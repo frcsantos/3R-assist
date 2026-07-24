@@ -8,9 +8,9 @@
     "signIn": "Entrar"
   },
   "glossary": {
-    "title": "Glossário",
-    "placeholder": "Vocabulário controlado e definições de termos — em breve."
+    "title": "Glossário"
   },
+
   "info": {
     "title": "Info",
     "placeholder": "Sobre o 3R Assist, metodologia e documentação — em breve."
@@ -86,12 +86,18 @@
       "expandMatches": "Buscar correspondências no banco",
       "collapseMatches": "Ocultar correspondências",
       "matching": "Buscando no banco…",
-      "matchError": "Não foi possível buscar correspondências no banco.",
-      "noMatches": "Nenhum método correspondente encontrado no banco.",
+      "matchError": "Não foi possível buscar métodos correspondentes no banco. Tente de novo ou confira os metadados dos métodos curados.",
+      "noMatches": "Nenhum método correspondente encontrado no banco para este código/nome.",
+      "searchOecd": "Buscar na OECD",
+      "addMethod": "Adicionar método",
+      "addMethodError": "Não foi possível abrir o formulário de novo método.",
       "matchByOecd": "Ref. OECD TG",
       "matchByText": "Similaridade textual",
       "regulatoryStatus": "Status regulatório",
-      "inactive": "inativo"
+      "inactive": "inativo",
+      "savedTitle": "Extrações salvas",
+      "savedMeta": "{{date}} · {{count}} métodos",
+      "removeSaved": "Remover"
     },
     "docs": {
       "label": "Docs",

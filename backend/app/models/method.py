@@ -1,26 +1,28 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, Field, computed_field
 
 ThreeRClass = Literal["replacement", "reduction", "refinement"]
 RegulatoryJurisdiction = Literal["brazil", "eu", "us", "oecd"]
 StudyDomain = Literal["pharma", "cosmetics", "chemical_safety", "general"]
 ValidationStatus = Literal["validated", "accepted", "emerging"]
 RegulatoryStatus = Literal["not_approved", "approved", "recommended", "mandatory"]
-SourceDb = Literal["OECD_TG", "ECVAM_DBALM", "NICEATM", "FARMACOPEIA_BR", "TSAR"]
+# Preferred curated values: OECD_TG | ECVAM_DBALM | NICEATM | FARMACOPEIA_BR | TSAR.
+# Stored as free text so admin-curated / imported rows are not rejected at read time.
+SourceDb = str
 
 _THREE_R_ORDER: tuple[ThreeRClass, ...] = ("replacement", "reduction", "refinement")
 
 
-class MethodValidationContext(BaseModel):
+class MethodRegulatoryContext(BaseModel):
     study_domain: StudyDomain
     jurisdiction: RegulatoryJurisdiction
     validation_status: ValidationStatus
-    purpose: str | None = None
-    regulatory_status: RegulatoryStatus | None = None
+    regulation_status: RegulatoryStatus | None = None
+    regulation_date: date | None = None
+    regulation_purpose: str | None = None
     regulatory_body: str | None = None
-    regulatory_ref: str | None = None
     regulatory_url: str | None = None
     notes: str | None = None
 
@@ -28,22 +30,24 @@ class MethodValidationContext(BaseModel):
 class Method(BaseModel):
     id: int
     slug: str
+    active: bool = False
     name_en: str
     name_pt: str
     description_en: str
     description_pt: str
-    text_for_embedding: str
+    endpoint_category: str
+    routes_applicable: list[str] | None = None
+    study_domain: StudyDomain
+    oecd_ref: str | None = None
+    ncit_id: str | None = None
+    source_db: SourceDb
     replacement_rationale: str | None = None
     reduction_rationale: str | None = None
     refinement_rationale: str | None = None
-    endpoint_category: str
-    study_domain: StudyDomain
-    oecd_tg_ref: str | None = None
-    ncit_id: str | None = None
-    source_db: SourceDb
-    routes_applicable: list[str] | None = None
+    keywords_en: list[str] = Field(default_factory=list)
+    keywords_pt: list[str] = Field(default_factory=list)
+    text_for_embedding: str
     embedding_json: list[float] | None = None
-    active: bool = False
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
@@ -71,10 +75,3 @@ class Method(BaseModel):
             if self.has_three_r(preferred):
                 return preferred
         return "replacement"
-
-
-class MethodKeyword(BaseModel):
-    id: int
-    method_id: int
-    keyword: str
-    language: Literal["en", "pt"]

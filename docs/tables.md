@@ -7,8 +7,7 @@ Engine: PostgreSQL via Neon (Vercel Postgres) or a local PostgreSQL instance. Dr
 | Table | Purpose |
 | --- | --- |
 | [methods](#methods) | Curated 3R alternative methods corpus |
-| [method_validation_contexts](#method_validation_contexts) | Per-method validation status by study domain and jurisdiction |
-| [method_keywords](#method_keywords) | Synonym dictionary for vocabulary bridging (EN/PT) |
+| [method_regulatory_contexts](#method_regulatory_contexts) | Per-method validation status by study domain and jurisdiction |
 | [endpoints](#endpoints) | Controlled vocabulary for toxicological endpoints |
 | [routes](#routes) | Controlled vocabulary for administration routes |
 | [study_domains](#study_domains) | Controlled vocabulary for study domains |
@@ -24,28 +23,30 @@ Engine: PostgreSQL via Neon (Vercel Postgres) or a local PostgreSQL instance. Dr
 
 ## methods
 
-Curated catalogue of alternative methods (replacement, reduction, refinement). Only rows with `active = TRUE` are eligible for retrieval. Validation status and jurisdiction live in `method_validation_contexts`, not on this table.
+Curated catalogue of alternative methods (replacement, reduction, refinement). Only rows with `active = TRUE` are eligible for retrieval. Validation status and jurisdiction live in `method_regulatory_contexts`, not on this table.
 
 | Column | Type | Nullable | Default | Description |
 | --- | --- | --- | --- | --- |
 | `id` | `SERIAL` | NO | auto | Primary key. |
 | `slug` | `TEXT` | NO | — | Unique URL-safe identifier (e.g. `oecd-tg439-epiderm`). |
+| `active` | `BOOLEAN` | NO | `FALSE` | Whether the method is live in retrieval. Starts `FALSE` pending expert review. |
 | `name_en` | `TEXT` | NO | — | Method name in English. |
 | `name_pt` | `TEXT` | NO | — | Method name in Portuguese. |
 | `description_en` | `TEXT` | NO | — | Full description in English. |
 | `description_pt` | `TEXT` | NO | — | Full description in Portuguese. |
-| `text_for_embedding` | `TEXT` | NO | — | English-only string used at embed time; must match the string that produced `embedding_json`. |
+| `endpoint_category` | `TEXT` | NO | — | Toxicological endpoint code; FK → `endpoints(code)`. |
+| `routes_applicable` | `JSONB` | YES | — | Array of applicable route codes (e.g. `["dermal"]`). `NULL` means route-agnostic. |
+| `study_domain` | `TEXT` | NO | — | Primary study domain code; FK → `study_domains(code)`. Values: `general`, `pharma`, `cosmetics`, `chemical_safety`. |
+| `oecd_ref` | `TEXT` | YES | — | OECD Test Guideline or Guidance Document reference (e.g. `TG 439`, `GD 129`). `NULL` for non-OECD methods. |
+| `ncit_id` | `TEXT` | YES | — | NCI Thesaurus concept ID for the endpoint category. |
+| `source_db` | `TEXT` | NO | — | Provenance of the curated entry. Values: `OECD_TG`, `ECVAM_DBALM`, `NICEATM`, `FARMACOPEIA_BR`, `TSAR`. |
 | `replacement_rationale` | `TEXT` | YES | — | Non-null/non-empty ⇒ method qualifies as replacement; value is the auditable rationale (ADR-023). |
 | `reduction_rationale` | `TEXT` | YES | — | Non-null/non-empty ⇒ method qualifies as reduction. |
 | `refinement_rationale` | `TEXT` | YES | — | Non-null/non-empty ⇒ method qualifies as refinement. |
-| `endpoint_category` | `TEXT` | NO | — | Toxicological endpoint code; FK → `endpoints(code)`. |
-| `study_domain` | `TEXT` | NO | — | Primary study domain code; FK → `study_domains(code)`. Values: `general`, `pharma`, `cosmetics`, `chemical_safety`. |
-| `oecd_tg_ref` | `TEXT` | YES | — | OECD Test Guideline or Guidance Document reference (e.g. `TG 439`, `GD 129`). `NULL` for non-OECD methods. |
-| `ncit_id` | `TEXT` | YES | — | NCI Thesaurus concept ID for the endpoint category. |
-| `source_db` | `TEXT` | NO | — | Provenance of the curated entry. Values: `OECD_TG`, `ECVAM_DBALM`, `NICEATM`, `FARMACOPEIA_BR`, `TSAR`. |
-| `routes_applicable` | `JSONB` | YES | — | Array of applicable route codes (e.g. `["dermal"]`). `NULL` means route-agnostic. |
+| `keywords_en` | `JSONB` | NO | `[]` | English synonym / search terms for vocabulary bridging (string array). |
+| `keywords_pt` | `JSONB` | NO | `[]` | Portuguese synonym / search terms for vocabulary bridging (string array). |
+| `text_for_embedding` | `TEXT` | NO | — | English-only string used at embed time; must match the string that produced `embedding_json`. |
 | `embedding_json` | `JSONB` | YES | — | 384-dim float embedding vector. `NULL` until `embed_methods.py` runs. |
-| `active` | `BOOLEAN` | NO | `FALSE` | Whether the method is live in retrieval. Starts `FALSE` pending expert review. |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
 | `updated_at` | `TIMESTAMPTZ` | NO | `NOW()` | Last update time. |
 
@@ -55,7 +56,7 @@ Curated catalogue of alternative methods (replacement, reduction, refinement). O
 
 ---
 
-## method_validation_contexts
+## method_regulatory_contexts
 
 Validation status and regulatory recognition for a method, scoped by study domain and jurisdiction. One row per `(method_id, study_domain, jurisdiction)`.
 
@@ -66,10 +67,10 @@ Validation status and regulatory recognition for a method, scoped by study domai
 | `study_domain` | `TEXT` | NO | — | Study domain for this validation context (`general`, `pharma`, `cosmetics`, `chemical_safety`). |
 | `jurisdiction` | `TEXT` | NO | — | Regulatory jurisdiction: `brazil` (CONCEA / ANVISA / MAPA), `eu` (ECHA, EMA, Cosmetics Reg 1223/2009, EFSA), `us` (FDA, EPA, ICCVAM / NICEATM), `oecd` (OECD TG adoption). |
 | `validation_status` | `TEXT` | NO | — | Status in that context: `validated`, `accepted`, or `emerging`. |
-| `purpose` | `TEXT` | YES | — | What the method is recognized/validated for in this context (endpoint, use, or regulatory purpose). |
-| `regulatory_status` | `TEXT` | YES | — | Regulatory standing: `not_approved`, `approved`, `recommended`, or `mandatory`. |
+| `regulation_status` | `TEXT` | YES | — | Regulatory standing: `not_approved`, `approved`, `recommended`, or `mandatory`. |
+| `regulation_date` | `DATE` | YES | — | Date of the regulation / recognition / adoption for this context (`YYYY-MM-DD`). |
+| `regulation_purpose` | `TEXT` | YES | — | What the method is recognized/validated for in this context (endpoint, use, or regulatory purpose). |
 | `regulatory_body` | `TEXT` | YES | — | Issuing body, e.g. `CONCEA`, `ANVISA`, `ECHA`, `EMA`, `EPA`, `FDA`, `ICCVAM`, `OECD`. |
-| `regulatory_ref` | `TEXT` | YES | — | Citation, e.g. `RN 18/2014 Art. 2`, `TG 439`, `Reg 1223/2009`. |
 | `regulatory_url` | `TEXT` | YES | — | Link to the regulatory document or guideline. |
 | `notes` | `TEXT` | YES | — | Free-text notes (applicability limits, pending verification, etc.). |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
@@ -77,21 +78,6 @@ Validation status and regulatory recognition for a method, scoped by study domai
 **Constraints:** `UNIQUE (method_id, study_domain, jurisdiction)`.
 
 **Indexes:** `method_id`, `jurisdiction`, `(study_domain, jurisdiction)`.
-
----
-
-## method_keywords
-
-Synonyms and search terms for each method, used for vocabulary bridging between protocol language and method metadata.
-
-| Column | Type | Nullable | Default | Description |
-| --- | --- | --- | --- | --- |
-| `id` | `SERIAL` | NO | auto | Primary key. |
-| `method_id` | `INTEGER` | NO | — | FK → `methods(id)` `ON DELETE CASCADE`. |
-| `keyword` | `TEXT` | NO | — | Synonym or search term. |
-| `language` | `TEXT` | NO | — | Language of the keyword: `en` or `pt`. |
-
-**Indexes:** `method_id`.
 
 ---
 
@@ -137,7 +123,7 @@ Controlled vocabulary for chemical administration routes (`parameter_model.md` �
 
 ## study_domains
 
-Controlled vocabulary for study / regulatory domains (`parameter_model.md` §3.3). Referenced by `methods.study_domain` and `method_validation_contexts.study_domain`.
+Controlled vocabulary for study / regulatory domains (`parameter_model.md` §3.3). Referenced by `methods.study_domain` and `method_regulatory_contexts.study_domain`.
 
 | Column | Type | Nullable | Default | Description |
 | --- | --- | --- | --- | --- |
@@ -279,8 +265,7 @@ erDiagram
     users ||--o{ suggestions : submits
     queries ||--o{ feedback : receives
     methods ||--o{ feedback : rated_in
-    methods ||--o{ method_keywords : has
-    methods ||--o{ method_validation_contexts : has
+    methods ||--o{ method_regulatory_contexts : has
     endpoints ||--o{ methods : categorizes
     study_domains ||--o{ methods : scopes
     routes ||--o{ route_endpoints : maps
@@ -291,14 +276,23 @@ Migrations that define or alter these tables:
 
 | Migration | Tables |
 | --- | --- |
-| `001_initial.sql` | `methods`, `method_validation_contexts`, `method_keywords` |
+| `001_initial.sql` | `methods`, `method_regulatory_contexts`, `method_keywords` (keywords later folded into `methods`) |
 | `002_app_tables.sql` | `users`, `magic_link_tokens`, `queries`, `feedback`, `suggestions` |
 | `003_vocabulary_tables.sql` | `endpoints`, `routes`, `study_domains`, `route_endpoints` |
 | `004_rename_study_domain.sql` | renames legacy `application_area` / `application_areas` |
 | `005_method_validation_contexts.sql` | upgrades legacy schemas to ADR-021/022 |
 | `006_route_other.sql` | seeds `routes.other` |
 | `007_add_3r_rationale_columns.sql` | adds `replacement_rationale`, `reduction_rationale`, `refinement_rationale` (ADR-023 step 1) |
-| `009_add_mvc_purpose.sql` | adds `purpose` to `method_validation_contexts` (before `regulatory_body`) |
-| `010_add_mvc_regulatory_status.sql` | adds `regulatory_status` to `method_validation_contexts` (`not_approved` \| `approved` \| `recommended` \| `mandatory`) |
+| `009_add_mvc_purpose.sql` | adds `purpose` to `method_regulatory_contexts` (before `regulatory_body`) |
+| `010_add_mvc_regulatory_status.sql` | adds `regulatory_status` to `method_regulatory_contexts` (`not_approved` \| `approved` \| `recommended` \| `mandatory`) |
 | `011_mvc_purpose_status_comments.sql` | column comments for `purpose` and `regulatory_status` |
+| `012_mvc_regulation_date.sql` | replaces `regulatory_ref` with `regulation_date` on `method_regulatory_contexts` |
+| `013_mvc_rename_regulation_fields.sql` | renames `purpose`→`regulation_purpose`, `regulatory_status`→`regulation_status`; reorders to `regulation_status`, `regulation_date`, `regulation_purpose`, `regulatory_body` |
+| `014_rename_method_regulatory_contexts.sql` | renames table `method_validation_contexts` → `method_regulatory_contexts` |
+| `015_reorder_methods_columns.sql` | reorders `methods`: `active` after `slug`; `embedding_json`, `created_at`, `updated_at` after `refinement_rationale` |
+| `016_methods_oecd_ref_reorder.sql` | renames `oecd_tg_ref`→`oecd_ref`; reorders to `endpoint_category`, `routes_applicable`, `study_domain`, `oecd_ref`, `ncit_id`, `source_db` |
+| `017_methods_keywords_columns.sql` | moves `text_for_embedding` next to `embedding_json`; adds `keywords_en` / `keywords_pt`; migrates and drops `method_keywords` |
+| `018_methods_embed_keywords_reorder.sql` | moves `text_for_embedding`, `keywords_en`, `keywords_pt`, `embedding_json` after `source_db` |
+| `019_methods_text_for_embedding_reorder.sql` | moves `text_for_embedding` immediately left of `embedding_json` |
+| `020_methods_3r_columns_reorder.sql` | moves `category_3r` (if present) and `*_rationale` after `source_db` |
 | `manual/008_drop_category_3r.sql` | drops `category_3r` after rationale gate is clean (ADR-023 step 4; apply via `backfill_3r_rationales.py --apply-drop`) |

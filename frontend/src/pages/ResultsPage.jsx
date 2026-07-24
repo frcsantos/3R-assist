@@ -13,7 +13,7 @@ import {
   methodThreeRBadges,
   methodThreeRClasses,
   primaryThreeR,
-  primaryValidationContext,
+  primaryRegulatoryContext,
   regulatoryUrlFromContexts,
   scorePercent,
 } from '../lib/search'
@@ -80,7 +80,7 @@ export default function ResultsPage() {
   const filteredResults = useMemo(() => {
     return recommendations.filter((item) => {
       const method = item.method
-      const contexts = item.validation_contexts ?? []
+      const contexts = item.regulatory_contexts ?? []
       if (
         threeRFilter !== 'all' &&
         !methodThreeRClasses(method).includes(threeRFilter)
@@ -261,8 +261,8 @@ export default function ResultsPage() {
           <div className="grid gap-card-gap">
             {filteredResults.map((item) => {
               const method = item.method
-              const contexts = item.validation_contexts ?? []
-              const primaryContext = primaryValidationContext(contexts)
+              const contexts = item.regulatory_contexts ?? []
+              const primaryContext = primaryRegulatoryContext(contexts)
               const percent = scorePercent(item.score)
               const threeR = primaryThreeR(method)
               return (
@@ -280,13 +280,13 @@ export default function ResultsPage() {
                       : null
                   }
                   regulatoryStatus={
-                    primaryContext?.regulatory_status
-                      ? t(`s3.regulatoryStatus.${primaryContext.regulatory_status}`)
+                    primaryContext?.regulation_status
+                      ? t(`s3.regulatoryStatus.${primaryContext.regulation_status}`)
                       : null
                   }
-                  purpose={primaryContext?.purpose || null}
+                  purpose={primaryContext?.regulation_purpose || null}
                   purposeLabel={t('s3.purposeLabel')}
-                  oecdTgRef={formatOecdReference(method.oecd_tg_ref)}
+                  oecdTgRef={formatOecdReference(method.oecd_ref)}
                   matchedParams={formatMatchedParams(item.matched_params, t)}
                   matchedParamsLabel={t('s3.matchedParams')}
                   description={methodDescription(method, lang)}

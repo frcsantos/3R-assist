@@ -309,9 +309,10 @@ async def match_policy_method(
     except Exception as exc:
         return error_response(
             status_code=503,
-            code="DATABASE_UNAVAILABLE",
+            code="METHOD_MATCH_FAILED",
             message=(
-                f"Could not match policy method: {type(exc).__name__}: {exc}"
+                "Could not search for matching methods in the database. "
+                "Try again, or check that curated methods have valid metadata."
             ),
             detail={"type": type(exc).__name__, "reason": str(exc)},
         )

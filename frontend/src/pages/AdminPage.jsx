@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/Button'
@@ -18,7 +19,7 @@ import {
   formatJurisdictionBadges,
   methodDescription,
   methodDisplayName,
-  primaryValidationContext,
+  primaryRegulatoryContext,
   scorePercent,
 } from '../lib/search'
 
@@ -1232,6 +1233,79 @@ function PlaceholderPanel({ messageKey }) {
 
 const POLICY_TEXT_MIN = 20
 const POLICY_TEXT_MAX = 50000
+const EXTRACT_HISTORY_KEY = '3r_assist.extract.history'
+const EXTRACT_HISTORY_MAX = 20
+
+function readExtractHistory() {
+  try {
+    const raw = window.localStorage.getItem(EXTRACT_HISTORY_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function writeExtractHistory(entries) {
+  window.localStorage.setItem(EXTRACT_HISTORY_KEY, JSON.stringify(entries))
+}
+
+function extractionLabel(entry) {
+  const name = entry?.result?.document_name?.trim()
+  if (name) return name
+  const preview = entry?.text?.trim()?.slice(0, 48)
+  if (preview) return preview.length < entry.text.trim().length ? `${preview}…` : preview
+  return entry?.savedAt ?? '—'
+}
+
+function oecdTgNumberFromRef(ref) {
+  if (!ref) return null
+  const match = String(ref).match(/\b(?:OECD\s+)?TG\s*(\d{3,4})\b/i)
+  return match?.[1] ?? null
+}
+
+function oecdTestSearchUrl(testNumber) {
+  const params = new URLSearchParams({
+    q: `"Test No. ${testNumber}"`,
+    orderBy: 'mostRelevant',
+    page: '0',
+    facetTags: 'oecd-languages:en,oecd-content-types:publications/reports',
+  })
+  return `https://www.oecd.org/content/oecd/en/search.html?${params.toString()}`
+}
+
+function slugifyMethodDraft(value) {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+}
+
+function methodInitialValuesFromExtracted(method, normalizedOecd) {
+  const tgNumber =
+    oecdTgNumberFromRef(normalizedOecd) ?? oecdTgNumberFromRef(method.code)
+  const oecdRef =
+    (normalizedOecd && /^TG\s+\d{3,4}$/i.test(normalizedOecd.trim())
+      ? normalizedOecd.trim().toUpperCase().replace(/^TG\s+/i, 'TG ')
+      : null) ?? (tgNumber ? `TG ${tgNumber}` : '')
+  const name = method.name?.trim() ?? ''
+  const purpose = method.purpose?.trim() ?? ''
+  const code = method.code?.trim() ?? ''
+
+  return {
+    slug: slugifyMethodDraft(oecdRef || code || name),
+    name_en: name,
+    name_pt: name,
+    description_en: purpose || name,
+    description_pt: purpose || name,
+    text_for_embedding: [oecdRef || code, name, purpose].filter(Boolean).join(' — '),
+    oecd_ref: oecdRef,
+    source_db: oecdRef ? 'OECD_TG' : '',
+    active: 'false',
+  }
+}
 
 function ExpandArrow({ open }) {
   return (
@@ -1259,14 +1333,20 @@ function ExtractedMethodRow({ method }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [matchResult, setMatchResult] = useState(null)
+  const [addMethodSchema, setAddMethodSchema] = useState(null)
+  const [addMethodOpen, setAddMethodOpen] = useState(false)
+  const [addMethodLoading, setAddMethodLoading] = useState(false)
+  const [addMethodError, setAddMethodError] = useState(null)
 
   async function toggle() {
     const next = !open
     setOpen(next)
-    if (!next || matchResult !== null || loading) return
+    if (!next || loading) return
 
     setLoading(true)
     setError(null)
+    setMatchResult(null)
+    setAddMethodError(null)
     try {
       const result = await matchPolicyMethod({
         code: method.code,
@@ -1274,15 +1354,37 @@ function ExtractedMethodRow({ method }) {
         purpose: method.purpose,
       })
       setMatchResult(result)
-    } catch (err) {
-      setError(err.message ?? t('admin.extract.matchError'))
+    } catch {
+      setError(t('admin.extract.matchError'))
     } finally {
       setLoading(false)
     }
   }
 
+  async function openAddMethod() {
+    if (addMethodLoading) return
+    setAddMethodError(null)
+    setAddMethodLoading(true)
+    try {
+      const schema = await fetchAdminTable('methods', { limit: 1, offset: 0 })
+      setAddMethodSchema(schema)
+      setAddMethodOpen(true)
+    } catch {
+      setAddMethodError(t('admin.extract.addMethodError'))
+    } finally {
+      setAddMethodLoading(false)
+    }
+  }
+
   const matches = matchResult?.matches ?? []
-  const colSpan = 4
+  const oecdTgNumber =
+    oecdTgNumberFromRef(matchResult?.normalized_oecd_ref) ??
+    oecdTgNumberFromRef(method.code)
+  const colSpan = 5
+  const addMethodColumns =
+    addMethodSchema?.columns.filter(
+      (column) => !(addMethodSchema.auto_columns ?? []).includes(column),
+    ) ?? []
 
   return (
     <>
@@ -1314,6 +1416,11 @@ function ExtractedMethodRow({ method }) {
         <td className="px-3 py-2 align-top text-on-surface">
           {method.purpose || t('admin.extract.notFound')}
         </td>
+        <td className="whitespace-nowrap px-3 py-2 align-top text-on-surface">
+          {method.status
+            ? t(`s3.regulatoryStatus.${method.status}`)
+            : t('admin.extract.notFound')}
+        </td>
       </tr>
       {open ? (
         <tr className="bg-surface-container/40">
@@ -1326,88 +1433,146 @@ function ExtractedMethodRow({ method }) {
               <p className="font-metadata text-metadata text-error" role="alert">
                 {error}
               </p>
-            ) : matches.length === 0 ? (
-              <p className="font-metadata text-metadata text-on-secondary-container opacity-65">
-                {t('admin.extract.noMatches')}
-              </p>
             ) : (
-              <ul className="space-y-2">
-                {matches.map((candidate) => {
-                  const dbMethod = candidate.method
-                  const oecd = formatOecdReference(dbMethod.oecd_tg_ref)
-                  const contexts = dbMethod.validation_contexts ?? []
-                  const primaryContext = primaryValidationContext(contexts)
-                  return (
-                    <li
-                      key={`${candidate.match_kind}-${dbMethod.id}`}
-                      className="rounded-md border border-border-subtle bg-surface-container-lowest px-3 py-2"
+              <div className="space-y-3">
+                {matches.length === 0 ? (
+                  <p className="font-metadata text-metadata text-on-secondary-container opacity-65">
+                    {t('admin.extract.noMatches')}
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {matches.map((candidate) => {
+                      const dbMethod = candidate.method
+                      const oecd = formatOecdReference(dbMethod.oecd_ref)
+                      const contexts = dbMethod.regulatory_contexts ?? []
+                      const primaryContext = primaryRegulatoryContext(contexts)
+                      return (
+                        <li
+                          key={`${candidate.match_kind}-${dbMethod.id}`}
+                          className="rounded-md border border-border-subtle bg-surface-container-lowest px-3 py-2"
+                        >
+                          <div className="flex flex-wrap items-baseline justify-between gap-2">
+                            <p className="font-metadata text-metadata text-on-surface">
+                              {methodDisplayName(dbMethod, lang)}
+                              <span className="ml-2 opacity-65">
+                                ({dbMethod.slug})
+                              </span>
+                            </p>
+                            <p className="font-metadata text-metadata text-on-secondary-container">
+                              {candidate.match_kind === 'oecd_ref'
+                                ? t('admin.extract.matchByOecd')
+                                : t('admin.extract.matchByText')}
+                              {' · '}
+                              {scorePercent(candidate.score)}%
+                              {!dbMethod.active
+                                ? ` · ${t('admin.extract.inactive')}`
+                                : ''}
+                            </p>
+                          </div>
+                          <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-80">
+                            {[
+                              oecd,
+                              dbMethod.endpoint_category,
+                              dbMethod.study_domain,
+                              dbMethod.source_db,
+                              contexts.length
+                                ? formatJurisdictionBadges(contexts, t)
+                                : null,
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </p>
+                          {primaryContext?.regulation_purpose ? (
+                            <p className="mt-1 font-metadata text-metadata text-on-secondary-container">
+                              {t('s3.purposeLabel')}: {primaryContext.regulation_purpose}
+                            </p>
+                          ) : null}
+                          {primaryContext?.regulation_status ? (
+                            <p className="mt-1 font-metadata text-metadata text-on-secondary-container">
+                              {t('admin.extract.regulatoryStatus')}:{' '}
+                              {t(
+                                `s3.regulatoryStatus.${primaryContext.regulation_status}`,
+                              )}
+                            </p>
+                          ) : null}
+                          <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-65">
+                            {methodDescription(dbMethod, lang)}
+                          </p>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+                <div className="flex flex-wrap items-center gap-3">
+                  {oecdTgNumber ? (
+                    <a
+                      href={oecdTestSearchUrl(oecdTgNumber)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container"
                     >
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <p className="font-metadata text-metadata text-on-surface">
-                          {methodDisplayName(dbMethod, lang)}
-                          <span className="ml-2 opacity-65">
-                            ({dbMethod.slug})
-                          </span>
-                        </p>
-                        <p className="font-metadata text-metadata text-on-secondary-container">
-                          {candidate.match_kind === 'oecd_tg_ref'
-                            ? t('admin.extract.matchByOecd')
-                            : t('admin.extract.matchByText')}
-                          {' · '}
-                          {scorePercent(candidate.score)}%
-                          {!dbMethod.active
-                            ? ` · ${t('admin.extract.inactive')}`
-                            : ''}
-                        </p>
-                      </div>
-                      <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-80">
-                        {[
-                          oecd,
-                          dbMethod.endpoint_category,
-                          dbMethod.study_domain,
-                          dbMethod.source_db,
-                          contexts.length
-                            ? formatJurisdictionBadges(contexts, t)
-                            : null,
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </p>
-                      {primaryContext?.purpose ? (
-                        <p className="mt-1 font-metadata text-metadata text-on-secondary-container">
-                          {t('s3.purposeLabel')}: {primaryContext.purpose}
-                        </p>
-                      ) : null}
-                      {primaryContext?.regulatory_status ? (
-                        <p className="mt-1 font-metadata text-metadata text-on-secondary-container">
-                          {t('admin.extract.regulatoryStatus')}:{' '}
-                          {t(
-                            `s3.regulatoryStatus.${primaryContext.regulatory_status}`,
-                          )}
-                        </p>
-                      ) : null}
-                      <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-65">
-                        {methodDescription(dbMethod, lang)}
-                      </p>
-                    </li>
-                  )
-                })}
-              </ul>
+                      {t('admin.extract.searchOecd')}
+                    </a>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={addMethodLoading}
+                    onClick={openAddMethod}
+                    className="inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {addMethodLoading
+                      ? t('admin.loading')
+                      : t('admin.extract.addMethod')}
+                  </button>
+                </div>
+                {addMethodError ? (
+                  <p
+                    className="font-metadata text-metadata text-error"
+                    role="alert"
+                  >
+                    {addMethodError}
+                  </p>
+                ) : null}
+              </div>
             )}
           </td>
         </tr>
       ) : null}
+      {addMethodOpen && addMethodSchema
+        ? createPortal(
+            <AddRowModal
+              key={`extract-add-method-${method.code}-${method.name}`}
+              table="methods"
+              columns={addMethodColumns}
+              comments={addMethodSchema.column_comments}
+              types={addMethodSchema.column_types}
+              requiredColumns={addMethodSchema.required_columns}
+              foreignKeys={addMethodSchema.foreign_keys}
+              columnOptions={addMethodSchema.column_options}
+              mode="create"
+              initialValues={methodInitialValuesFromExtracted(
+                method,
+                matchResult?.normalized_oecd_ref,
+              )}
+              onClose={() => setAddMethodOpen(false)}
+              onSaved={() => setAddMethodOpen(false)}
+            />,
+            document.body,
+          )
+        : null}
     </>
   )
 }
 
 function ExtractPanel() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
+  const [history, setHistory] = useState(() => readExtractHistory())
+  const [activeHistoryId, setActiveHistoryId] = useState(null)
 
   useEffect(() => {
     if (!submitting) {
@@ -1426,6 +1591,27 @@ function ExtractPanel() {
 
   const trimmedLength = text.trim().length
   const canSubmit = trimmedLength >= POLICY_TEXT_MIN && !submitting
+  const dateLocale = i18n.language?.startsWith('pt') ? 'pt-BR' : 'en-US'
+
+  function persistHistory(entries) {
+    setHistory(entries)
+    writeExtractHistory(entries)
+  }
+
+  function loadHistoryEntry(entry) {
+    setError(null)
+    setText(entry.text ?? '')
+    setResult(entry.result ?? null)
+    setActiveHistoryId(entry.id)
+  }
+
+  function removeHistoryEntry(entryId) {
+    const next = history.filter((entry) => entry.id !== entryId)
+    persistHistory(next)
+    if (activeHistoryId === entryId) {
+      setActiveHistoryId(null)
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -1434,10 +1620,19 @@ function ExtractPanel() {
     setError(null)
     setSubmitting(true)
     try {
+      const sourceText = text.trim()
       const extracted = await extractPolicy({
-        text: text.trim(),
+        text: sourceText,
         lang: currentLanguage(),
       })
+      const entry = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        savedAt: new Date().toISOString(),
+        text: sourceText,
+        result: extracted,
+      }
+      persistHistory([entry, ...history].slice(0, EXTRACT_HISTORY_MAX))
+      setActiveHistoryId(entry.id)
       setResult(extracted)
     } catch (err) {
       setResult(null)
@@ -1449,6 +1644,57 @@ function ExtractPanel() {
 
   return (
     <div className="space-y-section-gap">
+      {history.length > 0 ? (
+        <section className="rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding">
+          <h2 className="mb-card-gap font-label-caps text-label-caps uppercase text-on-surface-variant">
+            {t('admin.extract.savedTitle')}
+          </h2>
+          <ul className="divide-y divide-border-subtle">
+            {history.map((entry) => {
+              const isActive = entry.id === activeHistoryId
+              const methodCount = entry.result?.methods?.length ?? 0
+              const savedLabel = new Date(entry.savedAt).toLocaleString(dateLocale, {
+                dateStyle: 'short',
+                timeStyle: 'short',
+              })
+              return (
+                <li
+                  key={entry.id}
+                  className={`flex flex-wrap items-center gap-2 py-2 ${
+                    isActive ? 'bg-surface-container/50' : ''
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => loadHistoryEntry(entry)}
+                    className="min-w-0 flex-1 text-left transition-colors hover:text-primary"
+                  >
+                    <span className="block truncate font-metadata text-metadata text-on-surface">
+                      {extractionLabel(entry)}
+                    </span>
+                    <span className="block font-metadata text-metadata text-on-secondary-container opacity-65">
+                      {t('admin.extract.savedMeta', {
+                        date: savedLabel,
+                        count: methodCount,
+                      })}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeHistoryEntry(entry.id)}
+                    className="shrink-0 rounded-md px-2 py-1 font-metadata text-metadata text-on-secondary-container transition-colors hover:bg-surface-container hover:text-error"
+                    title={t('admin.extract.removeSaved')}
+                    aria-label={t('admin.extract.removeSaved')}
+                  >
+                    {t('admin.extract.removeSaved')}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ) : null}
+
       <form
         onSubmit={handleSubmit}
         className="rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding"
@@ -1552,6 +1798,9 @@ function ExtractPanel() {
                     </th>
                     <th className="px-3 py-2 font-label-caps text-label-caps uppercase text-on-surface-variant">
                       {t('admin.extract.methodPurpose')}
+                    </th>
+                    <th className="px-3 py-2 font-label-caps text-label-caps uppercase text-on-surface-variant">
+                      {t('admin.extract.regulatoryStatus')}
                     </th>
                   </tr>
                 </thead>

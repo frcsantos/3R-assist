@@ -2,13 +2,14 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.models.method import MethodValidationContext
+from app.models.method import MethodRegulatoryContext, RegulatoryStatus
 
 
 class PolicyMethod(BaseModel):
     code: str
     name: str
     purpose: str | None = None
+    status: RegulatoryStatus | None = None
 
 
 class PolicyExtractRequest(BaseModel):
@@ -40,18 +41,18 @@ class MatchedMethodSummary(BaseModel):
     text_for_embedding: str
     endpoint_category: str
     study_domain: str
-    oecd_tg_ref: str | None = None
+    oecd_ref: str | None = None
     source_db: str
     active: bool
-    validation_contexts: list[MethodValidationContext] = Field(default_factory=list)
+    regulatory_contexts: list[MethodRegulatoryContext] = Field(default_factory=list)
 
 
 class PolicyMethodMatchCandidate(BaseModel):
-    match_kind: Literal["oecd_tg_ref", "text_for_embedding"]
+    match_kind: Literal["oecd_ref", "text_for_embedding"]
     score: float
     method: MatchedMethodSummary
 
 
 class PolicyMethodMatchResponse(BaseModel):
-    normalized_oecd_tg_ref: str | None = None
+    normalized_oecd_ref: str | None = None
     matches: list[PolicyMethodMatchCandidate] = Field(default_factory=list)

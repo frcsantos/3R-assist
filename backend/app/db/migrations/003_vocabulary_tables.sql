@@ -2,7 +2,7 @@
 -- 3R Assist — Migration 003: Controlled vocabulary tables (PostgreSQL)
 -- Tables: endpoints, routes, study_domains
 -- Source: docs/parameter_model.md §3.1–3.3
--- Assumes: 001_initial.sql already applied (methods, method_keywords exist)
+-- Assumes: 001_initial.sql already applied (methods exist)
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------

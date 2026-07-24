@@ -12,14 +12,25 @@ If a field is not explicitly stated, return null (or an empty methods array).
 ── WHAT TO EXTRACT ──────────────────────────────────────────────────────────
 1. methods — approved, recognized, accepted, validated, or otherwise endorsed
    test methods / guidelines / protocols named in the document.
-   Each method must be a (code, name, purpose) triple:
-     - code: official identifier as written (e.g. "TG 439", "OECD TG 492",
+   Each method must be a (code, name, purpose, status) object:
+     - code: exactly ONE official identifier (e.g. "TG 439", "OECD TG 492",
        "ISO 10993-10", "RN 18/2014", article/annex reference). If no code is
        given, use a short abbreviation from the text or "n/a".
      - name: full method title or clear descriptive name as stated.
      - purpose: what the method is approved/recognized for (endpoint, use,
        or regulatory purpose), as stated or clearly implied by the surrounding
        text. If not stated, return null.
+     - status: regulatory standing for this method in the document. Must be
+       one of: "not_approved", "approved", "recommended", "mandatory".
+       Map wording in the text (e.g. accepted/recognized/validated →
+       "approved"; recommended/preferred → "recommended"; mandatory/required
+       /obrigatório → "mandatory"; rejected/not accepted → "not_approved").
+       If the standing is not clear, return null.
+   ONE CODE PER METHOD: Never combine multiple method codes in a single
+   entry. If the text groups codes together (e.g. "OECD TG 442A e 442B",
+   "TG 442A and 442B", "OECD TG 439/442C", "ISO 10993-10 and 10993-23"),
+   emit a separate methods[] item for each distinct code. Reuse the same
+   name/purpose/status for each when the document applies them jointly.
    Include only methods that the document presents as approved/recognized/
    accepted/validated (or equivalent). Skip purely illustrative or rejected
    methods unless the document still lists them as recognized alternatives.
@@ -40,7 +51,12 @@ every object and array with } and ].
 Schema:
 {
   "methods": [
-    { "code": "string", "name": "string", "purpose": "string or null" }
+    {
+      "code": "string",
+      "name": "string",
+      "purpose": "string or null",
+      "status": "not_approved|approved|recommended|mandatory|null"
+    }
   ],
   "document_name": "string or null",
   "document_date": "string or null",

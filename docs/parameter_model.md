@@ -287,7 +287,7 @@ There is no overall or retrieval-level confidence on `ExtractionResult`.
 
 **S3 display:**
 - When `len(experiments) > 1`: matching experiment tabs; each tab shows that experiment's protocol summary, `notes`, and ranked recommendations.
-- Result cards: 3Rs badge, **Match** score (%), jurisdiction, validation status, matched parameters, primary source link, OECD/regulatory link (includes `oecd_tg_ref` when present, e.g. `OECD / regulatory (OECD TG 439)`).
+- Result cards: 3Rs badge, **Match** score (%), jurisdiction, validation status, matched parameters, primary source link, OECD/regulatory link (includes `oecd_ref` when present, e.g. `OECD / regulatory (OECD TG 439)`).
 - Cards with score ≤ 65% rendered at reduced opacity (ADR-011).
 
 Threshold and per-field scale are first estimates — revisit after pilot using F11 relevance ratings.

@@ -91,7 +91,7 @@ export function primaryThreeR(methodOrCategory) {
   return values[0] ?? 'replacement'
 }
 
-export function primaryValidationContext(contexts = []) {
+export function primaryRegulatoryContext(contexts = []) {
   if (!contexts.length) return null
   const priority = ['brazil', 'oecd', 'eu', 'us']
   for (const jurisdiction of priority) {
@@ -107,7 +107,7 @@ export function formatJurisdictionBadges(contexts = [], t) {
 }
 
 export function regulatoryUrlFromContexts(contexts = []) {
-  const primary = primaryValidationContext(contexts)
+  const primary = primaryRegulatoryContext(contexts)
   return primary?.regulatory_url ?? null
 }
 

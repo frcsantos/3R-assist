@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from app.models.method import Method, MethodValidationContext
+from app.models.method import Method, MethodRegulatoryContext
 from app.models.policy import (
     MatchedMethodSummary,
     PolicyMethodMatchCandidate,
@@ -17,7 +17,7 @@ _OECD_REF_RE = re.compile(r"\b(TG|GD)\s*(\d{3,4})\b", re.IGNORECASE)
 _MIN_TEXT_SCORE = 0.15
 
 
-def normalize_oecd_tg_ref(code: str | None) -> str | None:
+def normalize_oecd_ref(code: str | None) -> str | None:
     if not code:
         return None
     text = code.strip()
@@ -49,7 +49,7 @@ def text_for_embedding_score(query: str, method: Method) -> float:
 
 def _to_summary(
     method: Method,
-    contexts: list[MethodValidationContext] | None = None,
+    contexts: list[MethodRegulatoryContext] | None = None,
 ) -> MatchedMethodSummary:
     return MatchedMethodSummary(
         id=method.id,
@@ -61,10 +61,10 @@ def _to_summary(
         text_for_embedding=method.text_for_embedding,
         endpoint_category=method.endpoint_category,
         study_domain=method.study_domain,
-        oecd_tg_ref=method.oecd_tg_ref,
+        oecd_ref=method.oecd_ref,
         source_db=method.source_db,
         active=method.active,
-        validation_contexts=contexts or [],
+        regulatory_contexts=contexts or [],
     )
 
 
@@ -76,18 +76,18 @@ class PolicyMethodMatchService:
         self,
         request: PolicyMethodMatchRequest,
     ) -> PolicyMethodMatchResponse:
-        normalized = normalize_oecd_tg_ref(request.code)
+        normalized = normalize_oecd_ref(request.code)
         if normalized:
-            primary = await self._repository.find_by_oecd_tg_ref(
+            primary = await self._repository.find_by_oecd_ref(
                 normalized,
                 include_inactive=True,
             )
             if primary:
                 return PolicyMethodMatchResponse(
-                    normalized_oecd_tg_ref=normalized,
+                    normalized_oecd_ref=normalized,
                     matches=await self._candidates_with_contexts(
                         [
-                            (method, "oecd_tg_ref", 1.0)
+                            (method, "oecd_ref", 1.0)
                             for method in primary[: request.limit]
                         ]
                     ),
@@ -108,7 +108,7 @@ class PolicyMethodMatchService:
 
         scored.sort(key=lambda item: (-item[2], item[0].slug))
         return PolicyMethodMatchResponse(
-            normalized_oecd_tg_ref=normalized,
+            normalized_oecd_ref=normalized,
             matches=await self._candidates_with_contexts(scored[: request.limit]),
         )
 

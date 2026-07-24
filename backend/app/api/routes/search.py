@@ -21,7 +21,7 @@ def _matches_jurisdiction_filter(
 ) -> bool:
     return any(
         context.jurisdiction == jurisdiction
-        for context in recommendation.validation_contexts
+        for context in recommendation.regulatory_contexts
     )
 
 

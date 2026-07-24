@@ -1,0 +1,8 @@
+**Endpoint (desfecho):** Em toxicologia/farmacologia, é o efeito biológico ou parâmetro mensurável que um estudo se propõe a avaliar — a resposta que o teste captura, não a substância testada nem o método em si. Consenso terminológico em ecotoxicologia regulatória (OECD, ECHA, ANVISA usam o termo nesse sentido).
+Exemplos de endpoint: irritação ocular, corrosão cutânea, sensibilização cutânea (alergenicidade), genotoxicidade, toxicidade aguda, fototoxicidade, pirogenicidade. Cada um responde a uma pergunta regulatória distinta (ex.: "esta substância corrói a pele?" → endpoint = corrosão cutânea).
+
+**Método:** Uma técnica discreta e validável que produz um dado mensurável para um único endpoint_category — ex.: TG 439 EpiSkin produz um valor de viabilidade celular que classifica irritação cutânea. 
+
+**Metodologia:** Um desenho experimental ou estratégia mais ampla que responde a uma pergunta de pesquisa, potencialmente combinando ou sequenciando múltiplos métodos — ex.: uma IATA (Integrated Approach to Testing and Assessment) que combina in silico + in vitro + confirmação in vivo, ou um desenho de estudo comportamental completo.
+
+**Rota:** Descreve como a substância de teste entra em contato com o sistema biológico — não o tipo de sistema biológico - nos métodos de substituição ele refere a quais rotas do protocolo original este método é compatível para substituir — use null quando for compatível com qualquer rota.

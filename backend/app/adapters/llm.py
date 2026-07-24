@@ -15,8 +15,8 @@ from app.models.protocol import (
     Route,
     Species,
 )
+from app.models.method import RegulatoryStatus
 from app.models.policy import PolicyExtractResponse, PolicyMethod
-
 from app.prompts.extraction import build_extraction_prompt
 from app.prompts.policy_extraction import build_policy_extraction_prompt
 
@@ -26,6 +26,9 @@ RAW_RESPONSE_LOG_LIMIT = 1200
 EXTRACTION_MAX_TOKENS = 4096
 POLICY_EXTRACTION_MAX_TOKENS = 4096
 
+_REGULATORY_STATUS_VALUES: frozenset[str] = frozenset(
+    {"not_approved", "approved", "recommended", "mandatory"}
+)
 
 @dataclass(frozen=True)
 class ExtractionError:
@@ -655,6 +658,16 @@ def _nullable_str(value: object) -> str | None:
     return text
 
 
+def _nullable_regulatory_status(value: object) -> RegulatoryStatus | None:
+    text = _nullable_str(value)
+    if text is None:
+        return None
+    normalized = text.lower().replace(" ", "_").replace("-", "_")
+    if normalized in _REGULATORY_STATUS_VALUES:
+        return normalized  # type: ignore[return-value]
+    return None
+
+
 def _policy_from_payload(
     payload: object,
     *,
@@ -684,6 +697,7 @@ def _policy_from_payload(
         code = _nullable_str(item.get("code"))
         name = _nullable_str(item.get("name"))
         purpose = _nullable_str(item.get("purpose"))
+        status = _nullable_regulatory_status(item.get("status"))
         if not code and not name:
             continue
         methods.append(
@@ -691,6 +705,7 @@ def _policy_from_payload(
                 code=code or "n/a",
                 name=name or code or "n/a",
                 purpose=purpose,
+                status=status,
             )
         )
 

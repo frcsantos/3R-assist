@@ -8,9 +8,9 @@
     "signIn": "Sign in"
   },
   "glossary": {
-    "title": "Glossary",
-    "placeholder": "Controlled vocabulary and term definitions — coming soon."
+    "title": "Glossary"
   },
+
   "info": {
     "title": "Info",
     "placeholder": "About 3R Assist, methodology, and documentation — coming soon."
@@ -86,12 +86,18 @@
       "expandMatches": "Match against database methods",
       "collapseMatches": "Hide database matches",
       "matching": "Matching against database…",
-      "matchError": "Could not match method against the database.",
-      "noMatches": "No matching methods found in the database.",
+      "matchError": "Could not search for matching methods in the database. Try again, or check curated method metadata.",
+      "noMatches": "No matching methods found in the database for this code/name.",
+      "searchOecd": "Search OECD",
+      "addMethod": "Add method",
+      "addMethodError": "Could not open the add-method form.",
       "matchByOecd": "OECD TG ref",
       "matchByText": "Text similarity",
       "regulatoryStatus": "Regulatory status",
-      "inactive": "inactive"
+      "inactive": "inactive",
+      "savedTitle": "Saved extractions",
+      "savedMeta": "{{date}} · {{count}} methods",
+      "removeSaved": "Remove"
     },
     "docs": {
       "label": "Docs",
