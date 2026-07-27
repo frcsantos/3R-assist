@@ -1,6 +1,7 @@
 import asyncio
 
 from app.adapters.embedder import StubEmbedderAdapter
+from app.models.i18n import localized_str
 from app.models.method import Method
 from app.models.protocol import ProtocolParameters
 from app.repositories.methods import MethodRepository
@@ -24,10 +25,8 @@ def _method(
     return Method(
         id=method_id,
         slug=slug,
-        name_en=slug,
-        name_pt=slug,
-        description_en="desc",
-        description_pt="desc",
+        name=localized_str(slug),
+        description=localized_str("desc"),
         text_for_embedding=text_for_embedding,
         reduction_rationale="Test reduction rationale",
         endpoint_category=endpoint,

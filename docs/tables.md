@@ -7,7 +7,7 @@ Engine: PostgreSQL via Neon (Vercel Postgres) or a local PostgreSQL instance. Dr
 | Table | Purpose |
 | --- | --- |
 | [methods](#methods) | Curated 3R alternative methods corpus |
-| [method_regulatory_contexts](#method_regulatory_contexts) | Per-method validation status by study domain and jurisdiction |
+| [method_regulatory_contexts](#method_regulatory_contexts) | Per-method validation status by jurisdiction |
 | [endpoints](#endpoints) | Controlled vocabulary for toxicological endpoints |
 | [routes](#routes) | Controlled vocabulary for administration routes |
 | [study_domains](#study_domains) | Controlled vocabulary for study domains |
@@ -17,6 +17,7 @@ Engine: PostgreSQL via Neon (Vercel Postgres) or a local PostgreSQL instance. Dr
 | [queries](#queries) | Protocol analysis / search sessions |
 | [feedback](#feedback) | User ratings of recommended methods |
 | [suggestions](#suggestions) | User-submitted method suggestions for curation |
+| [documents](#documents) | Catalogue of source documents (protocols, guidelines, regulations) |
 | [schema_migrations](#schema_migrations) | Applied migration filenames |
 
 ---
@@ -30,27 +31,26 @@ Curated catalogue of alternative methods (replacement, reduction, refinement). O
 | `id` | `SERIAL` | NO | auto | Primary key. |
 | `slug` | `TEXT` | NO | — | Unique URL-safe identifier (e.g. `oecd-tg439-epiderm`). |
 | `active` | `BOOLEAN` | NO | `FALSE` | Whether the method is live in retrieval. Starts `FALSE` pending expert review. |
-| `name_en` | `TEXT` | NO | — | Method name in English. |
-| `name_pt` | `TEXT` | NO | — | Method name in Portuguese. |
-| `description_en` | `TEXT` | NO | — | Full description in English. |
-| `description_pt` | `TEXT` | NO | — | Full description in Portuguese. |
+| `name` | `JSONB` | NO | — | Localized method name: `{"en-us": "...", "pt-br": "..."}`. |
+| `description` | `JSONB` | NO | — | Localized full description: `{"en-us": "...", "pt-br": "..."}`. |
 | `endpoint_category` | `TEXT` | NO | — | Toxicological endpoint code; FK → `endpoints(code)`. |
 | `routes_applicable` | `JSONB` | YES | — | Array of applicable route codes (e.g. `["dermal"]`). `NULL` means route-agnostic. |
 | `study_domain` | `TEXT` | NO | — | Primary study domain code; FK → `study_domains(code)`. Values: `general`, `pharma`, `cosmetics`, `chemical_safety`. |
 | `oecd_ref` | `TEXT` | YES | — | OECD Test Guideline or Guidance Document reference (e.g. `TG 439`, `GD 129`). `NULL` for non-OECD methods. |
 | `ncit_id` | `TEXT` | YES | — | NCI Thesaurus concept ID for the endpoint category. |
+| `source_citation` | `TEXT` | YES | — | Bibliographic citation for the primary source document. API responses fall back to `documents.doc_ref` when null. |
+| `source_doc_id` | `INTEGER` | YES | — | FK → `documents(id)` `ON DELETE SET NULL`. Primary source document. API exposes `source_url` from `documents.url`. |
 | `source_db` | `TEXT` | NO | — | Provenance of the curated entry. Values: `OECD_TG`, `ECVAM_DBALM`, `NICEATM`, `FARMACOPEIA_BR`, `TSAR`. |
 | `replacement_rationale` | `TEXT` | YES | — | Non-null/non-empty ⇒ method qualifies as replacement; value is the auditable rationale (ADR-023). |
 | `reduction_rationale` | `TEXT` | YES | — | Non-null/non-empty ⇒ method qualifies as reduction. |
 | `refinement_rationale` | `TEXT` | YES | — | Non-null/non-empty ⇒ method qualifies as refinement. |
-| `keywords_en` | `JSONB` | NO | `[]` | English synonym / search terms for vocabulary bridging (string array). |
-| `keywords_pt` | `JSONB` | NO | `[]` | Portuguese synonym / search terms for vocabulary bridging (string array). |
+| `keywords` | `JSONB` | NO | `{"en-us":[],"pt-br":[]}` | Localized synonym / search terms: `{"en-us": [...], "pt-br": [...]}`. |
 | `text_for_embedding` | `TEXT` | NO | — | English-only string used at embed time; must match the string that produced `embedding_json`. |
 | `embedding_json` | `JSONB` | YES | — | 384-dim float embedding vector. `NULL` until `embed_methods.py` runs. |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
 | `updated_at` | `TIMESTAMPTZ` | NO | `NOW()` | Last update time. |
 
-**Indexes:** `endpoint_category`, `active`.
+**Indexes:** `endpoint_category`, `active`, `source_doc_id`.
 
 **3R qualification:** presence of a non-null, non-empty `*_rationale` column means the method qualifies for that R. There is no separate companion flag column. Filter semantics: `replacement_rationale IS NOT NULL` (and likewise for reduction/refinement), not JSONB `@>`.
 
@@ -58,26 +58,26 @@ Curated catalogue of alternative methods (replacement, reduction, refinement). O
 
 ## method_regulatory_contexts
 
-Validation status and regulatory recognition for a method, scoped by study domain and jurisdiction. One row per `(method_id, study_domain, jurisdiction)`.
+Validation status and regulatory recognition for a method, scoped by jurisdiction. One row per `(method_id, jurisdiction)`.
 
 | Column | Type | Nullable | Default | Description |
 | --- | --- | --- | --- | --- |
 | `id` | `SERIAL` | NO | auto | Primary key. |
 | `method_id` | `INTEGER` | NO | — | FK → `methods(id)` `ON DELETE CASCADE`. |
-| `study_domain` | `TEXT` | NO | — | Study domain for this validation context (`general`, `pharma`, `cosmetics`, `chemical_safety`). |
 | `jurisdiction` | `TEXT` | NO | — | Regulatory jurisdiction: `brazil` (CONCEA / ANVISA / MAPA), `eu` (ECHA, EMA, Cosmetics Reg 1223/2009, EFSA), `us` (FDA, EPA, ICCVAM / NICEATM), `oecd` (OECD TG adoption). |
 | `validation_status` | `TEXT` | NO | — | Status in that context: `validated`, `accepted`, or `emerging`. |
 | `regulation_status` | `TEXT` | YES | — | Regulatory standing: `not_approved`, `approved`, `recommended`, or `mandatory`. |
 | `regulation_date` | `DATE` | YES | — | Date of the regulation / recognition / adoption for this context (`YYYY-MM-DD`). |
 | `regulation_purpose` | `TEXT` | YES | — | What the method is recognized/validated for in this context (endpoint, use, or regulatory purpose). |
 | `regulatory_body` | `TEXT` | YES | — | Issuing body, e.g. `CONCEA`, `ANVISA`, `ECHA`, `EMA`, `EPA`, `FDA`, `ICCVAM`, `OECD`. |
-| `regulatory_url` | `TEXT` | YES | — | Link to the regulatory document or guideline. |
+| `regulatory_doc_id` | `INTEGER` | YES | — | FK → `documents(id)` `ON DELETE SET NULL`. Regulatory document for this context. API exposes `regulatory_url` from `documents.url`. |
+| `regulatory_citation` | `TEXT` | YES | — | Bibliographic citation / short reference for the regulatory recognition. API responses fall back to `documents.doc_ref` when null. |
 | `notes` | `TEXT` | YES | — | Free-text notes (applicability limits, pending verification, etc.). |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
 
-**Constraints:** `UNIQUE (method_id, study_domain, jurisdiction)`.
+**Constraints:** `UNIQUE (method_id, jurisdiction)`.
 
-**Indexes:** `method_id`, `jurisdiction`, `(study_domain, jurisdiction)`.
+**Indexes:** `method_id`, `jurisdiction`, `regulatory_doc_id`.
 
 ---
 
@@ -88,10 +88,8 @@ Controlled vocabulary for toxicological endpoint categories (`parameter_model.md
 | Column | Type | Nullable | Default | Description |
 | --- | --- | --- | --- | --- |
 | `code` | `TEXT` | NO | — | Primary key code (e.g. `skin_irritation`, `acute_toxicity`). |
-| `name_en` | `TEXT` | NO | — | Display name in English. |
-| `name_pt` | `TEXT` | NO | — | Display name in Portuguese. |
-| `description_en` | `TEXT` | YES | — | Longer English description / examples. |
-| `description_pt` | `TEXT` | YES | — | Longer Portuguese description / examples. |
+| `name` | `JSONB` | NO | — | Localized display name: `{"en-us": "...", "pt-br": "..."}`. |
+| `description` | `JSONB` | YES | — | Localized longer description / examples. |
 | `sort_order` | `INTEGER` | NO | `0` | Display order in UI lists. |
 | `active` | `BOOLEAN` | NO | `TRUE` | Whether the value is selectable. |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
@@ -108,10 +106,8 @@ Controlled vocabulary for chemical administration routes (`parameter_model.md` �
 | Column | Type | Nullable | Default | Description |
 | --- | --- | --- | --- | --- |
 | `code` | `TEXT` | NO | — | Primary key code (e.g. `oral`, `dermal`). |
-| `name_en` | `TEXT` | NO | — | Display name in English. |
-| `name_pt` | `TEXT` | NO | — | Display name in Portuguese. |
-| `description_en` | `TEXT` | YES | — | Longer English description / synonyms. |
-| `description_pt` | `TEXT` | YES | — | Longer Portuguese description / synonyms. |
+| `name` | `JSONB` | NO | — | Localized display name: `{"en-us": "...", "pt-br": "..."}`. |
+| `description` | `JSONB` | YES | — | Localized longer description / synonyms. |
 | `sort_order` | `INTEGER` | NO | `0` | Display order in UI lists. |
 | `active` | `BOOLEAN` | NO | `TRUE` | Whether the value is selectable. |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
@@ -123,15 +119,13 @@ Controlled vocabulary for chemical administration routes (`parameter_model.md` �
 
 ## study_domains
 
-Controlled vocabulary for study / regulatory domains (`parameter_model.md` §3.3). Referenced by `methods.study_domain` and `method_regulatory_contexts.study_domain`.
+Controlled vocabulary for study / regulatory domains (`parameter_model.md` §3.3). Referenced by `methods.study_domain`.
 
 | Column | Type | Nullable | Default | Description |
 | --- | --- | --- | --- | --- |
 | `code` | `TEXT` | NO | — | Primary key code (e.g. `pharma`, `general`). |
-| `name_en` | `TEXT` | NO | — | Display name in English. |
-| `name_pt` | `TEXT` | NO | — | Display name in Portuguese. |
-| `description_en` | `TEXT` | YES | — | Longer English description. |
-| `description_pt` | `TEXT` | YES | — | Longer Portuguese description. |
+| `name` | `JSONB` | NO | — | Localized display name: `{"en-us": "...", "pt-br": "..."}`. |
+| `description` | `JSONB` | YES | — | Localized longer description. |
 | `sort_order` | `INTEGER` | NO | `0` | Display order in UI lists. |
 | `active` | `BOOLEAN` | NO | `TRUE` | Whether the value is selectable. |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
@@ -231,8 +225,7 @@ User-submitted method suggestions queued for manual curation (F12).
 | --- | --- | --- | --- | --- |
 | `id` | `SERIAL` | NO | auto | Primary key. |
 | `user_id` | `INTEGER` | YES | — | FK → `users(id)` `ON DELETE SET NULL`. Submitter, if authenticated. |
-| `name_en` | `TEXT` | NO | — | Suggested method name in English. |
-| `name_pt` | `TEXT` | YES | — | Suggested method name in Portuguese. |
+| `name` | `JSONB` | NO | — | Localized suggested method name: `{"en-us": "...", "pt-br": "..."}`. |
 | `description` | `TEXT` | YES | — | Free-text description of the method. |
 | `source_url` | `TEXT` | YES | — | Link to a source document or publication. |
 | `endpoint_hint` | `TEXT` | YES | — | User's best-guess endpoint category; not validated until review. |
@@ -242,6 +235,25 @@ User-submitted method suggestions queued for manual curation (F12).
 | `reviewed_at` | `TIMESTAMPTZ` | YES | — | Time of review decision. |
 
 **Indexes:** partial index on `status` where `status = 'pending'`.
+
+---
+
+## documents
+
+Catalogue of source documents used for method curation and regulatory context (protocols, guidelines, regulations).
+
+| Column | Type | Nullable | Default | Description |
+| --- | --- | --- | --- | --- |
+| `id` | `SERIAL` | NO | auto | Primary key. |
+| `slug` | `TEXT` | NO | — | Unique URL-safe identifier (e.g. `oecd-tg439`, `concea-rn-18-2014`). |
+| `doc_ref` | `TEXT` | NO | — | Human-readable document reference / citation key (e.g. `OECD TG 439`, `RN 18/2014`). |
+| `date` | `DATE` | YES | — | Publication / adoption / issuance date. |
+| `category` | `TEXT` | NO | — | Document kind: `method_protocol`, `guideline`, or `regulation`. |
+| `url` | `TEXT` | YES | — | URL of the document, when available. |
+
+**Constraints:** `UNIQUE (slug)`; `CHECK (category IN ('method_protocol', 'guideline', 'regulation'))`.
+
+**Indexes:** `category`, `date`.
 
 ---
 
@@ -266,6 +278,8 @@ erDiagram
     queries ||--o{ feedback : receives
     methods ||--o{ feedback : rated_in
     methods ||--o{ method_regulatory_contexts : has
+    documents ||--o{ methods : sources
+    documents ||--o{ method_regulatory_contexts : regulates
     endpoints ||--o{ methods : categorizes
     study_domains ||--o{ methods : scopes
     routes ||--o{ route_endpoints : maps
@@ -295,4 +309,12 @@ Migrations that define or alter these tables:
 | `018_methods_embed_keywords_reorder.sql` | moves `text_for_embedding`, `keywords_en`, `keywords_pt`, `embedding_json` after `source_db` |
 | `019_methods_text_for_embedding_reorder.sql` | moves `text_for_embedding` immediately left of `embedding_json` |
 | `020_methods_3r_columns_reorder.sql` | moves `category_3r` (if present) and `*_rationale` after `source_db` |
-| `manual/008_drop_category_3r.sql` | drops `category_3r` after rationale gate is clean (ADR-023 step 4; apply via `backfill_3r_rationales.py --apply-drop`) |
+| `021_mvc_study_domain_fk.sql` | adds FK `method_regulatory_contexts.study_domain` → `study_domains(code)` |
+| `022_methods_source_citation_fields.sql` | adds `source_citation`, `source_url`, `source_date` after `ncit_id` |
+| `023_localized_json_fields.sql` | folds `*_en`/`*_pt` into localized JSONB (`name`, `description`, `keywords`) on methods, vocab tables, and suggestions |
+| `024_vocab_timestamps_after_description.sql` | reorders `endpoints`/`routes`/`study_domains` so `created_at`/`updated_at` follow `description` |
+| `025_drop_mrc_study_domain.sql` | drops `study_domain` from `method_regulatory_contexts`; unique key becomes `(method_id, jurisdiction)` |
+| `026_methods_drop_category_3r_reorder.sql` | drops `category_3r`; restores `name`/`description`/`keywords` then `text_for_embedding`/`embedding_json` order |
+| `027_documents.sql` | creates `documents` (`slug`, `doc_ref`, `date`, `category`, `url`) |
+| `028_doc_fks_and_citations.sql` | `methods.source_doc_id`; MRC `regulatory_doc_id` + `regulatory_citation` (replaces `regulatory_url`); drops `source_url`/`source_date` |
+| `manual/008_drop_category_3r.sql` | legacy gated DROP of `category_3r` (superseded by `026`) |

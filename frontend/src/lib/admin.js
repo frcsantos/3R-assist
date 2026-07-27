@@ -57,6 +57,16 @@ export function extractPolicy({ text, lang }) {
   })
 }
 
+export function extractMethodDraft({ text, lang }) {
+  return apiFetch('/admin/extract/method-draft', {
+    method: 'POST',
+    body: JSON.stringify({
+      text,
+      ...(lang ? { lang } : {}),
+    }),
+  })
+}
+
 export function matchPolicyMethod({ code, name, purpose, limit = 5 }) {
   return apiFetch('/admin/extract/policy/match-method', {
     method: 'POST',

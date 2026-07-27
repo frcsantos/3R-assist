@@ -14,6 +14,7 @@ import {
   methodThreeRClasses,
   primaryThreeR,
   primaryRegulatoryContext,
+  regulatoryCitationFromContexts,
   regulatoryUrlFromContexts,
   scorePercent,
 } from '../lib/search'
@@ -286,12 +287,23 @@ export default function ResultsPage() {
                   }
                   purpose={primaryContext?.regulation_purpose || null}
                   purposeLabel={t('s3.purposeLabel')}
-                  oecdTgRef={formatOecdReference(method.oecd_ref)}
+                  oecdTgRef={
+                    regulatoryCitationFromContexts(contexts)
+                      ? null
+                      : formatOecdReference(method.oecd_ref)
+                  }
                   matchedParams={formatMatchedParams(item.matched_params, t)}
                   matchedParamsLabel={t('s3.matchedParams')}
                   description={methodDescription(method, lang)}
+                  primaryUrl={method.source_url || null}
+                  sourcesLabel={
+                    method.source_citation?.trim() || t('s3.sourceLink')
+                  }
                   regulatoryUrl={regulatoryUrlFromContexts(contexts)}
-                  regulatoryLinkLabel={t('s3.regulatoryLink')}
+                  regulatoryLinkLabel={
+                    regulatoryCitationFromContexts(contexts) ||
+                    t('s3.regulatoryLink')
+                  }
                   matchLabel={t('s3.matchLabel')}
                 />
               )

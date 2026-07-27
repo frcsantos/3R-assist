@@ -552,7 +552,7 @@ Presença de valor não-nulo/não-vazio = o método qualifica para aquele R. O t
 1. `007_add_3r_rationale_columns.sql` — ADD das três colunas; `category_3r` permanece (fonte de verdade de quais Rs precisam de texto). Auto-aplicada por `migrate.py`.
 2. `scripts/backfill_3r_rationales.py` — para cada R em `category_3r`, insere placeholder `'[PENDENTE — ver category_3r]'` (não string vazia), distinguindo “precisa preencher” de “não se aplica”.
 3. Gate — só prosseguir quando a query de pendências retornar zero linhas (`backfill_3r_rationales.py --check`).
-4. `manual/008_drop_category_3r.sql` — DROP de `category_3r` via `backfill_3r_rationales.py --apply-drop` (não auto-aplicada; falha se o gate ainda tiver linhas).
+4. ~~`manual/008_drop_category_3r.sql`~~ — superseded by auto-applied `026_methods_drop_category_3r_reorder.sql` (also restores column order so `text_for_embedding` / `embedding_json` follow `keywords`).
 
 **Reversibility:** Moderada — schema + backfill + checklist Karynn.
 

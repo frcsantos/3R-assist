@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, computed_field
 
+from app.models.i18n import LocalizedStr, LocalizedStrList
+
 ThreeRClass = Literal["replacement", "reduction", "refinement"]
 RegulatoryJurisdiction = Literal["brazil", "eu", "us", "oecd"]
 StudyDomain = Literal["pharma", "cosmetics", "chemical_safety", "general"]
@@ -16,13 +18,15 @@ _THREE_R_ORDER: tuple[ThreeRClass, ...] = ("replacement", "reduction", "refineme
 
 
 class MethodRegulatoryContext(BaseModel):
-    study_domain: StudyDomain
     jurisdiction: RegulatoryJurisdiction
     validation_status: ValidationStatus
     regulation_status: RegulatoryStatus | None = None
     regulation_date: date | None = None
     regulation_purpose: str | None = None
     regulatory_body: str | None = None
+    regulatory_doc_id: int | None = None
+    regulatory_citation: str | None = None
+    # Resolved from documents.url when regulatory_doc_id is set (not a DB column).
     regulatory_url: str | None = None
     notes: str | None = None
 
@@ -31,21 +35,22 @@ class Method(BaseModel):
     id: int
     slug: str
     active: bool = False
-    name_en: str
-    name_pt: str
-    description_en: str
-    description_pt: str
+    name: LocalizedStr
+    description: LocalizedStr
     endpoint_category: str
     routes_applicable: list[str] | None = None
     study_domain: StudyDomain
     oecd_ref: str | None = None
     ncit_id: str | None = None
+    source_citation: str | None = None
+    source_doc_id: int | None = None
+    # Resolved from documents.url when source_doc_id is set (not a DB column).
+    source_url: str | None = None
     source_db: SourceDb
     replacement_rationale: str | None = None
     reduction_rationale: str | None = None
     refinement_rationale: str | None = None
-    keywords_en: list[str] = Field(default_factory=list)
-    keywords_pt: list[str] = Field(default_factory=list)
+    keywords: LocalizedStrList = Field(default_factory=LocalizedStrList)
     text_for_embedding: str
     embedding_json: list[float] | None = None
     created_at: datetime | None = None

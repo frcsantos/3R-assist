@@ -2,6 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.models.i18n import LocalizedStr
 from app.models.method import MethodRegulatoryContext, RegulatoryStatus
 
 
@@ -34,10 +35,8 @@ class PolicyMethodMatchRequest(BaseModel):
 class MatchedMethodSummary(BaseModel):
     id: int
     slug: str
-    name_en: str
-    name_pt: str
-    description_en: str
-    description_pt: str
+    name: LocalizedStr
+    description: LocalizedStr
     text_for_embedding: str
     endpoint_category: str
     study_domain: str

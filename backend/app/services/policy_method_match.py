@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 
 from app.models.method import Method, MethodRegulatoryContext
 from app.models.policy import (
@@ -15,6 +16,7 @@ from app.repositories.methods import MethodRepository
 
 _OECD_REF_RE = re.compile(r"\b(TG|GD)\s*(\d{3,4})\b", re.IGNORECASE)
 _MIN_TEXT_SCORE = 0.15
+_PLURAL_2 = frozenset({"as", "es", "os", "is"})
 
 
 def normalize_oecd_ref(code: str | None) -> str | None:
@@ -28,23 +30,77 @@ def normalize_oecd_ref(code: str | None) -> str | None:
     return f"{match.group(1).upper()} {match.group(2)}"
 
 
-def _token_set(text: str) -> set[str]:
-    return {token for token in re.findall(r"[a-z0-9]+", text.lower()) if len(token) > 2}
+def _strip_accents(text: str) -> str:
+    decomposed = unicodedata.normalize("NFD", text)
+    return "".join(char for char in decomposed if unicodedata.category(char) != "Mn")
+
+
+def _raw_tokens(text: str) -> set[str]:
+    normalized = _strip_accents(text).lower()
+    return {
+        token
+        for token in re.findall(r"[a-z0-9]+", normalized)
+        if len(token) > 2
+    }
+
+
+def _match_keys(token: str) -> set[str]:
+    """Soft keys for light plural/suffix and prefix folding (EN/PT)."""
+    keys = {token}
+    if len(token) > 4 and token.endswith("s") and not token.endswith("ss"):
+        keys.add(token[:-1])
+    if len(token) > 5 and token[-2:] in _PLURAL_2:
+        stem = token[:-2]
+        keys.add(stem)
+        keys.add(stem + token[-2])
+    if len(token) > 5 and token[-1] in "aeiou":
+        keys.add(token[:-1])
+    if len(token) >= 6:
+        keys.add(token[:6])
+    return keys
+
+
+def _token_keys(text: str) -> set[str]:
+    keys: set[str] = set()
+    for token in _raw_tokens(text):
+        keys |= _match_keys(token)
+    return keys
+
+
+def _overlap_ratio(query_tokens: set[str], candidate_keys: set[str]) -> float:
+    if not query_tokens:
+        return 0.0
+    matched = sum(
+        1 for token in query_tokens if _match_keys(token) & candidate_keys
+    )
+    return matched / len(query_tokens)
 
 
 def text_for_embedding_score(query: str, method: Method) -> float:
-    query_tokens = _token_set(query)
+    query_tokens = _raw_tokens(query)
     if not query_tokens:
         return 0.0
 
-    embedding_tokens = _token_set(method.text_for_embedding)
-    name_tokens = _token_set(f"{method.name_en} {method.name_pt}")
-    embedding_overlap = len(query_tokens & embedding_tokens)
-    name_overlap = len(query_tokens & name_tokens)
-
-    embedding_score = embedding_overlap / len(query_tokens)
-    name_score = name_overlap / len(query_tokens)
-    return round(min(1.0, (0.75 * embedding_score) + (0.25 * name_score)), 4)
+    embedding_score = _overlap_ratio(
+        query_tokens, _token_keys(method.text_for_embedding)
+    )
+    name_score = _overlap_ratio(
+        query_tokens,
+        _token_keys(method.name.joined()),
+    )
+    keyword_text = " ".join(method.keywords.all_values())
+    keyword_score = (
+        _overlap_ratio(query_tokens, _token_keys(keyword_text))
+        if keyword_text.strip()
+        else 0.0
+    )
+    return round(
+        min(
+            1.0,
+            (0.55 * embedding_score) + (0.30 * name_score) + (0.15 * keyword_score),
+        ),
+        4,
+    )
 
 
 def _to_summary(
@@ -54,10 +110,8 @@ def _to_summary(
     return MatchedMethodSummary(
         id=method.id,
         slug=method.slug,
-        name_en=method.name_en,
-        name_pt=method.name_pt,
-        description_en=method.description_en,
-        description_pt=method.description_pt,
+        name=method.name,
+        description=method.description,
         text_for_embedding=method.text_for_embedding,
         endpoint_category=method.endpoint_category,
         study_domain=method.study_domain,

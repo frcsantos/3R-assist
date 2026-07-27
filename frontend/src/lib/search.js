@@ -33,14 +33,28 @@ export function isLowConfidenceScore(score) {
   return score <= 0.65
 }
 
+export function localeKey(lang) {
+  const normalized = String(lang ?? 'en').toLowerCase().replace('_', '-')
+  if (normalized === 'pt' || normalized.startsWith('pt-')) return 'pt-br'
+  return 'en-us'
+}
+
+export function pickLocalized(value, lang) {
+  if (value == null) return ''
+  if (typeof value === 'string') return value
+  if (typeof value !== 'object') return String(value)
+  const key = localeKey(lang)
+  return value[key] || value['en-us'] || value['pt-br'] || ''
+}
+
 export function methodDisplayName(method, lang) {
   if (!method) return ''
-  return lang === 'pt' ? method.name_pt : method.name_en
+  return pickLocalized(method.name, lang)
 }
 
 export function methodDescription(method, lang) {
   if (!method) return ''
-  return lang === 'pt' ? method.description_pt : method.description_en
+  return pickLocalized(method.description, lang)
 }
 
 export function formatOecdReference(ref) {
@@ -109,6 +123,12 @@ export function formatJurisdictionBadges(contexts = [], t) {
 export function regulatoryUrlFromContexts(contexts = []) {
   const primary = primaryRegulatoryContext(contexts)
   return primary?.regulatory_url ?? null
+}
+
+export function regulatoryCitationFromContexts(contexts = []) {
+  const primary = primaryRegulatoryContext(contexts)
+  const citation = primary?.regulatory_citation?.trim()
+  return citation || null
 }
 
 export function formatMatchedParams(matchedParams, t) {

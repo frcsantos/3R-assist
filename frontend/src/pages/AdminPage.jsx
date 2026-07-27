@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/Button'
 import {
   deleteAdminRows,
+  extractMethodDraft,
   extractPolicy,
   fetchAdminTable,
   fetchAdminTables,
@@ -44,6 +45,30 @@ function toDraft(value) {
     return JSON.stringify(value, null, 2)
   }
   return String(value)
+}
+
+const RATIONALE_3R_COLUMNS = [
+  ['replacement_rationale', 'replacement'],
+  ['reduction_rationale', 'reduction'],
+  ['refinement_rationale', 'refinement'],
+]
+
+function category3rFromRationales(values) {
+  return RATIONALE_3R_COLUMNS.filter(
+    ([column]) => String(values[column] ?? '').trim() !== '',
+  ).map(([, label]) => label)
+}
+
+function withDerivedCategory3r(values, columns) {
+  if (!columns.includes('category_3r')) return values
+  const hasRationale = RATIONALE_3R_COLUMNS.some(([column]) =>
+    columns.includes(column),
+  )
+  if (!hasRationale) return values
+  return {
+    ...values,
+    category_3r: toDraft(category3rFromRationales(values)),
+  }
 }
 
 function fromDraft(draft, original) {
@@ -128,6 +153,64 @@ function CloseIconButton({ label, disabled, onClick }) {
   )
 }
 
+function EditIconButton({ label, disabled, onClick }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-primary transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      <svg
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M11.5 2.5l2 2L5 13H3v-2l8.5-8.5z" />
+      </svg>
+    </button>
+  )
+}
+
+function csvEscape(value) {
+  if (value === null || value === undefined) {
+    return ''
+  }
+  const text =
+    typeof value === 'object' ? JSON.stringify(value) : String(value)
+  if (/[",\r\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`
+  }
+  return text
+}
+
+function rowsToCsv(columns, rows) {
+  const header = columns.map(csvEscape).join(',')
+  const lines = rows.map((row) =>
+    columns.map((column) => csvEscape(row[column])).join(','),
+  )
+  return [header, ...lines].join('\r\n')
+}
+
+function downloadCsv(filename, csv) {
+  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+const EXPORT_PAGE_SIZE = 500
+
 function AddRowModal({
   table,
   columns,
@@ -140,6 +223,8 @@ function AddRowModal({
   initialValues = null,
   lockedColumns = [],
   primaryKey = null,
+  protocolAssist = false,
+  title = null,
   onClose,
   onSaved,
 }) {
@@ -147,37 +232,103 @@ function AddRowModal({
   const isEdit = mode === 'edit'
   const requiredSet = new Set(requiredColumns)
   const lockedSet = new Set(lockedColumns)
+  const derivesCategory3r =
+    columns.includes('category_3r') &&
+    RATIONALE_3R_COLUMNS.some(([column]) => columns.includes(column))
+  if (derivesCategory3r) {
+    lockedSet.add('category_3r')
+  }
   const [values, setValues] = useState(() =>
-    Object.fromEntries(
-      columns.map((column) => [
-        column,
-        initialValues ? toDraft(initialValues[column]) : '',
-      ]),
+    withDerivedCategory3r(
+      Object.fromEntries(
+        columns.map((column) => [
+          column,
+          initialValues ? toDraft(initialValues[column]) : '',
+        ]),
+      ),
+      columns,
     ),
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [protocolText, setProtocolText] = useState('')
+  const [extracting, setExtracting] = useState(false)
+  const [extractElapsedSeconds, setExtractElapsedSeconds] = useState(0)
 
   useEffect(() => {
     function onKeyDown(event) {
-      if (event.key === 'Escape' && !saving) {
+      if (event.key === 'Escape' && !saving && !extracting) {
         onClose()
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose, saving])
+  }, [onClose, saving, extracting])
+
+  useEffect(() => {
+    if (!extracting) {
+      setExtractElapsedSeconds(0)
+      return undefined
+    }
+
+    setExtractElapsedSeconds(0)
+    const startedAt = Date.now()
+    const timer = window.setInterval(() => {
+      setExtractElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000))
+    }, 250)
+
+    return () => window.clearInterval(timer)
+  }, [extracting])
 
   function updateValue(column, value) {
     if (lockedSet.has(column)) return
-    setValues((current) => ({
-      ...current,
-      [column]: value,
-    }))
+    setValues((current) => {
+      const next = {
+        ...current,
+        [column]: value,
+      }
+      return withDerivedCategory3r(next, columns)
+    })
+  }
+
+  async function extractFromProtocol(event) {
+    event?.preventDefault?.()
+    if (extracting || saving) return
+    const trimmed = protocolText.trim()
+    if (trimmed.length < POLICY_TEXT_MIN) {
+      setError(t('admin.extract.tooShort', { min: POLICY_TEXT_MIN }))
+      return
+    }
+
+    setExtracting(true)
+    setError(null)
+    try {
+      const result = await extractMethodDraft({
+        text: trimmed,
+        lang: currentLanguage(),
+      })
+      const fields = result.fields ?? {}
+      setValues((current) => {
+        const next = { ...current }
+        for (const column of columns) {
+          if (lockedSet.has(column) && column !== 'category_3r') continue
+          if (!(column in fields)) continue
+          const value = fields[column]
+          if (value === null || value === undefined) continue
+          if (typeof value === 'string' && value.trim() === '') continue
+          next[column] = toDraft(value)
+        }
+        return withDerivedCategory3r(next, columns)
+      })
+    } catch (err) {
+      setError(err.message ?? t('admin.extract.methodDraftError'))
+    } finally {
+      setExtracting(false)
+    }
   }
 
   async function submit() {
-    if (saving) return
+    if (saving || extracting) return
 
     const missing = columns.filter(
       (column) =>
@@ -193,14 +344,15 @@ function AddRowModal({
     setSaving(true)
     setError(null)
     try {
+      const payload = withDerivedCategory3r(values, columns)
       if (isEdit) {
         if (!primaryKey) {
           throw new Error(t('admin.editRowError'))
         }
         let lastRow = null
         for (const column of columns) {
-          if (lockedSet.has(column)) continue
-          const nextValue = values[column] ?? ''
+          if (lockedSet.has(column) && column !== 'category_3r') continue
+          const nextValue = payload[column] ?? ''
           const previousValue = initialValues
             ? toDraft(initialValues[column])
             : ''
@@ -214,7 +366,7 @@ function AddRowModal({
         }
         onSaved(lastRow)
       } else {
-        const result = await insertAdminRow(table, values)
+        const result = await insertAdminRow(table, payload)
         onSaved(result.row)
       }
     } catch (err) {
@@ -229,13 +381,19 @@ function AddRowModal({
   const fieldClass =
     'w-full rounded border border-border-subtle bg-surface-container-lowest px-3 py-2 font-metadata text-metadata text-on-surface outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60'
   const firstEditableIndex = columns.findIndex((column) => !lockedSet.has(column))
+  const protocolTrimmedLength = protocolText.trim().length
+  const canExtract =
+    protocolAssist &&
+    protocolTrimmedLength >= POLICY_TEXT_MIN &&
+    !extracting &&
+    !saving
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 px-container-padding py-section-gap"
       role="presentation"
       onClick={(event) => {
-        if (event.target === event.currentTarget && !saving) {
+        if (event.target === event.currentTarget && !saving && !extracting) {
           onClose()
         }
       }}
@@ -251,11 +409,11 @@ function AddRowModal({
             id="row-form-title"
             className="font-headline-lg text-headline-lg text-primary"
           >
-            {isEdit ? t('admin.editRow') : t('admin.addRow')}
+            {title ?? (isEdit ? t('admin.editRow') : t('admin.addRow'))}
           </h2>
           <CloseIconButton
             label={t('admin.close')}
-            disabled={saving}
+            disabled={saving || extracting}
             onClick={onClose}
           />
         </div>
@@ -267,6 +425,45 @@ function AddRowModal({
         )}
 
         <div className="min-h-0 flex-1 space-y-card-gap overflow-y-auto pr-1">
+          {protocolAssist ? (
+            <form
+              onSubmit={extractFromProtocol}
+              className="space-y-2 border-b border-border-subtle pb-card-gap"
+            >
+              <label className="block min-w-0" htmlFor="method-protocol-text">
+                <span className="mb-1 block font-label-caps text-label-caps uppercase text-on-surface-variant">
+                  {t('admin.extract.methodProtocolLabel')}
+                </span>
+                <textarea
+                  id="method-protocol-text"
+                  rows={6}
+                  value={protocolText}
+                  disabled={saving || extracting}
+                  onChange={(event) => setProtocolText(event.target.value)}
+                  placeholder={t('admin.extract.methodProtocolPlaceholder')}
+                  className="w-full rounded border border-border-subtle bg-surface-container-lowest px-3 py-2 font-metadata text-metadata text-on-surface outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                />
+              </label>
+              <p className="font-metadata text-metadata text-on-secondary-container opacity-65">
+                {t('admin.extract.methodProtocolHint')}
+              </p>
+              {protocolTrimmedLength > 0 &&
+              protocolTrimmedLength < POLICY_TEXT_MIN ? (
+                <p className="font-metadata text-metadata text-error" role="alert">
+                  {t('admin.extract.tooShort', { min: POLICY_TEXT_MIN })}
+                </p>
+              ) : null}
+              <div className="flex justify-end">
+                <Button type="submit" size="sm" disabled={!canExtract}>
+                  {extracting
+                    ? t('admin.extract.submittingSeconds', {
+                        seconds: extractElapsedSeconds,
+                      })
+                    : t('admin.extract.submit')}
+                </Button>
+              </div>
+            </form>
+          ) : null}
           {columns.map((column, index) => {
             const hint = comments?.[column]
             const type = types?.[column]
@@ -275,7 +472,7 @@ function AddRowModal({
             const options = columnOptions?.[column] ?? []
             const foreignKey = foreignKeys?.[column]
             const useSelect = options.length > 0
-            const autoFocus = index === firstEditableIndex
+            const autoFocus = !protocolAssist && index === firstEditableIndex
 
             return (
               <div
@@ -303,7 +500,7 @@ function AddRowModal({
                     <select
                       autoFocus={autoFocus}
                       value={values[column] ?? ''}
-                      disabled={saving || locked}
+                      disabled={saving || extracting || locked}
                       required={required}
                       onChange={(event) => updateValue(column, event.target.value)}
                       className={fieldClass}
@@ -327,7 +524,7 @@ function AddRowModal({
                       type="text"
                       autoFocus={autoFocus}
                       value={values[column] ?? ''}
-                      disabled={saving || locked}
+                      disabled={saving || extracting || locked}
                       required={required}
                       onChange={(event) => updateValue(column, event.target.value)}
                       className={fieldClass}
@@ -345,7 +542,7 @@ function AddRowModal({
         <div className="mt-card-gap flex gap-3 border-t border-border-subtle pt-card-gap">
           <button
             type="button"
-            disabled={saving}
+            disabled={saving || extracting}
             onClick={submit}
             className="font-metadata text-metadata text-primary hover:underline disabled:opacity-40"
           >
@@ -353,7 +550,7 @@ function AddRowModal({
           </button>
           <button
             type="button"
-            disabled={saving}
+            disabled={saving || extracting}
             onClick={onClose}
             className="font-metadata text-metadata text-on-secondary-container hover:underline disabled:opacity-40"
           >
@@ -531,6 +728,7 @@ function DatabasePanel() {
   const [deleting, setDeleting] = useState(false)
   const [commentColumn, setCommentColumn] = useState(null)
   const [rowModal, setRowModal] = useState(null)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -653,6 +851,33 @@ function DatabasePanel() {
   function cancelEdit() {
     if (saving) return
     setEdit(null)
+  }
+
+  async function exportTableCsv() {
+    if (!activeTable || !tableData || exporting) return
+    setExporting(true)
+    setError(null)
+    try {
+      const columns = tableData.columns
+      const rows = []
+      let offset = 0
+      let total = Infinity
+      while (offset < total) {
+        const result = await fetchAdminTable(activeTable, {
+          limit: EXPORT_PAGE_SIZE,
+          offset,
+        })
+        rows.push(...result.rows)
+        total = result.total
+        offset += result.rows.length
+        if (result.rows.length === 0) break
+      }
+      downloadCsv(`${activeTable}.csv`, rowsToCsv(columns, rows))
+    } catch (err) {
+      setError(err.message ?? t('admin.exportError'))
+    } finally {
+      setExporting(false)
+    }
   }
 
   function toggleRow(row, key) {
@@ -833,7 +1058,17 @@ function DatabasePanel() {
                     {tableData.columns.length > 0 ? (
                       <button
                         type="button"
-                        disabled={saving || deleting}
+                        disabled={saving || deleting || exporting}
+                        onClick={exportTableCsv}
+                        className="font-metadata text-metadata text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {exporting ? t('admin.exporting') : t('admin.exportCsv')}
+                      </button>
+                    ) : null}
+                    {tableData.columns.length > 0 ? (
+                      <button
+                        type="button"
+                        disabled={saving || deleting || exporting}
                         onClick={() => {
                           setCommentColumn(null)
                           setConfirmDelete(false)
@@ -902,8 +1137,8 @@ function DatabasePanel() {
                               </th>
                             ) : null}
                             {primaryKey.length > 0 ? (
-                              <th className="w-16 whitespace-nowrap px-3 py-2 font-label-caps text-label-caps uppercase text-on-surface-variant">
-                                {t('admin.edit')}
+                              <th className="w-10 whitespace-nowrap px-2 py-2">
+                                <span className="sr-only">{t('admin.edit')}</span>
                               </th>
                             ) : null}
                             {tableData.columns.map((column) => {
@@ -954,20 +1189,17 @@ function DatabasePanel() {
                                   </td>
                                 ) : null}
                                 {primaryKey.length > 0 ? (
-                                  <td className="w-16 whitespace-nowrap px-3 py-2 align-top">
-                                    <button
-                                      type="button"
-                                      disabled={saving || deleting}
+                                  <td className="w-10 whitespace-nowrap px-2 py-2 align-top">
+                                    <EditIconButton
+                                      label={t('admin.edit')}
+                                      disabled={saving || deleting || exporting}
                                       onClick={() => {
                                         setCommentColumn(null)
                                         setConfirmDelete(false)
                                         setEdit(null)
                                         setRowModal({ mode: 'edit', row })
                                       }}
-                                      className="font-metadata text-metadata text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-40"
-                                    >
-                                      {t('admin.edit')}
-                                    </button>
+                                    />
                                   </td>
                                 ) : null}
                                 {tableData.columns.map((column) => {
@@ -1294,16 +1526,64 @@ function methodInitialValuesFromExtracted(method, normalizedOecd) {
   const purpose = method.purpose?.trim() ?? ''
   const code = method.code?.trim() ?? ''
 
+  let slug
+  if (tgNumber) {
+    const namePart = slugifyMethodDraft(name || code)
+    slug = namePart
+      ? `oecd-tg${tgNumber}-${namePart}`.slice(0, 80)
+      : `oecd-tg${tgNumber}`
+  } else if (oecdRef) {
+    slug = slugifyMethodDraft(`oecd-${oecdRef}`)
+    if (!slug.startsWith('oecd-')) {
+      slug = `oecd-${slug}`
+    }
+  } else {
+    slug = slugifyMethodDraft(code || name)
+  }
+
   return {
-    slug: slugifyMethodDraft(oecdRef || code || name),
-    name_en: name,
-    name_pt: name,
-    description_en: purpose || name,
-    description_pt: purpose || name,
+    slug,
+    name: { 'en-us': name, 'pt-br': name },
+    description: { 'en-us': purpose || name, 'pt-br': purpose || name },
     text_for_embedding: [oecdRef || code, name, purpose].filter(Boolean).join(' — '),
     oecd_ref: oecdRef,
     source_db: oecdRef ? 'OECD_TG' : '',
     active: 'false',
+  }
+}
+
+function regulationDateFromDocument(documentDate) {
+  if (!documentDate) return ''
+  const trimmed = String(documentDate).trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed
+  const yearOnly = trimmed.match(/^(20\d{2})$/)
+  if (yearOnly) return `${yearOnly[1]}-01-01`
+  return trimmed
+}
+
+function regulationInitialValuesFromExtracted(
+  method,
+  { documentDate, institution, matchResult, oecdTgNumber } = {},
+) {
+  const topMatch = matchResult?.matches?.[0]?.method ?? null
+  const isOecd = Boolean(
+    oecdTgNumber || matchResult?.normalized_oecd_ref || oecdTgNumberFromRef(method.code),
+  )
+  const code = method.code?.trim() ?? ''
+  const name = method.name?.trim() ?? ''
+
+  return {
+    method_id: topMatch?.id ?? '',
+    jurisdiction: isOecd ? 'oecd' : '',
+    validation_status: 'accepted',
+    regulation_status: method.status ?? '',
+    regulation_date: regulationDateFromDocument(documentDate),
+    regulation_purpose: method.purpose?.trim() ?? '',
+    regulatory_body:
+      institution?.trim() || (isOecd ? 'OECD' : ''),
+    regulatory_doc_id: '',
+    regulatory_citation: '',
+    notes: [code, name].filter(Boolean).join(' — '),
   }
 }
 
@@ -1326,7 +1606,7 @@ function ExpandArrow({ open }) {
   )
 }
 
-function ExtractedMethodRow({ method }) {
+function ExtractedMethodRow({ method, documentDate, institution }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language?.startsWith('pt') ? 'pt' : 'en'
   const [open, setOpen] = useState(false)
@@ -1337,6 +1617,10 @@ function ExtractedMethodRow({ method }) {
   const [addMethodOpen, setAddMethodOpen] = useState(false)
   const [addMethodLoading, setAddMethodLoading] = useState(false)
   const [addMethodError, setAddMethodError] = useState(null)
+  const [addRegulationSchema, setAddRegulationSchema] = useState(null)
+  const [addRegulationOpen, setAddRegulationOpen] = useState(false)
+  const [addRegulationLoading, setAddRegulationLoading] = useState(false)
+  const [addRegulationError, setAddRegulationError] = useState(null)
 
   async function toggle() {
     const next = !open
@@ -1347,6 +1631,7 @@ function ExtractedMethodRow({ method }) {
     setError(null)
     setMatchResult(null)
     setAddMethodError(null)
+    setAddRegulationError(null)
     try {
       const result = await matchPolicyMethod({
         code: method.code,
@@ -1362,7 +1647,7 @@ function ExtractedMethodRow({ method }) {
   }
 
   async function openAddMethod() {
-    if (addMethodLoading) return
+    if (addMethodLoading || addRegulationLoading) return
     setAddMethodError(null)
     setAddMethodLoading(true)
     try {
@@ -1376,6 +1661,24 @@ function ExtractedMethodRow({ method }) {
     }
   }
 
+  async function openAddRegulation() {
+    if (addRegulationLoading || addMethodLoading) return
+    setAddRegulationError(null)
+    setAddRegulationLoading(true)
+    try {
+      const schema = await fetchAdminTable('method_regulatory_contexts', {
+        limit: 1,
+        offset: 0,
+      })
+      setAddRegulationSchema(schema)
+      setAddRegulationOpen(true)
+    } catch {
+      setAddRegulationError(t('admin.extract.addRegulationError'))
+    } finally {
+      setAddRegulationLoading(false)
+    }
+  }
+
   const matches = matchResult?.matches ?? []
   const oecdTgNumber =
     oecdTgNumberFromRef(matchResult?.normalized_oecd_ref) ??
@@ -1384,6 +1687,10 @@ function ExtractedMethodRow({ method }) {
   const addMethodColumns =
     addMethodSchema?.columns.filter(
       (column) => !(addMethodSchema.auto_columns ?? []).includes(column),
+    ) ?? []
+  const addRegulationColumns =
+    addRegulationSchema?.columns.filter(
+      (column) => !(addRegulationSchema.auto_columns ?? []).includes(column),
     ) ?? []
 
   return (
@@ -1504,27 +1811,45 @@ function ExtractedMethodRow({ method }) {
                   </ul>
                 )}
                 <div className="flex flex-wrap items-center gap-3">
-                  {oecdTgNumber ? (
-                    <a
-                      href={oecdTestSearchUrl(oecdTgNumber)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container"
-                    >
-                      {t('admin.extract.searchOecd')}
-                    </a>
-                  ) : null}
                   <button
                     type="button"
-                    disabled={addMethodLoading}
+                    disabled={addRegulationLoading || addMethodLoading}
+                    onClick={openAddRegulation}
+                    className="order-1 inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {addRegulationLoading
+                      ? t('admin.loading')
+                      : t('admin.extract.addRegulation')}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={addMethodLoading || addRegulationLoading}
                     onClick={openAddMethod}
-                    className="inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
+                    className="order-2 inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {addMethodLoading
                       ? t('admin.loading')
                       : t('admin.extract.addMethod')}
                   </button>
+                  {oecdTgNumber ? (
+                    <a
+                      href={oecdTestSearchUrl(oecdTgNumber)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="order-3 inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container"
+                    >
+                      {t('admin.extract.searchOecd')}
+                    </a>
+                  ) : null}
                 </div>
+                {addRegulationError ? (
+                  <p
+                    className="font-metadata text-metadata text-error"
+                    role="alert"
+                  >
+                    {addRegulationError}
+                  </p>
+                ) : null}
                 {addMethodError ? (
                   <p
                     className="font-metadata text-metadata text-error"
@@ -1538,6 +1863,31 @@ function ExtractedMethodRow({ method }) {
           </td>
         </tr>
       ) : null}
+      {addRegulationOpen && addRegulationSchema
+        ? createPortal(
+            <AddRowModal
+              key={`extract-add-regulation-${method.code}-${method.name}`}
+              table="method_regulatory_contexts"
+              columns={addRegulationColumns}
+              comments={addRegulationSchema.column_comments}
+              types={addRegulationSchema.column_types}
+              requiredColumns={addRegulationSchema.required_columns}
+              foreignKeys={addRegulationSchema.foreign_keys}
+              columnOptions={addRegulationSchema.column_options}
+              mode="create"
+              title={t('admin.extract.addRegulation')}
+              initialValues={regulationInitialValuesFromExtracted(method, {
+                documentDate,
+                institution,
+                matchResult,
+                oecdTgNumber,
+              })}
+              onClose={() => setAddRegulationOpen(false)}
+              onSaved={() => setAddRegulationOpen(false)}
+            />,
+            document.body,
+          )
+        : null}
       {addMethodOpen && addMethodSchema
         ? createPortal(
             <AddRowModal
@@ -1550,6 +1900,8 @@ function ExtractedMethodRow({ method }) {
               foreignKeys={addMethodSchema.foreign_keys}
               columnOptions={addMethodSchema.column_options}
               mode="create"
+              protocolAssist
+              title={t('admin.extract.addMethod')}
               initialValues={methodInitialValuesFromExtracted(
                 method,
                 matchResult?.normalized_oecd_ref,
@@ -1809,6 +2161,8 @@ function ExtractPanel() {
                     <ExtractedMethodRow
                       key={`${method.code}-${method.name}-${index}`}
                       method={method}
+                      documentDate={result.document_date}
+                      institution={result.responsible_institution}
                     />
                   ))}
                 </tbody>

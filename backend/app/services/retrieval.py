@@ -99,20 +99,6 @@ def _matched_params(method: Method, params: ProtocolParameters) -> list[str]:
     return matched
 
 
-def _contexts_for_params(
-    contexts: list[MethodRegulatoryContext],
-    params: ProtocolParameters,
-) -> list[MethodRegulatoryContext]:
-    if not contexts:
-        return []
-    domain = params.study_domain or "general"
-    return [
-        context
-        for context in contexts
-        if context.study_domain in (domain, "general")
-    ]
-
-
 def _build_recommendations(
     scored: list[tuple[Method, float]],
     params: ProtocolParameters,
@@ -122,10 +108,7 @@ def _build_recommendations(
     return [
         Recommendation(
             method=method,
-            regulatory_contexts=_contexts_for_params(
-                contexts_by_method.get(method.id, []),
-                params,
-            ),
+            regulatory_contexts=contexts_by_method.get(method.id, []),
             rank=index,
             score=score,
             matched_params=_matched_params(method, params),

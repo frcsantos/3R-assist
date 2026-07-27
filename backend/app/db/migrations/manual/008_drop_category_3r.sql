@@ -1,11 +1,23 @@
--- ADR-023: drop category_3r after rationales are filled (step 4 of 4).
--- NOT auto-applied by migrate.py — run only via:
---   python scripts/backfill_3r_rationales.py --apply-drop
--- Apply only when the gate query returns zero rows.
--- Placeholder text does not count as filled.
+-- ADR-023 step 4 (historical): drop category_3r after rationales are filled.
+-- SUPERSEDED by auto-applied migration:
+--   026_methods_drop_category_3r_reorder.sql
+-- Kept for reference / older environments that still have category_3r.
+-- Prefer: python scripts/migrate.py
+-- Legacy path: python scripts/backfill_3r_rationales.py --apply-drop
 
 DO $$
 BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'methods'
+      AND column_name = 'category_3r'
+  ) THEN
+    RAISE NOTICE 'category_3r already dropped — nothing to do.';
+    RETURN;
+  END IF;
+
   IF EXISTS (
     SELECT 1
     FROM methods
@@ -27,4 +39,4 @@ END $$;
 
 DROP INDEX IF EXISTS idx_methods_category_3r;
 
-ALTER TABLE methods DROP COLUMN category_3r;
+ALTER TABLE methods DROP COLUMN IF EXISTS category_3r;

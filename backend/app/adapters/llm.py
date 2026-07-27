@@ -16,8 +16,11 @@ from app.models.protocol import (
     Species,
 )
 from app.models.method import RegulatoryStatus
+from app.models.method_draft import MethodDraftExtractResponse, MethodDraftFields
+from app.models.i18n import localized_str, localized_str_list, parse_localized_str
 from app.models.policy import PolicyExtractResponse, PolicyMethod
 from app.prompts.extraction import build_extraction_prompt
+from app.prompts.method_draft_extraction import build_method_draft_extraction_prompt
 from app.prompts.policy_extraction import build_policy_extraction_prompt
 
 logger = logging.getLogger(__name__)
@@ -25,9 +28,41 @@ logger = logging.getLogger(__name__)
 RAW_RESPONSE_LOG_LIMIT = 1200
 EXTRACTION_MAX_TOKENS = 4096
 POLICY_EXTRACTION_MAX_TOKENS = 4096
+METHOD_DRAFT_EXTRACTION_MAX_TOKENS = 4096
 
 _REGULATORY_STATUS_VALUES: frozenset[str] = frozenset(
     {"not_approved", "approved", "recommended", "mandatory"}
+)
+_ENDPOINT_CATEGORY_VALUES: frozenset[str] = frozenset(
+    {
+        "acute_toxicity",
+        "skin_irritation",
+        "skin_corrosion",
+        "ocular_irritation",
+        "skin_sensitisation",
+        "phototoxicity",
+        "genotoxicity",
+        "pyrogenicity",
+        "skin_absorption",
+    }
+)
+_ROUTE_VALUES: frozenset[str] = frozenset(
+    {
+        "oral",
+        "intraperitoneal",
+        "intravenous",
+        "dermal",
+        "ocular",
+        "inhalation",
+        "in_vitro",
+        "other",
+    }
+)
+_STUDY_DOMAIN_VALUES: frozenset[str] = frozenset(
+    {"pharma", "cosmetics", "chemical_safety", "general"}
+)
+_SOURCE_DB_VALUES: frozenset[str] = frozenset(
+    {"OECD_TG", "ECVAM_DBALM", "NICEATM", "FARMACOPEIA_BR", "TSAR"}
 )
 
 @dataclass(frozen=True)
@@ -68,6 +103,12 @@ class LLMAdapter(ABC):
 
     @abstractmethod
     def extract_policy(self, text: str) -> PolicyExtractResponse | ExtractionError:
+        pass
+
+    @abstractmethod
+    def extract_method_draft(
+        self, text: str
+    ) -> MethodDraftExtractResponse | ExtractionError:
         pass
 
 
@@ -141,6 +182,90 @@ class StubLLMAdapter(LLMAdapter):
             document_date=document_date,
             responsible_institution=institution,
         )
+
+    def extract_method_draft(
+        self, text: str
+    ) -> MethodDraftExtractResponse | ExtractionError:
+        normalized = text.strip()
+        if len(normalized) < 20:
+            return ExtractionError(
+                message="Text is too short to extract method fields.",
+                reason="text_too_short",
+            )
+
+        tg_match = re.search(
+            r"(?:OECD\s+)?TG\s*(\d{3,4})\b(?:\s*[:\-–—]\s*([^\n.;]{3,120}))?",
+            normalized,
+            flags=re.IGNORECASE,
+        )
+        oecd_ref = f"TG {tg_match.group(1)}" if tg_match else None
+        title = (tg_match.group(2) if tg_match else None) or None
+        if not title:
+            title_match = re.search(
+                r"(?im)^(?:title|name|method|guideline)\s*[:\-–—]\s*(.+)$",
+                normalized,
+            )
+            title = title_match.group(1).strip()[:240] if title_match else None
+        if not title and oecd_ref:
+            title = f"OECD Test Guideline {oecd_ref.removeprefix('TG ').strip()}"
+        if not title:
+            title = normalized.split("\n", 1)[0].strip()[:120] or "Untitled method"
+
+        description = None
+        purpose_match = re.search(
+            r"(?is)\b(?:purpose|objective|scope|descri(?:ption|ção))\s*[:\-–—]\s*(.+?)(?:\n\n|$)",
+            normalized,
+        )
+        if purpose_match:
+            description = " ".join(purpose_match.group(1).split())[:800]
+
+        endpoint = self._method_endpoint(normalized.lower())
+        routes = self._extract_routes(normalized.lower())
+        study_domain = self._extract_study_domain(normalized.lower())
+        slug_seed = (
+            f"oecd-tg{tg_match.group(1)}-{title}" if tg_match else title
+        )
+        slug = _slugify_method(slug_seed)
+        if oecd_ref and not slug.startswith("oecd-"):
+            slug = f"oecd-{slug}"
+
+        fields = MethodDraftFields(
+            slug=slug[:80],
+            name=localized_str(title),
+            description=localized_str(description or title),
+            endpoint_category=endpoint,
+            routes_applicable=routes,
+            study_domain=study_domain,
+            oecd_ref=oecd_ref,
+            source_db="OECD_TG" if oecd_ref else None,
+            text_for_embedding=" — ".join(
+                part for part in (oecd_ref, title, description) if part
+            ),
+            active=False,
+        )
+        return MethodDraftExtractResponse(fields=fields)
+
+    @staticmethod
+    def _method_endpoint(text: str) -> EndpointCategory | None:
+        if re.search(r"skin sensiti|llna|alergeni", text):
+            return "skin_sensitisation"
+        if re.search(r"skin corrosion|corros", text):
+            return "skin_corrosion"
+        if re.search(r"skin irrit|dermal irrit|epiderm", text):
+            return "skin_irritation"
+        if re.search(r"ocular|eye irrit|bcop|draize.*eye", text):
+            return "ocular_irritation"
+        if re.search(r"phototox", text):
+            return "phototoxicity"
+        if re.search(r"genotox|ames|micronucle|mutagen", text):
+            return "genotoxicity"
+        if re.search(r"pyrogen|mat\b|monocyte activation", text):
+            return "pyrogenicity"
+        if re.search(r"absorption|permeab|dermal penetr", text):
+            return "skin_absorption"
+        if re.search(r"acute tox|ld50|fixed dose|atc\b|udp\b", text):
+            return "acute_toxicity"
+        return None
 
     def _extract_single(self, text: str) -> RawExtraction | ExtractionError:
         normalized = text.strip()
@@ -648,6 +773,51 @@ class LlmCallAdapter(LLMAdapter):
             log_extraction_error(parsed)
         return parsed
 
+    def extract_method_draft(
+        self, text: str
+    ) -> MethodDraftExtractResponse | ExtractionError:
+        try:
+            import llmcall
+            from llmcall import CallConstraints, LLMError as LlmCallError
+        except ImportError:
+            return ExtractionError(message="llmcall package is not installed.")
+
+        result = llmcall.call(
+            self._model,
+            build_method_draft_extraction_prompt(text),
+            constraints=CallConstraints(
+                max_tokens=METHOD_DRAFT_EXTRACTION_MAX_TOKENS,
+                response_format="json",
+            ),
+        )
+        if isinstance(result, LlmCallError):
+            error = ExtractionError(
+                message=result.message,
+                reason="llm_api_error",
+            )
+            log_extraction_error(error)
+            return error
+
+        raw_content = result.content
+        try:
+            payload = _parse_json_payload(raw_content)
+        except json.JSONDecodeError as exc:
+            error = ExtractionError(
+                message=f"LLM response is not valid JSON: {exc}",
+                reason="json_decode_error",
+                raw_response=truncate_raw_response(raw_content),
+            )
+            log_extraction_error(error)
+            return error
+
+        parsed = _method_draft_from_payload(
+            payload,
+            raw_response=raw_content,
+        )
+        if isinstance(parsed, ExtractionError):
+            log_extraction_error(parsed)
+        return parsed
+
 
 def _nullable_str(value: object) -> str | None:
     if value is None:
@@ -717,6 +887,161 @@ def _policy_from_payload(
             payload.get("responsible_institution")
         ),
     )
+
+
+def _slugify_method(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    return slug[:80]
+
+
+def _normalize_oecd_ref(value: str | None) -> str | None:
+    if not value:
+        return None
+    match = re.search(r"\b(?:OECD\s+)?(TG|GD)\s*(\d{3,4}[A-Z]?)\b", value, re.I)
+    if match:
+        return f"{match.group(1).upper()} {match.group(2).upper()}"
+    return value.strip()[:40]
+
+
+def _ensure_oecd_slug(slug: str | None, oecd_ref: str | None) -> str | None:
+    if not slug:
+        return None
+    cleaned = _slugify_method(slug)
+    if oecd_ref and not cleaned.startswith("oecd-"):
+        cleaned = f"oecd-{cleaned}"
+    return cleaned[:80]
+
+
+def _string_list(value: object) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        text = value.strip()
+        return [text] if text else []
+    if not isinstance(value, list):
+        return []
+    items: list[str] = []
+    for item in value:
+        text = _nullable_str(item)
+        if text:
+            items.append(text)
+    return items
+
+
+def _localized_str_from_payload(
+    payload: dict,
+    field: str,
+    legacy_en: str,
+    legacy_pt: str,
+):
+    raw = payload.get(field)
+    if isinstance(raw, dict):
+        try:
+            return parse_localized_str(raw, required=False)
+        except (TypeError, ValueError):
+            pass
+    en = _nullable_str(payload.get(legacy_en))
+    pt = _nullable_str(payload.get(legacy_pt)) or en
+    if en is None and pt is None:
+        return None
+    return localized_str(en or pt or "", pt or en or "")
+
+
+def _enum_or_none(value: object, allowed: frozenset[str]) -> str | None:
+    text = _nullable_str(value)
+    if text is None:
+        return None
+    normalized = text.lower().replace(" ", "_").replace("-", "_")
+    if normalized in allowed:
+        return normalized
+    if text in allowed:
+        return text
+    return None
+
+
+def _routes_or_none(value: object) -> list[str] | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, list):
+        return None
+    routes: list[str] = []
+    for item in value:
+        route = _enum_or_none(item, _ROUTE_VALUES)
+        if route and route not in routes:
+            routes.append(route)
+    return routes or None
+
+
+def _method_draft_from_payload(
+    payload: object,
+    *,
+    raw_response: str | None = None,
+) -> MethodDraftExtractResponse | ExtractionError:
+    if not isinstance(payload, dict):
+        return ExtractionError(
+            message="LLM method-draft response must be a JSON object.",
+            reason="invalid_payload_type",
+            raw_response=truncate_raw_response(raw_response),
+        )
+
+    oecd_ref = _normalize_oecd_ref(_nullable_str(payload.get("oecd_ref")))
+    source_db = _nullable_str(payload.get("source_db"))
+    if source_db not in _SOURCE_DB_VALUES:
+        source_db = "OECD_TG" if oecd_ref else None
+
+    name = _localized_str_from_payload(payload, "name", "name_en", "name_pt")
+    description = _localized_str_from_payload(
+        payload, "description", "description_en", "description_pt"
+    )
+    name_en = name.en_us if name else None
+    description_en = description.en_us if description else None
+
+    slug = _ensure_oecd_slug(_nullable_str(payload.get("slug")), oecd_ref)
+    if not slug and (oecd_ref or name_en):
+        seed = f"oecd-{oecd_ref}-{name_en}" if oecd_ref else name_en or ""
+        slug = _ensure_oecd_slug(seed, oecd_ref)
+
+    endpoint = _enum_or_none(payload.get("endpoint_category"), _ENDPOINT_CATEGORY_VALUES)
+    study_domain = _enum_or_none(payload.get("study_domain"), _STUDY_DOMAIN_VALUES)
+    text_for_embedding = _nullable_str(payload.get("text_for_embedding"))
+    if not text_for_embedding:
+        text_for_embedding = " — ".join(
+            part for part in (oecd_ref, name_en, description_en) if part
+        ) or None
+
+    keywords_raw = payload.get("keywords")
+    if isinstance(keywords_raw, dict):
+        keywords = localized_str_list(
+            _string_list(keywords_raw.get("en-us") or keywords_raw.get("en_us")),
+            _string_list(keywords_raw.get("pt-br") or keywords_raw.get("pt_br")),
+        )
+    else:
+        keywords = localized_str_list(
+            _string_list(payload.get("keywords_en")),
+            _string_list(payload.get("keywords_pt")),
+        )
+
+    fields = MethodDraftFields(
+        slug=slug,
+        name=name,
+        description=description,
+        endpoint_category=endpoint,  # type: ignore[arg-type]
+        routes_applicable=_routes_or_none(payload.get("routes_applicable")),  # type: ignore[arg-type]
+        study_domain=study_domain,  # type: ignore[arg-type]
+        oecd_ref=oecd_ref,
+        ncit_id=_nullable_str(payload.get("ncit_id")),
+        source_citation=_nullable_str(payload.get("source_citation")),
+        source_db=source_db,  # type: ignore[arg-type]
+        replacement_rationale=_nullable_str(payload.get("replacement_rationale")),
+        reduction_rationale=_nullable_str(payload.get("reduction_rationale")),
+        refinement_rationale=_nullable_str(payload.get("refinement_rationale")),
+        keywords=keywords,
+        text_for_embedding=text_for_embedding,
+        active=False,
+    )
+    return MethodDraftExtractResponse(fields=fields)
 
 
 def build_llm_adapter(*, model: str, use_stub: bool) -> LLMAdapter:

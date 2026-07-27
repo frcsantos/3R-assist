@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from app.adapters.llm import ExtractionError
 from app.api.deps import (
     get_admin_repository,
+    get_method_draft_extraction_service,
     get_policy_extraction_service,
     get_policy_method_match_service,
 )
@@ -20,6 +21,10 @@ from app.models.admin import (
     AdminTableDataResponse,
     AdminTablesResponse,
 )
+from app.models.method_draft import (
+    MethodDraftExtractRequest,
+    MethodDraftExtractResponse,
+)
 from app.models.policy import (
     PolicyExtractRequest,
     PolicyExtractResponse,
@@ -27,6 +32,7 @@ from app.models.policy import (
     PolicyMethodMatchResponse,
 )
 from app.repositories.admin import AdminRepository
+from app.services.method_draft_extraction import MethodDraftExtractionService
 from app.services.policy_extraction import PolicyExtractionService
 from app.services.policy_method_match import PolicyMethodMatchService
 
@@ -285,6 +291,27 @@ async def extract_policy(
     payload: PolicyExtractRequest,
     extraction: PolicyExtractionService = Depends(get_policy_extraction_service),
 ) -> PolicyExtractResponse | JSONResponse:
+    result = extraction.extract(payload.text)
+    if isinstance(result, ExtractionError):
+        return error_response(
+            status_code=422,
+            code=result.code,
+            message=result.message,
+        )
+    return result
+
+
+@router.post(
+    "/extract/method-draft",
+    response_model=MethodDraftExtractResponse,
+    responses={422: {"model": ErrorEnvelope}},
+)
+async def extract_method_draft(
+    payload: MethodDraftExtractRequest,
+    extraction: MethodDraftExtractionService = Depends(
+        get_method_draft_extraction_service
+    ),
+) -> MethodDraftExtractResponse | JSONResponse:
     result = extraction.extract(payload.text)
     if isinstance(result, ExtractionError):
         return error_response(

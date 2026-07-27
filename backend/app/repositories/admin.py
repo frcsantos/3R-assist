@@ -117,6 +117,38 @@ def _parse_check_enum_options(definition: str) -> dict[str, list[str]]:
     return found
 
 
+def _parse_date(value: Any) -> date:
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    text = str(value).strip()
+    if not text:
+        raise ValueError("Empty date value")
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        return date.fromisoformat(text[:10])
+    except ValueError:
+        parsed = datetime.fromisoformat(text)
+        return parsed.date()
+
+
+def _parse_datetime(value: Any) -> datetime:
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return datetime(value.year, value.month, value.day)
+    text = str(value).strip()
+    if not text:
+        raise ValueError("Empty datetime value")
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    if "T" not in text and " " not in text and len(text) == 10:
+        return datetime.fromisoformat(text)
+    return datetime.fromisoformat(text)
+
+
 def _coerce_value(value: Any, data_type: str, udt_name: str) -> Any:
     if value is None:
         return None
@@ -138,6 +170,15 @@ def _coerce_value(value: Any, data_type: str, udt_name: str) -> Any:
 
     if data_type in ("numeric", "double precision", "real", "decimal"):
         return float(value)
+
+    if data_type == "date" or udt_name == "date":
+        return _parse_date(value)
+
+    if data_type in (
+        "timestamp without time zone",
+        "timestamp with time zone",
+    ) or udt_name in ("timestamp", "timestamptz"):
+        return _parse_datetime(value)
 
     if data_type in ("json", "jsonb") or udt_name in ("json", "jsonb"):
         if isinstance(value, (dict, list)):
@@ -335,8 +376,8 @@ class AdminRepository:
             )
         ]
         for candidate in (
+            "doc_ref",
             "slug",
-            "name_en",
             "name",
             "code",
             "title",
@@ -346,6 +387,21 @@ class AdminRepository:
             if candidate in columns and candidate != value_column:
                 return candidate
         return None
+
+    async def _table_has_column(self, conn, table_name: str, column_name: str) -> bool:
+        return bool(
+            await conn.fetchval(
+                """
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = $1
+                  AND column_name = $2
+                """,
+                table_name,
+                column_name,
+            )
+        )
 
     async def _foreign_key_options(
         self,
@@ -361,11 +417,36 @@ class AdminRepository:
         label_column = await self._label_column(conn, foreign_table, foreign_column)
         if label_column:
             self._validate_ident(label_column, "column name")
+            label_is_jsonb = await conn.fetchval(
+                """
+                SELECT udt_name = 'jsonb'
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = $1
+                  AND column_name = $2
+                """,
+                foreign_table,
+                label_column,
+            )
+            if label_is_jsonb:
+                label_expr = f"COALESCE(\"{label_column}\"->>'en-us', \"{label_column}\"->>'pt-br')"
+                order_label_expr = f"lower(COALESCE(\"{label_column}\"->>'en-us', \"{label_column}\"->>'pt-br', ''))"
+            else:
+                label_expr = f'"{label_column}"'
+                order_label_expr = f'lower("{label_column}"::text)'
+
+            order_parts: list[str] = []
+            if await self._table_has_column(conn, foreign_table, "sort_order"):
+                order_parts.append('"sort_order"')
+            # Case-insensitive alphabetical by label (e.g. methods.slug).
+            order_parts.append(order_label_expr)
+            order_parts.append(f'"{foreign_column}"')
+            order_sql = ", ".join(order_parts)
             rows = await conn.fetch(
                 f'SELECT "{foreign_column}" AS value, '
-                f'"{label_column}" AS label '
+                f"{label_expr} AS label "
                 f'FROM "{foreign_table}" '
-                f'ORDER BY "{label_column}", "{foreign_column}" '
+                f"ORDER BY {order_sql} "
                 f"LIMIT $1",
                 limit,
             )
@@ -373,18 +454,20 @@ class AdminRepository:
             for row in rows:
                 value = _serialize_value(row["value"])
                 label = row["label"]
-                label_text = (
-                    f"{value} — {label}"
-                    if label is not None and str(label) != str(value)
-                    else str(value)
-                )
+                if label is None or str(label) == str(value):
+                    label_text = str(value)
+                elif label_column == "slug":
+                    # Prefer slug-first so alphabetical order matches the visible text.
+                    label_text = f"{label} ({value})"
+                else:
+                    label_text = f"{value} — {label}"
                 options.append({"value": value, "label": label_text})
             return options
 
         rows = await conn.fetch(
             f'SELECT "{foreign_column}" AS value '
             f'FROM "{foreign_table}" '
-            f'ORDER BY "{foreign_column}" '
+            f'ORDER BY lower("{foreign_column}"::text), "{foreign_column}" '
             f"LIMIT $1",
             limit,
         )

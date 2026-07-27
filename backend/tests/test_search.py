@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from app.adapters.embedder import StubEmbedderAdapter
 from app.api.deps import get_retrieval_service
 from app.main import create_app
+from app.models.i18n import localized_str
 from app.models.method import Method, MethodRegulatoryContext
 from app.repositories.methods import MethodRepository
 from app.services.retrieval import RetrievalService
@@ -11,16 +12,14 @@ from app.services.retrieval import RetrievalService
 def _context(
     jurisdiction: str = "oecd",
     *,
-    study_domain: str = "general",
     validation_status: str = "validated",
 ) -> MethodRegulatoryContext:
     return MethodRegulatoryContext(
-        study_domain=study_domain,
         jurisdiction=jurisdiction,
         validation_status=validation_status,
         regulatory_body="OECD",
         regulation_date=None,
-        regulatory_url="https://example.org/tg420",
+        regulatory_citation="https://example.org/tg420",
     )
 
 
@@ -41,10 +40,8 @@ def _method(
     method = Method(
         id=method_id,
         slug=slug,
-        name_en=f"{slug} EN",
-        name_pt=f"{slug} PT",
-        description_en="desc",
-        description_pt="desc",
+        name=localized_str(f"{slug} EN", f"{slug} PT"),
+        description=localized_str("desc"),
         text_for_embedding="acute oral LD50",
         endpoint_category=endpoint,
         study_domain="general",
