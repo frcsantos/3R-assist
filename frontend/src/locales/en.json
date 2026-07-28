@@ -1,7 +1,7 @@
 {
   "nav": {
     "analyze": "Analyze",
-    "search": "Search",
+    "explore": "Explore",
     "glossary": "Glossary",
     "info": "Info",
     "admin": "Admin",
@@ -79,6 +79,8 @@
       "documentName": "Document name",
       "documentDate": "Document date",
       "institution": "Responsible institution",
+      "url": "URL",
+      "urlPlaceholder": "https://…",
       "methods": "Approved / recognized methods",
       "methodCode": "Code",
       "methodName": "Name",
@@ -92,6 +94,14 @@
       "matchError": "Could not search for matching methods in the database. Try again, or check curated method metadata.",
       "noMatches": "No matching methods found in the database for this code/name.",
       "searchOecd": "Search OECD",
+      "searchDocument": "Search document",
+      "searchDocumentError": "Could not search for matching documents in the database.",
+      "searchingDocuments": "Searching documents…",
+      "noDocumentMatches": "No matching documents found in the database.",
+      "matchByDocRef": "Document ref",
+      "matchByUrl": "URL",
+      "addDocument": "Add document",
+      "addDocumentError": "Could not open the add-document form.",
       "addMethod": "Add method",
       "addMethodError": "Could not open the add-method form.",
       "addRegulation": "Add regulation",
@@ -131,7 +141,7 @@
     "submittingSeconds": "Analyzing… {{seconds}}s",
     "mock": "Demo",
     "searchLink": "Already know what you're looking for?",
-    "searchLinkAction": "Direct search",
+    "searchLinkAction": "Explore",
     "anonymous": "Continue without an account (anonymous) — history available after registration",
     "tooShort": "Minimum {{min}} characters",
     "charCount": "{{count}} / {{max}}"
@@ -152,6 +162,8 @@
     "experimentTabsLabel": "Detected experiments",
     "experimentTab": "Experiment {{number}}",
     "notesLabel": "Extraction notes",
+    "certaintyLabel": "Certainty",
+    "evidenceLabel": "Evidence",
     "showEvidence": "Show evidence",
     "hideEvidence": "Hide evidence",
     "matchingSection": "Matching parameters",
@@ -179,7 +191,7 @@
     },
     "fields": {
       "studyType": "Study type (extracted)",
-      "endpointCategory": "Endpoint category (database)",
+      "endpointCategory": "Endpoint category",
       "route": "Route",
       "studyDomain": "Study domain",
       "procedureText": "Procedure text",
@@ -243,7 +255,10 @@
     "matchedParams": "Matched parameters",
     "matchLabel": "Match",
     "sourceLink": "Primary source",
-    "regulatoryLink": "OECD / regulatory",
+    "noProtocolCitation": "No protocol citation available.",
+    "noRegulatoryCitation": "No regulatory citation available.",
+    "regulatoryLink": "Open regulatory source",
+    "close": "Close",
     "filterThreeR": "3Rs class",
     "filterJurisdiction": "Jurisdiction",
     "filterAll": "All",
@@ -262,8 +277,8 @@
     },
     "validationStatus": {
       "validated": "Validated",
-      "accepted": "Accepted",
-      "emerging": "Emerging"
+      "in_process_of_validation": "In process of validation",
+      "not_validated": "Not validated"
     },
     "regulatoryStatus": {
       "not_approved": "Not approved",
@@ -279,7 +294,35 @@
     }
   },
   "s4": {
-    "placeholderTitle": "Direct search",
-    "placeholderBody": "Structured filters without protocol analysis — in development."
+    "title": "Explore",
+    "tabsLabel": "Explore sections",
+    "loading": "Loading…",
+    "loadError": "Could not load catalogue data.",
+    "filterPlaceholder": "Filter by name…",
+    "noMatches": "No items match this filter.",
+    "expand": "Expand details",
+    "collapse": "Collapse details",
+    "fields": {
+      "category": "Category",
+      "date": "Date",
+      "url": "URL"
+    },
+    "documentCategory": {
+      "method_protocol": "Method protocol",
+      "guideline": "Guideline",
+      "regulation": "Regulation"
+    },
+    "methods": {
+      "label": "Methods",
+      "empty": "No methods in the catalogue yet."
+    },
+    "regulations": {
+      "label": "Regulations",
+      "empty": "No regulations or guidelines in the catalogue yet."
+    },
+    "documents": {
+      "label": "Documents",
+      "empty": "No method protocol documents in the catalogue yet."
+    }
   }
 }

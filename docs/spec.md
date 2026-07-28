@@ -173,7 +173,7 @@ updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 id                SERIAL PRIMARY KEY
 method_id         INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE
 jurisdiction      TEXT    NOT NULL   -- 'brazil' | 'eu' | 'us' | 'oecd'
-validation_status TEXT    NOT NULL   -- 'validated' | 'accepted' | 'emerging'
+validation_status TEXT    NOT NULL   -- 'validated' | 'in_process_of_validation' | 'not_validated'
 regulation_status TEXT               -- 'not_approved' | 'approved' | 'recommended' | 'mandatory'
 regulation_date   DATE               -- date of regulation / recognition / adoption (YYYY-MM-DD)
 regulation_purpose TEXT              -- what the method is recognized/validated for in this context
@@ -383,6 +383,7 @@ Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension avai
 │   │           ├── 026_methods_drop_category_3r_reorder.sql    # drop category_3r; embedding cols after keywords
 │   │           ├── 027_documents.sql                           # documents catalogue
 │   │           ├── 028_doc_fks_and_citations.sql               # source_doc_id / regulatory_doc_id + citation
+│   │           ├── 029_mrc_validation_status_values.sql        # normalize validation_status vocabulary
 │   │           └── manual/
 │   │               └── 008_drop_category_3r.sql       # legacy gated DROP (superseded by 026)
 │   ├── scripts/
@@ -602,7 +603,7 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
       "regulatory_contexts": [
         {
           "jurisdiction": "brazil"|"eu"|"us"|"oecd",
-          "validation_status": "validated"|"accepted"|"emerging",
+          "validation_status": "validated"|"in_process_of_validation"|"not_validated",
           "regulation_status": "not_approved"|"approved"|"recommended"|"mandatory"|null,
           "regulation_date": "YYYY-MM-DD"|null,
           "regulation_purpose": string|null,

@@ -55,3 +55,30 @@ class PolicyMethodMatchCandidate(BaseModel):
 class PolicyMethodMatchResponse(BaseModel):
     normalized_oecd_ref: str | None = None
     matches: list[PolicyMethodMatchCandidate] = Field(default_factory=list)
+
+
+class PolicyDocumentMatchRequest(BaseModel):
+    document_name: str | None = Field(default=None, max_length=500)
+    document_date: str | None = Field(default=None, max_length=40)
+    responsible_institution: str | None = Field(default=None, max_length=500)
+    url: str | None = Field(default=None, max_length=2000)
+    limit: int = Field(default=5, ge=1, le=20)
+
+
+class MatchedDocumentSummary(BaseModel):
+    id: int
+    slug: str
+    doc_ref: str
+    date: str | None = None
+    category: str
+    url: str | None = None
+
+
+class PolicyDocumentMatchCandidate(BaseModel):
+    match_kind: Literal["doc_ref", "url", "text"]
+    score: float
+    document: MatchedDocumentSummary
+
+
+class PolicyDocumentMatchResponse(BaseModel):
+    matches: list[PolicyDocumentMatchCandidate] = Field(default_factory=list)

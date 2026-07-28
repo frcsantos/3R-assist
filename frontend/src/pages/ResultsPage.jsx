@@ -4,7 +4,6 @@ import { Link, Navigate, useLocation } from 'react-router-dom'
 import ExperimentTabs, { experimentTabLabel } from '../components/ExperimentTabs'
 import ResultCard from '../components/ResultCard'
 import {
-  formatJurisdictionBadges,
   formatMatchedParams,
   formatOecdReference,
   isLowConfidenceScore,
@@ -14,8 +13,6 @@ import {
   methodThreeRClasses,
   primaryThreeR,
   primaryRegulatoryContext,
-  regulatoryCitationFromContexts,
-  regulatoryUrlFromContexts,
   scorePercent,
 } from '../lib/search'
 
@@ -266,6 +263,10 @@ export default function ResultsPage() {
               const primaryContext = primaryRegulatoryContext(contexts)
               const percent = scorePercent(item.score)
               const threeR = primaryThreeR(method)
+              const protocolCitation =
+                method.source_citation?.trim() ||
+                formatOecdReference(method.oecd_ref) ||
+                null
               return (
                 <ResultCard
                   key={method.slug}
@@ -273,37 +274,36 @@ export default function ResultsPage() {
                   badges={methodThreeRBadges(method, t)}
                   title={methodDisplayName(method, lang)}
                   score={percent}
-                  jurisdiction={formatJurisdictionBadges(contexts, t)}
                   dimmed={isLowConfidenceScore(item.score)}
                   validationStatus={
                     primaryContext
                       ? t(`s3.validationStatus.${primaryContext.validation_status}`)
                       : null
                   }
-                  regulatoryStatus={
-                    primaryContext?.regulation_status
-                      ? t(`s3.regulatoryStatus.${primaryContext.regulation_status}`)
+                  regulatoryStatuses={contexts.map((context, index) => {
+                    const jurisdiction = t(`s3.jurisdiction.${context.jurisdiction}`)
+                    const status = context.regulation_status
+                      ? t(`s3.regulatoryStatus.${context.regulation_status}`)
                       : null
-                  }
+                    return {
+                      key: `${context.jurisdiction}-${index}`,
+                      label: status ? `${jurisdiction}: ${status}` : jurisdiction,
+                      citation: context.regulatory_citation?.trim() || null,
+                      url: context.regulatory_url || null,
+                    }
+                  })}
                   purpose={primaryContext?.regulation_purpose || null}
                   purposeLabel={t('s3.purposeLabel')}
-                  oecdTgRef={
-                    regulatoryCitationFromContexts(contexts)
-                      ? null
-                      : formatOecdReference(method.oecd_ref)
-                  }
                   matchedParams={formatMatchedParams(item.matched_params, t)}
                   matchedParamsLabel={t('s3.matchedParams')}
                   description={methodDescription(method, lang)}
+                  protocolCitation={protocolCitation}
+                  noCitationLabel={t('s3.noProtocolCitation')}
+                  noRegulatoryCitationLabel={t('s3.noRegulatoryCitation')}
                   primaryUrl={method.source_url || null}
-                  sourcesLabel={
-                    method.source_citation?.trim() || t('s3.sourceLink')
-                  }
-                  regulatoryUrl={regulatoryUrlFromContexts(contexts)}
-                  regulatoryLinkLabel={
-                    regulatoryCitationFromContexts(contexts) ||
-                    t('s3.regulatoryLink')
-                  }
+                  sourcesLabel={t('s3.sourceLink')}
+                  regulatoryLinkLabel={t('s3.regulatoryLink')}
+                  closeLabel={t('s3.close')}
                   matchLabel={t('s3.matchLabel')}
                 />
               )

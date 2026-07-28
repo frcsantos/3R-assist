@@ -10,6 +10,7 @@ import {
   fetchAdminTable,
   fetchAdminTables,
   insertAdminRow,
+  matchPolicyDocument,
   matchPolicyMethod,
   updateAdminCell,
   updateAdminColumnComment,
@@ -1575,7 +1576,7 @@ function regulationInitialValuesFromExtracted(
   return {
     method_id: topMatch?.id ?? '',
     jurisdiction: isOecd ? 'oecd' : '',
-    validation_status: 'accepted',
+    validation_status: 'in_process_of_validation',
     regulation_status: method.status ?? '',
     regulation_date: regulationDateFromDocument(documentDate),
     regulation_purpose: method.purpose?.trim() ?? '',
@@ -1584,6 +1585,21 @@ function regulationInitialValuesFromExtracted(
     regulatory_doc_id: '',
     regulatory_citation: '',
     notes: [code, name].filter(Boolean).join(' — '),
+  }
+}
+
+function documentInitialValuesFromExtracted({
+  documentName,
+  documentDate,
+  url,
+} = {}) {
+  const docRef = documentName?.trim() ?? ''
+  return {
+    slug: slugifyMethodDraft(docRef),
+    doc_ref: docRef,
+    date: regulationDateFromDocument(documentDate),
+    category: 'regulation',
+    url: url?.trim() ?? '',
   }
 }
 
@@ -1923,6 +1939,14 @@ function ExtractPanel() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
+  const [documentUrl, setDocumentUrl] = useState('')
+  const [documentMatches, setDocumentMatches] = useState(null)
+  const [documentSearchLoading, setDocumentSearchLoading] = useState(false)
+  const [documentSearchError, setDocumentSearchError] = useState(null)
+  const [addDocumentSchema, setAddDocumentSchema] = useState(null)
+  const [addDocumentOpen, setAddDocumentOpen] = useState(false)
+  const [addDocumentLoading, setAddDocumentLoading] = useState(false)
+  const [addDocumentError, setAddDocumentError] = useState(null)
   const [history, setHistory] = useState(() => readExtractHistory())
   const [activeHistoryId, setActiveHistoryId] = useState(null)
 
@@ -1950,11 +1974,54 @@ function ExtractPanel() {
     writeExtractHistory(entries)
   }
 
+  function clearDocumentSearch() {
+    setDocumentMatches(null)
+    setDocumentSearchError(null)
+  }
+
   function loadHistoryEntry(entry) {
     setError(null)
     setText(entry.text ?? '')
     setResult(entry.result ?? null)
+    setDocumentUrl('')
+    clearDocumentSearch()
+    setAddDocumentError(null)
     setActiveHistoryId(entry.id)
+  }
+
+  async function searchDocuments() {
+    if (documentSearchLoading || !result) return
+    setDocumentSearchError(null)
+    setDocumentSearchLoading(true)
+    try {
+      const matched = await matchPolicyDocument({
+        documentName: result.document_name,
+        documentDate: result.document_date,
+        institution: result.responsible_institution,
+        url: documentUrl,
+      })
+      setDocumentMatches(matched.matches ?? [])
+    } catch {
+      setDocumentMatches(null)
+      setDocumentSearchError(t('admin.extract.searchDocumentError'))
+    } finally {
+      setDocumentSearchLoading(false)
+    }
+  }
+
+  async function openAddDocument() {
+    if (addDocumentLoading || !result) return
+    setAddDocumentError(null)
+    setAddDocumentLoading(true)
+    try {
+      const schema = await fetchAdminTable('documents', { limit: 1, offset: 0 })
+      setAddDocumentSchema(schema)
+      setAddDocumentOpen(true)
+    } catch {
+      setAddDocumentError(t('admin.extract.addDocumentError'))
+    } finally {
+      setAddDocumentLoading(false)
+    }
   }
 
   function removeHistoryEntry(entryId) {
@@ -1986,13 +2053,23 @@ function ExtractPanel() {
       persistHistory([entry, ...history].slice(0, EXTRACT_HISTORY_MAX))
       setActiveHistoryId(entry.id)
       setResult(extracted)
+      setDocumentUrl('')
+      clearDocumentSearch()
+      setAddDocumentError(null)
     } catch (err) {
       setResult(null)
+      setDocumentUrl('')
+      clearDocumentSearch()
       setError(err.message ?? t('admin.extract.error'))
     } finally {
       setSubmitting(false)
     }
   }
+
+  const addDocumentColumns =
+    addDocumentSchema?.columns.filter(
+      (column) => !(addDocumentSchema.auto_columns ?? []).includes(column),
+    ) ?? []
 
   return (
     <div className="space-y-section-gap">
@@ -2133,6 +2210,110 @@ function ExtractPanel() {
             </div>
           </dl>
 
+          <div className="mb-card-gap flex flex-wrap items-end gap-3">
+            <div className="min-w-[16rem] flex-1">
+              <label
+                htmlFor="extract-document-url"
+                className="mb-1 block font-label-caps text-label-caps uppercase text-on-surface-variant"
+              >
+                {t('admin.extract.url')}
+              </label>
+              <input
+                id="extract-document-url"
+                type="url"
+                value={documentUrl}
+                onChange={(event) => setDocumentUrl(event.target.value)}
+                placeholder={t('admin.extract.urlPlaceholder')}
+                className="w-full rounded-md border border-border-emphasis bg-surface-container-low px-3 py-2 font-metadata text-metadata text-on-surface outline-none transition-colors duration-ethos placeholder:text-text-tertiary focus:border-primary"
+              />
+            </div>
+            <button
+              type="button"
+              disabled={documentSearchLoading}
+              onClick={searchDocuments}
+              className="inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {documentSearchLoading
+                ? t('admin.loading')
+                : t('admin.extract.searchDocument')}
+            </button>
+          </div>
+
+          <div className="mb-card-gap space-y-3">
+            {documentSearchLoading ? (
+              <p className="font-metadata text-metadata text-on-secondary-container">
+                {t('admin.extract.searchingDocuments')}
+              </p>
+            ) : null}
+            {documentSearchError ? (
+              <p className="font-metadata text-metadata text-error" role="alert">
+                {documentSearchError}
+              </p>
+            ) : null}
+            {documentMatches ? (
+              documentMatches.length === 0 ? (
+                <p className="font-metadata text-metadata text-on-secondary-container opacity-65">
+                  {t('admin.extract.noDocumentMatches')}
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {documentMatches.map((candidate) => {
+                    const doc = candidate.document
+                    return (
+                      <li
+                        key={doc.id}
+                        className="rounded-md border border-border-subtle bg-surface-container/40 px-3 py-2"
+                      >
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                          <p className="font-metadata text-metadata text-on-surface">
+                            {doc.doc_ref}
+                            <span className="ml-2 opacity-65">({doc.slug})</span>
+                          </p>
+                          <p className="font-metadata text-metadata text-on-secondary-container">
+                            {candidate.match_kind === 'doc_ref'
+                              ? t('admin.extract.matchByDocRef')
+                              : candidate.match_kind === 'url'
+                                ? t('admin.extract.matchByUrl')
+                                : t('admin.extract.matchByText')}
+                            {' · '}
+                            {scorePercent(candidate.score)}%
+                          </p>
+                        </div>
+                        <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-80">
+                          {[
+                            doc.category,
+                            doc.date,
+                            doc.url,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </p>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )
+            ) : null}
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                disabled={addDocumentLoading}
+                onClick={openAddDocument}
+                className="inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {addDocumentLoading
+                  ? t('admin.loading')
+                  : t('admin.extract.addDocument')}
+              </button>
+            </div>
+            {addDocumentError ? (
+              <p className="font-metadata text-metadata text-error" role="alert">
+                {addDocumentError}
+              </p>
+            ) : null}
+          </div>
+
           <h3 className="mb-2 font-label-caps text-label-caps uppercase text-on-surface-variant">
             {t('admin.extract.methods')}
           </h3>
@@ -2175,6 +2356,30 @@ function ExtractPanel() {
           )}
         </section>
       ) : null}
+      {addDocumentOpen && addDocumentSchema
+        ? createPortal(
+            <AddRowModal
+              key={`extract-add-document-${result?.document_name ?? 'doc'}`}
+              table="documents"
+              columns={addDocumentColumns}
+              comments={addDocumentSchema.column_comments}
+              types={addDocumentSchema.column_types}
+              requiredColumns={addDocumentSchema.required_columns}
+              foreignKeys={addDocumentSchema.foreign_keys}
+              columnOptions={addDocumentSchema.column_options}
+              mode="create"
+              title={t('admin.extract.addDocument')}
+              initialValues={documentInitialValuesFromExtracted({
+                documentName: result?.document_name,
+                documentDate: result?.document_date,
+                url: documentUrl,
+              })}
+              onClose={() => setAddDocumentOpen(false)}
+              onSaved={() => setAddDocumentOpen(false)}
+            />,
+            document.body,
+          )
+        : null}
     </div>
   )
 }

@@ -23,7 +23,7 @@ export function FieldConfidenceIndicator({ level }) {
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center rounded border px-2 py-0.5 font-metadata text-metadata ${confidenceStyles[level] ?? confidenceStyles.medium}`}
+      className={`inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[0.7rem] leading-snug ${confidenceStyles[level] ?? confidenceStyles.medium}`}
       title={t(hintKey, { defaultValue: '' }) || undefined}
     >
       {t(`s2.fieldConfidence.level.${level}`)}
@@ -31,28 +31,26 @@ export function FieldConfidenceIndicator({ level }) {
   )
 }
 
-export function EvidenceToggle({ evidence, fieldConfidence }) {
+export function EvidenceToggle({ evidence }) {
   const { t } = useTranslation()
   const [visible, setVisible] = useState(false)
 
-  if (!evidence && !fieldConfidence) return null
+  if (!evidence) return null
 
   return (
     <div className="space-y-1">
       <div className="flex flex-wrap items-center gap-2">
-        <FieldConfidenceIndicator level={fieldConfidence} />
-        {evidence && (
-          <button
-            type="button"
-            onClick={() => setVisible((current) => !current)}
-            className="ml-auto font-metadata text-metadata text-primary underline decoration-border-emphasis underline-offset-2 transition-colors hover:decoration-primary"
-          >
-            {visible ? t('s2.hideEvidence') : t('s2.showEvidence')}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setVisible((current) => !current)}
+          className="ml-auto font-metadata text-metadata text-primary underline decoration-border-emphasis underline-offset-2 transition-colors hover:decoration-primary"
+        >
+          {visible ? t('s2.hideEvidence') : t('s2.showEvidence')}
+        </button>
       </div>
       {visible && evidence && (
         <p className="rounded-lg border-l-2 border-primary bg-surface-container-low px-card-gap py-2 font-metadata text-metadata text-on-secondary-container">
+          <span className="font-semibold">{t('s2.evidenceLabel')}:</span>{' '}
           {evidence}
         </p>
       )}
@@ -218,9 +216,12 @@ export default function ParameterField({
       <label
         id={isMultiSelect ? labelId : undefined}
         htmlFor={isMultiSelect ? undefined : id}
-        className="font-small-label text-small-label uppercase text-on-surface-variant opacity-65"
+        className="flex items-center justify-between gap-2 text-on-surface-variant"
       >
-        {t(labelKey)}
+        <span className="font-small-label text-small-label uppercase opacity-65">
+          {t(labelKey)}
+        </span>
+        <FieldConfidenceIndicator level={fieldConfidence} />
       </label>
       {renderInput()}
       {hintKey && !readOnly && (
@@ -228,7 +229,7 @@ export default function ParameterField({
           {t(hintKey)}
         </p>
       )}
-      <EvidenceToggle evidence={evidence} fieldConfidence={fieldConfidence} />
+      <EvidenceToggle evidence={evidence} />
     </div>
   )
 }

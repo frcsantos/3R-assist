@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.errors import unhandled_exception_handler
-from app.api.routes import admin, analysis, health, search
+from app.api.routes import admin, analysis, documents, health, methods, search
 from app.config import get_settings
 from app.db.connection import close_pool, create_pool
 
@@ -54,6 +54,8 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(analysis.router)
     app.include_router(search.router)
+    app.include_router(methods.router)
+    app.include_router(documents.router)
     app.include_router(admin.router)
 
     return app

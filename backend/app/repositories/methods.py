@@ -60,9 +60,25 @@ class MethodRepository:
     async def list_active_with_contexts(
         self,
     ) -> tuple[list[Method], dict[int, list[MethodRegulatoryContext]]]:
+        return await self.list_with_contexts(active_only=True)
+
+    async def list_with_contexts(
+        self,
+        *,
+        active_only: bool = False,
+    ) -> tuple[list[Method], dict[int, list[MethodRegulatoryContext]]]:
         pool = await get_pool()
         async with pool.acquire() as conn:
-            rows = await conn.fetch(self._SELECT_ACTIVE)
+            if active_only:
+                rows = await conn.fetch(self._SELECT_ACTIVE)
+            else:
+                rows = await conn.fetch(
+                    f"""
+                    SELECT {self._SELECT_COLUMNS}
+                    {self._FROM_METHODS}
+                    ORDER BY m.slug
+                    """
+                )
             if not rows:
                 return [], {}
 

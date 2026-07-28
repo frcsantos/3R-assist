@@ -197,6 +197,29 @@ def _coerce_value(value: Any, data_type: str, udt_name: str) -> Any:
     return value
 
 
+_MRC_VALIDATION_STATUS_MAP = {
+    "accepted": "in_process_of_validation",
+    "emerging": "not_validated",
+    "validated": "validated",
+    "in_process_of_validation": "in_process_of_validation",
+    "not_validated": "not_validated",
+}
+
+
+def _normalize_admin_value(table_name: str, column: str, value: Any) -> Any:
+    """Normalize legacy values accepted by old UI/import paths."""
+    if table_name != "method_regulatory_contexts":
+        return value
+    if column != "validation_status":
+        return value
+    if value is None:
+        return value
+    text = str(value).strip().lower()
+    if not text:
+        return value
+    return _MRC_VALIDATION_STATUS_MAP.get(text, value)
+
+
 class AdminRepository:
     async def list_tables(self) -> list[str]:
         pool = await get_pool()
@@ -670,6 +693,7 @@ class AdminRepository:
                     continue
 
                 raw = values.get(column)
+                raw = _normalize_admin_value(table_name, column, raw)
                 is_empty = raw is None or (isinstance(raw, str) and raw.strip() == "")
                 if is_empty:
                     if meta["is_identity"] == "YES" or meta["column_default"] is not None:
@@ -760,6 +784,7 @@ class AdminRepository:
                 raise ValueError(f"Column '{column}' was not found.")
 
             try:
+                value = _normalize_admin_value(table_name, column, value)
                 coerced = _coerce_value(value, meta["data_type"], meta["udt_name"])
             except (TypeError, ValueError, json.JSONDecodeError) as exc:
                 raise ValueError(f"Invalid value for column '{column}': {exc}") from exc

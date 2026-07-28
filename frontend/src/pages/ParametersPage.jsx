@@ -3,7 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import ExperimentTabs, { experimentTabLabel } from '../components/ExperimentTabs'
-import ParameterField, { EvidenceToggle } from '../components/ParameterField'
+import ParameterField, {
+  EvidenceToggle,
+  FieldConfidenceIndicator,
+} from '../components/ParameterField'
 import ProtocolTextPanel from '../components/ProtocolTextPanel'
 import { resolveExperimentStates } from '../lib/experimentState.js'
 import { setLanguage } from '../lib/i18n'
@@ -243,9 +246,14 @@ export default function ParametersPage() {
               {renderFields(DISPLAY_FIELDS)}
 
               <div className="space-y-card-gap pt-fine-gap">
-                <p className="font-small-label text-small-label uppercase text-on-surface-variant opacity-65">
-                  {t('s2.fields.animalCounts.label')}
-                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-small-label text-small-label uppercase text-on-surface-variant opacity-65">
+                    {t('s2.fields.animalCounts.label')}
+                  </p>
+                  <FieldConfidenceIndicator
+                    level={activeExperiment.fieldConfidence?.animal_counts}
+                  />
+                </div>
                 <div className="grid gap-card-gap sm:grid-cols-2">
                   {ANIMAL_COUNT_FIELDS.map(({ key, labelKey }) => (
                     <ParameterField
@@ -259,12 +267,7 @@ export default function ParametersPage() {
                     />
                   ))}
                 </div>
-                <EvidenceToggle
-                  evidence={activeExperiment.evidence?.animal_counts}
-                  fieldConfidence={
-                    activeExperiment.fieldConfidence?.animal_counts
-                  }
-                />
+                <EvidenceToggle evidence={activeExperiment.evidence?.animal_counts} />
               </div>
             </div>
 

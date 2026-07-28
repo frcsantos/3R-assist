@@ -5,6 +5,7 @@ from app.adapters.llm import ExtractionError
 from app.api.deps import (
     get_admin_repository,
     get_method_draft_extraction_service,
+    get_policy_document_match_service,
     get_policy_extraction_service,
     get_policy_method_match_service,
 )
@@ -26,6 +27,8 @@ from app.models.method_draft import (
     MethodDraftExtractResponse,
 )
 from app.models.policy import (
+    PolicyDocumentMatchRequest,
+    PolicyDocumentMatchResponse,
     PolicyExtractRequest,
     PolicyExtractResponse,
     PolicyMethodMatchRequest,
@@ -33,6 +36,7 @@ from app.models.policy import (
 )
 from app.repositories.admin import AdminRepository
 from app.services.method_draft_extraction import MethodDraftExtractionService
+from app.services.policy_document_match import PolicyDocumentMatchService
 from app.services.policy_extraction import PolicyExtractionService
 from app.services.policy_method_match import PolicyMethodMatchService
 
@@ -340,6 +344,31 @@ async def match_policy_method(
             message=(
                 "Could not search for matching methods in the database. "
                 "Try again, or check that curated methods have valid metadata."
+            ),
+            detail={"type": type(exc).__name__, "reason": str(exc)},
+        )
+
+
+@router.post(
+    "/extract/policy/match-document",
+    response_model=PolicyDocumentMatchResponse,
+    responses={503: {"model": ErrorEnvelope}},
+)
+async def match_policy_document(
+    payload: PolicyDocumentMatchRequest,
+    matching: PolicyDocumentMatchService = Depends(
+        get_policy_document_match_service
+    ),
+) -> PolicyDocumentMatchResponse | JSONResponse:
+    try:
+        return await matching.match(payload)
+    except Exception as exc:
+        return error_response(
+            status_code=503,
+            code="DOCUMENT_MATCH_FAILED",
+            message=(
+                "Could not search for matching documents in the database. "
+                "Try again, or check that curated documents have valid metadata."
             ),
             detail={"type": type(exc).__name__, "reason": str(exc)},
         )

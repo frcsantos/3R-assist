@@ -8,7 +8,11 @@ from app.models.i18n import LocalizedStr, LocalizedStrList
 ThreeRClass = Literal["replacement", "reduction", "refinement"]
 RegulatoryJurisdiction = Literal["brazil", "eu", "us", "oecd"]
 StudyDomain = Literal["pharma", "cosmetics", "chemical_safety", "general"]
-ValidationStatus = Literal["validated", "accepted", "emerging"]
+ValidationStatus = Literal[
+    "validated",
+    "in_process_of_validation",
+    "not_validated",
+]
 RegulatoryStatus = Literal["not_approved", "approved", "recommended", "mandatory"]
 # Preferred curated values: OECD_TG | ECVAM_DBALM | NICEATM | FARMACOPEIA_BR | TSAR.
 # Stored as free text so admin-curated / imported rows are not rejected at read time.

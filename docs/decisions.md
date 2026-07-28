@@ -476,7 +476,7 @@ Adicionalmente, o vocabulário original de 4 valores (`pharma`, `cosmetics`, `ch
 
 **Decision:** (a) `validation_status`, `jurisdiction`, `jurisdiction_notes`, `regulatory_url` removidos da tabela `methods` e migrados para nova tabela `method_regulatory_contexts`. (b) Vocabulário de jurisdição substituído: `'brazil' | 'international' | 'both'` → `'brazil' | 'eu' | 'us' | 'oecd'`.
 
-**Context:** `jurisdiction = 'both'` e `validation_status = 'validated'` eram propriedades do método, quando na realidade são propriedades da combinação método × domínio de aplicação × framework regulatório. BCOP (TG 437) é `validated` para cosméticos na UE (Reg 1223/2009), `accepted` para químicos sob REACH (ECHA), e sem status formal ANVISA para medicamentos. Um único par (validation_status, jurisdiction) comunicava algo que não era verdadeiro para todos os contextos. `international` colapsava EU, US, OECD e outros frameworks sem distinção — um pesquisador precisando de evidência regulatória específica para submissão ANVISA vs. registro CE obtinha a mesma resposta.
+**Context:** `jurisdiction = 'both'` e `validation_status = 'validated'` eram propriedades do método, quando na realidade são propriedades da combinação método × domínio de aplicação × framework regulatório. BCOP (TG 437) é `validated` para cosméticos na UE (Reg 1223/2009), `in_process_of_validation` para químicos sob REACH (ECHA), e `not_validated` quando não há status formal ANVISA para medicamentos. Um único par (validation_status, jurisdiction) comunicava algo que não era verdadeiro para todos os contextos. `international` colapsava EU, US, OECD e outros frameworks sem distinção — um pesquisador precisando de evidência regulatória específica para submissão ANVISA vs. registro CE obtinha a mesma resposta.
 
 **Schema:**
 ```sql
@@ -485,7 +485,7 @@ CREATE TABLE method_regulatory_contexts (
     method_id         INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE,
     study_domain      TEXT    NOT NULL,  -- 'general' | 'pharma' | 'cosmetics' | 'chemical_safety'
     jurisdiction      TEXT    NOT NULL,  -- 'brazil' | 'eu' | 'us' | 'oecd'
-    validation_status  TEXT    NOT NULL,  -- 'validated' | 'accepted' | 'emerging'
+    validation_status  TEXT    NOT NULL,  -- 'validated' | 'in_process_of_validation' | 'not_validated'
     regulation_status  TEXT,             -- 'not_approved' | 'approved' | 'recommended' | 'mandatory'
     regulation_date    DATE,             -- date of regulation / recognition / adoption (YYYY-MM-DD)
     regulation_purpose TEXT,             -- what the method is recognized/validated for in this context

@@ -78,3 +78,22 @@ export function matchPolicyMethod({ code, name, purpose, limit = 5 }) {
     }),
   })
 }
+
+export function matchPolicyDocument({
+  documentName,
+  documentDate,
+  institution,
+  url,
+  limit = 5,
+} = {}) {
+  return apiFetch('/admin/extract/policy/match-document', {
+    method: 'POST',
+    body: JSON.stringify({
+      document_name: documentName ?? null,
+      document_date: documentDate ?? null,
+      responsible_institution: institution ?? null,
+      url: url ?? null,
+      limit,
+    }),
+  })
+}

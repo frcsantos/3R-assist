@@ -135,7 +135,7 @@ export default function AnalyzePage({ onSubmit }) {
         <p className="font-body-base text-body-base text-on-secondary-container">
           {t('s1.searchLink')}{' '}
           <Link
-            to="/buscar"
+            to="/explore"
             className="font-medium text-primary underline decoration-border-emphasis underline-offset-2 transition-colors hover:decoration-primary"
           >
             {t('s1.searchLinkAction')} →

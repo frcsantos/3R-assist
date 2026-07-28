@@ -5,7 +5,7 @@ import { currentLanguage, setLanguage } from '../lib/i18n'
 
 const routes = [
   { key: 'analyze', to: '/' },
-  { key: 'search', to: '/buscar' },
+  { key: 'explore', to: '/explore' },
   { key: 'glossary', to: '/glossary' },
   { key: 'info', to: '/info' },
 ]

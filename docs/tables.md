@@ -65,7 +65,7 @@ Validation status and regulatory recognition for a method, scoped by jurisdictio
 | `id` | `SERIAL` | NO | auto | Primary key. |
 | `method_id` | `INTEGER` | NO | — | FK → `methods(id)` `ON DELETE CASCADE`. |
 | `jurisdiction` | `TEXT` | NO | — | Regulatory jurisdiction: `brazil` (CONCEA / ANVISA / MAPA), `eu` (ECHA, EMA, Cosmetics Reg 1223/2009, EFSA), `us` (FDA, EPA, ICCVAM / NICEATM), `oecd` (OECD TG adoption). |
-| `validation_status` | `TEXT` | NO | — | Status in that context: `validated`, `accepted`, or `emerging`. |
+| `validation_status` | `TEXT` | NO | — | Status in that context: `validated`, `in_process_of_validation`, or `not_validated`. |
 | `regulation_status` | `TEXT` | YES | — | Regulatory standing: `not_approved`, `approved`, `recommended`, or `mandatory`. |
 | `regulation_date` | `DATE` | YES | — | Date of the regulation / recognition / adoption for this context (`YYYY-MM-DD`). |
 | `regulation_purpose` | `TEXT` | YES | — | What the method is recognized/validated for in this context (endpoint, use, or regulatory purpose). |
@@ -317,4 +317,5 @@ Migrations that define or alter these tables:
 | `026_methods_drop_category_3r_reorder.sql` | drops `category_3r`; restores `name`/`description`/`keywords` then `text_for_embedding`/`embedding_json` order |
 | `027_documents.sql` | creates `documents` (`slug`, `doc_ref`, `date`, `category`, `url`) |
 | `028_doc_fks_and_citations.sql` | `methods.source_doc_id`; MRC `regulatory_doc_id` + `regulatory_citation` (replaces `regulatory_url`); drops `source_url`/`source_date` |
+| `029_mrc_validation_status_values.sql` | normalizes MRC `validation_status` to `validated` \| `in_process_of_validation` \| `not_validated`; maps legacy `accepted`/`emerging` values |
 | `manual/008_drop_category_3r.sql` | legacy gated DROP of `category_3r` (superseded by `026`) |
