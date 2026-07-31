@@ -68,14 +68,14 @@ class PolicyDocumentMatchRequest(BaseModel):
 class MatchedDocumentSummary(BaseModel):
     id: int
     slug: str
-    doc_ref: str
+    doc_citation: LocalizedStr
     date: str | None = None
     category: str
     url: str | None = None
 
 
 class PolicyDocumentMatchCandidate(BaseModel):
-    match_kind: Literal["doc_ref", "url", "text"]
+    match_kind: Literal["doc_citation", "url", "text"]
     score: float
     document: MatchedDocumentSummary
 

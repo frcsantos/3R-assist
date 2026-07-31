@@ -15,7 +15,11 @@ class MethodRepository:
         m.id, m.slug, m.active, m.name, m.description,
         m.endpoint_category, m.routes_applicable, m.study_domain,
         m.oecd_ref, m.ncit_id,
-        COALESCE(NULLIF(BTRIM(m.source_citation), ''), sd.doc_ref) AS source_citation,
+        COALESCE(
+            NULLIF(BTRIM(m.source_citation), ''),
+            NULLIF(BTRIM(sd.doc_citation->>'en-us'), ''),
+            sd.doc_citation->>'pt-br'
+        ) AS source_citation,
         m.source_doc_id,
         sd.url AS source_url,
         m.source_db,
@@ -43,14 +47,15 @@ class MethodRepository:
             mrc.regulatory_body, mrc.regulatory_doc_id,
             COALESCE(
                 NULLIF(BTRIM(mrc.regulatory_citation), ''),
-                rd.doc_ref
+                NULLIF(BTRIM(rd.doc_citation->>'en-us'), ''),
+                rd.doc_citation->>'pt-br'
             ) AS regulatory_citation,
             rd.url AS regulatory_url,
             mrc.notes
-        FROM method_regulatory_contexts mrc
+        FROM regulations mrc
         LEFT JOIN documents rd ON rd.id = mrc.regulatory_doc_id
         WHERE mrc.method_id = ANY($1::int[])
-        ORDER BY mrc.method_id, mrc.jurisdiction
+        ORDER BY mrc.method_id, mrc.jurisdiction->>'en-us'
     """
 
     async def list_active(self) -> list[Method]:
@@ -198,7 +203,7 @@ class MethodRepository:
     @staticmethod
     def _row_to_context(row) -> MethodRegulatoryContext:
         return MethodRegulatoryContext(
-            jurisdiction=MethodRepository._norm_vocab(row["jurisdiction"]),
+            jurisdiction=row["jurisdiction"],
             validation_status=MethodRepository._norm_vocab(row["validation_status"]),
             regulation_status=MethodRepository._norm_vocab(row["regulation_status"]),
             regulation_date=row["regulation_date"],

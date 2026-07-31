@@ -98,7 +98,7 @@
       "searchDocumentError": "Could not search for matching documents in the database.",
       "searchingDocuments": "Searching documents…",
       "noDocumentMatches": "No matching documents found in the database.",
-      "matchByDocRef": "Document ref",
+      "matchByDocCitation": "Document citation",
       "matchByUrl": "URL",
       "addDocument": "Add document",
       "addDocumentError": "Could not open the add-document form.",

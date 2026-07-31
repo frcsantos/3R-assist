@@ -98,7 +98,7 @@
       "searchDocumentError": "Não foi possível buscar documentos correspondentes no banco.",
       "searchingDocuments": "Buscando documentos…",
       "noDocumentMatches": "Nenhum documento correspondente encontrado no banco.",
-      "matchByDocRef": "Ref. do documento",
+      "matchByDocCitation": "Citação do documento",
       "matchByUrl": "URL",
       "addDocument": "Adicionar documento",
       "addDocumentError": "Não foi possível abrir o formulário de novo documento.",
@@ -273,7 +273,7 @@
       "brazil": "Brasil",
       "eu": "UE",
       "us": "EUA",
-      "oecd": "OECD"
+      "oecd": "OCDE"
     },
     "validationStatus": {
       "validated": "Validado",

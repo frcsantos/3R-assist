@@ -23,6 +23,11 @@ async def _with_fresh_pool_retry(operation):
         return await operation()
 
 _IDENT_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+# JSONB array columns that pick values from a vocabulary table (multi-select in admin UI).
+# (table, column) -> (vocab_table, vocab_value_column)
+_JSON_ARRAY_VOCAB_COLUMNS: dict[tuple[str, str], tuple[str, str]] = {
+    ("methods", "routes_applicable"): ("routes", "code"),
+}
 _AUTO_DEFAULT_MARKERS = (
     "nextval(",
     "now(",
@@ -208,7 +213,7 @@ _MRC_VALIDATION_STATUS_MAP = {
 
 def _normalize_admin_value(table_name: str, column: str, value: Any) -> Any:
     """Normalize legacy values accepted by old UI/import paths."""
-    if table_name != "method_regulatory_contexts":
+    if table_name != "regulations":
         return value
     if column != "validation_status":
         return value
@@ -399,7 +404,7 @@ class AdminRepository:
             )
         ]
         for candidate in (
-            "doc_ref",
+            "doc_citation",
             "slug",
             "name",
             "code",
@@ -572,6 +577,19 @@ class AdminRepository:
                 await self._check_constraint_options(conn, table_name)
             ).items():
                 column_options.setdefault(column, options)
+            for (owner_table, column), (
+                vocab_table,
+                vocab_column,
+            ) in _JSON_ARRAY_VOCAB_COLUMNS.items():
+                if owner_table != table_name or column in column_options:
+                    continue
+                if not any(row["column_name"] == column for row in column_rows):
+                    continue
+                column_options[column] = await self._foreign_key_options(
+                    conn,
+                    foreign_table=vocab_table,
+                    foreign_column=vocab_column,
+                )
 
         serialized_rows = [_serialize_row(row) for row in rows]
         columns = [row["column_name"] for row in column_rows]

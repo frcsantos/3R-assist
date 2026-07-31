@@ -18,9 +18,11 @@ import {
 import { currentLanguage } from '../lib/i18n'
 import {
   formatOecdReference,
-  formatJurisdictionBadges,
+  jurisdictionLabel,
+  JURISDICTION_LABELS,
   methodDescription,
   methodDisplayName,
+  pickLocalized,
   primaryRegulatoryContext,
   scorePercent,
 } from '../lib/search'
@@ -46,6 +48,36 @@ function toDraft(value) {
     return JSON.stringify(value, null, 2)
   }
   return String(value)
+}
+
+function parseMultiSelectDraft(draft) {
+  const trimmed = String(draft ?? '').trim()
+  if (!trimmed) return []
+  try {
+    const parsed = JSON.parse(trimmed)
+    if (!Array.isArray(parsed)) return []
+    return parsed.map((item) => String(item))
+  } catch {
+    return []
+  }
+}
+
+function toMultiSelectDraft(selected) {
+  if (!selected?.length) return ''
+  return JSON.stringify(selected, null, 2)
+}
+
+function isJsonColumnType(type) {
+  return type === 'jsonb' || type === 'json'
+}
+
+/** Columns that store JSON arrays of vocabulary codes (admin multi-select). */
+const MULTI_SELECT_COLUMNS = new Set(['routes_applicable'])
+
+function isMultiSelectColumn(column, type, options) {
+  if (!options?.length) return false
+  if (MULTI_SELECT_COLUMNS.has(column)) return true
+  return isJsonColumnType(type)
 }
 
 const RATIONALE_3R_COLUMNS = [
@@ -473,15 +505,32 @@ function AddRowModal({
             const options = columnOptions?.[column] ?? []
             const foreignKey = foreignKeys?.[column]
             const useSelect = options.length > 0
+            const useMultiSelect = isMultiSelectColumn(column, type, options)
             const autoFocus = !protocolAssist && index === firstEditableIndex
+            const labelId = `row-field-${column}-label`
+            const fieldId = `row-field-${column}`
+            const selectedValues = useMultiSelect
+              ? parseMultiSelectDraft(values[column])
+              : []
+
+            function toggleMultiOption(optionValue) {
+              const next = selectedValues.includes(optionValue)
+                ? selectedValues.filter((item) => item !== optionValue)
+                : [...selectedValues, optionValue]
+              updateValue(column, toMultiSelectDraft(next))
+            }
 
             return (
               <div
                 key={column}
                 className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-start sm:gap-4"
               >
-                <label className="block min-w-0">
-                  <span className="mb-1 block font-label-caps text-label-caps uppercase text-on-surface-variant">
+                <div className="block min-w-0">
+                  <label
+                    id={labelId}
+                    htmlFor={useMultiSelect ? undefined : fieldId}
+                    className="mb-1 block font-label-caps text-label-caps uppercase text-on-surface-variant"
+                  >
                     {column}
                     {required ? (
                       <span className="ml-0.5 text-error" aria-hidden="true">
@@ -496,9 +545,41 @@ function AddRowModal({
                         → {foreignKey.table}.{foreignKey.column}
                       </span>
                     ) : null}
-                  </span>
-                  {useSelect ? (
+                  </label>
+                  {useMultiSelect ? (
+                    <div
+                      id={fieldId}
+                      role="group"
+                      aria-labelledby={labelId}
+                      className={`${fieldClass} flex flex-col gap-2`}
+                    >
+                      {options.map((option, optionIndex) => {
+                        const optionValue = String(option.value)
+                        const optionId = `${fieldId}-${optionValue}`
+                        const checked = selectedValues.includes(optionValue)
+                        return (
+                          <label
+                            key={optionValue}
+                            htmlFor={optionId}
+                            className="inline-flex cursor-pointer items-center gap-2 font-metadata text-metadata text-on-surface"
+                          >
+                            <input
+                              id={optionId}
+                              type="checkbox"
+                              checked={checked}
+                              disabled={saving || extracting || locked}
+                              autoFocus={autoFocus && optionIndex === 0}
+                              onChange={() => toggleMultiOption(optionValue)}
+                              className="h-4 w-4 shrink-0 rounded border-border-subtle text-primary accent-primary"
+                            />
+                            {option.label}
+                          </label>
+                        )
+                      })}
+                    </div>
+                  ) : useSelect ? (
                     <select
+                      id={fieldId}
                       autoFocus={autoFocus}
                       value={values[column] ?? ''}
                       disabled={saving || extracting || locked}
@@ -522,6 +603,7 @@ function AddRowModal({
                     </select>
                   ) : (
                     <input
+                      id={fieldId}
                       type="text"
                       autoFocus={autoFocus}
                       value={values[column] ?? ''}
@@ -531,7 +613,7 @@ function AddRowModal({
                       className={fieldClass}
                     />
                   )}
-                </label>
+                </div>
                 <p className="whitespace-pre-wrap font-metadata text-metadata text-on-secondary-container opacity-65 sm:pt-6">
                   {hint || t('admin.noCommentHint')}
                 </p>
@@ -1575,8 +1657,8 @@ function regulationInitialValuesFromExtracted(
 
   return {
     method_id: topMatch?.id ?? '',
-    jurisdiction: isOecd ? 'oecd' : '',
-    validation_status: 'in_process_of_validation',
+    jurisdiction: isOecd ? JURISDICTION_LABELS.oecd : '',
+    validation_status: 'validated',
     regulation_status: method.status ?? '',
     regulation_date: regulationDateFromDocument(documentDate),
     regulation_purpose: method.purpose?.trim() ?? '',
@@ -1593,10 +1675,10 @@ function documentInitialValuesFromExtracted({
   documentDate,
   url,
 } = {}) {
-  const docRef = documentName?.trim() ?? ''
+  const citation = documentName?.trim() ?? ''
   return {
-    slug: slugifyMethodDraft(docRef),
-    doc_ref: docRef,
+    slug: slugifyMethodDraft(citation),
+    doc_citation: { 'en-us': citation, 'pt-br': citation },
     date: regulationDateFromDocument(documentDate),
     category: 'regulation',
     url: url?.trim() ?? '',
@@ -1682,7 +1764,7 @@ function ExtractedMethodRow({ method, documentDate, institution }) {
     setAddRegulationError(null)
     setAddRegulationLoading(true)
     try {
-      const schema = await fetchAdminTable('method_regulatory_contexts', {
+      const schema = await fetchAdminTable('regulations', {
         limit: 1,
         offset: 0,
       })
@@ -1798,9 +1880,6 @@ function ExtractedMethodRow({ method, documentDate, institution }) {
                               dbMethod.endpoint_category,
                               dbMethod.study_domain,
                               dbMethod.source_db,
-                              contexts.length
-                                ? formatJurisdictionBadges(contexts, t)
-                                : null,
                             ]
                               .filter(Boolean)
                               .join(' · ')}
@@ -1821,6 +1900,50 @@ function ExtractedMethodRow({ method, documentDate, institution }) {
                           <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-65">
                             {methodDescription(dbMethod, lang)}
                           </p>
+                          {contexts.length > 0 ? (
+                            <ul className="mt-2 space-y-1">
+                              {contexts.map((context, index) => {
+                                const name = jurisdictionLabel(
+                                  context.jurisdiction,
+                                  lang,
+                                  t,
+                                )
+                                const date = context.regulation_date || null
+                                const url = context.regulatory_url || null
+                                const keyBase =
+                                  typeof context.jurisdiction === 'object'
+                                    ? context.jurisdiction['en-us']
+                                    : context.jurisdiction
+                                return (
+                                  <li
+                                    key={`${keyBase}-${index}`}
+                                    className="font-metadata text-metadata text-on-secondary-container"
+                                  >
+                                    <span>{name || t('admin.extract.notFound')}</span>
+                                    <span className="opacity-65">
+                                      {' · '}
+                                      {date || t('admin.extract.notFound')}
+                                    </span>
+                                    {' · '}
+                                    {url ? (
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-primary underline-offset-2 hover:underline"
+                                      >
+                                        {t('s3.regulatoryLink')}
+                                      </a>
+                                    ) : (
+                                      <span className="opacity-65">
+                                        {t('admin.extract.notFound')}
+                                      </span>
+                                    )}
+                                  </li>
+                                )
+                              })}
+                            </ul>
+                          ) : null}
                         </li>
                       )
                     })}
@@ -1883,7 +2006,7 @@ function ExtractedMethodRow({ method, documentDate, institution }) {
         ? createPortal(
             <AddRowModal
               key={`extract-add-regulation-${method.code}-${method.name}`}
-              table="method_regulatory_contexts"
+              table="regulations"
               columns={addRegulationColumns}
               comments={addRegulationSchema.column_comments}
               types={addRegulationSchema.column_types}
@@ -2266,12 +2389,12 @@ function ExtractPanel() {
                       >
                         <div className="flex flex-wrap items-baseline justify-between gap-2">
                           <p className="font-metadata text-metadata text-on-surface">
-                            {doc.doc_ref}
+                            {pickLocalized(doc.doc_citation, currentLanguage())}
                             <span className="ml-2 opacity-65">({doc.slug})</span>
                           </p>
                           <p className="font-metadata text-metadata text-on-secondary-container">
-                            {candidate.match_kind === 'doc_ref'
-                              ? t('admin.extract.matchByDocRef')
+                            {candidate.match_kind === 'doc_citation'
+                              ? t('admin.extract.matchByDocCitation')
                               : candidate.match_kind === 'url'
                                 ? t('admin.extract.matchByUrl')
                                 : t('admin.extract.matchByText')}

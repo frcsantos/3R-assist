@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from app.db.connection import get_pool
 from app.models.document import Document
+from app.models.i18n import parse_localized_str
 
 
 class DocumentRepository:
     _SELECT_COLUMNS = """
-        d.id, d.slug, d.doc_ref, d."date", d.category, d.url
+        d.id, d.slug, d.doc_citation, d."date", d.category, d.url
     """
 
     async def list_all(
@@ -24,7 +25,7 @@ class DocumentRepository:
                     SELECT {self._SELECT_COLUMNS}
                     FROM documents d
                     WHERE d.category = ANY($1::text[])
-                    ORDER BY d.doc_ref, d.slug
+                    ORDER BY d.doc_citation->>'en-us', d.slug
                     """,
                     categories,
                 )
@@ -33,7 +34,7 @@ class DocumentRepository:
                     f"""
                     SELECT {self._SELECT_COLUMNS}
                     FROM documents d
-                    ORDER BY d.doc_ref, d.slug
+                    ORDER BY d.doc_citation->>'en-us', d.slug
                     """
                 )
         return [self._row_to_document(row) for row in rows]
@@ -43,7 +44,7 @@ class DocumentRepository:
         return Document(
             id=row["id"],
             slug=row["slug"],
-            doc_ref=row["doc_ref"],
+            doc_citation=parse_localized_str(row["doc_citation"]),
             date=row["date"],
             category=row["category"],
             url=row["url"],

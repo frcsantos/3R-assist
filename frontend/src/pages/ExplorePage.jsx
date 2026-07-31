@@ -11,8 +11,10 @@ import {
   methodDescription,
   methodDisplayName,
   methodThreeRBadges,
+  pickLocalized,
   primaryRegulatoryContext,
   primaryThreeR,
+  jurisdictionLabel,
 } from '../lib/search'
 
 const TABS = ['methods', 'regulations', 'documents']
@@ -57,7 +59,7 @@ function isHttpUrl(value) {
   }
 }
 
-function DocumentCard({ document: doc, t }) {
+function DocumentCard({ document: doc, t, lang }) {
   const categoryLabel = t(`s4.documentCategory.${doc.category}`, {
     defaultValue: doc.category,
   })
@@ -68,10 +70,11 @@ function DocumentCard({ document: doc, t }) {
         day: 'numeric',
       })
     : null
+  const citation = pickLocalized(doc.doc_citation, lang)
 
   return (
     <article className="rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding">
-      <h3 className="font-card-title text-card-title text-primary">{doc.doc_ref}</h3>
+      <h3 className="font-card-title text-card-title text-primary">{citation}</h3>
       <dl className="mt-3 space-y-2 font-metadata text-metadata text-on-secondary-container">
         <div className="flex flex-wrap gap-x-2">
           <dt className="text-on-surface-variant">{t('s4.fields.category')}</dt>
@@ -267,12 +270,20 @@ function MethodsPanel({ lang, t }) {
                 : null
             }
             regulatoryStatuses={contexts.map((context, index) => {
-              const jurisdiction = t(`s3.jurisdiction.${context.jurisdiction}`)
+              const jurisdiction = jurisdictionLabel(
+                context.jurisdiction,
+                lang,
+                t,
+              )
               const status = context.regulation_status
                 ? t(`s3.regulatoryStatus.${context.regulation_status}`)
                 : null
+              const keyBase =
+                typeof context.jurisdiction === 'object'
+                  ? context.jurisdiction['en-us']
+                  : context.jurisdiction
               return {
-                key: `${context.jurisdiction}-${index}`,
+                key: `${keyBase}-${index}`,
                 label: status ? `${jurisdiction}: ${status}` : jurisdiction,
                 citation: context.regulatory_citation?.trim() || null,
                 url: context.regulatory_url || null,
@@ -295,7 +306,7 @@ function MethodsPanel({ lang, t }) {
   )
 }
 
-function DocumentsPanel({ categories, emptyKey, t }) {
+function DocumentsPanel({ categories, emptyKey, t, lang }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -338,13 +349,15 @@ function DocumentsPanel({ categories, emptyKey, t }) {
     <ExpandableList
       items={items}
       getKey={(item) => item.slug}
-      getLabel={(item) => item.doc_ref}
+      getLabel={(item) => pickLocalized(item.doc_citation, lang)}
       emptyLabel={t(emptyKey)}
       noMatchesLabel={t('s4.noMatches')}
       filterPlaceholder={t('s4.filterPlaceholder')}
       expandLabel={t('s4.expand')}
       collapseLabel={t('s4.collapse')}
-      renderCard={(item) => <DocumentCard document={item} t={t} />}
+      renderCard={(item) => (
+        <DocumentCard document={item} t={t} lang={lang} />
+      )}
     />
   )
 }
@@ -404,6 +417,7 @@ export default function ExplorePage() {
             categories={DOCUMENT_CATEGORIES[activeTab]}
             emptyKey={`s4.${activeTab}.empty`}
             t={t}
+            lang={lang}
           />
         )}
       </div>

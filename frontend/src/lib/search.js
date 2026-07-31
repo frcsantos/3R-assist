@@ -105,19 +105,62 @@ export function primaryThreeR(methodOrCategory) {
   return values[0] ?? 'replacement'
 }
 
+export const JURISDICTION_LABELS = {
+  brazil: { 'en-us': 'Brazil', 'pt-br': 'Brasil' },
+  eu: { 'en-us': 'EU', 'pt-br': 'UE' },
+  us: { 'en-us': 'US', 'pt-br': 'EUA' },
+  oecd: { 'en-us': 'OECD', 'pt-br': 'OCDE' },
+}
+
+export function jurisdictionMatches(jurisdiction, code) {
+  const expected = JURISDICTION_LABELS[code]
+  if (!expected || jurisdiction == null) return false
+  if (typeof jurisdiction === 'string') {
+    const key = jurisdiction.toLowerCase()
+    if (key === code) return true
+    const mapped = JURISDICTION_LABELS[key]
+    if (!mapped) return false
+    return (
+      mapped['en-us'] === expected['en-us'] ||
+      mapped['pt-br'] === expected['pt-br']
+    )
+  }
+  return (
+    jurisdiction['en-us'] === expected['en-us'] ||
+    jurisdiction['pt-br'] === expected['pt-br']
+  )
+}
+
+export function jurisdictionLabel(jurisdiction, lang, t) {
+  if (jurisdiction == null) return ''
+  if (typeof jurisdiction === 'string') {
+    return t ? t(`s3.jurisdiction.${jurisdiction}`, { defaultValue: jurisdiction }) : jurisdiction
+  }
+  return pickLocalized(jurisdiction, lang)
+}
+
 export function primaryRegulatoryContext(contexts = []) {
   if (!contexts.length) return null
   const priority = ['brazil', 'oecd', 'eu', 'us']
-  for (const jurisdiction of priority) {
-    const match = contexts.find((context) => context.jurisdiction === jurisdiction)
+  for (const code of priority) {
+    const match = contexts.find((context) =>
+      jurisdictionMatches(context.jurisdiction, code),
+    )
     if (match) return match
   }
   return contexts[0]
 }
 
-export function formatJurisdictionBadges(contexts = [], t) {
-  const jurisdictions = [...new Set(contexts.map((context) => context.jurisdiction))]
-  return jurisdictions.map((value) => t(`s3.jurisdiction.${value}`)).join(' · ')
+export function formatJurisdictionBadges(contexts = [], lang, t) {
+  const seen = new Set()
+  const labels = []
+  for (const context of contexts) {
+    const label = jurisdictionLabel(context.jurisdiction, lang, t)
+    if (!label || seen.has(label)) continue
+    seen.add(label)
+    labels.push(label)
+  }
+  return labels.join(' · ')
 }
 
 export function regulatoryUrlFromContexts(contexts = []) {

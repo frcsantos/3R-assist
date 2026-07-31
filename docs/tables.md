@@ -7,7 +7,7 @@ Engine: PostgreSQL via Neon (Vercel Postgres) or a local PostgreSQL instance. Dr
 | Table | Purpose |
 | --- | --- |
 | [methods](#methods) | Curated 3R alternative methods corpus |
-| [method_regulatory_contexts](#method_regulatory_contexts) | Per-method validation status by jurisdiction |
+| [regulations](#regulations) | Per-method validation status by jurisdiction |
 | [endpoints](#endpoints) | Controlled vocabulary for toxicological endpoints |
 | [routes](#routes) | Controlled vocabulary for administration routes |
 | [study_domains](#study_domains) | Controlled vocabulary for study domains |
@@ -24,7 +24,7 @@ Engine: PostgreSQL via Neon (Vercel Postgres) or a local PostgreSQL instance. Dr
 
 ## methods
 
-Curated catalogue of alternative methods (replacement, reduction, refinement). Only rows with `active = TRUE` are eligible for retrieval. Validation status and jurisdiction live in `method_regulatory_contexts`, not on this table.
+Curated catalogue of alternative methods (replacement, reduction, refinement). Only rows with `active = TRUE` are eligible for retrieval. Validation status and jurisdiction live in `regulations`, not on this table.
 
 | Column | Type | Nullable | Default | Description |
 | --- | --- | --- | --- | --- |
@@ -38,7 +38,7 @@ Curated catalogue of alternative methods (replacement, reduction, refinement). O
 | `study_domain` | `TEXT` | NO | — | Primary study domain code; FK → `study_domains(code)`. Values: `general`, `pharma`, `cosmetics`, `chemical_safety`. |
 | `oecd_ref` | `TEXT` | YES | — | OECD Test Guideline or Guidance Document reference (e.g. `TG 439`, `GD 129`). `NULL` for non-OECD methods. |
 | `ncit_id` | `TEXT` | YES | — | NCI Thesaurus concept ID for the endpoint category. |
-| `source_citation` | `TEXT` | YES | — | Bibliographic citation for the primary source document. API responses fall back to `documents.doc_ref` when null. |
+| `source_citation` | `TEXT` | YES | — | Bibliographic citation for the primary source document. API responses fall back to `documents.doc_citation` (`en-us`, then `pt-br`) when null. |
 | `source_doc_id` | `INTEGER` | YES | — | FK → `documents(id)` `ON DELETE SET NULL`. Primary source document. API exposes `source_url` from `documents.url`. |
 | `source_db` | `TEXT` | NO | — | Provenance of the curated entry. Values: `OECD_TG`, `ECVAM_DBALM`, `NICEATM`, `FARMACOPEIA_BR`, `TSAR`. |
 | `replacement_rationale` | `TEXT` | YES | — | Non-null/non-empty ⇒ method qualifies as replacement; value is the auditable rationale (ADR-023). |
@@ -56,7 +56,7 @@ Curated catalogue of alternative methods (replacement, reduction, refinement). O
 
 ---
 
-## method_regulatory_contexts
+## regulations
 
 Validation status and regulatory recognition for a method, scoped by jurisdiction. One row per `(method_id, jurisdiction)`.
 
@@ -64,14 +64,14 @@ Validation status and regulatory recognition for a method, scoped by jurisdictio
 | --- | --- | --- | --- | --- |
 | `id` | `SERIAL` | NO | auto | Primary key. |
 | `method_id` | `INTEGER` | NO | — | FK → `methods(id)` `ON DELETE CASCADE`. |
-| `jurisdiction` | `TEXT` | NO | — | Regulatory jurisdiction: `brazil` (CONCEA / ANVISA / MAPA), `eu` (ECHA, EMA, Cosmetics Reg 1223/2009, EFSA), `us` (FDA, EPA, ICCVAM / NICEATM), `oecd` (OECD TG adoption). |
+| `jurisdiction` | `JSONB` | NO | — | Localized regulatory jurisdiction: `{"en-us":"...","pt-br":"..."}` — Brazil/Brasil, EU/UE, US/EUA, OECD/OCDE. |
 | `validation_status` | `TEXT` | NO | — | Status in that context: `validated`, `in_process_of_validation`, or `not_validated`. |
 | `regulation_status` | `TEXT` | YES | — | Regulatory standing: `not_approved`, `approved`, `recommended`, or `mandatory`. |
 | `regulation_date` | `DATE` | YES | — | Date of the regulation / recognition / adoption for this context (`YYYY-MM-DD`). |
 | `regulation_purpose` | `TEXT` | YES | — | What the method is recognized/validated for in this context (endpoint, use, or regulatory purpose). |
 | `regulatory_body` | `TEXT` | YES | — | Issuing body, e.g. `CONCEA`, `ANVISA`, `ECHA`, `EMA`, `EPA`, `FDA`, `ICCVAM`, `OECD`. |
 | `regulatory_doc_id` | `INTEGER` | YES | — | FK → `documents(id)` `ON DELETE SET NULL`. Regulatory document for this context. API exposes `regulatory_url` from `documents.url`. |
-| `regulatory_citation` | `TEXT` | YES | — | Bibliographic citation / short reference for the regulatory recognition. API responses fall back to `documents.doc_ref` when null. |
+| `regulatory_citation` | `TEXT` | YES | — | Bibliographic citation / short reference for the regulatory recognition. API responses fall back to `documents.doc_citation` (`en-us`, then `pt-br`) when null. |
 | `notes` | `TEXT` | YES | — | Free-text notes (applicability limits, pending verification, etc.). |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
 
@@ -246,7 +246,7 @@ Catalogue of source documents used for method curation and regulatory context (p
 | --- | --- | --- | --- | --- |
 | `id` | `SERIAL` | NO | auto | Primary key. |
 | `slug` | `TEXT` | NO | — | Unique URL-safe identifier (e.g. `oecd-tg439`, `concea-rn-18-2014`). |
-| `doc_ref` | `TEXT` | NO | — | Human-readable document reference / citation key (e.g. `OECD TG 439`, `RN 18/2014`). |
+| `doc_citation` | `JSONB` | NO | — | Localized document citation / reference key: `{"en-us": "...", "pt-br": "..."}` (e.g. `OECD TG 439`, `RN 18/2014`). |
 | `date` | `DATE` | YES | — | Publication / adoption / issuance date. |
 | `category` | `TEXT` | NO | — | Document kind: `method_protocol`, `guideline`, or `regulation`. |
 | `url` | `TEXT` | YES | — | URL of the document, when available. |
@@ -277,9 +277,9 @@ erDiagram
     users ||--o{ suggestions : submits
     queries ||--o{ feedback : receives
     methods ||--o{ feedback : rated_in
-    methods ||--o{ method_regulatory_contexts : has
+    methods ||--o{ regulations : has
     documents ||--o{ methods : sources
-    documents ||--o{ method_regulatory_contexts : regulates
+    documents ||--o{ regulations : regulates
     endpoints ||--o{ methods : categorizes
     study_domains ||--o{ methods : scopes
     routes ||--o{ route_endpoints : maps
@@ -318,4 +318,7 @@ Migrations that define or alter these tables:
 | `027_documents.sql` | creates `documents` (`slug`, `doc_ref`, `date`, `category`, `url`) |
 | `028_doc_fks_and_citations.sql` | `methods.source_doc_id`; MRC `regulatory_doc_id` + `regulatory_citation` (replaces `regulatory_url`); drops `source_url`/`source_date` |
 | `029_mrc_validation_status_values.sql` | normalizes MRC `validation_status` to `validated` \| `in_process_of_validation` \| `not_validated`; maps legacy `accepted`/`emerging` values |
+| `030_documents_doc_citation.sql` | renames `documents.doc_ref` → `doc_citation` and converts to localized JSONB (`en-us` / `pt-br`) |
+| `031_mrc_jurisdiction_localized.sql` | converts `method_regulatory_contexts.jurisdiction` to localized JSONB |
+| `032_rename_regulations.sql` | renames table `method_regulatory_contexts` → `regulations` |
 | `manual/008_drop_category_3r.sql` | legacy gated DROP of `category_3r` (superseded by `026`) |

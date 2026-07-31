@@ -7,6 +7,8 @@ import {
   formatMatchedParams,
   formatOecdReference,
   isLowConfidenceScore,
+  jurisdictionLabel,
+  jurisdictionMatches,
   methodDescription,
   methodDisplayName,
   methodThreeRBadges,
@@ -87,7 +89,9 @@ export default function ResultsPage() {
       }
       if (
         jurisdictionFilter !== 'all' &&
-        !contexts.some((context) => context.jurisdiction === jurisdictionFilter)
+        !contexts.some((context) =>
+          jurisdictionMatches(context.jurisdiction, jurisdictionFilter),
+        )
       ) {
         return false
       }
@@ -281,12 +285,20 @@ export default function ResultsPage() {
                       : null
                   }
                   regulatoryStatuses={contexts.map((context, index) => {
-                    const jurisdiction = t(`s3.jurisdiction.${context.jurisdiction}`)
+                    const jurisdiction = jurisdictionLabel(
+                      context.jurisdiction,
+                      lang,
+                      t,
+                    )
                     const status = context.regulation_status
                       ? t(`s3.regulatoryStatus.${context.regulation_status}`)
                       : null
+                    const keyBase =
+                      typeof context.jurisdiction === 'object'
+                        ? context.jurisdiction['en-us']
+                        : context.jurisdiction
                     return {
-                      key: `${context.jurisdiction}-${index}`,
+                      key: `${keyBase}-${index}`,
                       label: status ? `${jurisdiction}: ${status}` : jurisdiction,
                       citation: context.regulatory_citation?.trim() || null,
                       url: context.regulatory_url || null,

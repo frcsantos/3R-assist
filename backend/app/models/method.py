@@ -1,12 +1,12 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field, computed_field, field_validator
 
 from app.models.i18n import LocalizedStr, LocalizedStrList
+from app.models.jurisdiction import parse_jurisdiction
 
 ThreeRClass = Literal["replacement", "reduction", "refinement"]
-RegulatoryJurisdiction = Literal["brazil", "eu", "us", "oecd"]
 StudyDomain = Literal["pharma", "cosmetics", "chemical_safety", "general"]
 ValidationStatus = Literal[
     "validated",
@@ -22,7 +22,7 @@ _THREE_R_ORDER: tuple[ThreeRClass, ...] = ("replacement", "reduction", "refineme
 
 
 class MethodRegulatoryContext(BaseModel):
-    jurisdiction: RegulatoryJurisdiction
+    jurisdiction: LocalizedStr
     validation_status: ValidationStatus
     regulation_status: RegulatoryStatus | None = None
     regulation_date: date | None = None
@@ -33,6 +33,11 @@ class MethodRegulatoryContext(BaseModel):
     # Resolved from documents.url when regulatory_doc_id is set (not a DB column).
     regulatory_url: str | None = None
     notes: str | None = None
+
+    @field_validator("jurisdiction", mode="before")
+    @classmethod
+    def _coerce_jurisdiction(cls, value):
+        return parse_jurisdiction(value)
 
 
 class Method(BaseModel):

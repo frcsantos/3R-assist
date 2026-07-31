@@ -40,7 +40,7 @@ class StubDocumentRepository:
             Document(
                 id=1,
                 slug="rn-18-2014",
-                doc_ref="RN 18/2014",
+                doc_citation=localized_str("RN 18/2014"),
                 date=None,
                 category="regulation",
                 url="https://example.org/rn18",
@@ -48,7 +48,7 @@ class StubDocumentRepository:
             Document(
                 id=2,
                 slug="oecd-tg439",
-                doc_ref="OECD TG 439",
+                doc_citation=localized_str("OECD TG 439"),
                 date=None,
                 category="method_protocol",
                 url=None,
@@ -56,7 +56,7 @@ class StubDocumentRepository:
             Document(
                 id=3,
                 slug="gd-129",
-                doc_ref="OECD GD 129",
+                doc_citation=localized_str("OECD GD 129"),
                 date=None,
                 category="guideline",
                 url=None,
@@ -91,7 +91,10 @@ def test_list_methods_catalogue(monkeypatch):
     assert method["name"]["pt-br"] == "Epiderme reconstruída"
     assert "embedding_json" not in method
     assert "text_for_embedding" not in method
-    assert body["methods"][0]["regulatory_contexts"][0]["jurisdiction"] == "oecd"
+    assert body["methods"][0]["regulatory_contexts"][0]["jurisdiction"] == {
+        "en-us": "OECD",
+        "pt-br": "OCDE",
+    }
     get_settings.cache_clear()
 
 
@@ -106,7 +109,10 @@ def test_list_documents_filtered(monkeypatch):
         params=[("category", "regulation"), ("category", "guideline")],
     )
     assert response.status_code == 200
-    refs = [doc["doc_ref"] for doc in response.json()["documents"]]
+    refs = [
+        doc["doc_citation"]["en-us"]
+        for doc in response.json()["documents"]
+    ]
     assert set(refs) == {"OECD GD 129", "RN 18/2014"}
     assert "OECD TG 439" not in refs
     get_settings.cache_clear()
