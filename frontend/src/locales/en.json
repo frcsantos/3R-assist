@@ -101,6 +101,7 @@
       "matchByDocCitation": "Document citation",
       "matchByUrl": "URL",
       "addDocument": "Add document",
+      "addNewDocument": "Add new document",
       "addDocumentError": "Could not open the add-document form.",
       "addMethod": "Add method",
       "addMethodError": "Could not open the add-method form.",

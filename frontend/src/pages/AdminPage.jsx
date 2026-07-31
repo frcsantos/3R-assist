@@ -257,7 +257,9 @@ function AddRowModal({
   lockedColumns = [],
   primaryKey = null,
   protocolAssist = false,
+  documentInitialValues = null,
   title = null,
+  overlayClassName = 'z-50',
   onClose,
   onSaved,
 }) {
@@ -282,21 +284,35 @@ function AddRowModal({
       columns,
     ),
   )
+  const [fieldOptions, setFieldOptions] = useState(() => columnOptions ?? {})
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [protocolText, setProtocolText] = useState('')
   const [extracting, setExtracting] = useState(false)
   const [extractElapsedSeconds, setExtractElapsedSeconds] = useState(0)
+  const [nestedDocumentSchema, setNestedDocumentSchema] = useState(null)
+  const [nestedDocumentOpen, setNestedDocumentOpen] = useState(false)
+  const [nestedDocumentLoading, setNestedDocumentLoading] = useState(false)
+  const [nestedDocumentError, setNestedDocumentError] = useState(null)
+
+  useEffect(() => {
+    setFieldOptions(columnOptions ?? {})
+  }, [columnOptions])
 
   useEffect(() => {
     function onKeyDown(event) {
-      if (event.key === 'Escape' && !saving && !extracting) {
+      if (
+        event.key === 'Escape' &&
+        !saving &&
+        !extracting &&
+        !nestedDocumentOpen
+      ) {
         onClose()
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose, saving, extracting])
+  }, [onClose, saving, extracting, nestedDocumentOpen])
 
   useEffect(() => {
     if (!extracting) {
@@ -322,6 +338,42 @@ function AddRowModal({
       }
       return withDerivedCategory3r(next, columns)
     })
+  }
+
+  async function openNestedDocument() {
+    if (nestedDocumentLoading || saving || extracting || nestedDocumentOpen) {
+      return
+    }
+    setNestedDocumentError(null)
+    setNestedDocumentLoading(true)
+    try {
+      const schema = await fetchAdminTable('documents', { limit: 1, offset: 0 })
+      setNestedDocumentSchema(schema)
+      setNestedDocumentOpen(true)
+    } catch {
+      setNestedDocumentError(t('admin.extract.addDocumentError'))
+    } finally {
+      setNestedDocumentLoading(false)
+    }
+  }
+
+  async function handleNestedDocumentSaved(row) {
+    setNestedDocumentOpen(false)
+    if (row?.id != null) {
+      updateValue('source_doc_id', String(row.id))
+    }
+    try {
+      const schema = await fetchAdminTable(table, { limit: 1, offset: 0 })
+      const refreshed = schema.column_options?.source_doc_id
+      if (refreshed) {
+        setFieldOptions((current) => ({
+          ...current,
+          source_doc_id: refreshed,
+        }))
+      }
+    } catch {
+      // Keep existing options; newly created id is still selected.
+    }
   }
 
   async function extractFromProtocol(event) {
@@ -420,16 +472,16 @@ function AddRowModal({
     protocolTrimmedLength >= POLICY_TEXT_MIN &&
     !extracting &&
     !saving
+  const nestedDocumentColumns =
+    nestedDocumentSchema?.columns.filter(
+      (column) => !(nestedDocumentSchema.auto_columns ?? []).includes(column),
+    ) ?? []
 
   return (
+    <>
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 px-container-padding py-section-gap"
+      className={`fixed inset-0 ${overlayClassName} flex items-center justify-center bg-on-surface/40 px-container-padding py-section-gap`}
       role="presentation"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !saving && !extracting) {
-          onClose()
-        }
-      }}
     >
       <div
         role="dialog"
@@ -502,7 +554,7 @@ function AddRowModal({
             const type = types?.[column]
             const locked = lockedSet.has(column)
             const required = !locked && requiredSet.has(column)
-            const options = columnOptions?.[column] ?? []
+            const options = fieldOptions?.[column] ?? []
             const foreignKey = foreignKeys?.[column]
             const useSelect = options.length > 0
             const useMultiSelect = isMultiSelectColumn(column, type, options)
@@ -512,6 +564,8 @@ function AddRowModal({
             const selectedValues = useMultiSelect
               ? parseMultiSelectDraft(values[column])
               : []
+            const canAddDocument =
+              column === 'source_doc_id' && foreignKey?.table === 'documents'
 
             function toggleMultiOption(optionValue) {
               const next = selectedValues.includes(optionValue)
@@ -613,6 +667,34 @@ function AddRowModal({
                       className={fieldClass}
                     />
                   )}
+                    {canAddDocument ? (
+                      <div className="mt-2 flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          disabled={
+                            saving ||
+                            extracting ||
+                            locked ||
+                            nestedDocumentLoading ||
+                            nestedDocumentOpen
+                          }
+                          onClick={openNestedDocument}
+                          className="inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-3 py-1.5 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {nestedDocumentLoading
+                            ? t('admin.loading')
+                            : t('admin.extract.addNewDocument')}
+                        </button>
+                        {nestedDocumentError ? (
+                          <p
+                            className="font-metadata text-metadata text-error"
+                            role="alert"
+                          >
+                            {nestedDocumentError}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
                 </div>
                 <p className="whitespace-pre-wrap font-metadata text-metadata text-on-secondary-container opacity-65 sm:pt-6">
                   {hint || t('admin.noCommentHint')}
@@ -642,6 +724,28 @@ function AddRowModal({
         </div>
       </div>
     </div>
+    {nestedDocumentOpen && nestedDocumentSchema
+      ? createPortal(
+          <AddRowModal
+            key="nested-add-document"
+            table="documents"
+            columns={nestedDocumentColumns}
+            comments={nestedDocumentSchema.column_comments}
+            types={nestedDocumentSchema.column_types}
+            requiredColumns={nestedDocumentSchema.required_columns}
+            foreignKeys={nestedDocumentSchema.foreign_keys}
+            columnOptions={nestedDocumentSchema.column_options}
+            mode="create"
+            title={t('admin.extract.addDocument')}
+            initialValues={documentInitialValues}
+            overlayClassName="z-[60]"
+            onClose={() => setNestedDocumentOpen(false)}
+            onSaved={handleNestedDocumentSaved}
+          />,
+          document.body,
+        )
+      : null}
+    </>
   )
 }
 
@@ -1704,7 +1808,13 @@ function ExpandArrow({ open }) {
   )
 }
 
-function ExtractedMethodRow({ method, documentDate, institution }) {
+function ExtractedMethodRow({
+  method,
+  documentDate,
+  institution,
+  documentName,
+  documentUrl,
+}) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language?.startsWith('pt') ? 'pt' : 'en'
   const [open, setOpen] = useState(false)
@@ -2041,6 +2151,11 @@ function ExtractedMethodRow({ method, documentDate, institution }) {
               mode="create"
               protocolAssist
               title={t('admin.extract.addMethod')}
+              documentInitialValues={documentInitialValuesFromExtracted({
+                documentName,
+                documentDate,
+                url: documentUrl,
+              })}
               initialValues={methodInitialValuesFromExtracted(
                 method,
                 matchResult?.normalized_oecd_ref,
@@ -2467,6 +2582,8 @@ function ExtractPanel() {
                       method={method}
                       documentDate={result.document_date}
                       institution={result.responsible_institution}
+                      documentName={result.document_name}
+                      documentUrl={documentUrl}
                     />
                   ))}
                 </tbody>

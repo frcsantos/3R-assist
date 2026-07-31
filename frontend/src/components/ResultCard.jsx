@@ -82,7 +82,7 @@ function RegulationModal({ item, onClose, closeLabel, noCitationLabel, linkLabel
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 font-metadata text-metadata text-on-surface-variant transition-colors hover:text-primary"
+            className="shrink-0 -mr-1 -mt-1 flex h-9 w-9 items-center justify-center rounded text-2xl leading-none text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
             aria-label={closeLabel}
           >
             ×
@@ -149,9 +149,25 @@ export default function ResultCard({
       <div className="mb-2 flex items-start justify-between gap-card-gap">
         <h3 className="font-card-title text-card-title text-primary">{title}</h3>
         {score != null ? (
-          <span className="shrink-0 text-right font-metadata text-metadata text-text-tertiary">
+          <span
+            className="group relative shrink-0 text-right font-metadata text-metadata text-text-tertiary"
+            tabIndex={matchedParams.length > 0 ? 0 : undefined}
+            aria-label={
+              matchedParams.length > 0
+                ? `${matchLabel} ${score}%. ${matchedParamsLabel}: ${matchedParams.join(', ')}`
+                : undefined
+            }
+          >
             {matchLabel}{' '}
             <span className="font-monospace-data text-monospace-data">{score}%</span>
+            {matchedParams.length > 0 ? (
+              <span
+                role="tooltip"
+                className="pointer-events-none absolute right-0 top-full z-10 mt-1 w-max max-w-[16rem] rounded border border-border-subtle bg-surface-container-lowest px-2 py-1.5 text-left font-metadata text-metadata text-on-secondary-container opacity-0 shadow-md transition-opacity duration-ethos group-hover:opacity-100 group-focus-within:opacity-100"
+              >
+                {matchedParamsLabel}: {matchedParams.join(', ')}
+              </span>
+            ) : null}
           </span>
         ) : null}
       </div>
@@ -237,11 +253,6 @@ export default function ResultCard({
           {purposeLabel ? `${purposeLabel}: ${purpose}` : purpose}
         </p>
       ) : null}
-      {matchedParams.length > 0 && (
-        <p className="mt-3 font-metadata text-metadata text-on-surface-variant">
-          {matchedParamsLabel}: {matchedParams.join(', ')}
-        </p>
-      )}
       <RegulationModal
         item={selectedRegulation}
         onClose={() => setSelectedRegulation(null)}

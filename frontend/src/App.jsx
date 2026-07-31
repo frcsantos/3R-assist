@@ -18,9 +18,10 @@ export default function App() {
         <Route path="/admin/:section" element={<AdminPage />} />
         <Route path="/" element={<AnalyzePage onSubmit={analyzeProtocol} />} />
         <Route path="/parameters" element={<ParametersPage />} />
-        <Route path="/resultados" element={<ResultsPage />} />
+        <Route path="/results" element={<ResultsPage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/explore/:section" element={<ExplorePage />} />
+        <Route path="/resultados" element={<Navigate to="/results" replace />} />
         <Route path="/buscar" element={<Navigate to="/explore" replace />} />
         <Route path="/glossary" element={<GlossaryPage />} />
         <Route path="/info" element={<InfoPage />} />

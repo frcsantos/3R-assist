@@ -101,6 +101,7 @@
       "matchByDocCitation": "Citação do documento",
       "matchByUrl": "URL",
       "addDocument": "Adicionar documento",
+      "addNewDocument": "Adicionar novo documento",
       "addDocumentError": "Não foi possível abrir o formulário de novo documento.",
       "addMethod": "Adicionar método",
       "addMethodError": "Não foi possível abrir o formulário de novo método.",

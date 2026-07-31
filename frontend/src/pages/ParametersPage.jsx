@@ -94,7 +94,7 @@ export default function ParametersPage() {
       const activeResult =
         experimentSearchResults[activeExperimentIndex] ??
         experimentSearchResults[0]
-      navigate('/resultados', {
+      navigate('/results', {
         state: {
           ...analysis,
           experimentStates,

@@ -482,13 +482,16 @@ class AdminRepository:
             for row in rows:
                 value = _serialize_value(row["value"])
                 label = row["label"]
+                id_text = (
+                    f"id: {value}" if foreign_column == "id" else str(value)
+                )
                 if label is None or str(label) == str(value):
-                    label_text = str(value)
+                    label_text = id_text
                 elif label_column == "slug":
                     # Prefer slug-first so alphabetical order matches the visible text.
-                    label_text = f"{label} ({value})"
+                    label_text = f"{label} ({id_text})"
                 else:
-                    label_text = f"{value} — {label}"
+                    label_text = f"{id_text} — {label}"
                 options.append({"value": value, "label": label_text})
             return options
 
@@ -501,8 +504,10 @@ class AdminRepository:
         )
         return [
             {
-                "value": _serialize_value(row["value"]),
-                "label": str(_serialize_value(row["value"])),
+                "value": (value := _serialize_value(row["value"])),
+                "label": (
+                    f"id: {value}" if foreign_column == "id" else str(value)
+                ),
             }
             for row in rows
         ]
