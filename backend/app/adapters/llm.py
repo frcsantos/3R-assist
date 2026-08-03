@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import urllib.request
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Literal
@@ -56,6 +57,10 @@ def log_extraction_error(error: ExtractionError) -> None:
 
 
 class LLMAdapter(ABC):
+    def call(self, prompt: str, *, max_tokens: int, json_mode: bool = False) -> str | None:
+        """Send a single-turn prompt; return raw text or None on failure/stub."""
+        return None
+
     @abstractmethod
     def extract_raw_experiments(self, text: str) -> list[RawExtraction] | ExtractionError:
         pass
@@ -490,55 +495,96 @@ def _raw_experiments_from_payload(
     return [single]
 
 
+def _extract_from_raw(raw: str) -> list[RawExtraction] | ExtractionError:
+    try:
+        payload = _parse_json_payload(raw)
+    except json.JSONDecodeError as exc:
+        error = ExtractionError(
+            message=f"LLM response is not valid JSON: {exc}",
+            reason="json_decode_error",
+            raw_response=truncate_raw_response(raw),
+        )
+        log_extraction_error(error)
+        return error
+    parsed = _raw_experiments_from_payload(payload, raw_response=raw)
+    if isinstance(parsed, ExtractionError):
+        log_extraction_error(parsed)
+    return parsed
+
+
 class LlmCallAdapter(LLMAdapter):
     def __init__(self, model: str) -> None:
         self._model = _normalize_model(model)
 
-    def extract_raw_experiments(self, text: str) -> list[RawExtraction] | ExtractionError:
+    def call(self, prompt: str, *, max_tokens: int, json_mode: bool = False) -> str | None:
         try:
-            import llmcall
+            import llmcall as _llmcall
             from llmcall import CallConstraints, LLMError as LlmCallError
         except ImportError:
-            return ExtractionError(message="llmcall package is not installed.")
-
-        result = llmcall.call(
-            self._model,
-            build_extraction_prompt(text),
-            constraints=CallConstraints(
-                max_tokens=EXTRACTION_MAX_TOKENS,
-                response_format="json",
-            ),
-        )
+            logger.warning("llmcall package is not installed")
+            return None
+        kwargs: dict = {"max_tokens": max_tokens}
+        if json_mode:
+            kwargs["response_format"] = "json"
+        result = _llmcall.call(self._model, prompt, constraints=CallConstraints(**kwargs))
         if isinstance(result, LlmCallError):
-            error = ExtractionError(
-                message=result.message,
-                reason="llm_api_error",
-            )
-            log_extraction_error(error)
-            return error
+            logger.warning("LLM API error: %s", result.message)
+            return None
+        return result.content
 
-        raw_content = result.content
-        try:
-            payload = _parse_json_payload(raw_content)
-        except json.JSONDecodeError as exc:
-            error = ExtractionError(
-                message=f"LLM response is not valid JSON: {exc}",
-                reason="json_decode_error",
-                raw_response=truncate_raw_response(raw_content),
-            )
-            log_extraction_error(error)
-            return error
+    def extract_raw_experiments(self, text: str) -> list[RawExtraction] | ExtractionError:
+        raw = self.call(build_extraction_prompt(text), max_tokens=EXTRACTION_MAX_TOKENS, json_mode=True)
+        if raw is None:
+            return ExtractionError(message="LLM call returned no response.")
+        return _extract_from_raw(raw)
 
-        parsed = _raw_experiments_from_payload(
-            payload,
-            raw_response=raw_content,
+
+class OllamaLLMAdapter(LLMAdapter):
+    """Calls a locally-running Ollama server (default: http://localhost:11434)."""
+
+    def __init__(self, model: str, base_url: str = "http://localhost:11434") -> None:
+        self._model = model
+        self._base_url = base_url.rstrip("/")
+
+    def call(self, prompt: str, *, max_tokens: int, json_mode: bool = False) -> str | None:
+        payload: dict = {
+            "model": self._model,
+            "prompt": prompt,
+            "stream": False,
+            "options": {"num_predict": max_tokens},
+        }
+        if json_mode:
+            payload["format"] = "json"
+        data = json.dumps(payload).encode()
+        req = urllib.request.Request(
+            f"{self._base_url}/api/generate",
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
         )
-        if isinstance(parsed, ExtractionError):
-            log_extraction_error(parsed)
-        return parsed
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                body = json.loads(resp.read())
+            return body.get("response")
+        except Exception as exc:
+            logger.warning("Ollama call failed: %s", exc)
+            return None
+
+    def extract_raw_experiments(self, text: str) -> list[RawExtraction] | ExtractionError:
+        raw = self.call(build_extraction_prompt(text), max_tokens=EXTRACTION_MAX_TOKENS, json_mode=True)
+        if raw is None:
+            return ExtractionError(message="Ollama call returned no response.")
+        return _extract_from_raw(raw)
 
 
-def build_llm_adapter(*, model: str, use_stub: bool) -> LLMAdapter:
+def build_llm_adapter(
+    *,
+    model: str,
+    use_stub: bool,
+    ollama_model: str | None = None,
+) -> LLMAdapter:
+    if ollama_model:
+        return OllamaLLMAdapter(model=ollama_model)
     if use_stub:
         return StubLLMAdapter()
     return LlmCallAdapter(model=model)

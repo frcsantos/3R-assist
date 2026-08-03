@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 const MIN_LENGTH = 20
-const MAX_LENGTH = 10000
+const MAX_LENGTH = 40000
 
 export { MIN_LENGTH, MAX_LENGTH }
 

@@ -1,6 +1,7 @@
 {
   "nav": {
     "analyze": "Analisar",
+    "literature": "Literatura",
     "search": "Buscar",
     "glossary": "Glossário",
     "info": "Info",
@@ -223,5 +224,54 @@
   "s4": {
     "placeholderTitle": "Busca direta",
     "placeholderBody": "Filtros estruturados sem análise de protocolo — em desenvolvimento."
+  },
+  "litSearch": {
+    "title": "Busca na literatura",
+    "subtitle": "Cole uma descrição do estudo incluindo hipótese, objetivos e métodos. O sistema buscará no PubMed alternativas ao uso de animais.",
+    "inputLabel": "Descrição do estudo",
+    "placeholder": "Inclua:\n• Hipótese científica — qual pergunta este estudo responde?\n• Objetivos — quais desfechos são medidos?\n• Métodos detalhados — espécie, procedimento, duração, diretriz seguida\n\nExemplo: Hipotetizamos que o composto X causa irritação dérmica aguda. O objetivo é determinar seu potencial de irritação para registro no REACH. Ratos Wistar (n=10) receberão aplicação oclusiva de 0,5 mL/kg por 4 horas conforme OECD TG 404...",
+    "tooShort": "Mínimo {{min}} caracteres",
+    "submit": "Buscar literatura",
+    "analyzing": "Buscando na literatura PubMed…",
+    "error": "Não foi possível concluir a busca. Tente novamente.",
+    "retry": "Tentar novamente"
+  },
+  "pubmed": {
+    "cta": {
+      "label": "Buscar literatura emergente →",
+      "description": "Pesquise o banco completo do PubMed em busca de alternativas ainda não reconhecidas por órgãos regulatórios."
+    },
+    "page": {
+      "title": "Alternativas na literatura emergente",
+      "subtitle": "Busca ampla no PubMed por métodos que podem reduzir, substituir ou refinar o uso animal — ainda não validados por órgãos regulatórios.",
+      "backToResults": "Voltar às alternativas validadas",
+      "analyzing": "Buscando na literatura do PubMed…",
+      "error": "Não foi possível concluir a busca na literatura. Tente novamente.",
+      "retry": "Tentar novamente",
+      "endpointHypothesis": "Endpoint / hipótese:",
+      "literatureAlternatives": "Candidatos na literatura",
+      "totalSearched": "{{count}} registros candidatos pesquisados",
+      "noLiterature": "Nenhuma literatura relevante encontrada para este protocolo. O índice do PubMed pode ainda não conter alternativas emergentes para este endpoint."
+    },
+    "necessity": {
+      "title": "Necessidade do uso animal",
+      "not_necessary": "Desnecessário",
+      "possibly_avoidable": "Possivelmente evitável",
+      "necessary": "Necessário",
+      "keyConcerns": "Preocupações principais",
+      "confidence": {
+        "high": "Alta confiança",
+        "medium": "Média confiança",
+        "low": "Baixa confiança"
+      }
+    },
+    "summary": {
+      "title": "Síntese de evidências",
+      "citedArticles": "Artigos citados"
+    },
+    "results": {
+      "scoreLabel": "Relevância:",
+      "pubmedLink": "Ver no PubMed"
+    }
   }
 }

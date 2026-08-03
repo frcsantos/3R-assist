@@ -118,7 +118,7 @@ def to_protocol_parameters(result: ExtractionResult) -> ProtocolParameters:
 
 
 class AnalyzeRequest(BaseModel):
-    protocol_text: str = Field(..., min_length=20, max_length=10000)
+    protocol_text: str = Field(..., min_length=20, max_length=40000)
     lang: Literal["pt", "en"] | None = None
 
 

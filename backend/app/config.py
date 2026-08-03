@@ -39,6 +39,8 @@ class Settings(BaseSettings):
         alias="ANTHROPIC_MODEL",
     )
 
+    ollama_model: str | None = Field(default=None, alias="OLLAMA_MODEL")
+
     embedding_model: str = Field(
         default="all-MiniLM-L6-v2",
         alias="EMBEDDING_MODEL",

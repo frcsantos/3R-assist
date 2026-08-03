@@ -15,6 +15,7 @@ def get_llm_adapter() -> LLMAdapter:
     return build_llm_adapter(
         model=settings.resolved_llm_model,
         use_stub=settings.use_stub_llm,
+        ollama_model=settings.ollama_model,
     )
 
 
