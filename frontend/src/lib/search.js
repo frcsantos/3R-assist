@@ -33,14 +33,28 @@ export function isLowConfidenceScore(score) {
   return score <= 0.65
 }
 
+export function localeKey(lang) {
+  const normalized = String(lang ?? 'en').toLowerCase().replace('_', '-')
+  if (normalized === 'pt' || normalized.startsWith('pt-')) return 'pt-br'
+  return 'en-us'
+}
+
+export function pickLocalized(value, lang) {
+  if (value == null) return ''
+  if (typeof value === 'string') return value
+  if (typeof value !== 'object') return String(value)
+  const key = localeKey(lang)
+  return value[key] || value['en-us'] || value['pt-br'] || ''
+}
+
 export function methodDisplayName(method, lang) {
   if (!method) return ''
-  return lang === 'pt' ? method.name_pt : method.name_en
+  return pickLocalized(method.name, lang)
 }
 
 export function methodDescription(method, lang) {
   if (!method) return ''
-  return lang === 'pt' ? method.description_pt : method.description_en
+  return pickLocalized(method.description, lang)
 }
 
 export function formatOecdReference(ref) {
@@ -91,24 +105,73 @@ export function primaryThreeR(methodOrCategory) {
   return values[0] ?? 'replacement'
 }
 
-export function primaryValidationContext(contexts = []) {
+export const JURISDICTION_LABELS = {
+  brazil: { 'en-us': 'Brazil', 'pt-br': 'Brasil' },
+  eu: { 'en-us': 'EU', 'pt-br': 'UE' },
+  us: { 'en-us': 'US', 'pt-br': 'EUA' },
+  oecd: { 'en-us': 'OECD', 'pt-br': 'OCDE' },
+}
+
+export function jurisdictionMatches(jurisdiction, code) {
+  const expected = JURISDICTION_LABELS[code]
+  if (!expected || jurisdiction == null) return false
+  if (typeof jurisdiction === 'string') {
+    const key = jurisdiction.toLowerCase()
+    if (key === code) return true
+    const mapped = JURISDICTION_LABELS[key]
+    if (!mapped) return false
+    return (
+      mapped['en-us'] === expected['en-us'] ||
+      mapped['pt-br'] === expected['pt-br']
+    )
+  }
+  return (
+    jurisdiction['en-us'] === expected['en-us'] ||
+    jurisdiction['pt-br'] === expected['pt-br']
+  )
+}
+
+export function jurisdictionLabel(jurisdiction, lang, t) {
+  if (jurisdiction == null) return ''
+  if (typeof jurisdiction === 'string') {
+    return t ? t(`s3.jurisdiction.${jurisdiction}`, { defaultValue: jurisdiction }) : jurisdiction
+  }
+  return pickLocalized(jurisdiction, lang)
+}
+
+export function primaryRegulatoryContext(contexts = []) {
   if (!contexts.length) return null
   const priority = ['brazil', 'oecd', 'eu', 'us']
-  for (const jurisdiction of priority) {
-    const match = contexts.find((context) => context.jurisdiction === jurisdiction)
+  for (const code of priority) {
+    const match = contexts.find((context) =>
+      jurisdictionMatches(context.jurisdiction, code),
+    )
     if (match) return match
   }
   return contexts[0]
 }
 
-export function formatJurisdictionBadges(contexts = [], t) {
-  const jurisdictions = [...new Set(contexts.map((context) => context.jurisdiction))]
-  return jurisdictions.map((value) => t(`s3.jurisdiction.${value}`)).join(' · ')
+export function formatJurisdictionBadges(contexts = [], lang, t) {
+  const seen = new Set()
+  const labels = []
+  for (const context of contexts) {
+    const label = jurisdictionLabel(context.jurisdiction, lang, t)
+    if (!label || seen.has(label)) continue
+    seen.add(label)
+    labels.push(label)
+  }
+  return labels.join(' · ')
 }
 
 export function regulatoryUrlFromContexts(contexts = []) {
-  const primary = primaryValidationContext(contexts)
+  const primary = primaryRegulatoryContext(contexts)
   return primary?.regulatory_url ?? null
+}
+
+export function regulatoryCitationFromContexts(contexts = []) {
+  const primary = primaryRegulatoryContext(contexts)
+  const citation = primary?.regulatory_citation?.trim()
+  return citation || null
 }
 
 export function formatMatchedParams(matchedParams, t) {

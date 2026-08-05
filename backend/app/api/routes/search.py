@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from app.api.deps import get_retrieval_service
 from app.api.errors import error_response
 from app.config import get_settings
+from app.models.jurisdiction import jurisdiction_matches
 from app.models.protocol import SearchFilters, SearchRequest, SearchResponse
 from app.models.recommendation import Recommendation
 from app.services.retrieval import RetrievalService
@@ -20,8 +21,8 @@ def _matches_jurisdiction_filter(
     jurisdiction: str,
 ) -> bool:
     return any(
-        context.jurisdiction == jurisdiction
-        for context in recommendation.validation_contexts
+        jurisdiction_matches(context.jurisdiction, jurisdiction)
+        for context in recommendation.regulatory_contexts
     )
 
 

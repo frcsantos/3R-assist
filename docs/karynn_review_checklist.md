@@ -89,11 +89,11 @@ Todos os 25 métodos têm `study_domain = 'general'`. Confirmar se algum deveria
 Os contextos `eu` não foram seeded por falta de referência específica confirmada. Após verificar contra EU Cosmetics Regulation 1223/2009 (para métodos relevantes para cosméticos) e REACH Annex (para químicos industriais), inserir:
 
 ```sql
-INSERT INTO method_validation_contexts
-    (method_id, study_domain, jurisdiction, validation_status, regulatory_body, regulatory_ref, regulatory_url)
+INSERT INTO method_regulatory_contexts
+    (method_id, jurisdiction, validation_status, regulatory_body, regulation_date, regulatory_citation)
 VALUES
     ((SELECT id FROM methods WHERE slug='<slug>'),
-     'general', 'eu', 'validated', 'ECHA', '<Reg ref>', '<URL>');
+     'general', 'eu', 'validated', 'ECHA', 'YYYY-MM-DD', '<URL>');
 ```
 
 Métodos com maior probabilidade de contexto EU validado:
@@ -136,7 +136,7 @@ python scripts/backfill_3r_rationales.py --check
 
 ### 6. Keywords — complementar com terminologia CEUA
 
-A seção de keywords é um conjunto representativo. Adicionar termos que você usa em comunicações com CEUAs e pesquisadores brasileiros.
+As colunas `keywords` em `methods` (`{"en-us": [...], "pt-br": [...]}`) são um conjunto representativo. Adicionar termos que você usa em comunicações com CEUAs e pesquisadores brasileiros.
 
 ---
 
@@ -145,20 +145,20 @@ A seção de keywords é um conjunto representativo. Adicionar termos que você 
 > Para cada método: confirmar campos do método + preencher `*_rationale` (ADR-023) + contextos de validação faltantes.
 > Placeholders `[PENDENTE — ver category_3r]` devem ser substituídos por justificativa real antes do DROP de `category_3r`.
 > Os contextos `brazil` e `oecd` já estão seeded onde confirmados; indicar se precisam de correção.
-> Adicionar `eu`, `us`, e qualquer contexto por `study_domain` específico que se aplicar.
+> Adicionar `eu`, `us`, e qualquer contexto por jurisdição específica que se aplicar.
 
 ---
 
 ### Template de contexto para INSERT
 
 ```sql
-INSERT INTO method_validation_contexts
-    (method_id, study_domain, jurisdiction, validation_status,
-     regulatory_body, regulatory_ref, regulatory_url, notes)
+INSERT INTO method_regulatory_contexts
+    (method_id, jurisdiction, validation_status,
+     regulatory_body, regulation_date, regulatory_citation, notes)
 VALUES
     ((SELECT id FROM methods WHERE slug='<slug>'),
-     '<study_domain>', '<jurisdiction>', '<validation_status>',
-     '<regulatory_body>', '<regulatory_ref>', '<url>', '<notes>');
+     '<jurisdiction>', '<validation_status>',
+     '<regulatory_body>', 'YYYY-MM-DD', '<citation>', '<notes>');
 ```
 
 ---
@@ -176,7 +176,7 @@ VALUES
 
 **Contextos a verificar:**
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | cosmetics | eu | validated | ECHA/JRC | EU Cosmetics Reg 1223/2009 | ☐ |
 | general | eu | validated | ECHA | REACH Reg 1907/2006 | ☐ |
@@ -194,7 +194,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 431)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | general | eu | validated | ECHA | REACH Annex VIII | ☐ |
 | general | us | accepted | ICCVAM | [VERIFY] | ☐ |
@@ -210,7 +210,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 430)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | general | eu | validated | ECHA | REACH Annex VIII | ☐ |
 
@@ -226,7 +226,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 435)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | chemical_safety | eu | validated | ECHA | REACH Annex VIII | ☐ |
 
@@ -241,7 +241,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 437)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | cosmetics | eu | validated | ECHA/JRC | EU Cosmetics Reg 1223/2009 | ☐ |
 | general | eu | validated | ECHA | REACH Annex VIII | ☐ |
@@ -258,7 +258,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 438)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | cosmetics | eu | validated | ECHA/JRC | EU Cosmetics Reg 1223/2009 | ☐ |
 | general | eu | validated | ECHA | REACH Annex VIII | ☐ |
@@ -276,7 +276,7 @@ VALUES
 
 - ☐ **Verificar se CONCEA emitiu RN posterior adotando TG 492.** Se sim, inserir contexto brazil.
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | general | brazil | validated | CONCEA | [RN posterior — VERIFY] | ☐ |
 | cosmetics | eu | validated | ECHA/JRC | EU Cosmetics Reg 1223/2009 | ☐ |
@@ -292,7 +292,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 460)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | cosmetics | eu | validated | ECHA/JRC | EU Cosmetics Reg 1223/2009 | ☐ |
 
@@ -309,7 +309,7 @@ VALUES
 
 - ☐ **Verificar se CONCEA emitiu RN adotando TG 442C/D/E.** Se sim, inserir contextos brazil.
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | general | brazil | validated | CONCEA | [RN posterior — VERIFY] | ☐ |
 | cosmetics | eu | validated | ECHA/JRC | EU Cosmetics Reg 1223/2009 | ☐ |
@@ -327,7 +327,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 429)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | cosmetics | eu | validated | ECHA/JRC | EU Cosmetics Reg 1223/2009 | ☐ |
 | chemical_safety | eu | validated | ECHA | REACH Annex VIII | ☐ |
@@ -344,7 +344,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 442A / TG 442B)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | cosmetics | eu | validated | ECHA/JRC | EU Cosmetics Reg 1223/2009 | ☐ |
 
@@ -359,7 +359,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 432)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | cosmetics | eu | validated | ECHA/JRC | EU Cosmetics Reg 1223/2009 Annex | ☐ |
 | pharma | eu | accepted | EMA | [VERIFY guideline ref] | ☐ |
@@ -375,7 +375,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 428)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | chemical_safety | eu | validated | ECHA | REACH Annex VIII | ☐ |
 | pharma | eu | accepted | EMA | [VERIFY] | ☐ |
@@ -391,7 +391,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 471 / TG 476 / TG 487)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | pharma | eu | validated | EMA | ICH S2(R1) | ☐ |
 | pharma | us | validated | FDA | ICH S2(R1) | ☐ |
@@ -408,7 +408,7 @@ VALUES
 - ☐ `name_pt`
 - ☐ `description_pt`
 - ☐ `source_db` — confirmar: `FARMACOPEIA_BR` ou outra fonte primária?
-- ☐ `oecd_tg_ref` — atualmente NULL. MAT não tem TG OECD standalone; verificar se GD 129 ou EP 2.6.30 é a referência adequada
+- ☐ `oecd_ref` — atualmente NULL. MAT não tem TG OECD standalone; verificar se GD 129 ou EP 2.6.30 é a referência adequada
 - ☐ `text_for_embedding`
 - ☐ **`replacement_rationale`**: substituir placeholder por justificativa auditável
 
@@ -417,16 +417,16 @@ VALUES
 - ☐ **Confirmar**: Farmacopeia Brasileira capítulo exato que descreve MAT + regulatory_body correto (ANVISA ou CONCEA)
 - ☐ Após confirmação, atualizar o contexto brazil:
   ```sql
-  UPDATE method_validation_contexts
-  SET regulatory_body = '<body>', regulatory_ref = '<ref>', notes = NULL
+  UPDATE method_regulatory_contexts
+  SET regulatory_body = '<body>', regulation_date = 'YYYY-MM-DD', notes = NULL
   WHERE method_id = (SELECT id FROM methods WHERE slug = 'mat-monocyte-activation')
     AND jurisdiction = 'brazil';
   ```
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
-| pharma | eu | validated | EDQM | Ph. Eur. 2.6.30 | ☐ |
-| pharma | us | accepted | FDA | [VERIFY] | ☐ |
+| pharma | eu | validated | EDQM | [VERIFY date] | ☐ |
+| pharma | us | accepted | FDA | [VERIFY date] | ☐ |
 
 **Notas:**
 
@@ -444,14 +444,15 @@ VALUES
 
 **Contextos seeded:** brazil (CONCEA, via GD 129 em RN 18 VI-d) · oecd (GD 129) · us (ICCVAM)
 
-- ☐ **Confirmar** referência cruzada: GD 129 → RN 18 Art. 2 VI-d. Se confirmada, atualizar `regulatory_ref` do contexto brazil:
+- ☐ **Confirmar** referência cruzada: GD 129 → RN 18 Art. 2 VI-d. Se confirmada, atualizar `regulation_date` / `notes` do contexto brazil:
   ```sql
-  UPDATE method_validation_contexts
-  SET regulatory_ref = 'RN 18/2014 Art. 2 VI-d (via OECD GD 129)'
+  UPDATE method_regulatory_contexts
+  SET regulation_date = 'YYYY-MM-DD',
+      notes = 'RN 18/2014 Art. 2 VI-d (via OECD GD 129)'
   WHERE method_id = (SELECT id FROM methods WHERE slug = 'niceatm-cytotox-basal-barranco')
     AND jurisdiction = 'brazil';
   ```
-- ☐ Confirmar publicação Barranco et al. e registrar link em `regulatory_url` do contexto `us` (ICCVAM/NICEATM), se aplicável.
+- ☐ Confirmar publicação Barranco et al. e registrar citação em `regulatory_citation` do contexto `us` (ICCVAM/NICEATM), se aplicável.
 
 **Notas:**
 
@@ -465,7 +466,7 @@ VALUES
 
 **Contextos seeded:** brazil · oecd (TG 420 / TG 423 / TG 425)
 
-| study_domain | jurisdiction | validation_status | regulatory_body | regulatory_ref | ☐/☑ |
+| jurisdiction | validation_status | regulatory_body | regulation_date | ☐/☑ |
 |---|---|---|---|---|---|
 | chemical_safety | eu | validated | ECHA | REACH Annex B.1 tris | ☐ |
 | pharma | eu | accepted | EMA | [VERIFY] | ☐ |
@@ -479,10 +480,10 @@ VALUES
 
 1. **Tempo por entrada**: registrar quanto tempo levou para revisar um método completo (campos + contextos). Este dado é necessário para fechar H5 (tractability).
 
-2. **Contextos por study_domain específico**: para os métodos que têm usos regulatórios distintos (ex: genotoxicidade é obrigatória para pharma e chemical_safety mas com referências diferentes — ICH S2 vs. REACH), vale criar contextos separados por study_domain agora ou no Phase 3?
+2. **Contextos por jurisdição**: para os métodos que têm usos regulatórios distintos entre frameworks (ex: genotoxicidade sob ICH S2 vs. REACH), vale criar contextos separados por jurisdição agora ou no Phase 3?
 
 3. **MAT sem TG OECD**: se a Farmacopeia Brasileira não tiver capítulo MAT específico, reconsiderar `source_db` e criar contexto a partir da Ph. Eur. 2.6.30 com `jurisdiction = 'eu'` como contexto primário.
 
 ---
 
-*Criado em M3. Atualizado com study_domain (ADR-020), method_validation_contexts (ADR-022), colunas `*_rationale` por R (ADR-023; supersede ADR-021).*
+*Criado em M3. Atualizado com study_domain (ADR-020), method_regulatory_contexts (ADR-022), colunas `*_rationale` por R (ADR-023; supersede ADR-021).*

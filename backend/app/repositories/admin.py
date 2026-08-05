@@ -23,6 +23,11 @@ async def _with_fresh_pool_retry(operation):
         return await operation()
 
 _IDENT_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+# JSONB array columns that pick values from a vocabulary table (multi-select in admin UI).
+# (table, column) -> (vocab_table, vocab_value_column)
+_JSON_ARRAY_VOCAB_COLUMNS: dict[tuple[str, str], tuple[str, str]] = {
+    ("methods", "routes_applicable"): ("routes", "code"),
+}
 _AUTO_DEFAULT_MARKERS = (
     "nextval(",
     "now(",
@@ -79,6 +84,76 @@ def _sql_string_literal(value: str | None) -> str:
     return "'" + value.replace("'", "''") + "'"
 
 
+_CHECK_IN_RE = re.compile(
+    r"\b([A-Za-z_][A-Za-z0-9_]*)\b\s+IN\s*\(([^)]*)\)",
+    re.IGNORECASE,
+)
+_CHECK_ANY_RE = re.compile(
+    r"\b([A-Za-z_][A-Za-z0-9_]*)\b\s*=\s*ANY\s*\(\s*ARRAY\[(.*?)\]",
+    re.IGNORECASE | re.DOTALL,
+)
+_SQL_STRING_RE = re.compile(r"'((?:''|[^'])*)'")
+
+
+def _parse_check_enum_options(definition: str) -> dict[str, list[str]]:
+    """Extract column -> allowed string values from a CHECK constraint definition."""
+    found: dict[str, list[str]] = {}
+
+    def add(column: str, values: list[str]) -> None:
+        if not values:
+            return
+        # Keep first unique set if multiple clauses mention the same column.
+        found.setdefault(column, values)
+
+    for match in _CHECK_IN_RE.finditer(definition):
+        column = match.group(1)
+        values = [
+            item.replace("''", "'") for item in _SQL_STRING_RE.findall(match.group(2))
+        ]
+        add(column, values)
+
+    for match in _CHECK_ANY_RE.finditer(definition):
+        column = match.group(1)
+        values = [
+            item.replace("''", "'") for item in _SQL_STRING_RE.findall(match.group(2))
+        ]
+        add(column, values)
+
+    return found
+
+
+def _parse_date(value: Any) -> date:
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    text = str(value).strip()
+    if not text:
+        raise ValueError("Empty date value")
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        return date.fromisoformat(text[:10])
+    except ValueError:
+        parsed = datetime.fromisoformat(text)
+        return parsed.date()
+
+
+def _parse_datetime(value: Any) -> datetime:
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return datetime(value.year, value.month, value.day)
+    text = str(value).strip()
+    if not text:
+        raise ValueError("Empty datetime value")
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    if "T" not in text and " " not in text and len(text) == 10:
+        return datetime.fromisoformat(text)
+    return datetime.fromisoformat(text)
+
+
 def _coerce_value(value: Any, data_type: str, udt_name: str) -> Any:
     if value is None:
         return None
@@ -101,6 +176,15 @@ def _coerce_value(value: Any, data_type: str, udt_name: str) -> Any:
     if data_type in ("numeric", "double precision", "real", "decimal"):
         return float(value)
 
+    if data_type == "date" or udt_name == "date":
+        return _parse_date(value)
+
+    if data_type in (
+        "timestamp without time zone",
+        "timestamp with time zone",
+    ) or udt_name in ("timestamp", "timestamptz"):
+        return _parse_datetime(value)
+
     if data_type in ("json", "jsonb") or udt_name in ("json", "jsonb"):
         if isinstance(value, (dict, list)):
             return value
@@ -116,6 +200,29 @@ def _coerce_value(value: Any, data_type: str, udt_name: str) -> Any:
         raise ValueError(f"Invalid array value: {value!r}")
 
     return value
+
+
+_MRC_VALIDATION_STATUS_MAP = {
+    "accepted": "in_process_of_validation",
+    "emerging": "not_validated",
+    "validated": "validated",
+    "in_process_of_validation": "in_process_of_validation",
+    "not_validated": "not_validated",
+}
+
+
+def _normalize_admin_value(table_name: str, column: str, value: Any) -> Any:
+    """Normalize legacy values accepted by old UI/import paths."""
+    if table_name != "regulations":
+        return value
+    if column != "validation_status":
+        return value
+    if value is None:
+        return value
+    text = str(value).strip().lower()
+    if not text:
+        return value
+    return _MRC_VALIDATION_STATUS_MAP.get(text, value)
 
 
 class AdminRepository:
@@ -252,6 +359,33 @@ class AdminRepository:
             }
         return foreign_keys
 
+    async def _check_constraint_options(
+        self,
+        conn,
+        table_name: str,
+    ) -> dict[str, list[dict[str, Any]]]:
+        rows = await conn.fetch(
+            """
+            SELECT pg_get_constraintdef(c.oid) AS definition
+            FROM pg_catalog.pg_constraint c
+            JOIN pg_catalog.pg_class rel ON rel.oid = c.conrelid
+            JOIN pg_catalog.pg_namespace nsp ON nsp.oid = rel.relnamespace
+            WHERE c.contype = 'c'
+              AND nsp.nspname = 'public'
+              AND rel.relname = $1
+            """,
+            table_name,
+        )
+        options: dict[str, list[dict[str, Any]]] = {}
+        for row in rows:
+            parsed = _parse_check_enum_options(row["definition"] or "")
+            for column, values in parsed.items():
+                if column in options:
+                    continue
+                options[column] = [
+                    {"value": value, "label": value} for value in values
+                ]
+        return options
 
     async def _label_column(
         self, conn, table_name: str, value_column: str
@@ -270,8 +404,8 @@ class AdminRepository:
             )
         ]
         for candidate in (
+            "doc_citation",
             "slug",
-            "name_en",
             "name",
             "code",
             "title",
@@ -281,6 +415,21 @@ class AdminRepository:
             if candidate in columns and candidate != value_column:
                 return candidate
         return None
+
+    async def _table_has_column(self, conn, table_name: str, column_name: str) -> bool:
+        return bool(
+            await conn.fetchval(
+                """
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = $1
+                  AND column_name = $2
+                """,
+                table_name,
+                column_name,
+            )
+        )
 
     async def _foreign_key_options(
         self,
@@ -296,11 +445,36 @@ class AdminRepository:
         label_column = await self._label_column(conn, foreign_table, foreign_column)
         if label_column:
             self._validate_ident(label_column, "column name")
+            label_is_jsonb = await conn.fetchval(
+                """
+                SELECT udt_name = 'jsonb'
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = $1
+                  AND column_name = $2
+                """,
+                foreign_table,
+                label_column,
+            )
+            if label_is_jsonb:
+                label_expr = f"COALESCE(\"{label_column}\"->>'en-us', \"{label_column}\"->>'pt-br')"
+                order_label_expr = f"lower(COALESCE(\"{label_column}\"->>'en-us', \"{label_column}\"->>'pt-br', ''))"
+            else:
+                label_expr = f'"{label_column}"'
+                order_label_expr = f'lower("{label_column}"::text)'
+
+            order_parts: list[str] = []
+            if await self._table_has_column(conn, foreign_table, "sort_order"):
+                order_parts.append('"sort_order"')
+            # Case-insensitive alphabetical by label (e.g. methods.slug).
+            order_parts.append(order_label_expr)
+            order_parts.append(f'"{foreign_column}"')
+            order_sql = ", ".join(order_parts)
             rows = await conn.fetch(
                 f'SELECT "{foreign_column}" AS value, '
-                f'"{label_column}" AS label '
+                f"{label_expr} AS label "
                 f'FROM "{foreign_table}" '
-                f'ORDER BY "{label_column}", "{foreign_column}" '
+                f"ORDER BY {order_sql} "
                 f"LIMIT $1",
                 limit,
             )
@@ -308,25 +482,32 @@ class AdminRepository:
             for row in rows:
                 value = _serialize_value(row["value"])
                 label = row["label"]
-                label_text = (
-                    f"{value} — {label}"
-                    if label is not None and str(label) != str(value)
-                    else str(value)
+                id_text = (
+                    f"id: {value}" if foreign_column == "id" else str(value)
                 )
+                if label is None or str(label) == str(value):
+                    label_text = id_text
+                elif label_column == "slug":
+                    # Prefer slug-first so alphabetical order matches the visible text.
+                    label_text = f"{label} ({id_text})"
+                else:
+                    label_text = f"{id_text} — {label}"
                 options.append({"value": value, "label": label_text})
             return options
 
         rows = await conn.fetch(
             f'SELECT "{foreign_column}" AS value '
             f'FROM "{foreign_table}" '
-            f'ORDER BY "{foreign_column}" '
+            f'ORDER BY lower("{foreign_column}"::text), "{foreign_column}" '
             f"LIMIT $1",
             limit,
         )
         return [
             {
-                "value": _serialize_value(row["value"]),
-                "label": str(_serialize_value(row["value"])),
+                "value": (value := _serialize_value(row["value"])),
+                "label": (
+                    f"id: {value}" if foreign_column == "id" else str(value)
+                ),
             }
             for row in rows
         ]
@@ -396,6 +577,23 @@ class AdminRepository:
                     conn,
                     foreign_table=reference["table"],
                     foreign_column=reference["column"],
+                )
+            for column, options in (
+                await self._check_constraint_options(conn, table_name)
+            ).items():
+                column_options.setdefault(column, options)
+            for (owner_table, column), (
+                vocab_table,
+                vocab_column,
+            ) in _JSON_ARRAY_VOCAB_COLUMNS.items():
+                if owner_table != table_name or column in column_options:
+                    continue
+                if not any(row["column_name"] == column for row in column_rows):
+                    continue
+                column_options[column] = await self._foreign_key_options(
+                    conn,
+                    foreign_table=vocab_table,
+                    foreign_column=vocab_column,
                 )
 
         serialized_rows = [_serialize_row(row) for row in rows]
@@ -518,6 +716,7 @@ class AdminRepository:
                     continue
 
                 raw = values.get(column)
+                raw = _normalize_admin_value(table_name, column, raw)
                 is_empty = raw is None or (isinstance(raw, str) and raw.strip() == "")
                 if is_empty:
                     if meta["is_identity"] == "YES" or meta["column_default"] is not None:
@@ -608,6 +807,7 @@ class AdminRepository:
                 raise ValueError(f"Column '{column}' was not found.")
 
             try:
+                value = _normalize_admin_value(table_name, column, value)
                 coerced = _coerce_value(value, meta["data_type"], meta["udt_name"])
             except (TypeError, ValueError, json.JSONDecodeError) as exc:
                 raise ValueError(f"Invalid value for column '{column}': {exc}") from exc

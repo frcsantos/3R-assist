@@ -1,7 +1,14 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
-from app.api.deps import get_admin_repository
+from app.adapters.llm import ExtractionError
+from app.api.deps import (
+    get_admin_repository,
+    get_method_draft_extraction_service,
+    get_policy_document_match_service,
+    get_policy_extraction_service,
+    get_policy_method_match_service,
+)
 from app.api.errors import ErrorEnvelope, error_response
 from app.models.admin import (
     AdminCellUpdateRequest,
@@ -15,7 +22,23 @@ from app.models.admin import (
     AdminTableDataResponse,
     AdminTablesResponse,
 )
+from app.models.method_draft import (
+    MethodDraftExtractRequest,
+    MethodDraftExtractResponse,
+)
+from app.models.policy import (
+    PolicyDocumentMatchRequest,
+    PolicyDocumentMatchResponse,
+    PolicyExtractRequest,
+    PolicyExtractResponse,
+    PolicyMethodMatchRequest,
+    PolicyMethodMatchResponse,
+)
 from app.repositories.admin import AdminRepository
+from app.services.method_draft_extraction import MethodDraftExtractionService
+from app.services.policy_document_match import PolicyDocumentMatchService
+from app.services.policy_extraction import PolicyExtractionService
+from app.services.policy_method_match import PolicyMethodMatchService
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -261,3 +284,91 @@ async def update_column_comment(
             detail={"type": type(exc).__name__, "reason": str(exc)},
         )
     return AdminColumnCommentUpdateResponse(**payload)
+
+
+@router.post(
+    "/extract/policy",
+    response_model=PolicyExtractResponse,
+    responses={422: {"model": ErrorEnvelope}},
+)
+async def extract_policy(
+    payload: PolicyExtractRequest,
+    extraction: PolicyExtractionService = Depends(get_policy_extraction_service),
+) -> PolicyExtractResponse | JSONResponse:
+    result = extraction.extract(payload.text)
+    if isinstance(result, ExtractionError):
+        return error_response(
+            status_code=422,
+            code=result.code,
+            message=result.message,
+        )
+    return result
+
+
+@router.post(
+    "/extract/method-draft",
+    response_model=MethodDraftExtractResponse,
+    responses={422: {"model": ErrorEnvelope}},
+)
+async def extract_method_draft(
+    payload: MethodDraftExtractRequest,
+    extraction: MethodDraftExtractionService = Depends(
+        get_method_draft_extraction_service
+    ),
+) -> MethodDraftExtractResponse | JSONResponse:
+    result = extraction.extract(payload.text)
+    if isinstance(result, ExtractionError):
+        return error_response(
+            status_code=422,
+            code=result.code,
+            message=result.message,
+        )
+    return result
+
+
+@router.post(
+    "/extract/policy/match-method",
+    response_model=PolicyMethodMatchResponse,
+    responses={503: {"model": ErrorEnvelope}},
+)
+async def match_policy_method(
+    payload: PolicyMethodMatchRequest,
+    matching: PolicyMethodMatchService = Depends(get_policy_method_match_service),
+) -> PolicyMethodMatchResponse | JSONResponse:
+    try:
+        return await matching.match(payload)
+    except Exception as exc:
+        return error_response(
+            status_code=503,
+            code="METHOD_MATCH_FAILED",
+            message=(
+                "Could not search for matching methods in the database. "
+                "Try again, or check that curated methods have valid metadata."
+            ),
+            detail={"type": type(exc).__name__, "reason": str(exc)},
+        )
+
+
+@router.post(
+    "/extract/policy/match-document",
+    response_model=PolicyDocumentMatchResponse,
+    responses={503: {"model": ErrorEnvelope}},
+)
+async def match_policy_document(
+    payload: PolicyDocumentMatchRequest,
+    matching: PolicyDocumentMatchService = Depends(
+        get_policy_document_match_service
+    ),
+) -> PolicyDocumentMatchResponse | JSONResponse:
+    try:
+        return await matching.match(payload)
+    except Exception as exc:
+        return error_response(
+            status_code=503,
+            code="DOCUMENT_MATCH_FAILED",
+            message=(
+                "Could not search for matching documents in the database. "
+                "Try again, or check that curated documents have valid metadata."
+            ),
+            detail={"type": type(exc).__name__, "reason": str(exc)},
+        )

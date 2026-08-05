@@ -1,7 +1,7 @@
 -- =============================================================================
 -- 3R Assist — Migration 002: Application tables (PostgreSQL)
 -- Tables: users, magic_link_tokens, queries, feedback, suggestions
--- Assumes: 001_initial.sql already applied (methods, method_keywords exist)
+-- Assumes: 001_initial.sql already applied (methods exist)
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
@@ -122,5 +122,6 @@ CREATE INDEX idx_suggestions_status ON suggestions (status)
 -- ---------------------------------------------------------------------------
 -- SELECT table_name FROM information_schema.tables
 --   WHERE table_schema = 'public' ORDER BY table_name;
--- Expected: feedback, magic_link_tokens, method_keywords, methods,
+-- Expected: feedback, magic_link_tokens, methods,
 --           queries, suggestions, users
+-- (method_keywords folded into methods.keywords_en / keywords_pt in 017)

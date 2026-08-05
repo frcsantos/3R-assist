@@ -4,17 +4,17 @@ import { Link, Navigate, useLocation } from 'react-router-dom'
 import ExperimentTabs, { experimentTabLabel } from '../components/ExperimentTabs'
 import ResultCard from '../components/ResultCard'
 import {
-  formatJurisdictionBadges,
   formatMatchedParams,
   formatOecdReference,
   isLowConfidenceScore,
+  jurisdictionLabel,
+  jurisdictionMatches,
   methodDescription,
   methodDisplayName,
   methodThreeRBadges,
   methodThreeRClasses,
   primaryThreeR,
-  primaryValidationContext,
-  regulatoryUrlFromContexts,
+  primaryRegulatoryContext,
   scorePercent,
 } from '../lib/search'
 
@@ -80,7 +80,7 @@ export default function ResultsPage() {
   const filteredResults = useMemo(() => {
     return recommendations.filter((item) => {
       const method = item.method
-      const contexts = item.validation_contexts ?? []
+      const contexts = item.regulatory_contexts ?? []
       if (
         threeRFilter !== 'all' &&
         !methodThreeRClasses(method).includes(threeRFilter)
@@ -89,7 +89,9 @@ export default function ResultsPage() {
       }
       if (
         jurisdictionFilter !== 'all' &&
-        !contexts.some((context) => context.jurisdiction === jurisdictionFilter)
+        !contexts.some((context) =>
+          jurisdictionMatches(context.jurisdiction, jurisdictionFilter),
+        )
       ) {
         return false
       }
@@ -261,10 +263,14 @@ export default function ResultsPage() {
           <div className="grid gap-card-gap">
             {filteredResults.map((item) => {
               const method = item.method
-              const contexts = item.validation_contexts ?? []
-              const primaryContext = primaryValidationContext(contexts)
+              const contexts = item.regulatory_contexts ?? []
+              const primaryContext = primaryRegulatoryContext(contexts)
               const percent = scorePercent(item.score)
               const threeR = primaryThreeR(method)
+              const protocolCitation =
+                method.source_citation?.trim() ||
+                formatOecdReference(method.oecd_ref) ||
+                null
               return (
                 <ResultCard
                   key={method.slug}
@@ -272,19 +278,44 @@ export default function ResultsPage() {
                   badges={methodThreeRBadges(method, t)}
                   title={methodDisplayName(method, lang)}
                   score={percent}
-                  jurisdiction={formatJurisdictionBadges(contexts, t)}
                   dimmed={isLowConfidenceScore(item.score)}
                   validationStatus={
                     primaryContext
                       ? t(`s3.validationStatus.${primaryContext.validation_status}`)
                       : null
                   }
-                  oecdTgRef={formatOecdReference(method.oecd_tg_ref)}
+                  regulatoryStatuses={contexts.map((context, index) => {
+                    const jurisdiction = jurisdictionLabel(
+                      context.jurisdiction,
+                      lang,
+                      t,
+                    )
+                    const status = context.regulation_status
+                      ? t(`s3.regulatoryStatus.${context.regulation_status}`)
+                      : null
+                    const keyBase =
+                      typeof context.jurisdiction === 'object'
+                        ? context.jurisdiction['en-us']
+                        : context.jurisdiction
+                    return {
+                      key: `${keyBase}-${index}`,
+                      label: status ? `${jurisdiction}: ${status}` : jurisdiction,
+                      citation: context.regulatory_citation?.trim() || null,
+                      url: context.regulatory_url || null,
+                    }
+                  })}
+                  purpose={primaryContext?.regulation_purpose || null}
+                  purposeLabel={t('s3.purposeLabel')}
                   matchedParams={formatMatchedParams(item.matched_params, t)}
                   matchedParamsLabel={t('s3.matchedParams')}
                   description={methodDescription(method, lang)}
-                  regulatoryUrl={regulatoryUrlFromContexts(contexts)}
+                  protocolCitation={protocolCitation}
+                  noCitationLabel={t('s3.noProtocolCitation')}
+                  noRegulatoryCitationLabel={t('s3.noRegulatoryCitation')}
+                  primaryUrl={method.source_url || null}
+                  sourcesLabel={t('s3.sourceLink')}
                   regulatoryLinkLabel={t('s3.regulatoryLink')}
+                  closeLabel={t('s3.close')}
                   matchLabel={t('s3.matchLabel')}
                 />
               )

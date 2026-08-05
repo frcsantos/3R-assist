@@ -14,12 +14,23 @@ CREATE TABLE IF NOT EXISTS method_validation_contexts (
     study_domain      TEXT        NOT NULL,
     jurisdiction      TEXT        NOT NULL,
     validation_status TEXT        NOT NULL,
+    purpose           TEXT,
+    regulatory_status TEXT,
     regulatory_body   TEXT,
     regulatory_ref    TEXT,
     regulatory_url    TEXT,
     notes             TEXT,
     created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (method_id, study_domain, jurisdiction)
+    UNIQUE (method_id, study_domain, jurisdiction),
+    CONSTRAINT method_validation_contexts_regulatory_status_check CHECK (
+        regulatory_status IS NULL
+        OR regulatory_status IN (
+            'not_approved',
+            'approved',
+            'recommended',
+            'mandatory'
+        )
+    )
 );
 
 CREATE INDEX IF NOT EXISTS idx_mvc_method

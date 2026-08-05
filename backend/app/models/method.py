@@ -1,46 +1,67 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, Field, computed_field, field_validator
+
+from app.models.i18n import LocalizedStr, LocalizedStrList
+from app.models.jurisdiction import parse_jurisdiction
 
 ThreeRClass = Literal["replacement", "reduction", "refinement"]
-RegulatoryJurisdiction = Literal["brazil", "eu", "us", "oecd"]
 StudyDomain = Literal["pharma", "cosmetics", "chemical_safety", "general"]
-ValidationStatus = Literal["validated", "accepted", "emerging"]
-SourceDb = Literal["OECD_TG", "ECVAM_DBALM", "NICEATM", "FARMACOPEIA_BR", "TSAR"]
+ValidationStatus = Literal[
+    "validated",
+    "in_process_of_validation",
+    "not_validated",
+]
+RegulatoryStatus = Literal["not_approved", "approved", "recommended", "mandatory"]
+# Preferred curated values: OECD_TG | ECVAM_DBALM | NICEATM | FARMACOPEIA_BR | TSAR.
+# Stored as free text so admin-curated / imported rows are not rejected at read time.
+SourceDb = str
 
 _THREE_R_ORDER: tuple[ThreeRClass, ...] = ("replacement", "reduction", "refinement")
 
 
-class MethodValidationContext(BaseModel):
-    study_domain: StudyDomain
-    jurisdiction: RegulatoryJurisdiction
+class MethodRegulatoryContext(BaseModel):
+    jurisdiction: LocalizedStr
     validation_status: ValidationStatus
+    regulation_status: RegulatoryStatus | None = None
+    regulation_date: date | None = None
+    regulation_purpose: str | None = None
     regulatory_body: str | None = None
-    regulatory_ref: str | None = None
+    regulatory_doc_id: int | None = None
+    regulatory_citation: str | None = None
+    # Resolved from documents.url when regulatory_doc_id is set (not a DB column).
     regulatory_url: str | None = None
     notes: str | None = None
+
+    @field_validator("jurisdiction", mode="before")
+    @classmethod
+    def _coerce_jurisdiction(cls, value):
+        return parse_jurisdiction(value)
 
 
 class Method(BaseModel):
     id: int
     slug: str
-    name_en: str
-    name_pt: str
-    description_en: str
-    description_pt: str
-    text_for_embedding: str
+    active: bool = False
+    name: LocalizedStr
+    description: LocalizedStr
+    endpoint_category: str
+    routes_applicable: list[str] | None = None
+    study_domain: StudyDomain
+    oecd_ref: str | None = None
+    ncit_id: str | None = None
+    source_citation: str | None = None
+    source_doc_id: int | None = None
+    # Resolved from documents.url when source_doc_id is set (not a DB column).
+    source_url: str | None = None
+    source_db: SourceDb
     replacement_rationale: str | None = None
     reduction_rationale: str | None = None
     refinement_rationale: str | None = None
-    endpoint_category: str
-    study_domain: StudyDomain
-    oecd_tg_ref: str | None = None
-    ncit_id: str | None = None
-    source_db: SourceDb
-    routes_applicable: list[str] | None = None
+    keywords: LocalizedStrList = Field(default_factory=LocalizedStrList)
+    text_for_embedding: str
     embedding_json: list[float] | None = None
-    active: bool = False
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
@@ -68,10 +89,3 @@ class Method(BaseModel):
             if self.has_three_r(preferred):
                 return preferred
         return "replacement"
-
-
-class MethodKeyword(BaseModel):
-    id: int
-    method_id: int
-    keyword: str
-    language: Literal["en", "pt"]

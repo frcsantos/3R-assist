@@ -1,17 +1,17 @@
 {
   "nav": {
     "analyze": "Analisar",
+    "explore": "Explorar",
     "literature": "Literatura",
-    "search": "Buscar",
     "glossary": "Glossário",
     "info": "Info",
     "admin": "Admin",
     "signIn": "Entrar"
   },
   "glossary": {
-    "title": "Glossário",
-    "placeholder": "Vocabulário controlado e definições de termos — em breve."
+    "title": "Glossário"
   },
+
   "info": {
     "title": "Info",
     "placeholder": "Sobre o 3R Assist, metodologia e documentação — em breve."
@@ -48,8 +48,14 @@
     "noCommentHint": "Sem comentário",
     "close": "Fechar",
     "addRow": "Adicionar registro",
+    "edit": "Editar",
+    "exportCsv": "Exportar CSV",
+    "exporting": "Exportando…",
+    "exportError": "Não foi possível exportar a tabela.",
+    "editRow": "Editar registro",
     "ok": "OK",
     "addRowError": "Não foi possível adicionar o registro.",
+    "editRowError": "Não foi possível atualizar o registro.",
     "requiredFieldsMissing": "Campos obrigatórios em falta: {{fields}}",
     "selectRequired": "Selecione…",
     "selectOptional": "— Nenhum —",
@@ -59,6 +65,62 @@
     "database": {
       "label": "Banco de dados",
       "subtitle": "Navegue e edite as tabelas públicas do PostgreSQL. Clique duas vezes em uma célula para editar."
+    },
+    "extract": {
+      "label": "Extrair",
+      "subtitle": "Extraia métodos aprovados e metadados documentais a partir de textos de política.",
+      "policyLabel": "Extração de política",
+      "policyPlaceholder": "Cole o texto de uma política, diretriz ou regulamento…",
+      "charCount": "{{count}} / {{max}}",
+      "tooShort": "Mínimo de {{min}} caracteres",
+      "submit": "Extrair",
+      "submittingSeconds": "Extraindo… {{seconds}}s",
+      "error": "Não foi possível extrair os dados da política.",
+      "resultsTitle": "Resultados da extração",
+      "documentName": "Nome do documento",
+      "documentDate": "Data do documento",
+      "institution": "Instituição responsável",
+      "url": "URL",
+      "urlPlaceholder": "https://…",
+      "methods": "Métodos aprovados / reconhecidos",
+      "methodCode": "Código",
+      "methodName": "Nome",
+      "methodPurpose": "Finalidade",
+      "noMethods": "Nenhum método aprovado ou reconhecido encontrado.",
+      "notFound": "—",
+      "match": "Correspondência",
+      "expandMatches": "Buscar correspondências no banco",
+      "collapseMatches": "Ocultar correspondências",
+      "matching": "Buscando no banco…",
+      "matchError": "Não foi possível buscar métodos correspondentes no banco. Tente de novo ou confira os metadados dos métodos curados.",
+      "noMatches": "Nenhum método correspondente encontrado no banco para este código/nome.",
+      "searchOecd": "Buscar na OECD",
+      "searchDocument": "Buscar documento",
+      "searchDocumentError": "Não foi possível buscar documentos correspondentes no banco.",
+      "searchingDocuments": "Buscando documentos…",
+      "noDocumentMatches": "Nenhum documento correspondente encontrado no banco.",
+      "matchByDocCitation": "Citação do documento",
+      "matchByUrl": "URL",
+      "addDocument": "Adicionar documento",
+      "addNewDocument": "Adicionar novo documento",
+      "addDocumentError": "Não foi possível abrir o formulário de novo documento.",
+      "addMethod": "Adicionar método",
+      "addMethodError": "Não foi possível abrir o formulário de novo método.",
+      "addRegulation": "Adicionar regulamentação",
+      "addRegulationError": "Não foi possível abrir o formulário de nova regulamentação.",
+      "methodProtocolLabel": "Protocolo do método",
+      "methodProtocolPlaceholder": "Cole o texto do protocolo, diretriz ou documento TG do método…",
+      "methodProtocolHint": "Envie para o modelo preencher os campos do formulário a partir do documento.",
+      "methodDraftExtract": "Extrair campos",
+      "methodDraftExtracting": "Extraindo…",
+      "methodDraftError": "Não foi possível extrair os campos do método a partir do protocolo.",
+      "matchByOecd": "Ref. OECD TG",
+      "matchByText": "Similaridade textual",
+      "regulatoryStatus": "Status regulatório",
+      "inactive": "inativo",
+      "savedTitle": "Extrações salvas",
+      "savedMeta": "{{date}} · {{count}} métodos",
+      "removeSaved": "Remover"
     },
     "docs": {
       "label": "Docs",
@@ -81,7 +143,7 @@
     "submittingSeconds": "Analisando… {{seconds}}s",
     "mock": "Demonstração",
     "searchLink": "Já sabe o que procura?",
-    "searchLinkAction": "Busca direta",
+    "searchLinkAction": "Explorar",
     "anonymous": "Continuar sem conta (anônimo) — histórico disponível após cadastro",
     "tooShort": "Mínimo de {{min}} caracteres",
     "charCount": "{{count}} / {{max}}"
@@ -102,6 +164,8 @@
     "experimentTabsLabel": "Experimentos detectados",
     "experimentTab": "Experimento {{number}}",
     "notesLabel": "Observações da extração",
+    "certaintyLabel": "Certeza",
+    "evidenceLabel": "Evidência",
     "showEvidence": "Ver evidência",
     "hideEvidence": "Ocultar evidência",
     "matchingSection": "Parâmetros de matching",
@@ -129,7 +193,7 @@
     },
     "fields": {
       "studyType": "Tipo de estudo (extraído)",
-      "endpointCategory": "Categoria de endpoint (banco)",
+      "endpointCategory": "Categoria de endpoint",
       "route": "Via de administração",
       "studyDomain": "Domínio do estudo",
       "procedureText": "Texto do procedimento",
@@ -193,7 +257,10 @@
     "matchedParams": "Parâmetros correspondentes",
     "matchLabel": "Match",
     "sourceLink": "Fonte primária",
-    "regulatoryLink": "OECD / regulatório",
+    "noProtocolCitation": "Nenhuma citação de protocolo disponível.",
+    "noRegulatoryCitation": "Nenhuma citação regulatória disponível.",
+    "regulatoryLink": "Abrir fonte regulatória",
+    "close": "Fechar",
     "filterThreeR": "Classe 3R",
     "filterJurisdiction": "Jurisdição",
     "filterAll": "Todas",
@@ -208,13 +275,20 @@
       "brazil": "Brasil",
       "eu": "UE",
       "us": "EUA",
-      "oecd": "OECD"
+      "oecd": "OCDE"
     },
     "validationStatus": {
       "validated": "Validado",
-      "accepted": "Aceito",
-      "emerging": "Emergente"
+      "in_process_of_validation": "Em processo de validação",
+      "not_validated": "Não validado"
     },
+    "regulatoryStatus": {
+      "not_approved": "Não aprovado",
+      "approved": "Aprovado",
+      "recommended": "Recomendado",
+      "mandatory": "Obrigatório"
+    },
+    "purposeLabel": "Finalidade",
     "threeR": {
       "replacement": "Substituição",
       "reduction": "Redução",
@@ -222,8 +296,36 @@
     }
   },
   "s4": {
-    "placeholderTitle": "Busca direta",
-    "placeholderBody": "Filtros estruturados sem análise de protocolo — em desenvolvimento."
+    "title": "Explorar",
+    "tabsLabel": "Seções de exploração",
+    "loading": "Carregando…",
+    "loadError": "Não foi possível carregar o catálogo.",
+    "filterPlaceholder": "Filtrar por nome…",
+    "noMatches": "Nenhum item corresponde a este filtro.",
+    "expand": "Expandir detalhes",
+    "collapse": "Recolher detalhes",
+    "fields": {
+      "category": "Categoria",
+      "date": "Data",
+      "url": "URL"
+    },
+    "documentCategory": {
+      "method_protocol": "Protocolo de método",
+      "guideline": "Diretriz",
+      "regulation": "Regulamento"
+    },
+    "methods": {
+      "label": "Métodos",
+      "empty": "Ainda não há métodos no catálogo."
+    },
+    "regulations": {
+      "label": "Regulamentos",
+      "empty": "Ainda não há regulamentos ou diretrizes no catálogo."
+    },
+    "documents": {
+      "label": "Documentos",
+      "empty": "Ainda não há protocolos de método no catálogo."
+    }
   },
   "litSearch": {
     "title": "Busca na literatura",

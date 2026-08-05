@@ -472,25 +472,27 @@ Adicionalmente, o vocabulário original de 4 valores (`pharma`, `cosmetics`, `ch
 
 ---
 
-## ADR-022 — `method_validation_contexts`: validação por método × domínio × jurisdição; jurisdições específicas
+## ADR-022 — `method_regulatory_contexts`: validação por método × domínio × jurisdição; jurisdições específicas
 
-**Decision:** (a) `validation_status`, `jurisdiction`, `jurisdiction_notes`, `regulatory_url` removidos da tabela `methods` e migrados para nova tabela `method_validation_contexts`. (b) Vocabulário de jurisdição substituído: `'brazil' | 'international' | 'both'` → `'brazil' | 'eu' | 'us' | 'oecd'`.
+**Decision:** (a) `validation_status`, `jurisdiction`, `jurisdiction_notes`, `regulatory_url` removidos da tabela `methods` e migrados para nova tabela `method_regulatory_contexts`. (b) Vocabulário de jurisdição substituído: `'brazil' | 'international' | 'both'` → `'brazil' | 'eu' | 'us' | 'oecd'`.
 
-**Context:** `jurisdiction = 'both'` e `validation_status = 'validated'` eram propriedades do método, quando na realidade são propriedades da combinação método × domínio de aplicação × framework regulatório. BCOP (TG 437) é `validated` para cosméticos na UE (Reg 1223/2009), `accepted` para químicos sob REACH (ECHA), e sem status formal ANVISA para medicamentos. Um único par (validation_status, jurisdiction) comunicava algo que não era verdadeiro para todos os contextos. `international` colapsava EU, US, OECD e outros frameworks sem distinção — um pesquisador precisando de evidência regulatória específica para submissão ANVISA vs. registro CE obtinha a mesma resposta.
+**Context:** `jurisdiction = 'both'` e `validation_status = 'validated'` eram propriedades do método, quando na realidade são propriedades da combinação método × domínio de aplicação × framework regulatório. BCOP (TG 437) é `validated` para cosméticos na UE (Reg 1223/2009), `in_process_of_validation` para químicos sob REACH (ECHA), e `not_validated` quando não há status formal ANVISA para medicamentos. Um único par (validation_status, jurisdiction) comunicava algo que não era verdadeiro para todos os contextos. `international` colapsava EU, US, OECD e outros frameworks sem distinção — um pesquisador precisando de evidência regulatória específica para submissão ANVISA vs. registro CE obtinha a mesma resposta.
 
 **Schema:**
 ```sql
-CREATE TABLE method_validation_contexts (
+CREATE TABLE method_regulatory_contexts (
     id                SERIAL PRIMARY KEY,
     method_id         INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE,
     study_domain      TEXT    NOT NULL,  -- 'general' | 'pharma' | 'cosmetics' | 'chemical_safety'
     jurisdiction      TEXT    NOT NULL,  -- 'brazil' | 'eu' | 'us' | 'oecd'
-    validation_status TEXT    NOT NULL,  -- 'validated' | 'accepted' | 'emerging'
-    regulatory_body   TEXT,             -- 'CONCEA' | 'ANVISA' | 'ECHA' | 'EMA' | 'EPA' | 'FDA' | 'ICCVAM' | 'OECD'
-    regulatory_ref    TEXT,             -- e.g. 'RN 18/2014 Art. 2' | 'TG 439' | 'Reg 1223/2009'
-    regulatory_url    TEXT,
-    notes             TEXT,
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    validation_status  TEXT    NOT NULL,  -- 'validated' | 'in_process_of_validation' | 'not_validated'
+    regulation_status  TEXT,             -- 'not_approved' | 'approved' | 'recommended' | 'mandatory'
+    regulation_date    DATE,             -- date of regulation / recognition / adoption (YYYY-MM-DD)
+    regulation_purpose TEXT,             -- what the method is recognized/validated for in this context
+    regulatory_body    TEXT,             -- 'CONCEA' | 'ANVISA' | 'ECHA' | 'EMA' | 'EPA' | 'FDA' | 'ICCVAM' | 'OECD'
+    regulatory_url     TEXT,
+    notes              TEXT,
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (method_id, study_domain, jurisdiction)
 );
 ```
@@ -508,14 +510,14 @@ CREATE TABLE method_validation_contexts (
 SELECT DISTINCT m.*
 FROM methods m
 WHERE EXISTS (
-    SELECT 1 FROM method_validation_contexts mvc
+    SELECT 1 FROM method_regulatory_contexts mvc
     WHERE mvc.method_id = m.id
       AND (mvc.study_domain = :study_domain OR mvc.study_domain = 'general')
       AND mvc.jurisdiction = :jurisdiction   -- filtro opcional
 )
 ```
 
-**POST /search response:** inclui array `validation_contexts` com todas as entradas do método para o domínio matchado.
+**POST /search response:** inclui array `regulatory_contexts` com todas as entradas do método para o domínio matchado.
 
 **S3 ResultCard:** exibe badges de jurisdição para todos os contextos retornados (ex: "OECD · Brasil"); `validation_status` exibido do contexto mais relevante (brazil se disponível, senão oecd).
 
@@ -523,7 +525,7 @@ WHERE EXISTS (
 
 **Consequences:**
 - `001_initial.sql`: nova tabela + seed de contextos; campos removidos de `methods`.
-- `spec.md` §2.6: entidade Method atualizada; nova entidade MethodValidationContext; POST /search filter e response.
+- `spec.md` §2.6: entidade Method atualizada; nova entidade MethodRegulatoryContext; POST /search filter e response.
 - `karynn_review_checklist.md`: seção de validação por método reestruturada como tabela de contextos.
 - `app/repositories/methods.py`: JOIN + GROUP BY para agregar contextos por método.
 - Frontend S3: múltiplos badges jurisdição/validação por card.
@@ -550,7 +552,7 @@ Presença de valor não-nulo/não-vazio = o método qualifica para aquele R. O t
 1. `007_add_3r_rationale_columns.sql` — ADD das três colunas; `category_3r` permanece (fonte de verdade de quais Rs precisam de texto). Auto-aplicada por `migrate.py`.
 2. `scripts/backfill_3r_rationales.py` — para cada R em `category_3r`, insere placeholder `'[PENDENTE — ver category_3r]'` (não string vazia), distinguindo “precisa preencher” de “não se aplica”.
 3. Gate — só prosseguir quando a query de pendências retornar zero linhas (`backfill_3r_rationales.py --check`).
-4. `manual/008_drop_category_3r.sql` — DROP de `category_3r` via `backfill_3r_rationales.py --apply-drop` (não auto-aplicada; falha se o gate ainda tiver linhas).
+4. ~~`manual/008_drop_category_3r.sql`~~ — superseded by auto-applied `026_methods_drop_category_3r_reorder.sql` (also restores column order so `text_for_embedding` / `embedding_json` follow `keywords`).
 
 **Reversibility:** Moderada — schema + backfill + checklist Karynn.
 

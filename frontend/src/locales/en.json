@@ -1,17 +1,17 @@
 {
   "nav": {
     "analyze": "Analyze",
+    "explore": "Explore",
     "literature": "Literature",
-    "search": "Search",
     "glossary": "Glossary",
     "info": "Info",
     "admin": "Admin",
     "signIn": "Sign in"
   },
   "glossary": {
-    "title": "Glossary",
-    "placeholder": "Controlled vocabulary and term definitions — coming soon."
+    "title": "Glossary"
   },
+
   "info": {
     "title": "Info",
     "placeholder": "About 3R Assist, methodology, and documentation — coming soon."
@@ -48,8 +48,14 @@
     "noCommentHint": "No comment",
     "close": "Close",
     "addRow": "Add row",
+    "edit": "Edit",
+    "exportCsv": "Export CSV",
+    "exporting": "Exporting…",
+    "exportError": "Could not export table.",
+    "editRow": "Edit row",
     "ok": "OK",
     "addRowError": "Could not add row.",
+    "editRowError": "Could not update row.",
     "requiredFieldsMissing": "Required fields missing: {{fields}}",
     "selectRequired": "Select…",
     "selectOptional": "— None —",
@@ -59,6 +65,62 @@
     "database": {
       "label": "Database",
       "subtitle": "Browse and edit public PostgreSQL tables. Double-click a cell to edit."
+    },
+    "extract": {
+      "label": "Extract",
+      "subtitle": "Extract approved methods and document metadata from policy text.",
+      "policyLabel": "Policy extraction",
+      "policyPlaceholder": "Paste a policy, guideline, or regulation text…",
+      "charCount": "{{count}} / {{max}}",
+      "tooShort": "Minimum {{min}} characters",
+      "submit": "Extract",
+      "submittingSeconds": "Extracting… {{seconds}}s",
+      "error": "Could not extract policy data.",
+      "resultsTitle": "Extraction results",
+      "documentName": "Document name",
+      "documentDate": "Document date",
+      "institution": "Responsible institution",
+      "url": "URL",
+      "urlPlaceholder": "https://…",
+      "methods": "Approved / recognized methods",
+      "methodCode": "Code",
+      "methodName": "Name",
+      "methodPurpose": "Purpose",
+      "noMethods": "No approved or recognized methods found.",
+      "notFound": "—",
+      "match": "Match",
+      "expandMatches": "Match against database methods",
+      "collapseMatches": "Hide database matches",
+      "matching": "Matching against database…",
+      "matchError": "Could not search for matching methods in the database. Try again, or check curated method metadata.",
+      "noMatches": "No matching methods found in the database for this code/name.",
+      "searchOecd": "Search OECD",
+      "searchDocument": "Search document",
+      "searchDocumentError": "Could not search for matching documents in the database.",
+      "searchingDocuments": "Searching documents…",
+      "noDocumentMatches": "No matching documents found in the database.",
+      "matchByDocCitation": "Document citation",
+      "matchByUrl": "URL",
+      "addDocument": "Add document",
+      "addNewDocument": "Add new document",
+      "addDocumentError": "Could not open the add-document form.",
+      "addMethod": "Add method",
+      "addMethodError": "Could not open the add-method form.",
+      "addRegulation": "Add regulation",
+      "addRegulationError": "Could not open the add-regulation form.",
+      "methodProtocolLabel": "Method protocol",
+      "methodProtocolPlaceholder": "Paste the method protocol, guideline, or TG document text…",
+      "methodProtocolHint": "Submit to ask the model to fill the form fields from the document.",
+      "methodDraftExtract": "Extract fields",
+      "methodDraftExtracting": "Extracting…",
+      "methodDraftError": "Could not extract method fields from the protocol.",
+      "matchByOecd": "OECD TG ref",
+      "matchByText": "Text similarity",
+      "regulatoryStatus": "Regulatory status",
+      "inactive": "inactive",
+      "savedTitle": "Saved extractions",
+      "savedMeta": "{{date}} · {{count}} methods",
+      "removeSaved": "Remove"
     },
     "docs": {
       "label": "Docs",
@@ -81,7 +143,7 @@
     "submittingSeconds": "Analyzing… {{seconds}}s",
     "mock": "Demo",
     "searchLink": "Already know what you're looking for?",
-    "searchLinkAction": "Direct search",
+    "searchLinkAction": "Explore",
     "anonymous": "Continue without an account (anonymous) — history available after registration",
     "tooShort": "Minimum {{min}} characters",
     "charCount": "{{count}} / {{max}}"
@@ -102,6 +164,8 @@
     "experimentTabsLabel": "Detected experiments",
     "experimentTab": "Experiment {{number}}",
     "notesLabel": "Extraction notes",
+    "certaintyLabel": "Certainty",
+    "evidenceLabel": "Evidence",
     "showEvidence": "Show evidence",
     "hideEvidence": "Hide evidence",
     "matchingSection": "Matching parameters",
@@ -129,7 +193,7 @@
     },
     "fields": {
       "studyType": "Study type (extracted)",
-      "endpointCategory": "Endpoint category (database)",
+      "endpointCategory": "Endpoint category",
       "route": "Route",
       "studyDomain": "Study domain",
       "procedureText": "Procedure text",
@@ -193,7 +257,10 @@
     "matchedParams": "Matched parameters",
     "matchLabel": "Match",
     "sourceLink": "Primary source",
-    "regulatoryLink": "OECD / regulatory",
+    "noProtocolCitation": "No protocol citation available.",
+    "noRegulatoryCitation": "No regulatory citation available.",
+    "regulatoryLink": "Open regulatory source",
+    "close": "Close",
     "filterThreeR": "3Rs class",
     "filterJurisdiction": "Jurisdiction",
     "filterAll": "All",
@@ -212,9 +279,16 @@
     },
     "validationStatus": {
       "validated": "Validated",
-      "accepted": "Accepted",
-      "emerging": "Emerging"
+      "in_process_of_validation": "In process of validation",
+      "not_validated": "Not validated"
     },
+    "regulatoryStatus": {
+      "not_approved": "Not approved",
+      "approved": "Approved",
+      "recommended": "Recommended",
+      "mandatory": "Mandatory"
+    },
+    "purposeLabel": "Purpose",
     "threeR": {
       "replacement": "Replacement",
       "reduction": "Reduction",
@@ -222,8 +296,36 @@
     }
   },
   "s4": {
-    "placeholderTitle": "Direct search",
-    "placeholderBody": "Structured filters without protocol analysis — in development."
+    "title": "Explore",
+    "tabsLabel": "Explore sections",
+    "loading": "Loading…",
+    "loadError": "Could not load catalogue data.",
+    "filterPlaceholder": "Filter by name…",
+    "noMatches": "No items match this filter.",
+    "expand": "Expand details",
+    "collapse": "Collapse details",
+    "fields": {
+      "category": "Category",
+      "date": "Date",
+      "url": "URL"
+    },
+    "documentCategory": {
+      "method_protocol": "Method protocol",
+      "guideline": "Guideline",
+      "regulation": "Regulation"
+    },
+    "methods": {
+      "label": "Methods",
+      "empty": "No methods in the catalogue yet."
+    },
+    "regulations": {
+      "label": "Regulations",
+      "empty": "No regulations or guidelines in the catalogue yet."
+    },
+    "documents": {
+      "label": "Documents",
+      "empty": "No method protocol documents in the catalogue yet."
+    }
   },
   "litSearch": {
     "title": "Literature search",

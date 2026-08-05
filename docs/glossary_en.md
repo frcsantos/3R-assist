@@ -1,0 +1,8 @@
+**Endpoint:** In toxicology and pharmacology, this refers to the biological effect or measurable parameter that a study aims to evaluate—the response that the test captures, not the substance being tested or the method itself. This is the accepted terminology in regulatory ecotoxicology (OECD, ECHA, and ANVISA use the term in this sense).
+Examples of endpoints: eye irritation, skin corrosion, skin sensitization (allergenicity), genotoxicity, acute toxicity, phototoxicity, pyrogenicity. Each answers a distinct regulatory question (e.g., “Does this substance corrode the skin?” → endpoint = skin corrosion).
+
+**Method:** A discrete, validatable technique that produces measurable data for a single endpoint_category—e.g., TG 439 EpiSkin produces a cell viability value that classifies skin irritation. 
+
+**Methodology:** An experimental design or broader strategy that answers a research question, potentially combining or sequencing multiple methods—e.g., an IATA (Integrated Approach to Testing and Assessment) that combines in silico + in vitro + in vivo confirmation, or a comprehensive behavioral study design.
+
+**Route:** Describes how the test substance comes into contact with the biological system—not the type of biological system. In surrogate methods, it refers to which routes in the original protocol this method is compatible with to replace—use “null” when it is compatible with any route.

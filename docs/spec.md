@@ -22,7 +22,7 @@
 | F01 | Free-text protocol input (PT/EN) | Single textarea; no required fields |
 | F02 | LLM-based parameter extraction | Returns `AnalyzeResponse { experiments: ExtractionResult[] }` per `docs/parameter_model.md`. LLM produces `RawExtraction` (strict extraction only, no inference; every non-null field has a paired evidence string and `{field}_confidence`; `study_type` as free text). Application code maps `study_type` → `endpoint_category` via §4.1 lookup. See ADR-014–018 |
 | F03 | Parameter display and inline correction | S2 displays: `study_type` (what the LLM found) + `endpoint_category` (what the database covers, or "Not covered" if null); editable fields for route, study_domain, procedure_text, species, animal_counts, regulatory; per-field `{field}_confidence` badge (High/Medium/Low) with "show evidence" toggle (right-aligned) per field; original protocol text in a side panel with evidence spans highlighted; `notes` displayed below parameters when non-null. When `len(experiments) > 1`, S2 shows tabs — one per experiment — each with its own editable params and evidence (ADR-014, ADR-019). |
-| F04 | Ranked recommendations | S3 calls `POST /search` after S2 confirmation. Results sorted by relevance score; each card shows 3Rs class badge, **Match** score (%), jurisdiction, validation status, matched parameters, primary source link, and OECD/regulatory link (with `oecd_tg_ref` when present, e.g. "OECD / regulatory (OECD TG 439)"); cards with score ≤ 65% at reduced opacity (ADR-011). When `len(experiments) > 1`, S3 shows tabs with per-experiment summary and results (ADR-019). |
+| F04 | Ranked recommendations | S3 calls `POST /search` after S2 confirmation. Results sorted by relevance score; each card shows 3Rs class badge, **Match** score (%), jurisdiction, validation status, matched parameters, primary source link, and OECD/regulatory link (with `oecd_ref` when present, e.g. "OECD / regulatory (OECD TG 439)"); cards with score ≤ 65% at reduced opacity (ADR-011). When `len(experiments) > 1`, S3 shows tabs with per-experiment summary and results (ADR-019). |
 | F05 | 3Rs classification per result | Replacement / Reduction / Refinement label on each recommendation |
 | F06 | Jurisdictional validity indicator | Brazil / International / Both per result |
 | F07 | Direct database search | Structured filters: 3Rs class, endpoint, application area, jurisdiction; for users who already know what to look for |
@@ -62,7 +62,7 @@ Six primary screens. Detailed mockups in `/design/`. Nav has two primary items o
 |---|---|---|
 | **S1 — Input** | Protocol submission | Free-text area; PT/EN language toggle inside the input shell (pills in top bar of textarea — not a global page toggle); submit CTA; link to S4 below CTA; anonymous bypass as low-prominence text below a divider |
 | **S2 — Parameters** | Extracted parameter review | Per-field confidence indicator alongside "show evidence" toggle (ADR-018); `study_type` + `endpoint_category` at top (ADR-015); editable fields; protocol text side panel with evidence highlighting; when `len(experiments) > 1`, experiment tabs switch the active parameter set (ADR-019); "Search alternatives" triggers `POST /search` for **all** experiments in parallel; incomplete study_domain blocks search |
-| **S3 — Results** | Ranked recommendations | Back link to S2; when `len(experiments) > 1`, experiment tabs switch per-experiment protocol summary and result list (ADR-019); horizontal filter bar (3Rs class, jurisdiction); cards ordered by relevance with **Match** % label; score ≤ 65% at reduced opacity (ADR-011); each card: method name, 3Rs badge, jurisdiction, validation status, matched params, primary source link, OECD/regulatory link with `oecd_tg_ref`; filter relaxation notice when Minimum Results Rule fires; export/feedback/suggest-method links deferred |
+| **S3 — Results** | Ranked recommendations | Back link to S2; when `len(experiments) > 1`, experiment tabs switch per-experiment protocol summary and result list (ADR-019); horizontal filter bar (3Rs class, jurisdiction); cards ordered by relevance with **Match** % label; score ≤ 65% at reduced opacity (ADR-011); each card: method name, 3Rs badge, jurisdiction, validation status, matched params, primary source link, OECD/regulatory link with `oecd_ref`; filter relaxation notice when Minimum Results Rule fires; export/feedback/suggest-method links deferred |
 | **S4 — Direct Search** | Filter-based discovery | Persistent sidebar filter panel (3Rs class, endpoint, application area, jurisdiction) — sidebar justified by iterative filter comparison workflow; unranked result list (no embedding step) with count of total methods |
 | **S5 — Account / History** | Query log and exports | Registered users only — anonymous users redirected to S1 with registration invite; query list with date, protocol snippet, result count; inline accordion expansion; PDF/CSV export per query |
 | **S6 — Method Suggestion** | Crowdsourced additions | Not in primary nav — accessed from S3 "Suggest method" link and footer; form: method name (required), source URL, 3Rs class, notes; auth optional (email pre-filled if logged in); expectation notice: manual review queue, no publication timeline |
@@ -141,44 +141,48 @@ Key bottleneck under load: the Service layer (embedding generation + cosine simi
 
 #### Domain entities
 
-**Method** *(the core of the product — source of truth: `001_initial.sql`)*
+**Method** *(the core of the product — source of truth: `001_initial.sql` + later migrations)*
 ```
 id                  SERIAL PRIMARY KEY
 slug                TEXT NOT NULL UNIQUE          -- human-readable curation key
-name_en             TEXT NOT NULL
-name_pt             TEXT NOT NULL
-description_en      TEXT NOT NULL
-description_pt      TEXT NOT NULL
-text_for_embedding  TEXT NOT NULL                 -- exact string used at embed time; English only
+active              BOOLEAN NOT NULL DEFAULT FALSE
+name                JSONB NOT NULL                 -- {"en-us": "...", "pt-br": "..."}
+description         JSONB NOT NULL                 -- {"en-us": "...", "pt-br": "..."}
+endpoint_category   TEXT NOT NULL                 -- FK → endpoints(code); see parameter_model.md §3.1
+routes_applicable   JSONB                         -- e.g. '["oral"]', '["dermal"]'; NULL = route-agnostic
+study_domain        TEXT NOT NULL                 -- FK → study_domains(code); ADR-020
+oecd_ref            TEXT                          -- e.g. 'TG 439', 'GD 129'; NULL for non-OECD methods
+ncit_id             TEXT                          -- NCI Thesaurus concept ID; NULL until Karynn maps
+source_citation     TEXT                          -- bibliographic citation for the primary source
+source_doc_id       INTEGER                       -- FK → documents(id); primary source document
+source_db           TEXT NOT NULL                 -- 'OECD_TG' | 'ECVAM_DBALM' | 'NICEATM' | 'FARMACOPEIA_BR' | 'TSAR'
 replacement_rationale TEXT                       -- non-null/non-empty ⇒ qualifies as replacement; text is audit rationale (ADR-023)
 reduction_rationale   TEXT                       -- non-null/non-empty ⇒ qualifies as reduction
 refinement_rationale  TEXT                       -- non-null/non-empty ⇒ qualifies as refinement
-endpoint_category   TEXT NOT NULL                 -- FK → endpoints(code); see parameter_model.md §3.1
-study_domain        TEXT NOT NULL                 -- FK → study_domains(code); ADR-020
-oecd_tg_ref         TEXT                          -- e.g. 'TG 439', 'GD 129'; NULL for non-OECD methods
-ncit_id             TEXT                          -- NCI Thesaurus concept ID; NULL until Karynn maps
-source_db           TEXT NOT NULL                 -- 'OECD_TG' | 'ECVAM_DBALM' | 'NICEATM' | 'FARMACOPEIA_BR' | 'TSAR'
-routes_applicable   JSONB                         -- e.g. '["oral"]', '["dermal"]'; NULL = route-agnostic
+keywords            JSONB NOT NULL DEFAULT '{"en-us":[],"pt-br":[]}'  -- localized synonym lists
+text_for_embedding  TEXT NOT NULL                 -- exact string used at embed time; English only
 embedding_json      JSONB                         -- 384-dim float array; NULL until embed_methods.py runs
-active              BOOLEAN NOT NULL DEFAULT FALSE
 created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 ```
-> `validation_status`, `jurisdiction`, `jurisdiction_notes`, `primary_lit_url`, `regulatory_url` removed — see **MethodValidationContext** below (ADR-022).
+> `validation_status`, `jurisdiction`, `jurisdiction_notes`, `primary_lit_url`, `regulatory_url` removed — see **MethodRegulatoryContext** below (ADR-022).
+> Column order: `active` after `slug`; endpoint/routes/domain/`oecd_ref`/`ncit_id`/`source_citation`/`source_doc_id`/`source_db`; then `*_rationale`, `keywords`, `text_for_embedding`, `embedding_json`, timestamps. Paired `*_en`/`*_pt` columns folded into localized JSONB in migration `023`. Keywords previously lived in `method_keywords` (folded in `017`).
 
-**MethodValidationContext** *(validation status and jurisdiction per method × study_domain × regulatory framework)*
+**MethodRegulatoryContext** *(validation status and jurisdiction per method × regulatory framework)*
 ```
 id                SERIAL PRIMARY KEY
 method_id         INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE
-study_domain      TEXT    NOT NULL   -- 'general' | 'pharma' | 'cosmetics' | 'chemical_safety'
-jurisdiction      TEXT    NOT NULL   -- 'brazil' | 'eu' | 'us' | 'oecd'
-validation_status TEXT    NOT NULL   -- 'validated' | 'accepted' | 'emerging'
+jurisdiction      JSONB   NOT NULL   -- {"en-us":"Brazil"|"EU"|"US"|"OECD","pt-br":"Brasil"|"UE"|"EUA"|"OCDE"}
+validation_status TEXT    NOT NULL   -- 'validated' | 'in_process_of_validation' | 'not_validated'
+regulation_status TEXT               -- 'not_approved' | 'approved' | 'recommended' | 'mandatory'
+regulation_date   DATE               -- date of regulation / recognition / adoption (YYYY-MM-DD)
+regulation_purpose TEXT              -- what the method is recognized/validated for in this context
 regulatory_body   TEXT               -- 'CONCEA' | 'ANVISA' | 'ECHA' | 'EMA' | 'EPA' | 'FDA' | 'ICCVAM' | 'OECD'
-regulatory_ref    TEXT               -- e.g. 'RN 18/2014 Art. 2', 'TG 439', 'Reg 1223/2009'
-regulatory_url    TEXT
+regulatory_doc_id INTEGER            -- FK → documents(id)
+regulatory_citation TEXT             -- bibliographic citation / short reference
 notes             TEXT
 created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
-UNIQUE (method_id, study_domain, jurisdiction)
+UNIQUE (method_id, jurisdiction)
 ```
 
 **Jurisdiction vocabulary (ADR-022):**
@@ -193,19 +197,10 @@ SELECT DISTINCT m.*
 FROM methods m
 WHERE m.active = TRUE
   AND EXISTS (
-    SELECT 1 FROM method_validation_contexts mvc
+    SELECT 1 FROM regulations mvc
     WHERE mvc.method_id = m.id
-      AND (mvc.study_domain = :study_domain OR mvc.study_domain = 'general')
       AND (:jurisdiction IS NULL OR mvc.jurisdiction = :jurisdiction)
   )
-```
-
-**MethodKeyword** *(synonym dictionary for vocabulary bridging)*
-```
-id          SERIAL PRIMARY KEY
-method_id   INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE
-keyword     TEXT NOT NULL
-language    TEXT NOT NULL    -- 'en' | 'pt'
 ```
 
 **Endpoint / Route / StudyDomain** *(controlled vocabularies — source of truth: `003_vocabulary_tables.sql`)*
@@ -213,10 +208,8 @@ language    TEXT NOT NULL    -- 'en' | 'pt'
 Shared shape for `endpoints`, `routes`, and `study_domains`:
 ```
 code            TEXT PRIMARY KEY
-name_en         TEXT NOT NULL
-name_pt         TEXT NOT NULL
-description_en  TEXT
-description_pt  TEXT
+name            JSONB NOT NULL    -- {"en-us": "...", "pt-br": "..."}
+description     JSONB             -- {"en-us": "...", "pt-br": "..."} (nullable)
 sort_order      INTEGER NOT NULL DEFAULT 0
 active          BOOLEAN NOT NULL DEFAULT TRUE
 created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -279,8 +272,7 @@ UNIQUE (query_id, method_id)
 ```
 id              SERIAL PRIMARY KEY
 user_id         INTEGER REFERENCES users(id) ON DELETE SET NULL
-name_en         TEXT NOT NULL
-name_pt         TEXT
+name            JSONB NOT NULL   -- {"en-us": "...", "pt-br": "..."}
 description     TEXT
 source_url      TEXT
 endpoint_hint   TEXT          -- user's best guess; not validated
@@ -374,15 +366,29 @@ Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension avai
 │   │   └── db/
 │   │       ├── connection.py        # asyncpg connection pool (DATABASE_URL)
 │   │       └── migrations/
-│   │           ├── 001_initial.sql                    # methods, method_validation_contexts, method_keywords
+│   │           ├── 001_initial.sql                    # methods, method_regulatory_contexts (+ legacy method_keywords)
 │   │           ├── 002_app_tables.sql                 # users, magic_link_tokens, queries, feedback, suggestions
 │   │           ├── 003_vocabulary_tables.sql          # endpoints, routes, study_domains, route_endpoints
 │   │           ├── 004_rename_study_domain.sql        # application_area → study_domain (legacy upgrade)
-│   │           ├── 005_method_validation_contexts.sql # ADR-021/022 legacy upgrade
+│   │           ├── 005_method_regulatory_contexts.sql # ADR-021/022 legacy upgrade
 │   │           ├── 006_route_other.sql                # seeds routes.other
 │   │           ├── 007_add_3r_rationale_columns.sql   # ADR-023 step 1 (add rationale columns)
+│   │           ├── 017_methods_keywords_columns.sql   # keywords_en/pt on methods; drop method_keywords
+│   │           ├── 018_methods_embed_keywords_reorder.sql  # embed/keyword cols after source_db
+│   │           ├── 019_methods_text_for_embedding_reorder.sql  # text_for_embedding left of embedding_json
+│   │           ├── 020_methods_3r_columns_reorder.sql     # category_3r / *_rationale after source_db
+│   │           ├── 023_localized_json_fields.sql      # fold *_en/*_pt into localized JSONB
+│   │           ├── 024_vocab_timestamps_after_description.sql  # vocab: timestamps after description
+│   │           ├── 025_drop_mrc_study_domain.sql               # drop study_domain from method_regulatory_contexts
+│   │           ├── 026_methods_drop_category_3r_reorder.sql    # drop category_3r; embedding cols after keywords
+│   │           ├── 027_documents.sql                           # documents catalogue
+│   │           ├── 028_doc_fks_and_citations.sql               # source_doc_id / regulatory_doc_id + citation
+│   │           ├── 029_mrc_validation_status_values.sql        # normalize validation_status vocabulary
+│   │           ├── 030_documents_doc_citation.sql              # doc_ref → doc_citation (localized JSONB)
+│   │           ├── 031_mrc_jurisdiction_localized.sql          # MRC jurisdiction → localized JSONB
+│   │           ├── 032_rename_regulations.sql                  # method_regulatory_contexts → regulations
 │   │           └── manual/
-│   │               └── 008_drop_category_3r.sql       # ADR-023 step 4 (gated; not auto-applied)
+│   │               └── 008_drop_category_3r.sql       # legacy gated DROP (superseded by 026)
 │   ├── scripts/
 │   │   ├── embed_methods.py         # generate embeddings for active methods (asyncpg)
 │   │   ├── backfill_3r_rationales.py # ADR-023 steps 2–4 (backfill, gate, optional DROP)
@@ -588,25 +594,26 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
     {
       "method": {
         "slug": string,
-        "name_en": string,
-        "name_pt": string,
-        "description_en": string,
-        "description_pt": string,
+        "name": {"en-us": string, "pt-br": string},
+        "description": {"en-us": string, "pt-br": string},
         "replacement_rationale": string|null,   -- non-null/non-empty ⇒ replacement (ADR-023)
         "reduction_rationale": string|null,
         "refinement_rationale": string|null,
         "category_3r": ["replacement"|"reduction"|"refinement"],   -- derived from rationale columns
         "endpoint_category": string,
-        "oecd_tg_ref": "TG 439"|null
+        "oecd_ref": "TG 439"|null
       },
-      "validation_contexts": [         -- all contexts for this method × matched study_domain (ADR-022)
+      "regulatory_contexts": [
         {
-          "study_domain": "general"|"pharma"|"cosmetics"|"chemical_safety",
-          "jurisdiction": "brazil"|"eu"|"us"|"oecd",
-          "validation_status": "validated"|"accepted"|"emerging",
+          "jurisdiction": {"en-us": string, "pt-br": string},
+          "validation_status": "validated"|"in_process_of_validation"|"not_validated",
+          "regulation_status": "not_approved"|"approved"|"recommended"|"mandatory"|null,
+          "regulation_date": "YYYY-MM-DD"|null,
+          "regulation_purpose": string|null,
           "regulatory_body": string|null,
-          "regulatory_ref": string|null,
-          "regulatory_url": string|null
+          "regulatory_doc_id": number|null,
+          "regulatory_citation": string|null,  -- falls back to documents.doc_citation
+          "regulatory_url": string|null       -- documents.url via regulatory_doc_id
         }
       ],
       "rank": 1,

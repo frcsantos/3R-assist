@@ -65,12 +65,23 @@ CREATE TABLE IF NOT EXISTS method_validation_contexts (
     study_domain      TEXT        NOT NULL,   -- 'general'|'pharma'|'cosmetics'|'chemical_safety'
     jurisdiction      TEXT        NOT NULL,   -- 'brazil'|'eu'|'us'|'oecd'
     validation_status TEXT        NOT NULL,   -- 'validated'|'accepted'|'emerging'
+    purpose           TEXT,                   -- what the method is recognized/validated for in this context
+    regulatory_status TEXT,                   -- 'not_approved'|'approved'|'recommended'|'mandatory'
     regulatory_body   TEXT,                   -- 'CONCEA'|'ANVISA'|'ECHA'|'EMA'|'EPA'|'FDA'|'ICCVAM'|'OECD'
     regulatory_ref    TEXT,                   -- e.g. 'RN 18/2014 Art. 2', 'TG 439', 'Reg 1223/2009'
     regulatory_url    TEXT,
     notes             TEXT,
     created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (method_id, study_domain, jurisdiction)
+    UNIQUE (method_id, study_domain, jurisdiction),
+    CONSTRAINT method_validation_contexts_regulatory_status_check CHECK (
+        regulatory_status IS NULL
+        OR regulatory_status IN (
+            'not_approved',
+            'approved',
+            'recommended',
+            'mandatory'
+        )
+    )
 );
 
 CREATE TABLE IF NOT EXISTS method_keywords (

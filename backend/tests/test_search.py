@@ -3,7 +3,8 @@ from fastapi.testclient import TestClient
 from app.adapters.embedder import StubEmbedderAdapter
 from app.api.deps import get_retrieval_service
 from app.main import create_app
-from app.models.method import Method, MethodValidationContext
+from app.models.i18n import localized_str
+from app.models.method import Method, MethodRegulatoryContext
 from app.repositories.methods import MethodRepository
 from app.services.retrieval import RetrievalService
 
@@ -11,16 +12,14 @@ from app.services.retrieval import RetrievalService
 def _context(
     jurisdiction: str = "oecd",
     *,
-    study_domain: str = "general",
     validation_status: str = "validated",
-) -> MethodValidationContext:
-    return MethodValidationContext(
-        study_domain=study_domain,
+) -> MethodRegulatoryContext:
+    return MethodRegulatoryContext(
         jurisdiction=jurisdiction,
         validation_status=validation_status,
         regulatory_body="OECD",
-        regulatory_ref="TG 420",
-        regulatory_url="https://example.org/tg420",
+        regulation_date=None,
+        regulatory_citation="https://example.org/tg420",
     )
 
 
@@ -36,15 +35,13 @@ def _method(
     *,
     method_id: int = 1,
     category_3r: list[str] | None = None,
-    contexts: list[MethodValidationContext] | None = None,
-) -> tuple[Method, list[MethodValidationContext]]:
+    contexts: list[MethodRegulatoryContext] | None = None,
+) -> tuple[Method, list[MethodRegulatoryContext]]:
     method = Method(
         id=method_id,
         slug=slug,
-        name_en=f"{slug} EN",
-        name_pt=f"{slug} PT",
-        description_en="desc",
-        description_pt="desc",
+        name=localized_str(f"{slug} EN", f"{slug} PT"),
+        description=localized_str("desc"),
         text_for_embedding="acute oral LD50",
         endpoint_category=endpoint,
         study_domain="general",
@@ -57,7 +54,7 @@ def _method(
 
 
 class FakeMethodRepository(MethodRepository):
-    def __init__(self, entries: list[tuple[Method, list[MethodValidationContext]]]) -> None:
+    def __init__(self, entries: list[tuple[Method, list[MethodRegulatoryContext]]]) -> None:
         self._entries = entries
 
     async def list_active(self) -> list[Method]:
@@ -66,13 +63,13 @@ class FakeMethodRepository(MethodRepository):
 
     async def list_active_with_contexts(
         self,
-    ) -> tuple[list[Method], dict[int, list[MethodValidationContext]]]:
+    ) -> tuple[list[Method], dict[int, list[MethodRegulatoryContext]]]:
         methods = [entry[0] for entry in self._entries]
         contexts = {entry[0].id: entry[1] for entry in self._entries}
         return methods, contexts
 
 
-def _search_client(entries: list[tuple[Method, list[MethodValidationContext]]]) -> TestClient:
+def _search_client(entries: list[tuple[Method, list[MethodRegulatoryContext]]]) -> TestClient:
     service = RetrievalService(
         FakeMethodRepository(entries),
         StubEmbedderAdapter(),
@@ -109,7 +106,7 @@ def test_search_returns_ranked_recommendations():
     assert data["results"][0]["rank"] == 1
     assert data["results"][0]["method"]["slug"] == "oral-a"
     assert data["results"][0]["score"] > 0
-    assert data["results"][0]["validation_contexts"]
+    assert data["results"][0]["regulatory_contexts"]
 
 
 def test_search_applies_three_r_filter():

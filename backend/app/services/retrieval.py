@@ -6,7 +6,7 @@ import logging
 from collections.abc import Callable
 
 from app.adapters.embedder import EmbedderAdapter
-from app.models.method import Method, MethodValidationContext
+from app.models.method import Method, MethodRegulatoryContext
 from app.models.protocol import ProtocolParameters
 from app.models.recommendation import Recommendation
 from app.repositories.methods import MethodRepository
@@ -99,33 +99,16 @@ def _matched_params(method: Method, params: ProtocolParameters) -> list[str]:
     return matched
 
 
-def _contexts_for_params(
-    contexts: list[MethodValidationContext],
-    params: ProtocolParameters,
-) -> list[MethodValidationContext]:
-    if not contexts:
-        return []
-    domain = params.study_domain or "general"
-    return [
-        context
-        for context in contexts
-        if context.study_domain in (domain, "general")
-    ]
-
-
 def _build_recommendations(
     scored: list[tuple[Method, float]],
     params: ProtocolParameters,
-    contexts_by_method: dict[int, list[MethodValidationContext]],
+    contexts_by_method: dict[int, list[MethodRegulatoryContext]],
 ) -> list[Recommendation]:
     scored.sort(key=lambda item: (-item[1], item[0].slug))
     return [
         Recommendation(
             method=method,
-            validation_contexts=_contexts_for_params(
-                contexts_by_method.get(method.id, []),
-                params,
-            ),
+            regulatory_contexts=contexts_by_method.get(method.id, []),
             rank=index,
             score=score,
             matched_params=_matched_params(method, params),
@@ -162,9 +145,9 @@ class RetrievalService:
         self,
         candidates: list[Method],
         params: ProtocolParameters,
-        contexts_by_method: dict[int, list[MethodValidationContext]],
+        contexts_by_method: dict[int, list[MethodRegulatoryContext]],
         rank: Callable[
-            [list[Method], ProtocolParameters, dict[int, list[MethodValidationContext]]],
+            [list[Method], ProtocolParameters, dict[int, list[MethodRegulatoryContext]]],
             list[Recommendation],
         ],
     ) -> tuple[list[Recommendation], str | None]:
@@ -191,7 +174,7 @@ class RetrievalService:
         self,
         methods: list[Method],
         params: ProtocolParameters,
-        contexts_by_method: dict[int, list[MethodValidationContext]],
+        contexts_by_method: dict[int, list[MethodRegulatoryContext]],
     ) -> tuple[list[Recommendation], str | None]:
         return self._search_with_relaxation(
             methods, params, contexts_by_method, self._rank_filter_only
@@ -201,7 +184,7 @@ class RetrievalService:
         self,
         methods: list[Method],
         params: ProtocolParameters,
-        contexts_by_method: dict[int, list[MethodValidationContext]],
+        contexts_by_method: dict[int, list[MethodRegulatoryContext]],
     ) -> tuple[list[Recommendation], str | None]:
         scorable = [method for method in methods if method.embedding_json]
         if not scorable:
@@ -225,7 +208,7 @@ class RetrievalService:
         self,
         methods: list[Method],
         params: ProtocolParameters,
-        contexts_by_method: dict[int, list[MethodValidationContext]],
+        contexts_by_method: dict[int, list[MethodRegulatoryContext]],
     ) -> list[Recommendation]:
         scored = [(method, filter_only_score(method, params)) for method in methods]
         return _build_recommendations(scored, params, contexts_by_method)
@@ -235,7 +218,7 @@ class RetrievalService:
         methods: list[Method],
         query_vector: list[float],
         params: ProtocolParameters,
-        contexts_by_method: dict[int, list[MethodValidationContext]],
+        contexts_by_method: dict[int, list[MethodRegulatoryContext]],
     ) -> list[Recommendation]:
         scored: list[tuple[Method, float]] = []
         for method in methods:
