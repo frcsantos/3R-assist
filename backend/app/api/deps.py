@@ -7,6 +7,8 @@ from app.repositories.admin import AdminRepository
 from app.repositories.documents import DocumentRepository
 from app.repositories.methods import MethodRepository
 from app.services.extraction import ExtractionService
+from app.services.document_draft_extraction import DocumentDraftExtractionService
+from app.services.extract_estimate import ExtractEstimateService
 from app.services.method_draft_extraction import MethodDraftExtractionService
 from app.services.policy_document_match import PolicyDocumentMatchService
 from app.services.policy_extraction import PolicyExtractionService
@@ -52,6 +54,14 @@ def get_policy_extraction_service() -> PolicyExtractionService:
 
 def get_method_draft_extraction_service() -> MethodDraftExtractionService:
     return MethodDraftExtractionService(llm=get_llm_adapter())
+
+
+def get_document_draft_extraction_service() -> DocumentDraftExtractionService:
+    return DocumentDraftExtractionService(llm=get_llm_adapter())
+
+
+def get_extract_estimate_service() -> ExtractEstimateService:
+    return ExtractEstimateService()
 
 
 def get_policy_method_match_service() -> PolicyMethodMatchService:

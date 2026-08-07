@@ -1,9 +1,22 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models.i18n import LocalizedStr
 from app.models.method import MethodRegulatoryContext, RegulatoryStatus
+
+
+def _looks_like_single_url(text: str) -> bool:
+    candidate = text.strip()
+    if not candidate or any(ch.isspace() for ch in candidate):
+        return False
+    lower = candidate.lower()
+    return lower.startswith(("http://", "https://", "www."))
+
+
+def looks_like_single_url(text: str) -> bool:
+    """True when `text` is a single URL-like token (http(s) or www.)."""
+    return _looks_like_single_url(text)
 
 
 class PolicyMethod(BaseModel):
@@ -14,8 +27,30 @@ class PolicyMethod(BaseModel):
 
 
 class PolicyExtractRequest(BaseModel):
-    text: str = Field(..., min_length=20, max_length=50000)
+    text: str = Field(..., min_length=1, max_length=50000)
     lang: Literal["pt", "en"] | None = None
+    source_url: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("text")
+    @classmethod
+    def strip_text(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("source_url")
+    @classmethod
+    def strip_source_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        cleaned = value.strip()
+        return cleaned or None
+
+    @model_validator(mode="after")
+    def require_length_unless_url(self) -> "PolicyExtractRequest":
+        if _looks_like_single_url(self.text):
+            return self
+        if len(self.text) < 20:
+            raise ValueError("text must be at least 20 characters unless it is a URL")
+        return self
 
 
 class PolicyExtractResponse(BaseModel):
@@ -23,6 +58,8 @@ class PolicyExtractResponse(BaseModel):
     document_name: str | None = None
     document_date: str | None = None
     responsible_institution: str | None = None
+    url: str | None = None
+    description: str | None = None
 
 
 class PolicyMethodMatchRequest(BaseModel):

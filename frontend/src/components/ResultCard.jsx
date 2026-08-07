@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react'
+import HighlightedText from './HighlightedText'
 
 const threeRStyles = {
   replacement: {
@@ -41,7 +42,14 @@ function ExternalLink({ href, children, className }) {
   )
 }
 
-function RegulationModal({ item, onClose, closeLabel, noCitationLabel, linkLabel }) {
+function RegulationModal({
+  item,
+  onClose,
+  closeLabel,
+  noCitationLabel,
+  linkLabel,
+  highlightQuery,
+}) {
   const titleId = useId()
 
   useEffect(() => {
@@ -77,7 +85,7 @@ function RegulationModal({ item, onClose, closeLabel, noCitationLabel, linkLabel
             id={titleId}
             className="font-card-title text-card-title text-primary"
           >
-            {item.label}
+            <HighlightedText text={item.label} query={highlightQuery} />
           </h4>
           <button
             type="button"
@@ -91,9 +99,11 @@ function RegulationModal({ item, onClose, closeLabel, noCitationLabel, linkLabel
         {citation ? (
           <p className="break-words font-body-base text-body-base text-on-secondary-container">
             {citationIsUrl ? (
-              <ExternalLink href={citation}>{citation}</ExternalLink>
+              <ExternalLink href={citation}>
+                <HighlightedText text={citation} query={highlightQuery} />
+              </ExternalLink>
             ) : (
-              citation
+              <HighlightedText text={citation} query={highlightQuery} />
             )}
           </p>
         ) : (
@@ -106,7 +116,10 @@ function RegulationModal({ item, onClose, closeLabel, noCitationLabel, linkLabel
             href={linkHref}
             className="mt-3 inline-block break-all font-metadata text-metadata text-primary underline underline-offset-2 hover:opacity-90"
           >
-            {item.url || linkLabel}
+            <HighlightedText
+              text={item.url || linkLabel}
+              query={highlightQuery}
+            />
           </ExternalLink>
         ) : null}
       </div>
@@ -135,6 +148,7 @@ export default function ResultCard({
   regulatoryLinkLabel = 'OECD / regulatory',
   closeLabel = 'Close',
   matchLabel = 'Match',
+  highlightQuery,
 }) {
   const styles = threeRStyles[type] ?? threeRStyles.replacement
   // undefined badges → legacy single-type fallback; [] → no 3R qualification yet
@@ -147,7 +161,9 @@ export default function ResultCard({
       className={`rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding transition-colors duration-ethos hover:border-border-emphasis ${dimmed ? 'opacity-65' : ''}`}
     >
       <div className="mb-2 flex items-start justify-between gap-card-gap">
-        <h3 className="font-card-title text-card-title text-primary">{title}</h3>
+        <h3 className="font-card-title text-card-title text-primary">
+          <HighlightedText text={title} query={highlightQuery} />
+        </h3>
         {score != null ? (
           <span
             className="group relative shrink-0 text-right font-metadata text-metadata text-text-tertiary"
@@ -173,21 +189,26 @@ export default function ResultCard({
       </div>
       {description && (
         <p className="mb-3 font-body-base text-body-base text-on-secondary-container">
-          {description}
+          <HighlightedText text={description} query={highlightQuery} />
         </p>
       )}
       {citationText ? (
         <p className="mb-3 break-words font-metadata text-metadata text-on-secondary-container">
           {isHttpUrl(citationText) ? (
-            <ExternalLink href={citationText}>{citationText}</ExternalLink>
+            <ExternalLink href={citationText}>
+              <HighlightedText text={citationText} query={highlightQuery} />
+            </ExternalLink>
           ) : (
-            citationText
+            <HighlightedText text={citationText} query={highlightQuery} />
           )}
           {primaryUrl ? (
             <>
               {' '}
               <ExternalLink href={primaryUrl}>
-                {isHttpUrl(primaryUrl) ? primaryUrl : sourcesLabel}
+                <HighlightedText
+                  text={isHttpUrl(primaryUrl) ? primaryUrl : sourcesLabel}
+                  query={highlightQuery}
+                />
               </ExternalLink>
             </>
           ) : null}
@@ -212,11 +233,17 @@ export default function ResultCard({
                 <span
                   className={`w-fit shrink-0 rounded border px-2 py-0.5 font-badge-button text-badge-button uppercase tracking-tight ${badgeStyles.badge}`}
                 >
-                  {badge.label ?? badge.type}
+                  <HighlightedText
+                    text={badge.label ?? badge.type}
+                    query={highlightQuery}
+                  />
                 </span>
                 {badge.rationale ? (
                   <p className="font-metadata text-metadata text-on-secondary-container">
-                    {badge.rationale}
+                    <HighlightedText
+                      text={badge.rationale}
+                      query={highlightQuery}
+                    />
                   </p>
                 ) : null}
               </li>
@@ -226,7 +253,8 @@ export default function ResultCard({
       )}
       {validationStatus && (
         <p className={`font-metadata text-metadata font-medium ${styles.accent}`}>
-          Validation Status: {validationStatus}
+          Validation Status:{' '}
+          <HighlightedText text={validationStatus} query={highlightQuery} />
         </p>
       )}
       {regulatoryStatuses.length > 0 && (
@@ -242,7 +270,7 @@ export default function ResultCard({
                 onClick={() => setSelectedRegulation(item)}
                 className="rounded border border-border-subtle bg-surface-container px-2 py-0.5 font-badge-button text-badge-button text-on-surface transition-colors hover:border-border-emphasis hover:bg-surface-container-low"
               >
-                {item.label}
+                <HighlightedText text={item.label} query={highlightQuery} />
               </button>
             ))}
           </div>
@@ -250,7 +278,14 @@ export default function ResultCard({
       )}
       {purpose ? (
         <p className="mt-2 font-metadata text-metadata text-on-secondary-container">
-          {purposeLabel ? `${purposeLabel}: ${purpose}` : purpose}
+          {purposeLabel ? (
+            <>
+              {purposeLabel}:{' '}
+              <HighlightedText text={purpose} query={highlightQuery} />
+            </>
+          ) : (
+            <HighlightedText text={purpose} query={highlightQuery} />
+          )}
         </p>
       ) : null}
       <RegulationModal
@@ -259,6 +294,7 @@ export default function ResultCard({
         closeLabel={closeLabel}
         noCitationLabel={noRegulatoryCitationLabel}
         linkLabel={regulatoryLinkLabel}
+        highlightQuery={highlightQuery}
       />
     </article>
   )

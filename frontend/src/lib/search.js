@@ -39,12 +39,41 @@ export function localeKey(lang) {
   return 'en-us'
 }
 
+function tryParseLocalizedObject(value) {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!trimmed.startsWith('{')) return null
+  if (!trimmed.includes('en-us') && !trimmed.includes('pt-br')) return null
+  try {
+    const parsed = JSON.parse(trimmed)
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      !Array.isArray(parsed) &&
+      ('en-us' in parsed || 'pt-br' in parsed)
+    ) {
+      return parsed
+    }
+  } catch {
+    /* plain string */
+  }
+  return null
+}
+
 export function pickLocalized(value, lang) {
   if (value == null) return ''
-  if (typeof value === 'string') return value
+  if (typeof value === 'string') {
+    const nested = tryParseLocalizedObject(value)
+    return nested ? pickLocalized(nested, lang) : value
+  }
   if (typeof value !== 'object') return String(value)
   const key = localeKey(lang)
-  return value[key] || value['en-us'] || value['pt-br'] || ''
+  const picked = value[key] || value['en-us'] || value['pt-br'] || ''
+  if (typeof picked === 'string') {
+    const nested = tryParseLocalizedObject(picked)
+    return nested ? pickLocalized(nested, lang) : picked
+  }
+  return pickLocalized(picked, lang)
 }
 
 export function methodDisplayName(method, lang) {

@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import ResultCard from '../components/ResultCard'
+import HighlightedText from '../components/HighlightedText'
 import {
   fetchDocumentsCatalogue,
   fetchMethodsCatalogue,
@@ -59,7 +60,49 @@ function isHttpUrl(value) {
   }
 }
 
-function DocumentCard({ document: doc, t, lang }) {
+const SKIP_SEARCH_KEYS = new Set([
+  'embedding_json',
+  'text_for_embedding',
+  'id',
+  'source_doc_id',
+  'regulatory_doc_id',
+  'created_at',
+  'updated_at',
+  'active',
+])
+
+function collectSearchText(value, parts = []) {
+  if (value == null) return parts
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed) parts.push(trimmed)
+    return parts
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    parts.push(String(value))
+    return parts
+  }
+  if (Array.isArray(value)) {
+    for (const entry of value) collectSearchText(entry, parts)
+    return parts
+  }
+  if (typeof value === 'object') {
+    for (const [key, entry] of Object.entries(value)) {
+      if (SKIP_SEARCH_KEYS.has(key)) continue
+      collectSearchText(entry, parts)
+    }
+  }
+  return parts
+}
+
+function itemMatchesFilter(item, query) {
+  return collectSearchText(item)
+    .join(' ')
+    .toLocaleLowerCase()
+    .includes(query)
+}
+
+function DocumentCard({ document: doc, t, lang, highlightQuery }) {
   const categoryLabel = t(`s4.documentCategory.${doc.category}`, {
     defaultValue: doc.category,
   })
@@ -71,19 +114,31 @@ function DocumentCard({ document: doc, t, lang }) {
       })
     : null
   const citation = pickLocalized(doc.doc_citation, lang)
+  const description = pickLocalized(doc.description, lang)
 
   return (
     <article className="rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding">
-      <h3 className="font-card-title text-card-title text-primary">{citation}</h3>
+      <h3 className="font-card-title text-card-title text-primary">
+        <HighlightedText text={citation} query={highlightQuery} />
+      </h3>
+      {description ? (
+        <p className="mt-2 font-body-base text-body-base text-on-secondary-container">
+          <HighlightedText text={description} query={highlightQuery} />
+        </p>
+      ) : null}
       <dl className="mt-3 space-y-2 font-metadata text-metadata text-on-secondary-container">
         <div className="flex flex-wrap gap-x-2">
           <dt className="text-on-surface-variant">{t('s4.fields.category')}</dt>
-          <dd>{categoryLabel}</dd>
+          <dd>
+            <HighlightedText text={categoryLabel} query={highlightQuery} />
+          </dd>
         </div>
         {dateLabel ? (
           <div className="flex flex-wrap gap-x-2">
             <dt className="text-on-surface-variant">{t('s4.fields.date')}</dt>
-            <dd>{dateLabel}</dd>
+            <dd>
+              <HighlightedText text={dateLabel} query={highlightQuery} />
+            </dd>
           </div>
         ) : null}
         {doc.url ? (
@@ -97,10 +152,10 @@ function DocumentCard({ document: doc, t, lang }) {
                   rel="noreferrer"
                   className="break-all text-primary underline underline-offset-2 hover:opacity-90"
                 >
-                  {doc.url}
+                  <HighlightedText text={doc.url} query={highlightQuery} />
                 </a>
               ) : (
-                doc.url
+                <HighlightedText text={doc.url} query={highlightQuery} />
               )}
             </dd>
           </div>
@@ -128,11 +183,7 @@ function ExpandableList({
 
   const query = filter.trim().toLocaleLowerCase()
   const filteredItems = query
-    ? items.filter((item) =>
-        String(getLabel(item) ?? '')
-          .toLocaleLowerCase()
-          .includes(query),
-      )
+    ? items.filter((item) => itemMatchesFilter(item, query))
     : items
 
   return (
@@ -180,7 +231,7 @@ function ExpandableList({
                 >
                   <ExpandArrow open={open} />
                   <span className="min-w-0 flex-1 font-body-base text-body-base text-primary">
-                    {getLabel(item)}
+                    <HighlightedText text={getLabel(item)} query={query} />
                   </span>
                 </button>
                 {open ? (
@@ -190,7 +241,7 @@ function ExpandableList({
                     aria-labelledby={buttonId}
                     className="border-t border-border-subtle bg-surface-container-low px-container-padding py-card-gap"
                   >
-                    {renderCard(item)}
+                    {renderCard(item, query)}
                   </div>
                 ) : null}
               </li>
@@ -251,7 +302,7 @@ function MethodsPanel({ lang, t }) {
       filterPlaceholder={t('s4.filterPlaceholder')}
       expandLabel={t('s4.expand')}
       collapseLabel={t('s4.collapse')}
-      renderCard={(item) => {
+      renderCard={(item, highlightQuery) => {
         const method = item.method
         const contexts = item.regulatory_contexts ?? []
         const primaryContext = primaryRegulatoryContext(contexts)
@@ -299,6 +350,7 @@ function MethodsPanel({ lang, t }) {
             sourcesLabel={t('s3.sourceLink')}
             regulatoryLinkLabel={t('s3.regulatoryLink')}
             closeLabel={t('s3.close')}
+            highlightQuery={highlightQuery}
           />
         )
       }}
@@ -355,8 +407,13 @@ function DocumentsPanel({ categories, emptyKey, t, lang }) {
       filterPlaceholder={t('s4.filterPlaceholder')}
       expandLabel={t('s4.expand')}
       collapseLabel={t('s4.collapse')}
-      renderCard={(item) => (
-        <DocumentCard document={item} t={t} lang={lang} />
+      renderCard={(item, highlightQuery) => (
+        <DocumentCard
+          document={item}
+          t={t}
+          lang={lang}
+          highlightQuery={highlightQuery}
+        />
       )}
     />
   )

@@ -1,19 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/Button'
+import MarkdownRenderer from '../components/MarkdownRenderer'
 import {
   deleteAdminRows,
+  estimateExtract,
+  extractDocumentDraft,
   extractMethodDraft,
   extractPolicy,
+  fetchAdminSettings,
   fetchAdminTable,
   fetchAdminTables,
   insertAdminRow,
   matchPolicyDocument,
   matchPolicyMethod,
+  resolveExtractSource,
   updateAdminCell,
   updateAdminColumnComment,
+  uploadExtractSource,
 } from '../lib/admin'
 import { currentLanguage } from '../lib/i18n'
 import {
@@ -29,6 +35,23 @@ import {
 
 const PAGE_SIZE = 10
 const MAIN_TABS = ['database', 'extract', 'docs', 'settings']
+
+const PROJECT_DOC_MODULES = import.meta.glob('../../../docs/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+})
+
+const PROJECT_DOCS = Object.entries(PROJECT_DOC_MODULES)
+  .map(([path, content]) => {
+    const filename = path.split(/[/\\]/).pop() ?? path
+    return {
+      id: filename,
+      filename,
+      content: typeof content === 'string' ? content : String(content ?? ''),
+    }
+  })
+  .sort((a, b) => a.filename.localeCompare(b.filename))
 
 function formatCell(value) {
   if (value === null || value === undefined) {
@@ -1640,13 +1663,161 @@ function DatabasePanel() {
   )
 }
 
-function PlaceholderPanel({ messageKey }) {
+function SettingsPanel() {
   const { t } = useTranslation()
+  const [settings, setSettings] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    fetchAdminSettings()
+      .then((data) => {
+        if (!cancelled) setSettings(data)
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err?.message || t('admin.settings.error'))
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [t])
+
+  if (loading) {
+    return (
+      <p className="font-body-base text-body-base text-on-secondary-container opacity-65">
+        {t('admin.settings.loading')}
+      </p>
+    )
+  }
+
+  if (error || !settings) {
+    return (
+      <p className="font-body-base text-body-base text-error">
+        {error || t('admin.settings.error')}
+      </p>
+    )
+  }
+
+  const rows = [
+    { key: 'environment', label: t('admin.settings.environment'), value: settings.app_env },
+    { key: 'modelName', label: t('admin.settings.modelName'), value: settings.llm_model },
+  ]
 
   return (
-    <p className="font-body-base text-body-base text-on-secondary-container opacity-65">
-      {t(messageKey)}
-    </p>
+    <dl className="divide-y divide-border-subtle rounded-lg border border-border-subtle bg-surface-container-lowest">
+      {rows.map((row) => (
+        <div
+          key={row.key}
+          className="flex flex-col gap-1 px-container-padding py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
+        >
+          <dt className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+            {row.label}
+          </dt>
+          <dd className="font-monospace-data text-monospace-data text-on-surface sm:text-right">
+            {row.value || '—'}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+function ProjectDocModal({ doc, onClose, closeLabel }) {
+  const titleId = useId()
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
+  if (!doc) return null
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 px-container-padding py-section-gap"
+      role="presentation"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="flex max-h-[min(90vh,56rem)] w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-border-subtle bg-surface-container-lowest shadow-lg"
+      >
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border-subtle px-container-padding py-3">
+          <h3
+            id={titleId}
+            className="font-card-title text-card-title text-primary"
+          >
+            {doc.filename}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="-mr-1 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded text-2xl leading-none text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
+            aria-label={closeLabel}
+          >
+            ×
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-container-padding py-card-gap">
+          <MarkdownRenderer>{doc.content}</MarkdownRenderer>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
+function DocsPanel() {
+  const { t } = useTranslation()
+  const [openDocId, setOpenDocId] = useState(null)
+  const openDoc = PROJECT_DOCS.find((doc) => doc.id === openDocId) ?? null
+
+  if (PROJECT_DOCS.length === 0) {
+    return (
+      <p className="font-body-base text-body-base text-on-secondary-container opacity-65">
+        {t('admin.docs.empty')}
+      </p>
+    )
+  }
+
+  return (
+    <>
+      <ul className="divide-y divide-border-subtle rounded-lg border border-border-subtle bg-surface-container-lowest">
+        {PROJECT_DOCS.map((doc) => (
+          <li key={doc.id}>
+            <button
+              type="button"
+              onClick={() => setOpenDocId(doc.id)}
+              className="flex w-full items-center px-container-padding py-3 text-left transition-colors hover:bg-surface-container-low"
+            >
+              <span className="min-w-0 flex-1 font-body-base text-body-base text-primary">
+                {doc.filename}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {openDoc ? (
+        <ProjectDocModal
+          doc={openDoc}
+          onClose={() => setOpenDocId(null)}
+          closeLabel={t('admin.docs.close')}
+        />
+      ) : null}
+    </>
   )
 }
 
@@ -1654,6 +1825,29 @@ const POLICY_TEXT_MIN = 20
 const POLICY_TEXT_MAX = 50000
 const EXTRACT_HISTORY_KEY = '3r_assist.extract.history'
 const EXTRACT_HISTORY_MAX = 20
+
+function looksLikeDocumentUrl(value) {
+  const candidate = String(value ?? '').trim()
+  if (!candidate || /\s/.test(candidate)) return false
+  try {
+    const withScheme = /^https?:\/\//i.test(candidate)
+      ? candidate
+      : candidate.toLowerCase().startsWith('www.')
+        ? `https://${candidate}`
+        : null
+    if (!withScheme) return false
+    const parsed = new URL(withScheme)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function normalizeDocumentUrl(value) {
+  const candidate = String(value ?? '').trim()
+  if (!looksLikeDocumentUrl(candidate)) return ''
+  return /^https?:\/\//i.test(candidate) ? candidate : `https://${candidate}`
+}
 
 function readExtractHistory() {
   try {
@@ -1671,6 +1865,14 @@ function writeExtractHistory(entries) {
 }
 
 function extractionLabel(entry) {
+  if (entry?.kind === 'document') {
+    const citation = entry?.documentFields?.doc_citation
+    const localized =
+      citation && typeof citation === 'object'
+        ? citation['en-us'] || citation['pt-br']
+        : null
+    if (localized?.trim()) return localized.trim()
+  }
   const name = entry?.result?.document_name?.trim()
   if (name) return name
   const preview = entry?.text?.trim()?.slice(0, 48)
@@ -1774,19 +1976,57 @@ function regulationInitialValuesFromExtracted(
   }
 }
 
+const DOCUMENT_TYPE_OPTIONS = [
+  { value: 'regulation', labelKey: 'admin.extract.documentType.regulation' },
+  { value: 'method_protocol', labelKey: 'admin.extract.documentType.protocol' },
+  { value: 'guideline', labelKey: 'admin.extract.documentType.guideline' },
+  { value: 'other', labelKey: 'admin.extract.documentType.other' },
+]
+
+function isPolicyExtractionType(documentType) {
+  return !documentType || documentType === 'regulation'
+}
+
 function documentInitialValuesFromExtracted({
   documentName,
   documentDate,
   url,
+  category,
+  slug,
+  docCitation,
+  description,
 } = {}) {
   const citation = documentName?.trim() ?? ''
+  const citationValue =
+    docCitation && typeof docCitation === 'object'
+      ? docCitation
+      : { 'en-us': citation, 'pt-br': citation }
+  const descriptionValue =
+    description && typeof description === 'object'
+      ? description
+      : {
+          'en-us': typeof description === 'string' ? description.trim() : '',
+          'pt-br': typeof description === 'string' ? description.trim() : '',
+        }
   return {
-    slug: slugifyMethodDraft(citation),
-    doc_citation: { 'en-us': citation, 'pt-br': citation },
+    slug: slug || slugifyMethodDraft(citation || citationValue['en-us']),
+    doc_citation: citationValue,
+    description: descriptionValue,
     date: regulationDateFromDocument(documentDate),
-    category: 'regulation',
+    category: category || 'regulation',
     url: url?.trim() ?? '',
   }
+}
+
+function documentInitialValuesFromDraftFields(fields, { categoryHint, sourceUrl } = {}) {
+  return documentInitialValuesFromExtracted({
+    slug: fields?.slug,
+    documentDate: fields?.date,
+    url: fields?.url || sourceUrl || '',
+    category: fields?.category || categoryHint || 'other',
+    docCitation: fields?.doc_citation,
+    description: fields?.description,
+  })
 }
 
 function ExpandArrow({ open }) {
@@ -1814,6 +2054,8 @@ function ExtractedMethodRow({
   institution,
   documentName,
   documentUrl,
+  documentType,
+  documentDescription,
 }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language?.startsWith('pt') ? 'pt' : 'en'
@@ -2155,6 +2397,8 @@ function ExtractedMethodRow({
                 documentName,
                 documentDate,
                 url: documentUrl,
+                category: documentType,
+                description: documentDescription,
               })}
               initialValues={methodInitialValuesFromExtracted(
                 method,
@@ -2170,10 +2414,18 @@ function ExtractedMethodRow({
   )
 }
 
+function formatUsd(amount) {
+  const value = Number(amount)
+  if (!Number.isFinite(value)) return '$0.00'
+  if (value === 0) return '$0.00'
+  if (value < 0.01) return `$${value.toFixed(4)}`
+  return `$${value.toFixed(3)}`
+}
+
 function ExtractPanel() {
   const { t, i18n } = useTranslation()
   const [text, setText] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [submitPhase, setSubmitPhase] = useState(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
@@ -2185,11 +2437,22 @@ function ExtractPanel() {
   const [addDocumentOpen, setAddDocumentOpen] = useState(false)
   const [addDocumentLoading, setAddDocumentLoading] = useState(false)
   const [addDocumentError, setAddDocumentError] = useState(null)
+  const [documentDraftValues, setDocumentDraftValues] = useState(null)
   const [history, setHistory] = useState(() => readExtractHistory())
   const [activeHistoryId, setActiveHistoryId] = useState(null)
+  const [documentType, setDocumentType] = useState('')
+  const [costEstimate, setCostEstimate] = useState(null)
+  const [readyToProceed, setReadyToProceed] = useState(false)
+  const [resolvedSourceText, setResolvedSourceText] = useState(null)
+  const [resolvedSourceUrl, setResolvedSourceUrl] = useState('')
+  const [uploadedFileName, setUploadedFileName] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
+  const uploadInputId = useId()
+  const submitAbortRef = useRef(null)
 
   useEffect(() => {
-    if (!submitting) {
+    if (!submitPhase) {
       setElapsedSeconds(0)
       return undefined
     }
@@ -2201,11 +2464,44 @@ function ExtractPanel() {
     }, 250)
 
     return () => window.clearInterval(timer)
-  }, [submitting])
+  }, [submitPhase])
+
+  useEffect(() => {
+    return () => {
+      submitAbortRef.current?.abort()
+    }
+  }, [])
 
   const trimmedLength = text.trim().length
-  const canSubmit = trimmedLength >= POLICY_TEXT_MIN && !submitting
+  const inputIsUrl = !uploadedFileName && looksLikeDocumentUrl(text)
+  const busy =
+    submitPhase != null || addDocumentLoading || uploading
+  const textLocked = Boolean(uploadedFileName)
+  const canSubmit =
+    (inputIsUrl || trimmedLength >= POLICY_TEXT_MIN) &&
+    (!busy || submitPhase != null)
   const dateLocale = i18n.language?.startsWith('pt') ? 'pt-BR' : 'en-US'
+
+  function clearCostEstimate() {
+    setCostEstimate(null)
+    setReadyToProceed(false)
+    setResolvedSourceText(null)
+    setResolvedSourceUrl('')
+  }
+
+  function cancelSubmit() {
+    submitAbortRef.current?.abort()
+  }
+
+  function clearUploadedFile() {
+    setUploadedFileName(null)
+    setText('')
+    clearCostEstimate()
+    setError(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
 
   function persistHistory(entries) {
     setHistory(entries)
@@ -2219,12 +2515,54 @@ function ExtractPanel() {
 
   function loadHistoryEntry(entry) {
     setError(null)
+    setUploadedFileName(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
     setText(entry.text ?? '')
-    setResult(entry.result ?? null)
-    setDocumentUrl('')
+    setDocumentType(entry.documentType ?? '')
+    setDocumentUrl(
+      entry.result?.url
+        || (looksLikeDocumentUrl(entry.text) ? normalizeDocumentUrl(entry.text) : '')
+        || entry.documentFields?.url
+        || '',
+    )
     clearDocumentSearch()
     setAddDocumentError(null)
+    clearCostEstimate()
     setActiveHistoryId(entry.id)
+
+    if (entry.kind === 'document') {
+      setResult(null)
+      void openDocumentDraftForm(
+        documentInitialValuesFromDraftFields(entry.documentFields, {
+          categoryHint: entry.documentType,
+          sourceUrl: looksLikeDocumentUrl(entry.text)
+            ? normalizeDocumentUrl(entry.text)
+            : '',
+        }),
+      )
+      return
+    }
+
+    setDocumentDraftValues(null)
+    setAddDocumentOpen(false)
+    setResult(entry.result ?? null)
+  }
+
+  async function openDocumentDraftForm(initialValues) {
+    setAddDocumentError(null)
+    setAddDocumentLoading(true)
+    try {
+      const schema = await fetchAdminTable('documents', { limit: 1, offset: 0 })
+      setAddDocumentSchema(schema)
+      setDocumentDraftValues(initialValues)
+      setAddDocumentOpen(true)
+    } catch {
+      setAddDocumentError(t('admin.extract.addDocumentError'))
+    } finally {
+      setAddDocumentLoading(false)
+    }
   }
 
   async function searchDocuments() {
@@ -2254,6 +2592,15 @@ function ExtractPanel() {
     try {
       const schema = await fetchAdminTable('documents', { limit: 1, offset: 0 })
       setAddDocumentSchema(schema)
+      setDocumentDraftValues(
+        documentInitialValuesFromExtracted({
+          documentName: result.document_name,
+          documentDate: result.document_date,
+          url: documentUrl,
+          category: documentType || 'regulation',
+          description: result.description,
+        }),
+      )
       setAddDocumentOpen(true)
     } catch {
       setAddDocumentError(t('admin.extract.addDocumentError'))
@@ -2270,37 +2617,179 @@ function ExtractPanel() {
     }
   }
 
+  function extractionErrorMessage(err) {
+    const code = err?.code
+    if (code === 'ABORTED' || err?.name === 'AbortError') {
+      return t('admin.extract.cancelled')
+    }
+    if (code === 'INVALID_URL') return t('admin.extract.urlInvalid')
+    if (code === 'URL_FETCH_FAILED') return t('admin.extract.urlFetchFailed')
+    if (code === 'URL_NO_TEXT') return t('admin.extract.urlNoText')
+    if (code === 'FILE_TYPE_UNSUPPORTED') return t('admin.extract.uploadTypeError')
+    if (code === 'FILE_TOO_LARGE') return t('admin.extract.uploadTooLarge')
+    if (code === 'FILE_NO_TEXT') return t('admin.extract.uploadNoText')
+    if (code === 'FILE_READ_FAILED') return t('admin.extract.uploadReadError')
+    return err.message ?? t('admin.extract.error')
+  }
+
+  async function handleUploadChange(event) {
+    const file = event.target.files?.[0]
+    if (!file || busy) return
+
+    setError(null)
+    setUploading(true)
+    clearCostEstimate()
+    try {
+      const uploaded = await uploadExtractSource(file)
+      setText(uploaded.text ?? '')
+      setUploadedFileName(uploaded.filename || file.name)
+      setResult(null)
+      setDocumentUrl('')
+      clearDocumentSearch()
+    } catch (err) {
+      clearUploadedFile()
+      setError(extractionErrorMessage(err))
+    } finally {
+      setUploading(false)
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
+    if (submitPhase) {
+      cancelSubmit()
+      return
+    }
     if (!canSubmit) return
 
     setError(null)
-    setSubmitting(true)
+    const sourceText = text.trim()
+    const sourceUrl = inputIsUrl ? normalizeDocumentUrl(sourceText) : ''
+    const policyMode = isPolicyExtractionType(documentType)
+    const controller = new AbortController()
+    submitAbortRef.current = controller
+    const { signal } = controller
+
+    if (!readyToProceed) {
+      try {
+        let workingText = resolvedSourceText || sourceText
+        let workingUrl = resolvedSourceUrl || sourceUrl
+
+        if (inputIsUrl && !resolvedSourceText) {
+          setSubmitPhase('fetching')
+          const resolved = await resolveExtractSource({
+            text: sourceText,
+            signal,
+          })
+          workingText = resolved.text
+          workingUrl = resolved.source_url || sourceUrl
+          setResolvedSourceText(workingText)
+          setResolvedSourceUrl(workingUrl)
+        }
+
+        setSubmitPhase('estimating')
+        const estimate = await estimateExtract({
+          text: workingText,
+          lang: currentLanguage(),
+          mode: policyMode ? 'policy' : 'document',
+          categoryHint: policyMode ? undefined : documentType,
+          sourceUrl: workingUrl || undefined,
+          signal,
+        })
+        setCostEstimate(estimate)
+        setReadyToProceed(true)
+      } catch (err) {
+        clearCostEstimate()
+        if (err?.code !== 'ABORTED' && err?.name !== 'AbortError') {
+          setError(extractionErrorMessage(err))
+        } else {
+          setError(null)
+        }
+      } finally {
+        if (submitAbortRef.current === controller) {
+          submitAbortRef.current = null
+        }
+        setSubmitPhase(null)
+      }
+      return
+    }
+
+    setSubmitPhase('extracting')
+    const extractText = resolvedSourceText || sourceText
+    const extractUrl = resolvedSourceUrl || sourceUrl
     try {
-      const sourceText = text.trim()
-      const extracted = await extractPolicy({
-        text: sourceText,
+      if (policyMode) {
+        const extracted = await extractPolicy({
+          text: extractText,
+          lang: currentLanguage(),
+          sourceUrl: extractUrl || undefined,
+          signal,
+        })
+        const entry = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          savedAt: new Date().toISOString(),
+          text: sourceText,
+          documentType,
+          kind: 'policy',
+          result: extracted,
+        }
+        persistHistory([entry, ...history].slice(0, EXTRACT_HISTORY_MAX))
+        setActiveHistoryId(entry.id)
+        setResult(extracted)
+        setDocumentDraftValues(null)
+        setAddDocumentOpen(false)
+        setDocumentUrl(extracted.url || extractUrl || '')
+        clearDocumentSearch()
+        setAddDocumentError(null)
+        clearCostEstimate()
+        return
+      }
+
+      const extracted = await extractDocumentDraft({
+        text: extractText,
         lang: currentLanguage(),
+        categoryHint: documentType,
+        sourceUrl: extractUrl || undefined,
+        signal,
+      })
+      const fields = extracted.fields ?? {}
+      const initialValues = documentInitialValuesFromDraftFields(fields, {
+        categoryHint: documentType,
+        sourceUrl: extractUrl,
       })
       const entry = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         savedAt: new Date().toISOString(),
         text: sourceText,
-        result: extracted,
+        documentType,
+        kind: 'document',
+        documentFields: fields,
+        result: null,
       }
       persistHistory([entry, ...history].slice(0, EXTRACT_HISTORY_MAX))
       setActiveHistoryId(entry.id)
-      setResult(extracted)
-      setDocumentUrl('')
-      clearDocumentSearch()
-      setAddDocumentError(null)
-    } catch (err) {
       setResult(null)
-      setDocumentUrl('')
+      setDocumentUrl(extractUrl || fields.url || '')
       clearDocumentSearch()
-      setError(err.message ?? t('admin.extract.error'))
+      clearCostEstimate()
+      await openDocumentDraftForm(initialValues)
+    } catch (err) {
+      if (err?.code === 'ABORTED' || err?.name === 'AbortError') {
+        setError(null)
+      } else {
+        setResult(null)
+        setDocumentUrl('')
+        clearDocumentSearch()
+        setAddDocumentOpen(false)
+        setDocumentDraftValues(null)
+        clearCostEstimate()
+        setError(extractionErrorMessage(err))
+      }
     } finally {
-      setSubmitting(false)
+      if (submitAbortRef.current === controller) {
+        submitAbortRef.current = null
+      }
+      setSubmitPhase(null)
     }
   }
 
@@ -2311,12 +2800,13 @@ function ExtractPanel() {
 
   return (
     <div className="space-y-section-gap">
+      <div className="space-y-[calc(var(--spacing-section-gap)/2)]">
       {history.length > 0 ? (
         <section className="rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding">
           <h2 className="mb-card-gap font-label-caps text-label-caps uppercase text-on-surface-variant">
             {t('admin.extract.savedTitle')}
           </h2>
-          <ul className="divide-y divide-border-subtle">
+          <ul className="max-h-[11.25rem] divide-y divide-border-subtle overflow-y-auto">
             {history.map((entry) => {
               const isActive = entry.id === activeHistoryId
               const methodCount = entry.result?.methods?.length ?? 0
@@ -2324,6 +2814,13 @@ function ExtractPanel() {
                 dateStyle: 'short',
                 timeStyle: 'short',
               })
+              const metaLabel =
+                entry.kind === 'document'
+                  ? t('admin.extract.savedMetaDocument', { date: savedLabel })
+                  : t('admin.extract.savedMeta', {
+                      date: savedLabel,
+                      count: methodCount,
+                    })
               return (
                 <li
                   key={entry.id}
@@ -2340,10 +2837,7 @@ function ExtractPanel() {
                       {extractionLabel(entry)}
                     </span>
                     <span className="block font-metadata text-metadata text-on-secondary-container opacity-65">
-                      {t('admin.extract.savedMeta', {
-                        date: savedLabel,
-                        count: methodCount,
-                      })}
+                      {metaLabel}
                     </span>
                   </button>
                   <button
@@ -2366,25 +2860,73 @@ function ExtractPanel() {
         onSubmit={handleSubmit}
         className="rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding"
       >
-        <label
-          htmlFor="policy-extraction-text"
-          className="mb-card-gap block font-label-caps text-label-caps uppercase text-on-surface-variant"
-        >
-          {t('admin.extract.policyLabel')}
-        </label>
+        <div className="mb-card-gap flex flex-wrap items-start justify-between gap-3">
+          <label
+            htmlFor="document-extraction-text"
+            className="block font-label-caps text-label-caps uppercase text-on-surface-variant"
+          >
+            {t('admin.extract.policyLabel')}
+          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            {uploadedFileName ? (
+              <span className="inline-flex max-w-[16rem] items-center gap-2 rounded-md border border-border-subtle bg-surface-container-low px-2 py-1 font-metadata text-metadata text-on-surface">
+                <span className="truncate" title={uploadedFileName}>
+                  {uploadedFileName}
+                </span>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={clearUploadedFile}
+                  className="shrink-0 text-on-secondary-container transition-colors hover:text-error disabled:opacity-50"
+                  title={t('admin.extract.clearUpload')}
+                  aria-label={t('admin.extract.clearUpload')}
+                >
+                  ×
+                </button>
+              </span>
+            ) : null}
+            <input
+              ref={fileInputRef}
+              id={uploadInputId}
+              type="file"
+              accept=".pdf,.html,.htm,.txt,application/pdf,text/html,text/plain"
+              className="sr-only"
+              disabled={busy}
+              onChange={handleUploadChange}
+            />
+            <label
+              htmlFor={uploadInputId}
+              className={`inline-flex cursor-pointer items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-3 py-1.5 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container ${
+                busy ? 'pointer-events-none opacity-50' : ''
+              }`}
+            >
+              {uploading
+                ? t('admin.extract.uploading')
+                : t('admin.extract.upload')}
+            </label>
+          </div>
+        </div>
         <div className="relative">
           <textarea
-            id="policy-extraction-text"
+            id="document-extraction-text"
             value={text}
-            onChange={(event) => setText(event.target.value)}
+            onChange={(event) => {
+              setText(event.target.value)
+              clearCostEstimate()
+            }}
             maxLength={POLICY_TEXT_MAX}
             rows={12}
-            disabled={submitting}
-            placeholder={t('admin.extract.policyPlaceholder')}
-            className="w-full resize-y rounded-lg border border-border-emphasis bg-surface-container-low p-container-padding font-monospace-data text-monospace-data text-on-surface outline-none transition-colors duration-ethos placeholder:text-text-tertiary focus:border-primary disabled:opacity-60"
+            disabled={busy || textLocked}
+            readOnly={textLocked}
+            placeholder={
+              textLocked
+                ? t('admin.extract.uploadPlaceholder')
+                : t('admin.extract.policyPlaceholder')
+            }
+            className="w-full resize-y rounded-lg border border-border-emphasis bg-surface-container-low p-container-padding pb-10 font-monospace-data text-monospace-data text-on-surface outline-none transition-colors duration-ethos placeholder:text-text-tertiary focus:border-primary disabled:opacity-60"
           />
           <div
-            className="pointer-events-none absolute bottom-4 right-4 font-metadata text-metadata text-text-tertiary"
+            className="pointer-events-none absolute bottom-3 right-4 font-metadata text-metadata text-text-tertiary"
             aria-live="polite"
           >
             {t('admin.extract.charCount', {
@@ -2394,7 +2936,7 @@ function ExtractPanel() {
           </div>
         </div>
 
-        {trimmedLength > 0 && trimmedLength < POLICY_TEXT_MIN ? (
+        {trimmedLength > 0 && !inputIsUrl && trimmedLength < POLICY_TEXT_MIN ? (
           <p className="mt-card-gap font-metadata text-metadata text-error" role="alert">
             {t('admin.extract.tooShort', { min: POLICY_TEXT_MIN })}
           </p>
@@ -2406,14 +2948,65 @@ function ExtractPanel() {
           </p>
         ) : null}
 
-        <div className="mt-card-gap flex justify-end">
+        <div className="mt-card-gap flex flex-wrap items-end justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap items-end gap-3">
+            <div className="min-w-[12rem]">
+              <label
+                htmlFor="document-extraction-type"
+                className="mb-1 block font-label-caps text-label-caps uppercase text-on-surface-variant"
+              >
+                {t('admin.extract.documentTypeLabel')}
+              </label>
+              <select
+                id="document-extraction-type"
+                value={documentType}
+                disabled={busy}
+                onChange={(event) => {
+                  setDocumentType(event.target.value)
+                  clearCostEstimate()
+                }}
+                className="w-full rounded-md border border-border-emphasis bg-surface-container-low px-3 py-2 font-metadata text-metadata text-on-surface outline-none transition-colors duration-ethos focus:border-primary disabled:opacity-60"
+              >
+                <option value="">{t('admin.selectOptional')}</option>
+                {DOCUMENT_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(option.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {costEstimate ? (
+              <p
+                className="pb-2 font-metadata text-metadata text-on-secondary-container"
+                aria-live="polite"
+              >
+                {t('admin.extract.costEstimate', {
+                  cost: formatUsd(costEstimate.estimated_cost_usd),
+                  tokens:
+                    (costEstimate.input_tokens ?? 0) +
+                    (costEstimate.output_tokens ?? 0),
+                })}
+              </p>
+            ) : null}
+          </div>
           <Button type="submit" disabled={!canSubmit}>
-            {submitting
-              ? t('admin.extract.submittingSeconds', { seconds: elapsedSeconds })
-              : t('admin.extract.submit')}
+            {submitPhase === 'fetching'
+              ? t('admin.extract.fetchingSeconds', { seconds: elapsedSeconds })
+              : submitPhase === 'estimating'
+                ? t('admin.extract.estimatingSeconds', {
+                    seconds: elapsedSeconds,
+                  })
+                : submitPhase === 'extracting'
+                  ? t('admin.extract.submittingSeconds', {
+                      seconds: elapsedSeconds,
+                    })
+                  : readyToProceed
+                    ? t('admin.extract.proceed')
+                    : t('admin.extract.submit')}
           </Button>
         </div>
       </form>
+      </div>
 
       {result ? (
         <section className="rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding">
@@ -2444,6 +3037,14 @@ function ExtractPanel() {
               </dt>
               <dd className="mt-1 font-metadata text-metadata text-on-surface">
                 {result.responsible_institution || t('admin.extract.notFound')}
+              </dd>
+            </div>
+            <div className="sm:col-span-3">
+              <dt className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+                {t('admin.extract.documentDescription')}
+              </dt>
+              <dd className="mt-1 font-metadata text-metadata text-on-surface">
+                {result.description || t('admin.extract.notFound')}
               </dd>
             </div>
           </dl>
@@ -2584,6 +3185,8 @@ function ExtractPanel() {
                       institution={result.responsible_institution}
                       documentName={result.document_name}
                       documentUrl={documentUrl}
+                      documentType={documentType}
+                      documentDescription={result.description}
                     />
                   ))}
                 </tbody>
@@ -2596,10 +3199,10 @@ function ExtractPanel() {
           )}
         </section>
       ) : null}
-      {addDocumentOpen && addDocumentSchema
+      {addDocumentOpen && addDocumentSchema && documentDraftValues
         ? createPortal(
             <AddRowModal
-              key={`extract-add-document-${result?.document_name ?? 'doc'}`}
+              key={`extract-add-document-${documentDraftValues.slug ?? 'doc'}-${activeHistoryId ?? 'new'}`}
               table="documents"
               columns={addDocumentColumns}
               comments={addDocumentSchema.column_comments}
@@ -2609,13 +3212,15 @@ function ExtractPanel() {
               columnOptions={addDocumentSchema.column_options}
               mode="create"
               title={t('admin.extract.addDocument')}
-              initialValues={documentInitialValuesFromExtracted({
-                documentName: result?.document_name,
-                documentDate: result?.document_date,
-                url: documentUrl,
-              })}
-              onClose={() => setAddDocumentOpen(false)}
-              onSaved={() => setAddDocumentOpen(false)}
+              initialValues={documentDraftValues}
+              onClose={() => {
+                setAddDocumentOpen(false)
+                setDocumentDraftValues(null)
+              }}
+              onSaved={() => {
+                setAddDocumentOpen(false)
+                setDocumentDraftValues(null)
+              }}
             />,
             document.body,
           )
@@ -2680,9 +3285,9 @@ export default function AdminPage() {
         ) : activeSection === 'extract' ? (
           <ExtractPanel />
         ) : activeSection === 'docs' ? (
-          <PlaceholderPanel messageKey="admin.docs.placeholder" />
+          <DocsPanel />
         ) : (
-          <PlaceholderPanel messageKey="admin.settings.placeholder" />
+          <SettingsPanel />
         )}
       </div>
     </main>

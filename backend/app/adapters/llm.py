@@ -17,11 +17,14 @@ from app.models.protocol import (
 )
 from app.models.method import RegulatoryStatus
 from app.models.method_draft import MethodDraftExtractResponse, MethodDraftFields
+from app.models.document_draft import DocumentDraftExtractResponse, DocumentDraftFields
 from app.models.i18n import localized_str, localized_str_list, parse_localized_str
 from app.models.policy import PolicyExtractResponse, PolicyMethod
+from app.prompts.document_draft_extraction import build_document_draft_extraction_prompt
 from app.prompts.extraction import build_extraction_prompt
 from app.prompts.method_draft_extraction import build_method_draft_extraction_prompt
 from app.prompts.policy_extraction import build_policy_extraction_prompt
+from app.services.oecd_citation import prefer_oecd_tg_citation
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,12 @@ RAW_RESPONSE_LOG_LIMIT = 1200
 EXTRACTION_MAX_TOKENS = 4096
 POLICY_EXTRACTION_MAX_TOKENS = 4096
 METHOD_DRAFT_EXTRACTION_MAX_TOKENS = 4096
+DOCUMENT_DRAFT_EXTRACTION_MAX_TOKENS = 2048
+
+_DOCUMENT_CATEGORY_VALUES: frozenset[str] = frozenset(
+    {"method_protocol", "guideline", "regulation", "other"}
+)
+_DESCRIPTION_MAX_CHARS = 300
 
 _REGULATORY_STATUS_VALUES: frozenset[str] = frozenset(
     {"not_approved", "approved", "recommended", "mandatory"}
@@ -102,13 +111,28 @@ class LLMAdapter(ABC):
         pass
 
     @abstractmethod
-    def extract_policy(self, text: str) -> PolicyExtractResponse | ExtractionError:
+    def extract_policy(
+        self,
+        text: str,
+        *,
+        source_url: str | None = None,
+    ) -> PolicyExtractResponse | ExtractionError:
         pass
 
     @abstractmethod
     def extract_method_draft(
         self, text: str
     ) -> MethodDraftExtractResponse | ExtractionError:
+        pass
+
+    @abstractmethod
+    def extract_document_draft(
+        self,
+        text: str,
+        *,
+        category_hint: str | None = None,
+        source_url: str | None = None,
+    ) -> DocumentDraftExtractResponse | ExtractionError:
         pass
 
 
@@ -125,7 +149,12 @@ class StubLLMAdapter(LLMAdapter):
             return raw
         return [raw]
 
-    def extract_policy(self, text: str) -> PolicyExtractResponse | ExtractionError:
+    def extract_policy(
+        self,
+        text: str,
+        *,
+        source_url: str | None = None,
+    ) -> PolicyExtractResponse | ExtractionError:
         normalized = text.strip()
         if len(normalized) < 20:
             return ExtractionError(
@@ -146,7 +175,7 @@ class StubLLMAdapter(LLMAdapter):
 
         document_name = None
         title_match = re.search(
-            r"(?im)^(?:title|documento|document|resolu[cç][aã]o|guideline)\s*[:\-–—]\s*(.+)$",
+            r"(?im)^(?:title|documento|document|citation|resolu[cç][aã]o|guideline)\s*[:\-–—]\s*(.+)$",
             normalized,
         )
         if title_match:
@@ -176,11 +205,28 @@ class StubLLMAdapter(LLMAdapter):
                 institution = candidate
                 break
 
+        url = _nullable_str(source_url)
+        url_match = re.search(r"https?://[^\s<>\"']+", normalized, flags=re.IGNORECASE)
+        if url_match:
+            url = url_match.group(0).rstrip(".,);]")
+
+        description = None
+        purpose_match = re.search(
+            r"(?is)\b(?:description|descri(?:ption|ção)|summary|resumo|scope|objetivo)\s*[:\-–—]\s*(.+?)(?:\n\n|$)",
+            normalized,
+        )
+        if purpose_match:
+            description = " ".join(purpose_match.group(1).split())[:_DESCRIPTION_MAX_CHARS]
+
+        document_name = prefer_oecd_tg_citation(document_name, normalized)
+
         return PolicyExtractResponse(
             methods=methods,
             document_name=document_name,
             document_date=document_date,
             responsible_institution=institution,
+            url=url,
+            description=description,
         )
 
     def extract_method_draft(
@@ -244,6 +290,73 @@ class StubLLMAdapter(LLMAdapter):
             active=False,
         )
         return MethodDraftExtractResponse(fields=fields)
+
+    def extract_document_draft(
+        self,
+        text: str,
+        *,
+        category_hint: str | None = None,
+        source_url: str | None = None,
+    ) -> DocumentDraftExtractResponse | ExtractionError:
+        normalized = text.strip()
+        if len(normalized) < 20:
+            return ExtractionError(
+                message="Text is too short to extract document fields.",
+                reason="text_too_short",
+            )
+
+        title = None
+        title_match = re.search(
+            r"(?im)^(?:title|documento|document|citation|guideline|protocol)\s*[:\-–—]\s*(.+)$",
+            normalized,
+        )
+        if title_match:
+            title = title_match.group(1).strip()[:240]
+        if not title:
+            title = normalized.split("\n", 1)[0].strip()[:160] or "Untitled document"
+
+        document_date = None
+        date_match = re.search(
+            r"\b(20\d{2}-\d{2}-\d{2}|\d{1,2}[./]\d{1,2}[./]20\d{2}|20\d{2})\b",
+            normalized,
+        )
+        if date_match:
+            raw_date = date_match.group(1)
+            if re.fullmatch(r"20\d{2}", raw_date):
+                document_date = f"{raw_date}-01-01"
+            else:
+                document_date = raw_date
+
+        url = source_url
+        url_match = re.search(r"https?://[^\s<>\"']+", normalized, flags=re.IGNORECASE)
+        if url_match:
+            url = url_match.group(0).rstrip(".,);]")
+
+        category = category_hint if category_hint in _DOCUMENT_CATEGORY_VALUES else None
+        if category is None:
+            lower = normalized.lower()
+            if re.search(r"\b(regulament|regulation|decree|resolu)", lower):
+                category = "regulation"
+            elif re.search(r"\b(guideline|guidance|diretriz)\b", lower):
+                category = "guideline"
+            elif re.search(r"\b(protocol|test guideline|\btg\s*\d)", lower):
+                category = "method_protocol"
+            else:
+                category = "other"
+
+        description_raw = " ".join(normalized.split())[:_DESCRIPTION_MAX_CHARS]
+        citation_text = prefer_oecd_tg_citation(title, normalized) or title
+
+        return DocumentDraftExtractResponse(
+            fields=DocumentDraftFields(
+                slug=_slugify_method(citation_text)[:80] or None,
+                date=document_date,
+                url=url,
+                category=category,  # type: ignore[arg-type]
+                doc_citation=localized_str(citation_text),
+                description=localized_str(description_raw),
+            )
+        )
 
     @staticmethod
     def _method_endpoint(text: str) -> EndpointCategory | None:
@@ -730,7 +843,12 @@ class LlmCallAdapter(LLMAdapter):
             log_extraction_error(parsed)
         return parsed
 
-    def extract_policy(self, text: str) -> PolicyExtractResponse | ExtractionError:
+    def extract_policy(
+        self,
+        text: str,
+        *,
+        source_url: str | None = None,
+    ) -> PolicyExtractResponse | ExtractionError:
         try:
             import llmcall
             from llmcall import CallConstraints, LLMError as LlmCallError
@@ -739,7 +857,7 @@ class LlmCallAdapter(LLMAdapter):
 
         result = llmcall.call(
             self._model,
-            build_policy_extraction_prompt(text),
+            build_policy_extraction_prompt(text, source_url=source_url),
             constraints=CallConstraints(
                 max_tokens=POLICY_EXTRACTION_MAX_TOKENS,
                 response_format="json",
@@ -768,6 +886,8 @@ class LlmCallAdapter(LLMAdapter):
         parsed = _policy_from_payload(
             payload,
             raw_response=raw_content,
+            source_url=source_url,
+            source_text=text,
         )
         if isinstance(parsed, ExtractionError):
             log_extraction_error(parsed)
@@ -818,6 +938,62 @@ class LlmCallAdapter(LLMAdapter):
             log_extraction_error(parsed)
         return parsed
 
+    def extract_document_draft(
+        self,
+        text: str,
+        *,
+        category_hint: str | None = None,
+        source_url: str | None = None,
+    ) -> DocumentDraftExtractResponse | ExtractionError:
+        try:
+            import llmcall
+            from llmcall import CallConstraints, LLMError as LlmCallError
+        except ImportError:
+            return ExtractionError(message="llmcall package is not installed.")
+
+        result = llmcall.call(
+            self._model,
+            build_document_draft_extraction_prompt(
+                text,
+                category_hint=category_hint,
+                source_url=source_url,
+            ),
+            constraints=CallConstraints(
+                max_tokens=DOCUMENT_DRAFT_EXTRACTION_MAX_TOKENS,
+                response_format="json",
+            ),
+        )
+        if isinstance(result, LlmCallError):
+            error = ExtractionError(
+                message=result.message,
+                reason="llm_api_error",
+            )
+            log_extraction_error(error)
+            return error
+
+        raw_content = result.content
+        try:
+            payload = _parse_json_payload(raw_content)
+        except json.JSONDecodeError as exc:
+            error = ExtractionError(
+                message=f"LLM response is not valid JSON: {exc}",
+                reason="json_decode_error",
+                raw_response=truncate_raw_response(raw_content),
+            )
+            log_extraction_error(error)
+            return error
+
+        parsed = _document_draft_from_payload(
+            payload,
+            category_hint=category_hint,
+            source_url=source_url,
+            source_text=text,
+            raw_response=raw_content,
+        )
+        if isinstance(parsed, ExtractionError):
+            log_extraction_error(parsed)
+        return parsed
+
 
 def _nullable_str(value: object) -> str | None:
     if value is None:
@@ -842,6 +1018,8 @@ def _policy_from_payload(
     payload: object,
     *,
     raw_response: str | None = None,
+    source_url: str | None = None,
+    source_text: str | None = None,
 ) -> PolicyExtractResponse | ExtractionError:
     if not isinstance(payload, dict):
         return ExtractionError(
@@ -879,13 +1057,53 @@ def _policy_from_payload(
             )
         )
 
+    document_name = _nullable_str(payload.get("document_name")) or _nullable_str(
+        payload.get("citation")
+    )
+    if not document_name:
+        raw_citation = payload.get("doc_citation")
+        if isinstance(raw_citation, dict):
+            document_name = _nullable_str(raw_citation.get("en-us")) or _nullable_str(
+                raw_citation.get("pt-br")
+            )
+        else:
+            document_name = _nullable_str(raw_citation)
+
+    url = _nullable_str(payload.get("url"))
+    if not url and source_text:
+        url_match = re.search(
+            r"https?://[^\s<>\"']+",
+            source_text,
+            flags=re.IGNORECASE,
+        )
+        if url_match:
+            url = url_match.group(0).rstrip(".,);]")
+    if not url:
+        url = _nullable_str(source_url)
+
+    description = _nullable_str(payload.get("description"))
+    if not description:
+        raw_description = payload.get("doc_description")
+        if isinstance(raw_description, dict):
+            description = _nullable_str(raw_description.get("en-us")) or _nullable_str(
+                raw_description.get("pt-br")
+            )
+        else:
+            description = _nullable_str(raw_description)
+    if description and len(description) > _DESCRIPTION_MAX_CHARS:
+        description = description[:_DESCRIPTION_MAX_CHARS].rstrip()
+
+    document_name = prefer_oecd_tg_citation(document_name, source_text)
+
     return PolicyExtractResponse(
         methods=methods,
-        document_name=_nullable_str(payload.get("document_name")),
+        document_name=document_name,
         document_date=_nullable_str(payload.get("document_date")),
         responsible_institution=_nullable_str(
             payload.get("responsible_institution")
         ),
+        url=url,
+        description=description,
     )
 
 
@@ -1042,6 +1260,78 @@ def _method_draft_from_payload(
         active=False,
     )
     return MethodDraftExtractResponse(fields=fields)
+
+
+def _truncate_localized(value, *, max_chars: int):
+    if value is None:
+        return None
+    en = (value.en_us or "")[:max_chars]
+    pt = (value.pt_br or "")[:max_chars]
+    if not en and not pt:
+        return None
+    return localized_str(en or pt, pt or en)
+
+
+def _document_draft_from_payload(
+    payload: object,
+    *,
+    category_hint: str | None = None,
+    source_url: str | None = None,
+    source_text: str | None = None,
+    raw_response: str | None = None,
+) -> DocumentDraftExtractResponse | ExtractionError:
+    if not isinstance(payload, dict):
+        return ExtractionError(
+            message="LLM document-draft response must be a JSON object.",
+            reason="invalid_payload_type",
+            raw_response=truncate_raw_response(raw_response),
+        )
+
+    citation = _localized_str_from_payload(
+        payload, "doc_citation", "citation_en", "citation_pt"
+    )
+    if citation is None:
+        citation = _localized_str_from_payload(
+            payload, "citation", "citation_en", "citation_pt"
+        )
+
+    citation_en = citation.en_us if citation else None
+    preferred = prefer_oecd_tg_citation(citation_en, source_text)
+    if preferred:
+        citation = localized_str(preferred)
+
+    description = _truncate_localized(
+        _localized_str_from_payload(
+            payload, "description", "description_en", "description_pt"
+        ),
+        max_chars=_DESCRIPTION_MAX_CHARS,
+    )
+
+    category = _enum_or_none(payload.get("category"), _DOCUMENT_CATEGORY_VALUES)
+    if category is None and category_hint in _DOCUMENT_CATEGORY_VALUES:
+        category = category_hint
+
+    slug = _nullable_str(payload.get("slug"))
+    if slug:
+        slug = _slugify_method(slug)[:80] or None
+    elif citation and citation.en_us:
+        slug = _slugify_method(citation.en_us)[:80] or None
+
+    url = _nullable_str(payload.get("url")) or _nullable_str(source_url)
+
+    date = _nullable_str(payload.get("date"))
+    if date and re.fullmatch(r"20\d{2}", date):
+        date = f"{date}-01-01"
+
+    fields = DocumentDraftFields(
+        slug=slug,
+        date=date,
+        url=url,
+        category=category,  # type: ignore[arg-type]
+        doc_citation=citation,
+        description=description,
+    )
+    return DocumentDraftExtractResponse(fields=fields)
 
 
 def build_llm_adapter(*, model: str, use_stub: bool) -> LLMAdapter:

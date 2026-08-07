@@ -9,7 +9,7 @@ from app.models.i18n import parse_localized_str
 
 class DocumentRepository:
     _SELECT_COLUMNS = """
-        d.id, d.slug, d.doc_citation, d."date", d.category, d.url
+        d.id, d.slug, d.doc_citation, d.description, d."date", d.category, d.url
     """
 
     async def list_all(
@@ -45,6 +45,7 @@ class DocumentRepository:
             id=row["id"],
             slug=row["slug"],
             doc_citation=parse_localized_str(row["doc_citation"]),
+            description=parse_localized_str(row["description"], required=False),
             date=row["date"],
             category=row["category"],
             url=row["url"],

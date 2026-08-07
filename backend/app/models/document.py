@@ -9,6 +9,7 @@ class Document(BaseModel):
     id: int
     slug: str
     doc_citation: LocalizedStr
+    description: LocalizedStr | None = None
     date: Date | None = None
     category: str
     url: str | None = None

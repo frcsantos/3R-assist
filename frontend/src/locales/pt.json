@@ -66,17 +66,41 @@
       "subtitle": "Navegue e edite as tabelas públicas do PostgreSQL. Clique duas vezes em uma célula para editar."
     },
     "extract": {
-      "label": "Extrair",
+      "label": "Extração de docs",
       "subtitle": "Extraia métodos aprovados e metadados documentais a partir de textos de política.",
-      "policyLabel": "Extração de política",
-      "policyPlaceholder": "Cole o texto de uma política, diretriz ou regulamento…",
+      "policyLabel": "Extração de documento",
+      "policyPlaceholder": "Cole o texto do documento, ou a URL de uma página…",
+      "upload": "Enviar arquivo",
+      "uploading": "Enviando…",
+      "clearUpload": "Remover arquivo",
+      "uploadPlaceholder": "Texto carregado do arquivo enviado.",
+      "uploadTypeError": "Tipos suportados: PDF, HTML, TXT.",
+      "uploadTooLarge": "O arquivo enviado é grande demais.",
+      "uploadNoText": "Não foi possível extrair texto suficiente do arquivo.",
+      "uploadReadError": "Não foi possível ler o arquivo enviado.",
+      "documentTypeLabel": "Tipo de documento (opcional)",
+      "documentType": {
+        "regulation": "Regulamento / Política",
+        "protocol": "Protocolo",
+        "guideline": "Diretriz",
+        "other": "Outro"
+      },
       "charCount": "{{count}} / {{max}}",
       "tooShort": "Mínimo de {{min}} caracteres",
       "submit": "Extrair",
-      "submittingSeconds": "Extraindo… {{seconds}}s",
+      "fetchingSeconds": "Buscando... ({{seconds}}s) — Clique para cancelar",
+      "estimatingSeconds": "Estimando... ({{seconds}}s) — Clique para cancelar",
+      "proceed": "Prosseguir?",
+      "costEstimate": "Custo estimado: {{cost}} ({{tokens}} tokens)",
+      "submittingSeconds": "Extraindo... ({{seconds}}s) — Clique para cancelar",
+      "cancelled": "Cancelado.",
       "error": "Não foi possível extrair os dados da política.",
+      "urlInvalid": "URL inválida. Cole o conteúdo da página.",
+      "urlFetchFailed": "Não foi possível buscar a URL. Cole o conteúdo da página.",
+      "urlNoText": "Não foi possível extrair texto da página. Cole o conteúdo da página.",
       "resultsTitle": "Resultados da extração",
-      "documentName": "Nome do documento",
+      "documentName": "Citação",
+      "documentDescription": "Descrição",
       "documentDate": "Data do documento",
       "institution": "Instituição responsável",
       "url": "URL",
@@ -117,19 +141,25 @@
       "matchByText": "Similaridade textual",
       "regulatoryStatus": "Status regulatório",
       "inactive": "inativo",
-      "savedTitle": "Extrações salvas",
+      "savedTitle": "Extrações anteriores",
       "savedMeta": "{{date}} · {{count}} métodos",
+      "savedMetaDocument": "{{date}} · campos do documento",
       "removeSaved": "Remover"
     },
     "docs": {
-      "label": "Docs",
+      "label": "Docs do projeto",
       "subtitle": "Documentação interna e materiais de revisão.",
-      "placeholder": "Docs — em breve."
+      "empty": "Nenhuma documentação encontrada.",
+      "close": "Fechar"
     },
     "settings": {
       "label": "Configurações",
       "subtitle": "Configuração de administração.",
-      "placeholder": "Configurações — em breve."
+      "placeholder": "Configurações — em breve.",
+      "loading": "Carregando configurações…",
+      "error": "Não foi possível carregar as configurações.",
+      "environment": "Ambiente",
+      "modelName": "Nome do modelo"
     }
   },
   "s1": {
@@ -299,7 +329,7 @@
     "tabsLabel": "Seções de exploração",
     "loading": "Carregando…",
     "loadError": "Não foi possível carregar o catálogo.",
-    "filterPlaceholder": "Filtrar por nome…",
+    "filterPlaceholder": "Filtrar…",
     "noMatches": "Nenhum item corresponde a este filtro.",
     "expand": "Expandir detalhes",
     "collapse": "Recolher detalhes",
@@ -311,7 +341,8 @@
     "documentCategory": {
       "method_protocol": "Protocolo de método",
       "guideline": "Diretriz",
-      "regulation": "Regulamento"
+      "regulation": "Regulamento",
+      "other": "Outro"
     },
     "methods": {
       "label": "Métodos",

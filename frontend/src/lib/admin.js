@@ -1,5 +1,9 @@
 import { apiFetch } from './api'
 
+export function fetchAdminSettings() {
+  return apiFetch('/admin/settings')
+}
+
 export function fetchAdminTables() {
   return apiFetch('/admin/tables')
 }
@@ -47,13 +51,59 @@ export function updateAdminColumnComment(tableName, column, comment) {
   )
 }
 
-export function extractPolicy({ text, lang }) {
+export function extractPolicy({ text, lang, sourceUrl, signal }) {
   return apiFetch('/admin/extract/policy', {
     method: 'POST',
     body: JSON.stringify({
       text,
       ...(lang ? { lang } : {}),
+      ...(sourceUrl ? { source_url: sourceUrl } : {}),
     }),
+    signal,
+  })
+}
+
+export function estimateExtract({ text, lang, mode, categoryHint, sourceUrl, signal }) {
+  return apiFetch('/admin/extract/estimate', {
+    method: 'POST',
+    body: JSON.stringify({
+      text,
+      mode: mode ?? 'policy',
+      ...(lang ? { lang } : {}),
+      ...(categoryHint ? { category_hint: categoryHint } : {}),
+      ...(sourceUrl ? { source_url: sourceUrl } : {}),
+    }),
+    signal,
+  })
+}
+
+export function resolveExtractSource({ text, signal }) {
+  return apiFetch('/admin/extract/resolve', {
+    method: 'POST',
+    body: JSON.stringify({ text }),
+    signal,
+  })
+}
+
+export function uploadExtractSource(file) {
+  const body = new FormData()
+  body.append('file', file)
+  return apiFetch('/admin/extract/upload', {
+    method: 'POST',
+    body,
+  })
+}
+
+export function extractDocumentDraft({ text, lang, categoryHint, sourceUrl, signal }) {
+  return apiFetch('/admin/extract/document-draft', {
+    method: 'POST',
+    body: JSON.stringify({
+      text,
+      ...(lang ? { lang } : {}),
+      ...(categoryHint ? { category_hint: categoryHint } : {}),
+      ...(sourceUrl ? { source_url: sourceUrl } : {}),
+    }),
+    signal,
   })
 }
 

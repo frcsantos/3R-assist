@@ -66,17 +66,41 @@
       "subtitle": "Browse and edit public PostgreSQL tables. Double-click a cell to edit."
     },
     "extract": {
-      "label": "Extract",
+      "label": "Doc Extraction",
       "subtitle": "Extract approved methods and document metadata from policy text.",
-      "policyLabel": "Policy extraction",
-      "policyPlaceholder": "Paste a policy, guideline, or regulation text…",
+      "policyLabel": "Document extraction",
+      "policyPlaceholder": "Paste document text, or a page URL…",
+      "upload": "Upload",
+      "uploading": "Uploading…",
+      "clearUpload": "Remove file",
+      "uploadPlaceholder": "Text loaded from uploaded file.",
+      "uploadTypeError": "Supported file types: PDF, HTML, TXT.",
+      "uploadTooLarge": "The uploaded file is too large.",
+      "uploadNoText": "Could not extract enough text from the file.",
+      "uploadReadError": "Could not read the uploaded file.",
+      "documentTypeLabel": "Type of document (optional)",
+      "documentType": {
+        "regulation": "Regulation / Policy",
+        "protocol": "Protocol",
+        "guideline": "Guideline",
+        "other": "Other"
+      },
       "charCount": "{{count}} / {{max}}",
       "tooShort": "Minimum {{min}} characters",
       "submit": "Extract",
-      "submittingSeconds": "Extracting… {{seconds}}s",
+      "fetchingSeconds": "Fetching... ({{seconds}}s) — Click to Cancel",
+      "estimatingSeconds": "Estimating... ({{seconds}}s) — Click to Cancel",
+      "proceed": "Proceed?",
+      "costEstimate": "Estimated cost: {{cost}} ({{tokens}} tokens)",
+      "submittingSeconds": "Extracting... ({{seconds}}s) — Click to Cancel",
+      "cancelled": "Cancelled.",
       "error": "Could not extract policy data.",
+      "urlInvalid": "Invalid URL. Paste the page content instead.",
+      "urlFetchFailed": "Could not fetch the URL. Paste the page content instead.",
+      "urlNoText": "Could not extract text from the page. Paste the page content instead.",
       "resultsTitle": "Extraction results",
-      "documentName": "Document name",
+      "documentName": "Citation",
+      "documentDescription": "Description",
       "documentDate": "Document date",
       "institution": "Responsible institution",
       "url": "URL",
@@ -117,19 +141,25 @@
       "matchByText": "Text similarity",
       "regulatoryStatus": "Regulatory status",
       "inactive": "inactive",
-      "savedTitle": "Saved extractions",
+      "savedTitle": "Previous Extractions",
       "savedMeta": "{{date}} · {{count}} methods",
+      "savedMetaDocument": "{{date}} · document fields",
       "removeSaved": "Remove"
     },
     "docs": {
-      "label": "Docs",
+      "label": "Project Docs",
       "subtitle": "Internal documentation and review materials.",
-      "placeholder": "Docs — coming soon."
+      "empty": "No project docs found.",
+      "close": "Close"
     },
     "settings": {
       "label": "Settings",
       "subtitle": "Admin configuration.",
-      "placeholder": "Settings — coming soon."
+      "placeholder": "Settings — coming soon.",
+      "loading": "Loading settings…",
+      "error": "Could not load settings.",
+      "environment": "Environment",
+      "modelName": "Model name"
     }
   },
   "s1": {
@@ -299,7 +329,7 @@
     "tabsLabel": "Explore sections",
     "loading": "Loading…",
     "loadError": "Could not load catalogue data.",
-    "filterPlaceholder": "Filter by name…",
+    "filterPlaceholder": "Filter…",
     "noMatches": "No items match this filter.",
     "expand": "Expand details",
     "collapse": "Collapse details",
@@ -311,7 +341,8 @@
     "documentCategory": {
       "method_protocol": "Method protocol",
       "guideline": "Guideline",
-      "regulation": "Regulation"
+      "regulation": "Regulation",
+      "other": "Other"
     },
     "methods": {
       "label": "Methods",

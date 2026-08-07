@@ -7,6 +7,11 @@ class AdminTablesResponse(BaseModel):
     tables: list[str]
 
 
+class AdminSettingsResponse(BaseModel):
+    app_env: str
+    llm_model: str
+
+
 class AdminForeignKeyRef(BaseModel):
     table: str
     column: str

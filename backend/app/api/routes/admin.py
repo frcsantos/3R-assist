@@ -1,15 +1,18 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import JSONResponse
 
 from app.adapters.llm import ExtractionError
 from app.api.deps import (
     get_admin_repository,
+    get_document_draft_extraction_service,
+    get_extract_estimate_service,
     get_method_draft_extraction_service,
     get_policy_document_match_service,
     get_policy_extraction_service,
     get_policy_method_match_service,
 )
 from app.api.errors import ErrorEnvelope, error_response
+from app.config import get_settings
 from app.models.admin import (
     AdminCellUpdateRequest,
     AdminCellUpdateResponse,
@@ -19,9 +22,21 @@ from app.models.admin import (
     AdminRowInsertResponse,
     AdminRowsDeleteRequest,
     AdminRowsDeleteResponse,
+    AdminSettingsResponse,
     AdminTableDataResponse,
     AdminTablesResponse,
 )
+from app.models.document_draft import (
+    DocumentDraftExtractRequest,
+    DocumentDraftExtractResponse,
+)
+from app.models.extract_estimate import (
+    ExtractEstimateRequest,
+    ExtractEstimateResponse,
+    ExtractResolveRequest,
+    ExtractResolveResponse,
+)
+from app.models.extract_upload import ExtractUploadResponse
 from app.models.method_draft import (
     MethodDraftExtractRequest,
     MethodDraftExtractResponse,
@@ -35,12 +50,25 @@ from app.models.policy import (
     PolicyMethodMatchResponse,
 )
 from app.repositories.admin import AdminRepository
+from app.services.document_draft_extraction import DocumentDraftExtractionService
+from app.services.extract_estimate import ExtractEstimateService
+from app.services.file_text import FileTextError, extract_text_from_upload
 from app.services.method_draft_extraction import MethodDraftExtractionService
 from app.services.policy_document_match import PolicyDocumentMatchService
 from app.services.policy_extraction import PolicyExtractionService
 from app.services.policy_method_match import PolicyMethodMatchService
+from app.services.url_text import UrlTextError, resolve_extraction_source
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+@router.get("/settings", response_model=AdminSettingsResponse)
+async def get_admin_settings() -> AdminSettingsResponse:
+    settings = get_settings()
+    return AdminSettingsResponse(
+        app_env=settings.app_env,
+        llm_model=settings.resolved_llm_model,
+    )
 
 
 @router.get("/tables", response_model=AdminTablesResponse)
@@ -287,6 +315,86 @@ async def update_column_comment(
 
 
 @router.post(
+    "/extract/resolve",
+    response_model=ExtractResolveResponse,
+    responses={422: {"model": ErrorEnvelope}},
+)
+async def resolve_extract_source(
+    payload: ExtractResolveRequest,
+) -> ExtractResolveResponse | JSONResponse:
+    try:
+        source_text, source_url = await resolve_extraction_source(payload.text)
+    except UrlTextError as exc:
+        return error_response(
+            status_code=422,
+            code=exc.code,
+            message=exc.message,
+        )
+    return ExtractResolveResponse(
+        text=source_text,
+        source_url=source_url,
+        fetched=source_url is not None,
+    )
+
+
+@router.post(
+    "/extract/upload",
+    response_model=ExtractUploadResponse,
+    responses={422: {"model": ErrorEnvelope}},
+)
+async def upload_extract_source(
+    file: UploadFile = File(...),
+) -> ExtractUploadResponse | JSONResponse:
+    raw = await file.read()
+    try:
+        text = extract_text_from_upload(
+            filename=file.filename,
+            content_type=file.content_type,
+            raw=raw,
+        )
+    except FileTextError as exc:
+        return error_response(
+            status_code=422,
+            code=exc.code,
+            message=exc.message,
+        )
+
+    filename = (file.filename or "document").strip() or "document"
+    return ExtractUploadResponse(
+        filename=filename,
+        text=text,
+        char_count=len(text),
+    )
+
+
+@router.post(
+    "/extract/estimate",
+    response_model=ExtractEstimateResponse,
+    responses={422: {"model": ErrorEnvelope}},
+)
+async def estimate_extract(
+    payload: ExtractEstimateRequest,
+    estimation: ExtractEstimateService = Depends(get_extract_estimate_service),
+) -> ExtractEstimateResponse | JSONResponse:
+    try:
+        source_text, fetched_url = await resolve_extraction_source(payload.text)
+    except UrlTextError as exc:
+        return error_response(
+            status_code=422,
+            code=exc.code,
+            message=exc.message,
+        )
+
+    source_url = payload.source_url or fetched_url
+    return estimation.estimate(
+        source_text,
+        mode=payload.mode,
+        category_hint=payload.category_hint,
+        source_url=source_url,
+    )
+
+
+@router.post(
     "/extract/policy",
     response_model=PolicyExtractResponse,
     responses={422: {"model": ErrorEnvelope}},
@@ -295,7 +403,52 @@ async def extract_policy(
     payload: PolicyExtractRequest,
     extraction: PolicyExtractionService = Depends(get_policy_extraction_service),
 ) -> PolicyExtractResponse | JSONResponse:
-    result = extraction.extract(payload.text)
+    try:
+        source_text, fetched_url = await resolve_extraction_source(payload.text)
+    except UrlTextError as exc:
+        return error_response(
+            status_code=422,
+            code=exc.code,
+            message=exc.message,
+        )
+
+    source_url = payload.source_url or fetched_url
+    result = extraction.extract(source_text, source_url=source_url)
+    if isinstance(result, ExtractionError):
+        return error_response(
+            status_code=422,
+            code=result.code,
+            message=result.message,
+        )
+    return result
+
+
+@router.post(
+    "/extract/document-draft",
+    response_model=DocumentDraftExtractResponse,
+    responses={422: {"model": ErrorEnvelope}},
+)
+async def extract_document_draft(
+    payload: DocumentDraftExtractRequest,
+    extraction: DocumentDraftExtractionService = Depends(
+        get_document_draft_extraction_service
+    ),
+) -> DocumentDraftExtractResponse | JSONResponse:
+    try:
+        source_text, fetched_url = await resolve_extraction_source(payload.text)
+    except UrlTextError as exc:
+        return error_response(
+            status_code=422,
+            code=exc.code,
+            message=exc.message,
+        )
+
+    source_url = payload.source_url or fetched_url
+    result = extraction.extract(
+        source_text,
+        category_hint=payload.category_hint,
+        source_url=source_url,
+    )
     if isinstance(result, ExtractionError):
         return error_response(
             status_code=422,
