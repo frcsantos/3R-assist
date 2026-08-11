@@ -38,11 +38,6 @@ describes substance-to-tissue contact, not the culture setup.
   dermal      ← topical, cutaneous, epicutaneous, skin application,
                   ex vivo skin disc, membrane model (Strat-M, Skin+)
 
-  in_vitro    ← substance added to culture medium in a well or plate,
-                  cell suspension assay, monolayer culture
-                  (USE THIS only when there is no oriented tissue surface —
-                  cells floating or adhered in medium, not an ex vivo disc)
-
   oral              ← p.o., gavage, gavagem, intragastric, intragástrico,
                        gastric tube, gastric intubation, dietary (mixed in feed)
   intraperitoneal   ← i.p.
@@ -50,7 +45,9 @@ describes substance-to-tissue contact, not the culture setup.
   inhalation        ← aerosol, nose-only chamber, inhalation chamber,
                        whole-body exposure
   other             ← any chemical administration route not listed above
-  null              ← UV irradiation, radiation, physical exposure
+  null              ← UV irradiation, radiation, physical exposure,
+                       or cell-culture medium exposure without an oriented tissue
+                       surface (assay modality belongs in test_system, not route)
                        (radiation is not a chemical administration route)
 
 ── SPECIES SYNONYMS ─────────────────────────────────────────────────────────

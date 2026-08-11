@@ -50,6 +50,8 @@ def _method(**overrides) -> Method:
 
 def test_normalize_oecd_ref():
     assert normalize_oecd_ref("OECD TG 439") == "TG 439"
+    assert normalize_oecd_ref("OECD TG 442E") == "TG 442E"
+    assert normalize_oecd_ref("TG 442c") == "TG 442C"
     assert normalize_oecd_ref("GD129") == "GD 129"
     assert normalize_oecd_ref("Farmacopeia Brasileira") is None
 

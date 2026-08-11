@@ -8,12 +8,42 @@ export function fetchAdminTables() {
   return apiFetch('/admin/tables')
 }
 
-export function fetchAdminTable(tableName, { limit = 100, offset = 0 } = {}) {
+export function fetchAdminTable(
+  tableName,
+  { limit = 100, offset = 0, sortBy = null, sortDir = 'asc' } = {},
+) {
   const params = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
   })
+  if (sortBy) {
+    params.set('sort_by', sortBy)
+    params.set('sort_dir', sortDir === 'desc' ? 'desc' : 'asc')
+  }
   return apiFetch(`/admin/tables/${encodeURIComponent(tableName)}?${params}`)
+}
+
+/** Load schema plus the row with the given primary-key id (paginates if needed). */
+export async function fetchAdminRowById(tableName, id) {
+  const pageSize = 500
+  let offset = 0
+  while (true) {
+    const page = await fetchAdminTable(tableName, {
+      limit: pageSize,
+      offset,
+      sortBy: 'id',
+    })
+    const row = (page.rows ?? []).find((candidate) => Number(candidate.id) === Number(id))
+    if (row) {
+      return { schema: page, row }
+    }
+    const total = Number(page.total ?? 0)
+    offset += pageSize
+    if (!(page.rows ?? []).length || offset >= total) {
+      break
+    }
+  }
+  throw new Error('ROW_NOT_FOUND')
 }
 
 export function insertAdminRow(tableName, values) {
@@ -114,6 +144,18 @@ export function extractMethodDraft({ text, lang }) {
       text,
       ...(lang ? { lang } : {}),
     }),
+  })
+}
+
+export function extractRegulationDraft({ text, lang, sourceUrl, signal }) {
+  return apiFetch('/admin/extract/regulation-draft', {
+    method: 'POST',
+    body: JSON.stringify({
+      text,
+      ...(lang ? { lang } : {}),
+      ...(sourceUrl ? { source_url: sourceUrl } : {}),
+    }),
+    signal,
   })
 }
 

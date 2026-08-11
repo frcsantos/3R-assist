@@ -11,12 +11,9 @@ from app.services.retrieval import RetrievalService
 
 def _context(
     jurisdiction: str = "oecd",
-    *,
-    validation_status: str = "validated",
 ) -> MethodRegulatoryContext:
     return MethodRegulatoryContext(
         jurisdiction=jurisdiction,
-        validation_status=validation_status,
         regulatory_body="OECD",
         regulation_date=None,
         regulatory_citation="https://example.org/tg420",
@@ -47,6 +44,7 @@ def _method(
         study_domain="general",
         source_db="NICEATM",
         routes_applicable=routes,
+        validation_status="validated",
         active=True,
         **_rationales_from_classes(category_3r),
     )

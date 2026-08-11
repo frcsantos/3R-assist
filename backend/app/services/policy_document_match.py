@@ -156,17 +156,37 @@ def document_match_score(
 
     citation_text = citation.joined()
     slug_text = document.slug.replace("-", " ")
+    institution_text = (
+        document.institution.joined() if document.institution else ""
+    )
     ref_score = _overlap_ratio(query_tokens, _doc_token_keys(citation_text))
     slug_score = _overlap_ratio(query_tokens, _doc_token_keys(slug_text))
+    institution_score = (
+        _overlap_ratio(query_tokens, _doc_token_keys(institution_text))
+        if institution_text
+        else 0.0
+    )
     url_score = (
         _overlap_ratio(query_tokens, _doc_token_keys(document.url or ""))
         if document.url
         else 0.0
     )
-    score = (0.50 * ref_score) + (0.25 * slug_score) + (0.10 * url_score)
+    score = (
+        (0.45 * ref_score)
+        + (0.20 * slug_score)
+        + (0.15 * institution_score)
+        + (0.10 * url_score)
+    )
 
     candidate_number_text = " ".join(
-        part for part in (citation_text, slug_text, document.url or "") if part
+        part
+        for part in (
+            citation_text,
+            slug_text,
+            institution_text,
+            document.url or "",
+        )
+        if part
     )
     score = min(1.0, score + _number_bonus(query_numbers, candidate_number_text))
     score = min(1.0, score + _date_bonus(request.document_date, document.date))
@@ -187,7 +207,8 @@ def _to_summary(document: Document) -> MatchedDocumentSummary:
         slug=document.slug,
         doc_citation=document.doc_citation,
         date=document.date.isoformat() if document.date else None,
-        category=document.category,
+        categories=list(document.categories),
+        institution=document.institution,
         url=document.url,
     )
 

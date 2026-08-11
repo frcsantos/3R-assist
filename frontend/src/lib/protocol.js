@@ -64,14 +64,6 @@ export const DISPLAY_FIELDS = [
     evidenceKey: 'species',
     confidenceKey: 'species',
   },
-  {
-    key: 'regulatory',
-    labelKey: 's2.fields.regulatory',
-    type: 'boolean',
-    allowEmpty: true,
-    evidenceKey: 'regulatory',
-    confidenceKey: 'regulatory',
-  },
 ]
 
 const EMPTY_ANIMAL_COUNTS = {
@@ -142,7 +134,6 @@ export function normalizeParamsFromExperiment(experiment) {
     species: raw.species ?? params.species,
     animal_counts: raw.animal_counts,
     n_animals: params.n_animals,
-    regulatory: raw.regulatory ?? params.regulatory,
   })
 }
 
@@ -157,12 +148,6 @@ export function normalizeParams(params) {
       params?.animal_counts,
       params?.n_animals ?? '',
     ),
-    regulatory:
-      params?.regulatory === true
-        ? 'true'
-        : params?.regulatory === false
-          ? 'false'
-          : '',
   }
 }
 
@@ -178,12 +163,6 @@ export function serializeParams(form) {
     species: form.species || null,
     animal_counts,
     n_animals: primaryAnimalCount(animal_counts),
-    regulatory:
-      form.regulatory === 'true'
-        ? true
-        : form.regulatory === 'false'
-          ? false
-          : null,
   }
 }
 
@@ -200,7 +179,6 @@ export function extractEvidence(raw = {}) {
     procedure_text: raw.procedure_text_evidence ?? null,
     species: raw.species_evidence ?? null,
     animal_counts: raw.animal_counts_evidence ?? null,
-    regulatory: raw.regulatory_evidence ?? null,
   }
 }
 
@@ -211,6 +189,5 @@ export function extractFieldConfidence(raw = {}) {
     procedure_text: raw.procedure_text_confidence ?? null,
     species: raw.species_confidence ?? null,
     animal_counts: raw.animal_counts_confidence ?? null,
-    regulatory: raw.regulatory_confidence ?? null,
   }
 }

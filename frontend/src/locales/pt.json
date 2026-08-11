@@ -51,6 +51,9 @@
     "exportCsv": "Exportar CSV",
     "exporting": "Exportando…",
     "exportError": "Não foi possível exportar a tabela.",
+    "sortByColumn": "Ordenar por {{column}}",
+    "sortAscending": "Ordenado crescente. Clique para ordenar decrescente.",
+    "sortDescending": "Ordenado decrescente. Clique para ordenar crescente.",
     "editRow": "Editar registro",
     "ok": "OK",
     "addRowError": "Não foi possível adicionar o registro.",
@@ -58,6 +61,10 @@
     "requiredFieldsMissing": "Campos obrigatórios em falta: {{fields}}",
     "selectRequired": "Selecione…",
     "selectOptional": "— Nenhum —",
+    "booleanTrue": "true",
+    "booleanFalse": "false",
+    "originalValue": "Original: {{value}}",
+    "restoreOriginal": "Restaurar valor original",
 
 
 
@@ -91,7 +98,7 @@
       "fetchingSeconds": "Buscando... ({{seconds}}s) — Clique para cancelar",
       "estimatingSeconds": "Estimando... ({{seconds}}s) — Clique para cancelar",
       "proceed": "Prosseguir?",
-      "costEstimate": "Custo estimado: {{cost}} ({{tokens}} tokens)",
+      "costEstimate": "Custo estimado: {{cost}} ({{inputTokens}} entrada + ~{{outputTokens}} saída)",
       "submittingSeconds": "Extraindo... ({{seconds}}s) — Clique para cancelar",
       "cancelled": "Cancelado.",
       "error": "Não foi possível extrair os dados da política.",
@@ -127,13 +134,23 @@
       "addDocument": "Adicionar documento",
       "addNewDocument": "Adicionar novo documento",
       "addDocumentError": "Não foi possível abrir o formulário de novo documento.",
+      "editDocumentError": "Não foi possível abrir o formulário de edição do documento.",
       "addMethod": "Adicionar método",
       "addMethodError": "Não foi possível abrir o formulário de novo método.",
+      "editMethodError": "Não foi possível abrir o formulário de edição do método.",
       "addRegulation": "Adicionar regulamentação",
       "addRegulationError": "Não foi possível abrir o formulário de nova regulamentação.",
       "methodProtocolLabel": "Protocolo do método",
       "methodProtocolPlaceholder": "Cole o texto do protocolo, diretriz ou documento TG do método…",
       "methodProtocolHint": "Envie para o modelo preencher os campos do formulário a partir do documento.",
+      "documentSourceLabel": "Fonte do documento",
+      "documentSourcePlaceholder": "Cole o texto do documento, ou a URL de uma página…",
+      "documentSourceHint": "Extraia para atualizar os campos diferentes. Os valores anteriores ficam visíveis abaixo de cada campo alterado.",
+      "documentDraftError": "Não foi possível extrair os campos do documento a partir da fonte.",
+      "regulationSourceLabel": "Fonte da regulamentação",
+      "regulationSourcePlaceholder": "Cole o texto da regulamentação / reconhecimento, ou a URL de uma página…",
+      "regulationSourceHint": "Extraia para atualizar os campos diferentes. Os valores anteriores ficam visíveis abaixo de cada campo alterado.",
+      "regulationDraftError": "Não foi possível extrair os campos da regulamentação a partir da fonte.",
       "methodDraftExtract": "Extrair campos",
       "methodDraftExtracting": "Extraindo…",
       "methodDraftError": "Não foi possível extrair os campos do método a partir do protocolo.",
@@ -167,6 +184,15 @@
     "subtitle": "Em português ou inglês.",
     "pasteLabel": "Cole o texto do protocolo",
     "placeholder": "Utilizamos camundongos Wistar para avaliar a toxicidade aguda por via oral…",
+    "upload": "Enviar arquivo",
+    "uploading": "Enviando…",
+    "clearUpload": "Remover arquivo",
+    "uploadPlaceholder": "Texto carregado do arquivo enviado.",
+    "uploadTypeError": "Tipos suportados: PDF, HTML, TXT.",
+    "uploadTooLarge": "O arquivo enviado é muito grande.",
+    "uploadNoText": "Não foi possível extrair texto suficiente do arquivo.",
+    "uploadReadError": "Não foi possível ler o arquivo enviado.",
+    "uploadError": "Não foi possível enviar o arquivo.",
     "submit": "Analisar protocolo",
     "submitting": "Analisando…",
     "submittingSeconds": "Analisando… {{seconds}}s",
@@ -227,7 +253,6 @@
       "studyDomain": "Domínio do estudo",
       "procedureText": "Texto do procedimento",
       "species": "Espécie",
-      "regulatory": "Contexto regulatório",
       "animalCounts": {
         "label": "Contagem de animais",
         "female": "Fêmeas",
@@ -246,7 +271,14 @@
         "phototoxicity": "Fototoxicidade",
         "genotoxicity": "Genotoxicidade",
         "pyrogenicity": "Pirogenicidade",
-        "skin_absorption": "Absorção cutânea"
+        "skin_absorption": "Absorção cutânea",
+        "reproductive_toxicity": "Toxicidade reprodutiva e do desenvolvimento",
+        "endocrine_activity": "Atividade endócrina",
+        "photoreactivity": "Fotorreatividade",
+        "aquatic_toxicity": "Toxicidade aquática",
+        "toxicokinetics": "Toxicocinética",
+        "bacterial_endotoxin": "Endotoxinas bacterianas",
+        "rabies_diagnosis": "Diagnóstico da raiva"
       },
       "route": {
         "oral": "Oral",
@@ -255,7 +287,6 @@
         "dermal": "Dérmica",
         "ocular": "Ocular",
         "inhalation": "Inalação",
-        "in_vitro": "In vitro",
         "other": "Outra"
       },
       "studyDomain": {
@@ -286,6 +317,7 @@
     "matchedParams": "Parâmetros correspondentes",
     "matchLabel": "Match",
     "sourceLink": "Fonte primária",
+    "referenceLabel": "Referência",
     "noProtocolCitation": "Nenhuma citação de protocolo disponível.",
     "noRegulatoryCitation": "Nenhuma citação regulatória disponível.",
     "regulatoryLink": "Abrir fonte regulatória",
@@ -307,9 +339,12 @@
       "oecd": "OCDE"
     },
     "validationStatus": {
+      "not_evaluated": "Não avaliado",
+      "under_validation": "Em validação",
       "validated": "Validado",
-      "in_process_of_validation": "Em processo de validação",
-      "not_validated": "Não validado"
+      "partially_validated": "Parcialmente validado",
+      "not_validated": "Não validado",
+      "unclear": "Incerto"
     },
     "regulatoryStatus": {
       "not_approved": "Não aprovado",
@@ -318,6 +353,8 @@
       "mandatory": "Obrigatório"
     },
     "purposeLabel": "Finalidade",
+    "validationStatusLabel": "Status de validação",
+    "approvedJurisdictionsLabel": "Jurisdições aprovadas",
     "threeR": {
       "replacement": "Substituição",
       "reduction": "Redução",
@@ -333,8 +370,10 @@
     "noMatches": "Nenhum item corresponde a este filtro.",
     "expand": "Expandir detalhes",
     "collapse": "Recolher detalhes",
+    "reportFeedback": "Enviar feedback sobre este item",
     "fields": {
-      "category": "Categoria",
+      "categories": "Categorias",
+      "institution": "Instituição",
       "date": "Data",
       "url": "URL"
     },
@@ -354,7 +393,19 @@
     },
     "documents": {
       "label": "Documentos",
-      "empty": "Ainda não há protocolos de método no catálogo."
+      "empty": "Ainda não há documentos no catálogo."
     }
+  },
+  "feedback": {
+    "title": "Enviar feedback",
+    "objectLabel": "Sobre",
+    "textLabel": "Seu feedback",
+    "textPlaceholder": "Descreva o problema ou sugestão…",
+    "submit": "Enviar",
+    "submitting": "Enviando…",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "success": "Obrigado — seu feedback foi enviado.",
+    "submitError": "Não foi possível enviar o feedback. Tente novamente."
   }
 }

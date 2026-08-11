@@ -10,6 +10,7 @@ from app.api.deps import (
     get_policy_document_match_service,
     get_policy_extraction_service,
     get_policy_method_match_service,
+    get_regulation_draft_extraction_service,
 )
 from app.api.errors import ErrorEnvelope, error_response
 from app.config import get_settings
@@ -41,6 +42,10 @@ from app.models.method_draft import (
     MethodDraftExtractRequest,
     MethodDraftExtractResponse,
 )
+from app.models.regulation_draft import (
+    RegulationDraftExtractRequest,
+    RegulationDraftExtractResponse,
+)
 from app.models.policy import (
     PolicyDocumentMatchRequest,
     PolicyDocumentMatchResponse,
@@ -54,6 +59,7 @@ from app.services.document_draft_extraction import DocumentDraftExtractionServic
 from app.services.extract_estimate import ExtractEstimateService
 from app.services.file_text import FileTextError, extract_text_from_upload
 from app.services.method_draft_extraction import MethodDraftExtractionService
+from app.services.regulation_draft_extraction import RegulationDraftExtractionService
 from app.services.policy_document_match import PolicyDocumentMatchService
 from app.services.policy_extraction import PolicyExtractionService
 from app.services.policy_method_match import PolicyMethodMatchService
@@ -102,6 +108,8 @@ async def get_table_data(
     table_name: str,
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
+    sort_by: str | None = Query(default=None, min_length=1, max_length=63),
+    sort_dir: str = Query(default="asc"),
     repository: AdminRepository = Depends(get_admin_repository),
 ) -> AdminTableDataResponse | JSONResponse:
     try:
@@ -109,6 +117,8 @@ async def get_table_data(
             table_name,
             limit=limit,
             offset=offset,
+            sort_by=sort_by,
+            sort_dir=sort_dir,
         )
     except LookupError:
         return error_response(
@@ -470,6 +480,37 @@ async def extract_method_draft(
     ),
 ) -> MethodDraftExtractResponse | JSONResponse:
     result = extraction.extract(payload.text)
+    if isinstance(result, ExtractionError):
+        return error_response(
+            status_code=422,
+            code=result.code,
+            message=result.message,
+        )
+    return result
+
+
+@router.post(
+    "/extract/regulation-draft",
+    response_model=RegulationDraftExtractResponse,
+    responses={422: {"model": ErrorEnvelope}},
+)
+async def extract_regulation_draft(
+    payload: RegulationDraftExtractRequest,
+    extraction: RegulationDraftExtractionService = Depends(
+        get_regulation_draft_extraction_service
+    ),
+) -> RegulationDraftExtractResponse | JSONResponse:
+    try:
+        source_text, fetched_url = await resolve_extraction_source(payload.text)
+    except UrlTextError as exc:
+        return error_response(
+            status_code=422,
+            code=exc.code,
+            message=exc.message,
+        )
+
+    source_url = payload.source_url or fetched_url
+    result = extraction.extract(source_text, source_url=source_url)
     if isinstance(result, ExtractionError):
         return error_response(
             status_code=422,

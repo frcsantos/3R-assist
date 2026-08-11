@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import ResultCard from '../components/ResultCard'
+import FeedbackModal from '../components/FeedbackModal'
 import HighlightedText from '../components/HighlightedText'
 import {
   fetchDocumentsCatalogue,
@@ -22,7 +23,7 @@ const TABS = ['methods', 'regulations', 'documents']
 
 const DOCUMENT_CATEGORIES = {
   regulations: ['regulation', 'guideline'],
-  documents: ['method_protocol'],
+  documents: null,
 }
 
 function tabClass(isActive) {
@@ -46,6 +47,29 @@ function ExpandArrow({ open }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  )
+}
+
+function FeedbackIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4">
+      <circle
+        cx="10"
+        cy="10"
+        r="8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M10 6v5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <circle cx="10" cy="14" r="1" fill="currentColor" />
     </svg>
   )
 }
@@ -102,10 +126,15 @@ function itemMatchesFilter(item, query) {
     .includes(query)
 }
 
-function DocumentCard({ document: doc, t, lang, highlightQuery }) {
-  const categoryLabel = t(`s4.documentCategory.${doc.category}`, {
-    defaultValue: doc.category,
-  })
+function DocumentCard({ document: doc, t, lang, highlightQuery, hideTitle = false, className = '' }) {
+  const categoryLabels = (doc.categories?.length ? doc.categories : [doc.category])
+    .filter(Boolean)
+    .map((category) =>
+      t(`s4.documentCategory.${category}`, {
+        defaultValue: category,
+      }),
+    )
+  const categoryLabel = categoryLabels.join(', ')
   const dateLabel = doc.date
     ? new Date(`${doc.date}T00:00:00`).toLocaleDateString(undefined, {
         year: 'numeric',
@@ -115,24 +144,39 @@ function DocumentCard({ document: doc, t, lang, highlightQuery }) {
     : null
   const citation = pickLocalized(doc.doc_citation, lang)
   const description = pickLocalized(doc.description, lang)
+  const institution = pickLocalized(doc.institution, lang)
 
   return (
-    <article className="rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding">
-      <h3 className="font-card-title text-card-title text-primary">
-        <HighlightedText text={citation} query={highlightQuery} />
-      </h3>
+    <article
+      className={`rounded-lg border border-border-subtle bg-surface-container-lowest ${hideTitle ? 'px-container-padding pb-container-padding pt-2' : 'p-container-padding'} ${className}`}
+    >
+      {!hideTitle ? (
+        <h3 className="font-card-title text-card-title text-primary">
+          <HighlightedText text={citation} query={highlightQuery} />
+        </h3>
+      ) : null}
       {description ? (
-        <p className="mt-2 font-body-base text-body-base text-on-secondary-container">
+        <p className={`font-body-base text-body-base text-on-secondary-container ${hideTitle ? '' : 'mt-2'}`}>
           <HighlightedText text={description} query={highlightQuery} />
         </p>
       ) : null}
       <dl className="mt-3 space-y-2 font-metadata text-metadata text-on-secondary-container">
-        <div className="flex flex-wrap gap-x-2">
-          <dt className="text-on-surface-variant">{t('s4.fields.category')}</dt>
-          <dd>
-            <HighlightedText text={categoryLabel} query={highlightQuery} />
-          </dd>
-        </div>
+        {categoryLabel ? (
+          <div className="flex flex-wrap gap-x-2">
+            <dt className="text-on-surface-variant">{t('s4.fields.categories')}</dt>
+            <dd>
+              <HighlightedText text={categoryLabel} query={highlightQuery} />
+            </dd>
+          </div>
+        ) : null}
+        {institution ? (
+          <div className="flex flex-wrap gap-x-2">
+            <dt className="text-on-surface-variant">{t('s4.fields.institution')}</dt>
+            <dd>
+              <HighlightedText text={institution} query={highlightQuery} />
+            </dd>
+          </div>
+        ) : null}
         {dateLabel ? (
           <div className="flex flex-wrap gap-x-2">
             <dt className="text-on-surface-variant">{t('s4.fields.date')}</dt>
@@ -175,9 +219,11 @@ function ExpandableList({
   filterPlaceholder,
   expandLabel,
   collapseLabel,
+  feedbackLabel,
 }) {
   const [openKey, setOpenKey] = useState(null)
   const [filter, setFilter] = useState('')
+  const [feedbackObject, setFeedbackObject] = useState(null)
   const listId = useId()
   const filterId = useId()
 
@@ -216,6 +262,7 @@ function ExpandableList({
           {filteredItems.map((item, index) => {
             const key = getKey(item, index)
             const open = openKey === key
+            const label = getLabel(item)
             const panelId = `${listId}-panel-${key}`
             const buttonId = `${listId}-button-${key}`
             return (
@@ -231,7 +278,7 @@ function ExpandableList({
                 >
                   <ExpandArrow open={open} />
                   <span className="min-w-0 flex-1 font-body-base text-body-base text-primary">
-                    <HighlightedText text={getLabel(item)} query={query} />
+                    <HighlightedText text={label} query={query} />
                   </span>
                 </button>
                 {open ? (
@@ -239,9 +286,18 @@ function ExpandableList({
                     id={panelId}
                     role="region"
                     aria-labelledby={buttonId}
-                    className="border-t border-border-subtle bg-surface-container-low px-container-padding py-card-gap"
+                    className="relative border-t border-border-subtle bg-surface-container-low"
                   >
                     {renderCard(item, query)}
+                    <button
+                      type="button"
+                      aria-label={feedbackLabel}
+                      title={feedbackLabel}
+                      onClick={() => setFeedbackObject(label)}
+                      className="absolute bottom-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
+                    >
+                      <FeedbackIcon />
+                    </button>
                   </div>
                 ) : null}
               </li>
@@ -249,6 +305,14 @@ function ExpandableList({
           })}
         </ul>
       )}
+
+      {feedbackObject ? (
+        <FeedbackModal
+          object={feedbackObject}
+          url={window.location.href}
+          onClose={() => setFeedbackObject(null)}
+        />
+      ) : null}
     </div>
   )
 }
@@ -302,6 +366,7 @@ function MethodsPanel({ lang, t }) {
       filterPlaceholder={t('s4.filterPlaceholder')}
       expandLabel={t('s4.expand')}
       collapseLabel={t('s4.collapse')}
+      feedbackLabel={t('s4.reportFeedback')}
       renderCard={(item, highlightQuery) => {
         const method = item.method
         const contexts = item.regulatory_contexts ?? []
@@ -313,11 +378,13 @@ function MethodsPanel({ lang, t }) {
         return (
           <ResultCard
             type={primaryThreeR(method)}
-            badges={methodThreeRBadges(method, t)}
+            badges={methodThreeRBadges(method, t, lang)}
             title={methodDisplayName(method, lang)}
+            hideTitle
+            className="rounded-none border-0 bg-transparent hover:border-transparent"
             validationStatus={
-              primaryContext
-                ? t(`s3.validationStatus.${primaryContext.validation_status}`)
+              method.validation_status
+                ? t(`s3.validationStatus.${method.validation_status}`)
                 : null
             }
             regulatoryStatuses={contexts.map((context, index) => {
@@ -342,12 +409,15 @@ function MethodsPanel({ lang, t }) {
             })}
             purpose={primaryContext?.regulation_purpose || null}
             purposeLabel={t('s3.purposeLabel')}
+            validationStatusLabel={t('s3.validationStatusLabel')}
+            approvedJurisdictionsLabel={t('s3.approvedJurisdictionsLabel')}
             description={methodDescription(method, lang)}
             protocolCitation={protocolCitation}
             noCitationLabel={t('s3.noProtocolCitation')}
             noRegulatoryCitationLabel={t('s3.noRegulatoryCitation')}
             primaryUrl={method.source_url || null}
             sourcesLabel={t('s3.sourceLink')}
+            referenceLabel={t('s3.referenceLabel')}
             regulatoryLinkLabel={t('s3.regulatoryLink')}
             closeLabel={t('s3.close')}
             highlightQuery={highlightQuery}
@@ -407,12 +477,15 @@ function DocumentsPanel({ categories, emptyKey, t, lang }) {
       filterPlaceholder={t('s4.filterPlaceholder')}
       expandLabel={t('s4.expand')}
       collapseLabel={t('s4.collapse')}
+      feedbackLabel={t('s4.reportFeedback')}
       renderCard={(item, highlightQuery) => (
         <DocumentCard
           document={item}
           t={t}
           lang={lang}
           highlightQuery={highlightQuery}
+          hideTitle
+          className="rounded-none border-0 bg-transparent"
         />
       )}
     />

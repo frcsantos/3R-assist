@@ -15,7 +15,7 @@ def _document(**overrides) -> Document:
         slug="concea-rn-18-2014",
         doc_citation=localized_str("RN 18/2014"),
         date=date(2014, 9, 24),
-        category="regulation",
+        categories=["regulation"],
         url="https://example.org/rn-18-2014",
     )
     base.update(overrides)

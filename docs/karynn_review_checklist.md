@@ -104,7 +104,7 @@ Métodos com maior probabilidade de contexto EU validado:
 
 ### 5. Rationales 3R — preencher nos 25 seeded (ADR-023)
 
-Cada R aplicável tem uma coluna TEXT: `replacement_rationale`, `reduction_rationale`, `refinement_rationale`.
+Cada R aplicável tem uma coluna JSONB localizada: `replacement_rationale`, `reduction_rationale`, `refinement_rationale` (`{"en-us","pt-br"}`).
 Valor não-nulo/não-vazio = o método qualifica para aquele R; o texto é a justificativa auditável.
 
 Após a migração `007` + `backfill_3r_rationales.py`, colunas aplicáveis contêm o placeholder
@@ -115,7 +115,7 @@ Colunas `NULL` = aquele R **não se aplica** (não preencher com string vazia).
 Para preencher:
 ```sql
 UPDATE methods
-SET replacement_rationale = '<justificativa auditável>'
+SET replacement_rationale = '{"en-us":"<justificativa>", "pt-br":"<justificativa>"}'::jsonb
 WHERE slug = '<slug>';
 -- idem reduction_rationale / refinement_rationale
 ```

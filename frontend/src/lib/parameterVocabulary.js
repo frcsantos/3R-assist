@@ -8,6 +8,13 @@ export const ENDPOINT_CATEGORIES = [
   'genotoxicity',
   'pyrogenicity',
   'skin_absorption',
+  'reproductive_toxicity',
+  'endocrine_activity',
+  'photoreactivity',
+  'aquatic_toxicity',
+  'toxicokinetics',
+  'bacterial_endotoxin',
+  'rabies_diagnosis',
 ]
 
 export const ROUTES = [
@@ -17,7 +24,6 @@ export const ROUTES = [
   'dermal',
   'ocular',
   'inhalation',
-  'in_vitro',
   'other',
 ]
 

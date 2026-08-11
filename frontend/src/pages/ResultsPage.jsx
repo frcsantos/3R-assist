@@ -275,13 +275,13 @@ export default function ResultsPage() {
                 <ResultCard
                   key={method.slug}
                   type={threeR}
-                  badges={methodThreeRBadges(method, t)}
+                  badges={methodThreeRBadges(method, t, lang)}
                   title={methodDisplayName(method, lang)}
                   score={percent}
                   dimmed={isLowConfidenceScore(item.score)}
                   validationStatus={
-                    primaryContext
-                      ? t(`s3.validationStatus.${primaryContext.validation_status}`)
+                    method.validation_status
+                      ? t(`s3.validationStatus.${method.validation_status}`)
                       : null
                   }
                   regulatoryStatuses={contexts.map((context, index) => {
@@ -306,6 +306,8 @@ export default function ResultsPage() {
                   })}
                   purpose={primaryContext?.regulation_purpose || null}
                   purposeLabel={t('s3.purposeLabel')}
+                  validationStatusLabel={t('s3.validationStatusLabel')}
+                  approvedJurisdictionsLabel={t('s3.approvedJurisdictionsLabel')}
                   matchedParams={formatMatchedParams(item.matched_params, t)}
                   matchedParamsLabel={t('s3.matchedParams')}
                   description={methodDescription(method, lang)}
@@ -314,6 +316,7 @@ export default function ResultsPage() {
                   noRegulatoryCitationLabel={t('s3.noRegulatoryCitation')}
                   primaryUrl={method.source_url || null}
                   sourcesLabel={t('s3.sourceLink')}
+                  referenceLabel={t('s3.referenceLabel')}
                   regulatoryLinkLabel={t('s3.regulatoryLink')}
                   closeLabel={t('s3.close')}
                   matchLabel={t('s3.matchLabel')}

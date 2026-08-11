@@ -51,6 +51,9 @@
     "exportCsv": "Export CSV",
     "exporting": "Exporting…",
     "exportError": "Could not export table.",
+    "sortByColumn": "Sort by {{column}}",
+    "sortAscending": "Sorted ascending. Click to sort descending.",
+    "sortDescending": "Sorted descending. Click to sort ascending.",
     "editRow": "Edit row",
     "ok": "OK",
     "addRowError": "Could not add row.",
@@ -58,6 +61,10 @@
     "requiredFieldsMissing": "Required fields missing: {{fields}}",
     "selectRequired": "Select…",
     "selectOptional": "— None —",
+    "booleanTrue": "true",
+    "booleanFalse": "false",
+    "originalValue": "Original: {{value}}",
+    "restoreOriginal": "Restore original value",
 
 
 
@@ -91,7 +98,7 @@
       "fetchingSeconds": "Fetching... ({{seconds}}s) — Click to Cancel",
       "estimatingSeconds": "Estimating... ({{seconds}}s) — Click to Cancel",
       "proceed": "Proceed?",
-      "costEstimate": "Estimated cost: {{cost}} ({{tokens}} tokens)",
+      "costEstimate": "Estimated cost: {{cost}} ({{inputTokens}} input + ~{{outputTokens}} output tokens)",
       "submittingSeconds": "Extracting... ({{seconds}}s) — Click to Cancel",
       "cancelled": "Cancelled.",
       "error": "Could not extract policy data.",
@@ -127,13 +134,23 @@
       "addDocument": "Add document",
       "addNewDocument": "Add new document",
       "addDocumentError": "Could not open the add-document form.",
+      "editDocumentError": "Could not open the edit-document form.",
       "addMethod": "Add method",
       "addMethodError": "Could not open the add-method form.",
+      "editMethodError": "Could not open the edit-method form.",
       "addRegulation": "Add regulation",
       "addRegulationError": "Could not open the add-regulation form.",
       "methodProtocolLabel": "Method protocol",
       "methodProtocolPlaceholder": "Paste the method protocol, guideline, or TG document text…",
       "methodProtocolHint": "Submit to ask the model to fill the form fields from the document.",
+      "documentSourceLabel": "Document source",
+      "documentSourcePlaceholder": "Paste document text, or a page URL…",
+      "documentSourceHint": "Extract to update differing fields. Previous values stay visible under each changed field.",
+      "documentDraftError": "Could not extract document fields from the source.",
+      "regulationSourceLabel": "Regulation source",
+      "regulationSourcePlaceholder": "Paste regulation / recognition text, or a page URL…",
+      "regulationSourceHint": "Extract to update differing fields. Previous values stay visible under each changed field.",
+      "regulationDraftError": "Could not extract regulation fields from the source.",
       "methodDraftExtract": "Extract fields",
       "methodDraftExtracting": "Extracting…",
       "methodDraftError": "Could not extract method fields from the protocol.",
@@ -167,6 +184,15 @@
     "subtitle": "In Portuguese or English.",
     "pasteLabel": "Paste protocol text",
     "placeholder": "We used Wistar rats to assess acute oral toxicity…",
+    "upload": "Upload",
+    "uploading": "Uploading…",
+    "clearUpload": "Remove file",
+    "uploadPlaceholder": "Text loaded from uploaded file.",
+    "uploadTypeError": "Supported file types: PDF, HTML, TXT.",
+    "uploadTooLarge": "The uploaded file is too large.",
+    "uploadNoText": "Could not extract enough text from the file.",
+    "uploadReadError": "Could not read the uploaded file.",
+    "uploadError": "Could not upload the file.",
     "submit": "Analyze protocol",
     "submitting": "Analyzing…",
     "submittingSeconds": "Analyzing… {{seconds}}s",
@@ -227,7 +253,6 @@
       "studyDomain": "Study domain",
       "procedureText": "Procedure text",
       "species": "Species",
-      "regulatory": "Regulatory context",
       "animalCounts": {
         "label": "Animal counts",
         "female": "Females",
@@ -246,7 +271,14 @@
         "phototoxicity": "Phototoxicity",
         "genotoxicity": "Genotoxicity",
         "pyrogenicity": "Pyrogenicity",
-        "skin_absorption": "Skin absorption"
+        "skin_absorption": "Skin absorption",
+        "reproductive_toxicity": "Reproductive and developmental toxicity",
+        "endocrine_activity": "Endocrine activity",
+        "photoreactivity": "Photoreactivity",
+        "aquatic_toxicity": "Aquatic toxicity",
+        "toxicokinetics": "Toxicokinetics",
+        "bacterial_endotoxin": "Bacterial endotoxin",
+        "rabies_diagnosis": "Rabies diagnosis"
       },
       "route": {
         "oral": "Oral",
@@ -255,7 +287,6 @@
         "dermal": "Dermal",
         "ocular": "Ocular",
         "inhalation": "Inhalation",
-        "in_vitro": "In vitro",
         "other": "Other"
       },
       "studyDomain": {
@@ -286,6 +317,7 @@
     "matchedParams": "Matched parameters",
     "matchLabel": "Match",
     "sourceLink": "Primary source",
+    "referenceLabel": "Reference",
     "noProtocolCitation": "No protocol citation available.",
     "noRegulatoryCitation": "No regulatory citation available.",
     "regulatoryLink": "Open regulatory source",
@@ -307,9 +339,12 @@
       "oecd": "OECD"
     },
     "validationStatus": {
+      "not_evaluated": "Not evaluated",
+      "under_validation": "Under validation",
       "validated": "Validated",
-      "in_process_of_validation": "In process of validation",
-      "not_validated": "Not validated"
+      "partially_validated": "Partially validated",
+      "not_validated": "Not validated",
+      "unclear": "Unclear"
     },
     "regulatoryStatus": {
       "not_approved": "Not approved",
@@ -318,6 +353,8 @@
       "mandatory": "Mandatory"
     },
     "purposeLabel": "Purpose",
+    "validationStatusLabel": "Validation status",
+    "approvedJurisdictionsLabel": "Approved jurisdictions",
     "threeR": {
       "replacement": "Replacement",
       "reduction": "Reduction",
@@ -333,8 +370,10 @@
     "noMatches": "No items match this filter.",
     "expand": "Expand details",
     "collapse": "Collapse details",
+    "reportFeedback": "Report feedback about this item",
     "fields": {
-      "category": "Category",
+      "categories": "Categories",
+      "institution": "Institution",
       "date": "Date",
       "url": "URL"
     },
@@ -354,7 +393,19 @@
     },
     "documents": {
       "label": "Documents",
-      "empty": "No method protocol documents in the catalogue yet."
+      "empty": "No documents in the catalogue yet."
     }
+  },
+  "feedback": {
+    "title": "Send feedback",
+    "objectLabel": "About",
+    "textLabel": "Your feedback",
+    "textPlaceholder": "Describe the issue or suggestion…",
+    "submit": "Submit",
+    "submitting": "Submitting…",
+    "cancel": "Cancel",
+    "close": "Close",
+    "success": "Thanks — your feedback was sent.",
+    "submitError": "Could not send feedback. Please try again."
   }
 }

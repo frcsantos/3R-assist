@@ -15,9 +15,11 @@ from app.prompts.policy_extraction import build_policy_extraction_prompt
 
 logger = logging.getLogger(__name__)
 
-# Keep in sync with app.adapters.llm extraction max_tokens.
-_POLICY_MAX_OUTPUT_TOKENS = 4096
-_DOCUMENT_MAX_OUTPUT_TOKENS = 2048
+# Expected completion size for cost estimates (not the API max_tokens ceiling).
+# Using max_tokens made estimates look flat: output dominated cost and the
+# displayed token total barely moved with source text length.
+_POLICY_EXPECTED_OUTPUT_TOKENS = 1200
+_DOCUMENT_EXPECTED_OUTPUT_TOKENS = 600
 
 
 def _approx_tokens(text: str) -> int:
@@ -94,17 +96,17 @@ class ExtractEstimateService:
     ) -> ExtractEstimateResponse:
         settings = get_settings()
         model = settings.resolved_llm_model
-        max_output = (
-            _POLICY_MAX_OUTPUT_TOKENS
+        expected_output = (
+            _POLICY_EXPECTED_OUTPUT_TOKENS
             if mode == "policy"
-            else _DOCUMENT_MAX_OUTPUT_TOKENS
+            else _DOCUMENT_EXPECTED_OUTPUT_TOKENS
         )
 
         if settings.use_stub_llm:
             return ExtractEstimateResponse(
                 model="stub",
                 input_tokens=_approx_tokens(text),
-                output_tokens=max_output,
+                output_tokens=expected_output,
                 estimated_cost_usd=0.0,
             )
 
@@ -121,6 +123,6 @@ class ExtractEstimateService:
         return ExtractEstimateResponse(
             model=model,
             input_tokens=input_tokens,
-            output_tokens=max_output,
-            estimated_cost_usd=_estimate_usd(model, input_tokens, max_output),
+            output_tokens=expected_output,
+            estimated_cost_usd=_estimate_usd(model, input_tokens, expected_output),
         )

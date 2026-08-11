@@ -15,15 +15,23 @@ from app.models.protocol import (
     Route,
     Species,
 )
-from app.models.method import RegulatoryStatus
+from app.models.method import AnimalUse, RegulatoryStatus, TestSystem
 from app.models.method_draft import MethodDraftExtractResponse, MethodDraftFields
 from app.models.document_draft import DocumentDraftExtractResponse, DocumentDraftFields
+from app.models.regulation_draft import (
+    RegulationDraftExtractResponse,
+    RegulationDraftFields,
+)
 from app.models.i18n import localized_str, localized_str_list, parse_localized_str
+from app.models.jurisdiction import jurisdiction_for_code, parse_jurisdiction
 from app.models.policy import PolicyExtractResponse, PolicyMethod
 from app.prompts.document_draft_extraction import build_document_draft_extraction_prompt
 from app.prompts.extraction import build_extraction_prompt
 from app.prompts.method_draft_extraction import build_method_draft_extraction_prompt
 from app.prompts.policy_extraction import build_policy_extraction_prompt
+from app.prompts.regulation_draft_extraction import (
+    build_regulation_draft_extraction_prompt,
+)
 from app.services.oecd_citation import prefer_oecd_tg_citation
 
 logger = logging.getLogger(__name__)
@@ -33,6 +41,7 @@ EXTRACTION_MAX_TOKENS = 4096
 POLICY_EXTRACTION_MAX_TOKENS = 4096
 METHOD_DRAFT_EXTRACTION_MAX_TOKENS = 4096
 DOCUMENT_DRAFT_EXTRACTION_MAX_TOKENS = 2048
+REGULATION_DRAFT_EXTRACTION_MAX_TOKENS = 2048
 
 _DOCUMENT_CATEGORY_VALUES: frozenset[str] = frozenset(
     {"method_protocol", "guideline", "regulation", "other"}
@@ -53,6 +62,13 @@ _ENDPOINT_CATEGORY_VALUES: frozenset[str] = frozenset(
         "genotoxicity",
         "pyrogenicity",
         "skin_absorption",
+        "reproductive_toxicity",
+        "endocrine_activity",
+        "photoreactivity",
+        "aquatic_toxicity",
+        "toxicokinetics",
+        "bacterial_endotoxin",
+        "rabies_diagnosis",
     }
 )
 _ROUTE_VALUES: frozenset[str] = frozenset(
@@ -63,12 +79,32 @@ _ROUTE_VALUES: frozenset[str] = frozenset(
         "dermal",
         "ocular",
         "inhalation",
-        "in_vitro",
         "other",
     }
 )
 _STUDY_DOMAIN_VALUES: frozenset[str] = frozenset(
     {"pharma", "cosmetics", "chemical_safety", "general"}
+)
+_ANIMAL_USE_VALUES: frozenset[str] = frozenset(
+    {
+        "none",
+        "animal_derived_material",
+        "slaughterhouse_byproduct",
+        "animals_killed_for_tissue",
+        "live_animals",
+        "mixed_or_variable",
+    }
+)
+_TEST_SYSTEM_VALUES: frozenset[str] = frozenset(
+    {
+        "in_silico",
+        "in_chemico",
+        "in_vitro",
+        "ex_vivo",
+        "in_vivo",
+        "hybrid",
+        "unclear",
+    }
 )
 _SOURCE_DB_VALUES: frozenset[str] = frozenset(
     {"OECD_TG", "ECVAM_DBALM", "NICEATM", "FARMACOPEIA_BR", "TSAR"}
@@ -133,6 +169,15 @@ class LLMAdapter(ABC):
         category_hint: str | None = None,
         source_url: str | None = None,
     ) -> DocumentDraftExtractResponse | ExtractionError:
+        pass
+
+    @abstractmethod
+    def extract_regulation_draft(
+        self,
+        text: str,
+        *,
+        source_url: str | None = None,
+    ) -> RegulationDraftExtractResponse | ExtractionError:
         pass
 
 
@@ -268,6 +313,8 @@ class StubLLMAdapter(LLMAdapter):
         endpoint = self._method_endpoint(normalized.lower())
         routes = self._extract_routes(normalized.lower())
         study_domain = self._extract_study_domain(normalized.lower())
+        animal_use = self._extract_animal_use(normalized.lower())
+        test_system = self._extract_test_system(normalized.lower())
         slug_seed = (
             f"oecd-tg{tg_match.group(1)}-{title}" if tg_match else title
         )
@@ -279,6 +326,8 @@ class StubLLMAdapter(LLMAdapter):
             slug=slug[:80],
             name=localized_str(title),
             description=localized_str(description or title),
+            animal_use=animal_use,
+            test_system=test_system,
             endpoint_category=endpoint,
             routes_applicable=routes,
             study_domain=study_domain,
@@ -352,9 +401,84 @@ class StubLLMAdapter(LLMAdapter):
                 slug=_slugify_method(citation_text)[:80] or None,
                 date=document_date,
                 url=url,
-                category=category,  # type: ignore[arg-type]
+                categories=[category],  # type: ignore[list-item]
                 doc_citation=localized_str(citation_text),
                 description=localized_str(description_raw),
+            )
+        )
+
+    def extract_regulation_draft(
+        self,
+        text: str,
+        *,
+        source_url: str | None = None,
+    ) -> RegulationDraftExtractResponse | ExtractionError:
+        _ = source_url
+        normalized = text.strip()
+        if len(normalized) < 20:
+            return ExtractionError(
+                message="Text is too short to extract regulation fields.",
+                reason="text_too_short",
+            )
+        lowered = normalized.lower()
+
+        jurisdiction = None
+        if re.search(r"\bbrazil\b|\bbrasil\b|concea|anvisa", lowered):
+            jurisdiction = jurisdiction_for_code("brazil")
+        elif re.search(r"\boecd\b", lowered):
+            jurisdiction = jurisdiction_for_code("oecd")
+        elif re.search(r"\beu\b|european union|echa|ema\b", lowered):
+            jurisdiction = jurisdiction_for_code("eu")
+        elif re.search(r"\bus\b|united states|\bfda\b|\bepa\b|iccvam", lowered):
+            jurisdiction = jurisdiction_for_code("us")
+
+        regulation_status = None
+        if re.search(r"\bmandatory\b|obrigat", lowered):
+            regulation_status = "mandatory"
+        elif re.search(r"\brecommended\b|recomend", lowered):
+            regulation_status = "recommended"
+        elif re.search(r"\bapproved\b|aprovad", lowered):
+            regulation_status = "approved"
+        elif re.search(r"not approved|não aprov|nao aprov", lowered):
+            regulation_status = "not_approved"
+
+        regulation_date = None
+        date_match = re.search(
+            r"\b(20\d{2}-\d{2}-\d{2}|\d{1,2}[./]\d{1,2}[./]20\d{2}|20\d{2})\b",
+            normalized,
+        )
+        if date_match:
+            raw_date = date_match.group(1)
+            regulation_date = (
+                f"{raw_date}-01-01"
+                if re.fullmatch(r"20\d{2}", raw_date)
+                else raw_date
+            )
+
+        body = None
+        for candidate in (
+            "CONCEA",
+            "ANVISA",
+            "ECHA",
+            "EMA",
+            "EPA",
+            "FDA",
+            "ICCVAM",
+            "OECD",
+        ):
+            if re.search(rf"\b{re.escape(candidate)}\b", normalized, re.I):
+                body = candidate
+                break
+
+        return RegulationDraftExtractResponse(
+            fields=RegulationDraftFields(
+                jurisdiction=jurisdiction,
+                regulation_status=regulation_status,  # type: ignore[arg-type]
+                regulation_date=regulation_date,
+                regulation_purpose=None,
+                regulatory_body=body,
+                regulatory_citation=None,
+                notes=None,
             )
         )
 
@@ -374,8 +498,25 @@ class StubLLMAdapter(LLMAdapter):
             return "genotoxicity"
         if re.search(r"pyrogen|mat\b|monocyte activation", text):
             return "pyrogenicity"
+        if re.search(r"bacterial endotoxin|lal test|bet assay", text):
+            return "bacterial_endotoxin"
         if re.search(r"absorption|permeab|dermal penetr", text):
             return "skin_absorption"
+        if re.search(
+            r"reproductive|developmental tox|teratogen|fertility|embryo.?fetal",
+            text,
+        ):
+            return "reproductive_toxicity"
+        if re.search(r"endocrine|estrogenic|androgenic|steroidogenic", text):
+            return "endocrine_activity"
+        if re.search(r"photoreactiv", text):
+            return "photoreactivity"
+        if re.search(r"aquatic tox|fish embryo|daphnia", text):
+            return "aquatic_toxicity"
+        if re.search(r"toxicokinetic|adme|intrinsic clearance", text):
+            return "toxicokinetics"
+        if re.search(r"rabies", text):
+            return "rabies_diagnosis"
         if re.search(r"acute tox|ld50|fixed dose|atc\b|udp\b", text):
             return "acute_toxicity"
         return None
@@ -449,8 +590,6 @@ class StubLLMAdapter(LLMAdapter):
             routes.append("ocular")
         if re.search(r"inala|inhalation|aerossol|respirat", text):
             routes.append("inhalation")
-        if re.search(r"in vitro|cultura celular|c[eé]lulas", text):
-            routes.append("in_vitro")
         return routes or None
 
     @staticmethod
@@ -509,6 +648,61 @@ class StubLLMAdapter(LLMAdapter):
         ):
             return "chemical_safety"
         return "general"
+
+    @staticmethod
+    def _extract_animal_use(text: str) -> AnimalUse | None:
+        hits: list[AnimalUse] = []
+        if re.search(
+            r"live animal|in vivo animal|conscious animal|anesthetized animal|"
+            r"animal experiment|labou?ratory animal",
+            text,
+        ):
+            hits.append("live_animals")
+        if re.search(
+            r"slaughterhouse|abattoir|food.?chain animal|already slaughtered",
+            text,
+        ):
+            hits.append("slaughterhouse_byproduct")
+        if re.search(
+            r"killed for (?:tissue|organ)|sacrificed for (?:tissue|organ)|"
+            r"animals? (?:were )?killed to obtain",
+            text,
+        ):
+            hits.append("animals_killed_for_tissue")
+        if re.search(
+            r"fetal bovine serum|fbs\b|animal.?derived|serum|antibody from|"
+            r"animal product",
+            text,
+        ):
+            hits.append("animal_derived_material")
+        if re.search(
+            r"\bno animals?\b|animal.?free|non.?animal|without animals",
+            text,
+        ):
+            hits.append("none")
+        unique = list(dict.fromkeys(hits))
+        if not unique:
+            return None
+        if len(unique) > 1:
+            return "mixed_or_variable"
+        return unique[0]
+
+    @staticmethod
+    def _extract_test_system(text: str) -> list[TestSystem] | None:
+        systems: list[TestSystem] = []
+        if re.search(r"in silico|computational|qsar|read.?across model", text):
+            systems.append("in_silico")
+        if re.search(r"in chemico|dpra|peptide reactivity|chemical reactivity assay", text):
+            systems.append("in_chemico")
+        if re.search(r"in vitro|cell culture|reconstructed|organoid|3d model", text):
+            systems.append("in_vitro")
+        if re.search(r"ex vivo|excised|isolated organ|corneal opacity", text):
+            systems.append("ex_vivo")
+        if re.search(r"\bin vivo\b|whole animal", text):
+            systems.append("in_vivo")
+        if re.search(r"\bhybrid\b|integrated approach|iata\b|defined approach", text):
+            systems.append("hybrid")
+        return systems or None
 
     @staticmethod
     def _extract_procedure_text(text: str, study_type: str) -> str | None:
@@ -994,6 +1188,54 @@ class LlmCallAdapter(LLMAdapter):
             log_extraction_error(parsed)
         return parsed
 
+    def extract_regulation_draft(
+        self,
+        text: str,
+        *,
+        source_url: str | None = None,
+    ) -> RegulationDraftExtractResponse | ExtractionError:
+        try:
+            import llmcall
+            from llmcall import CallConstraints, LLMError as LlmCallError
+        except ImportError:
+            return ExtractionError(message="llmcall package is not installed.")
+
+        result = llmcall.call(
+            self._model,
+            build_regulation_draft_extraction_prompt(text, source_url=source_url),
+            constraints=CallConstraints(
+                max_tokens=REGULATION_DRAFT_EXTRACTION_MAX_TOKENS,
+                response_format="json",
+            ),
+        )
+        if isinstance(result, LlmCallError):
+            error = ExtractionError(
+                message=result.message,
+                reason="llm_api_error",
+            )
+            log_extraction_error(error)
+            return error
+
+        raw_content = result.content
+        try:
+            payload = _parse_json_payload(raw_content)
+        except json.JSONDecodeError as exc:
+            error = ExtractionError(
+                message=f"LLM response is not valid JSON: {exc}",
+                reason="json_decode_error",
+                raw_response=truncate_raw_response(raw_content),
+            )
+            log_extraction_error(error)
+            return error
+
+        parsed = _regulation_draft_from_payload(
+            payload,
+            raw_response=raw_content,
+        )
+        if isinstance(parsed, ExtractionError):
+            log_extraction_error(parsed)
+        return parsed
+
 
 def _nullable_str(value: object) -> str | None:
     if value is None:
@@ -1155,9 +1397,17 @@ def _localized_str_from_payload(
     raw = payload.get(field)
     if isinstance(raw, dict):
         try:
-            return parse_localized_str(raw, required=False)
+            parsed = parse_localized_str(raw, required=False)
+            if parsed is None:
+                return None
+            if not parsed.en_us.strip() and not parsed.pt_br.strip():
+                return None
+            return parsed
         except (TypeError, ValueError):
             pass
+    if isinstance(raw, str):
+        text = _nullable_str(raw)
+        return localized_str(text) if text else None
     en = _nullable_str(payload.get(legacy_en))
     pt = _nullable_str(payload.get(legacy_pt)) or en
     if en is None and pt is None:
@@ -1190,6 +1440,68 @@ def _routes_or_none(value: object) -> list[str] | None:
         if route and route not in routes:
             routes.append(route)
     return routes or None
+
+
+def _enum_list_or_none(value: object, allowed: frozenset[str]) -> list[str] | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        if text.startswith("["):
+            try:
+                parsed = json.loads(text)
+                value = parsed if isinstance(parsed, list) else [text]
+            except json.JSONDecodeError:
+                value = [text]
+        else:
+            value = [text]
+    if not isinstance(value, list):
+        return None
+    items: list[str] = []
+    for item in value:
+        code = _enum_or_none(item, allowed)
+        if code and code not in items:
+            items.append(code)
+    return items or None
+
+
+def _document_categories_or_none(
+    value: object,
+    *,
+    category_hint: str | None = None,
+) -> list[str] | None:
+    raw_items: list[object]
+    if value is None:
+        raw_items = []
+    elif isinstance(value, str):
+        text = value.strip()
+        if not text:
+            raw_items = []
+        elif text.startswith("["):
+            try:
+                parsed = json.loads(text)
+                raw_items = parsed if isinstance(parsed, list) else [text]
+            except json.JSONDecodeError:
+                raw_items = [text]
+        else:
+            raw_items = [text]
+    elif isinstance(value, list):
+        raw_items = list(value)
+    else:
+        raw_items = []
+
+    categories: list[str] = []
+    for item in raw_items:
+        code = _enum_or_none(item, _DOCUMENT_CATEGORY_VALUES)
+        if code and code not in categories:
+            categories.append(code)
+
+    if not categories and category_hint in _DOCUMENT_CATEGORY_VALUES:
+        categories = [category_hint]
+
+    return categories or None
 
 
 def _method_draft_from_payload(
@@ -1245,6 +1557,10 @@ def _method_draft_from_payload(
         slug=slug,
         name=name,
         description=description,
+        animal_use=_enum_or_none(payload.get("animal_use"), _ANIMAL_USE_VALUES),  # type: ignore[arg-type]
+        test_system=_enum_list_or_none(  # type: ignore[arg-type]
+            payload.get("test_system"), _TEST_SYSTEM_VALUES
+        ),
         endpoint_category=endpoint,  # type: ignore[arg-type]
         routes_applicable=_routes_or_none(payload.get("routes_applicable")),  # type: ignore[arg-type]
         study_domain=study_domain,  # type: ignore[arg-type]
@@ -1252,9 +1568,24 @@ def _method_draft_from_payload(
         ncit_id=_nullable_str(payload.get("ncit_id")),
         source_citation=_nullable_str(payload.get("source_citation")),
         source_db=source_db,  # type: ignore[arg-type]
-        replacement_rationale=_nullable_str(payload.get("replacement_rationale")),
-        reduction_rationale=_nullable_str(payload.get("reduction_rationale")),
-        refinement_rationale=_nullable_str(payload.get("refinement_rationale")),
+        replacement_rationale=_localized_str_from_payload(
+            payload,
+            "replacement_rationale",
+            "replacement_rationale_en",
+            "replacement_rationale_pt",
+        ),
+        reduction_rationale=_localized_str_from_payload(
+            payload,
+            "reduction_rationale",
+            "reduction_rationale_en",
+            "reduction_rationale_pt",
+        ),
+        refinement_rationale=_localized_str_from_payload(
+            payload,
+            "refinement_rationale",
+            "refinement_rationale_en",
+            "refinement_rationale_pt",
+        ),
         keywords=keywords,
         text_for_embedding=text_for_embedding,
         active=False,
@@ -1307,9 +1638,17 @@ def _document_draft_from_payload(
         max_chars=_DESCRIPTION_MAX_CHARS,
     )
 
-    category = _enum_or_none(payload.get("category"), _DOCUMENT_CATEGORY_VALUES)
-    if category is None and category_hint in _DOCUMENT_CATEGORY_VALUES:
-        category = category_hint
+    categories = _document_categories_or_none(
+        payload.get("categories", payload.get("category")),
+        category_hint=category_hint,
+    )
+
+    institution = _localized_str_from_payload(
+        payload,
+        "institution",
+        "institution_en",
+        "institution_pt",
+    )
 
     slug = _nullable_str(payload.get("slug"))
     if slug:
@@ -1327,11 +1666,54 @@ def _document_draft_from_payload(
         slug=slug,
         date=date,
         url=url,
-        category=category,  # type: ignore[arg-type]
+        categories=categories,  # type: ignore[arg-type]
+        institution=institution,
         doc_citation=citation,
         description=description,
     )
     return DocumentDraftExtractResponse(fields=fields)
+
+
+def _regulation_draft_from_payload(
+    payload: object,
+    *,
+    raw_response: str | None = None,
+) -> RegulationDraftExtractResponse | ExtractionError:
+    if not isinstance(payload, dict):
+        return ExtractionError(
+            message="LLM regulation-draft response must be a JSON object.",
+            reason="invalid_payload_type",
+            raw_response=truncate_raw_response(raw_response),
+        )
+
+    jurisdiction = None
+    raw_jurisdiction = payload.get("jurisdiction")
+    if raw_jurisdiction is not None:
+        try:
+            if isinstance(raw_jurisdiction, str):
+                mapped = jurisdiction_for_code(raw_jurisdiction)
+                jurisdiction = mapped or parse_jurisdiction(raw_jurisdiction)
+            else:
+                jurisdiction = parse_jurisdiction(raw_jurisdiction)
+        except (TypeError, ValueError):
+            jurisdiction = None
+
+    date = _nullable_str(payload.get("regulation_date"))
+    if date and re.fullmatch(r"20\d{2}", date):
+        date = f"{date}-01-01"
+
+    fields = RegulationDraftFields(
+        jurisdiction=jurisdiction,
+        regulation_status=_nullable_regulatory_status(
+            payload.get("regulation_status")
+        ),
+        regulation_date=date,
+        regulation_purpose=_nullable_str(payload.get("regulation_purpose")),
+        regulatory_body=_nullable_str(payload.get("regulatory_body")),
+        regulatory_citation=_nullable_str(payload.get("regulatory_citation")),
+        notes=_nullable_str(payload.get("notes")),
+    )
+    return RegulationDraftExtractResponse(fields=fields)
 
 
 def build_llm_adapter(*, model: str, use_stub: bool) -> LLMAdapter:

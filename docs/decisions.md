@@ -533,17 +533,17 @@ WHERE EXISTS (
 
 ---
 
-## ADR-023 — Colunas TEXT de rationale por R (substitui `category_3r` JSONB)
+## ADR-023 — Colunas de rationale por R (substitui `category_3r` JSONB)
 
-**Decision:** `category_3r JSONB` substituído por três colunas TEXT nullable em `methods`:
+**Decision:** `category_3r JSONB` substituído por três colunas nullable em `methods`:
 
 - `replacement_rationale`
 - `reduction_rationale`
 - `refinement_rationale`
 
-Presença de valor não-nulo/não-vazio = o método qualifica para aquele R. O texto *é* a justificativa auditável — não há coluna companion separada de flag.
+Inicialmente TEXT (migração `007`); depois localizadas como JSONB `{"en-us","pt-br"}` (`040`). Presença de valor não-nulo com texto não-vazio em qualquer locale = o método qualifica para aquele R. O texto *é* a justificativa auditável — não há coluna companion separada de flag.
 
-**Context:** ADR-021 permitia múltiplos Rs, mas só como flags. CEUAs e curadoria precisam de rationale explícita (por que este método conta como replacement vs reduction). Colunas TEXT por R unificam qualificação e auditoria.
+**Context:** ADR-021 permitia múltiplos Rs, mas só como flags. CEUAs e curadoria precisam de rationale explícita (por que este método conta como replacement vs reduction). Colunas de rationale por R unificam qualificação e auditoria.
 
 **Filtro:** `replacement_rationale IS NOT NULL` (idem reduction/refinement), semântica OR no filtro S3 — métodos com *qualquer* R selecionado. API ainda expõe `category_3r` derivado das colunas preenchidas para compatibilidade.
 

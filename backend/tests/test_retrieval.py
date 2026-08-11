@@ -28,12 +28,13 @@ def _method(
         name=localized_str(slug),
         description=localized_str("desc"),
         text_for_embedding=text_for_embedding,
-        reduction_rationale="Test reduction rationale",
+        reduction_rationale=localized_str("Test reduction rationale"),
         endpoint_category=endpoint,
         study_domain="general",
         source_db="NICEATM",
         routes_applicable=routes,
         embedding_json=embedding,
+        validation_status="validated",
         active=True,
     )
 

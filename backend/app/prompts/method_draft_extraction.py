@@ -7,18 +7,45 @@ protocol / guideline / method document text below. The output will pre-fill a
 curation form; prefer precision over completeness.
 
 STRICT EXTRACTION MODE: Extract only what is supported by the text.
-Do not invent OECD references, endpoints, routes, or rationales that are not
-clearly present. If a field is not supported, return null.
+Do not invent OECD references, endpoints, routes, animal-use classifications,
+test systems, or rationales that are not clearly present. If a field is not
+supported, return null.
 
 ── CONTROLLED VOCABULARIES ──────────────────────────────────────────────────
+animal_use — exactly one of:
+  none, animal_derived_material, slaughterhouse_byproduct,
+  animals_killed_for_tissue, live_animals, mixed_or_variable
+  (or null if unclear)
+  Guidance:
+  - none: no animals and no animal-derived materials
+  - animal_derived_material: sera, antibodies, enzymes, or other products from
+    animals without killing for this method's tissue harvest
+  - slaughterhouse_byproduct: tissues/organs from animals already slaughtered
+    for food or other primary purposes
+  - animals_killed_for_tissue: animals killed specifically to obtain tissue for
+    the method
+  - live_animals: living animals used in the procedure
+  - mixed_or_variable: more than one of the above clearly applies, or use varies
+
+test_system — array of one or more of:
+  in_silico, in_chemico, in_vitro, ex_vivo, in_vivo, hybrid, unclear
+  Use null (not []) when the document does not indicate a test system.
+  Include every clearly supported kind (e.g. ["in_chemico","in_vitro"]).
+  Use hybrid when the document itself describes a hybrid/integrated approach;
+  otherwise list the concrete systems. Use unclear only when a system is
+  mentioned but cannot be classified.
+
 endpoint_category — exactly one of:
   acute_toxicity, skin_irritation, skin_corrosion, ocular_irritation,
-  skin_sensitisation, phototoxicity, genotoxicity, pyrogenicity, skin_absorption
+  skin_sensitisation, phototoxicity, genotoxicity, pyrogenicity, skin_absorption,
+  reproductive_toxicity, endocrine_activity, photoreactivity, aquatic_toxicity,
+  toxicokinetics, bacterial_endotoxin, rabies_diagnosis
   (or null if none fits)
 
 routes_applicable — array of zero or more of:
-  oral, intraperitoneal, intravenous, dermal, ocular, inhalation, in_vitro, other
+  oral, intraperitoneal, intravenous, dermal, ocular, inhalation, other
   Use null (not []) when the document does not indicate applicable routes.
+  Do not use in_vitro as a route; capture culture/assay modality in test_system.
 
 study_domain — exactly one of:
   general, pharma, cosmetics, chemical_safety
@@ -36,8 +63,10 @@ oecd_ref — OECD Test Guideline or Guidance Document reference when present,
   OECD methods with "oecd-". Otherwise derive from the method name.
 - name / description: localized objects {"en-us": "...", "pt-br": "..."}.
   If only one language is present, copy the same string into both locales.
-- replacement_rationale / reduction_rationale / refinement_rationale: non-empty
-  text only when the document clearly supports that 3R class; otherwise null.
+- replacement_rationale / reduction_rationale / refinement_rationale: localized
+  objects {"en-us": "...", "pt-br": "..."} only when the document clearly
+  supports that 3R class; otherwise null. If only one language is present,
+  copy the same string into both locales.
 - keywords: localized synonym arrays {"en-us": [...], "pt-br": [...]}; use []
   per locale when none.
 - text_for_embedding: single English string combining identifier, name, and
@@ -55,6 +84,8 @@ Schema:
   "slug": "string or null",
   "name": {"en-us": "string", "pt-br": "string"} or null,
   "description": {"en-us": "string", "pt-br": "string"} or null,
+  "animal_use": "string or null",
+  "test_system": ["string"] or null,
   "endpoint_category": "string or null",
   "routes_applicable": ["string"] or null,
   "study_domain": "string or null",
@@ -62,9 +93,9 @@ Schema:
   "ncit_id": "string or null",
   "source_citation": "string or null",
   "source_db": "string or null",
-  "replacement_rationale": "string or null",
-  "reduction_rationale": "string or null",
-  "refinement_rationale": "string or null",
+  "replacement_rationale": {"en-us": "string", "pt-br": "string"} or null,
+  "reduction_rationale": {"en-us": "string", "pt-br": "string"} or null,
+  "refinement_rationale": {"en-us": "string", "pt-br": "string"} or null,
   "keywords": {"en-us": ["string"], "pt-br": ["string"]},
   "text_for_embedding": "string or null",
   "active": false

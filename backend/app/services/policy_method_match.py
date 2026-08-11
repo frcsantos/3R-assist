@@ -14,7 +14,7 @@ from app.models.policy import (
 )
 from app.repositories.methods import MethodRepository
 
-_OECD_REF_RE = re.compile(r"\b(TG|GD)\s*(\d{3,4})\b", re.IGNORECASE)
+_OECD_REF_RE = re.compile(r"\b(TG|GD)\s*(\d{3,4}[A-Z]?)\b", re.IGNORECASE)
 _MIN_TEXT_SCORE = 0.15
 _PLURAL_2 = frozenset({"as", "es", "os", "is"})
 
@@ -27,7 +27,7 @@ def normalize_oecd_ref(code: str | None) -> str | None:
     match = _OECD_REF_RE.search(text)
     if not match:
         return None
-    return f"{match.group(1).upper()} {match.group(2)}"
+    return f"{match.group(1).upper()} {match.group(2).upper()}"
 
 
 def _strip_accents(text: str) -> str:
@@ -117,6 +117,7 @@ def _to_summary(
         study_domain=method.study_domain,
         oecd_ref=method.oecd_ref,
         source_db=method.source_db,
+        validation_status=method.validation_status,
         active=method.active,
         regulatory_contexts=contexts or [],
     )

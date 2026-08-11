@@ -2,14 +2,27 @@
 
 from __future__ import annotations
 
+import json
+
 from app.db.connection import get_pool
 from app.models.document import Document
 from app.models.i18n import parse_localized_str
 
 
+def _parse_categories(value) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        value = json.loads(value) if value.strip() else []
+    if isinstance(value, list):
+        return [str(item) for item in value if item is not None and str(item).strip()]
+    return []
+
+
 class DocumentRepository:
     _SELECT_COLUMNS = """
-        d.id, d.slug, d.doc_citation, d.description, d."date", d.category, d.url
+        d.id, d.slug, d.doc_citation, d.description, d."date",
+        d.categories, d.institution, d.url
     """
 
     async def list_all(
@@ -24,7 +37,7 @@ class DocumentRepository:
                     f"""
                     SELECT {self._SELECT_COLUMNS}
                     FROM documents d
-                    WHERE d.category = ANY($1::text[])
+                    WHERE d.categories ?| $1::text[]
                     ORDER BY d.doc_citation->>'en-us', d.slug
                     """,
                     categories,
@@ -47,6 +60,7 @@ class DocumentRepository:
             doc_citation=parse_localized_str(row["doc_citation"]),
             description=parse_localized_str(row["description"], required=False),
             date=row["date"],
-            category=row["category"],
+            categories=_parse_categories(row["categories"]),
+            institution=parse_localized_str(row["institution"], required=False),
             url=row["url"],
         )

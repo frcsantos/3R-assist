@@ -11,14 +11,16 @@ Do not invent titles, dates, URLs, or categories that are not clearly present.
 If a field is not supported, return null.
 
 ── CONTROLLED VOCABULARY ────────────────────────────────────────────────────
-category — exactly one of:
+categories — one or more of:
   method_protocol, guideline, regulation, other
   Use method_protocol for method/TG/protocol documents.
   Use guideline for guidance documents that are not binding regulations.
   Use regulation for laws, resolutions, decrees, or binding regulatory texts.
   Use other when none of the above fits.
-  If a preferred category hint is provided below, use it unless the text
-  clearly indicates a different category.
+  Include every clearly supported kind (e.g. a regulatory method protocol may
+  be ["method_protocol","regulation"]). Prefer a non-empty array.
+  If a preferred category hint is provided below, include it unless the text
+  clearly indicates different categories.
 
 ── FIELD GUIDANCE ───────────────────────────────────────────────────────────
 - slug: URL-safe lowercase identifier derived from the citation/title
@@ -29,7 +31,10 @@ category — exactly one of:
 - url: canonical document URL only if explicitly present in the text.
   If a source URL hint is provided below and the text has no other URL, use
   the hint. Otherwise null.
-- category: see controlled vocabulary above.
+- categories: see controlled vocabulary above.
+- institution: localized issuing / responsible body
+  {"en-us": "...", "pt-br": "..."}. Agency, ministry, council, or publisher
+  named in the text (e.g. OECD, CONCEA). Null if unsupported.
 - doc_citation: localized citation/title {"en-us": "...", "pt-br": "..."}.
   Prefer a formal bibliographic citation over a short page title.
   For OECD Test Guidelines, use this form when the text supports it:
@@ -54,7 +59,8 @@ Schema:
   "slug": "string or null",
   "date": "string or null",
   "url": "string or null",
-  "category": "method_protocol|guideline|regulation|other|null",
+  "categories": ["method_protocol|guideline|regulation|other"] or null,
+  "institution": {"en-us": "string", "pt-br": "string"} or null,
   "doc_citation": {"en-us": "string", "pt-br": "string"} or null,
   "description": {"en-us": "string", "pt-br": "string"} or null
 }

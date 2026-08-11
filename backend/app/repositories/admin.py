@@ -28,6 +28,25 @@ _IDENT_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 _JSON_ARRAY_VOCAB_COLUMNS: dict[tuple[str, str], tuple[str, str]] = {
     ("methods", "routes_applicable"): ("routes", "code"),
 }
+# JSONB array columns with fixed enum values (multi-select in admin UI).
+# (table, column) -> allowed values
+_JSON_ARRAY_ENUM_COLUMNS: dict[tuple[str, str], list[str]] = {
+    ("documents", "categories"): [
+        "method_protocol",
+        "guideline",
+        "regulation",
+        "other",
+    ],
+    ("methods", "test_system"): [
+        "in_silico",
+        "in_chemico",
+        "in_vitro",
+        "ex_vivo",
+        "in_vivo",
+        "hybrid",
+        "unclear",
+    ],
+}
 _AUTO_DEFAULT_MARKERS = (
     "nextval(",
     "now(",
@@ -202,27 +221,29 @@ def _coerce_value(value: Any, data_type: str, udt_name: str) -> Any:
     return value
 
 
-_MRC_VALIDATION_STATUS_MAP = {
-    "accepted": "in_process_of_validation",
+_METHODS_VALIDATION_STATUS_MAP = {
+    "accepted": "under_validation",
     "emerging": "not_validated",
+    "in_process_of_validation": "under_validation",
+    "not_evaluated": "not_evaluated",
+    "under_validation": "under_validation",
     "validated": "validated",
-    "in_process_of_validation": "in_process_of_validation",
+    "partially_validated": "partially_validated",
     "not_validated": "not_validated",
+    "unclear": "unclear",
 }
 
 
 def _normalize_admin_value(table_name: str, column: str, value: Any) -> Any:
     """Normalize legacy values accepted by old UI/import paths."""
-    if table_name != "regulations":
-        return value
-    if column != "validation_status":
+    if table_name != "methods" or column != "validation_status":
         return value
     if value is None:
         return value
     text = str(value).strip().lower()
     if not text:
         return value
-    return _MRC_VALIDATION_STATUS_MAP.get(text, value)
+    return _METHODS_VALIDATION_STATUS_MAP.get(text, value)
 
 
 class AdminRepository:
@@ -518,13 +539,29 @@ class AdminRepository:
         *,
         limit: int = 100,
         offset: int = 0,
+        sort_by: str | None = None,
+        sort_dir: str = "asc",
     ) -> dict[str, Any]:
         self._validate_ident(table_name, "table name")
+        direction = self._normalize_sort_dir(sort_dir)
+        if sort_by is not None:
+            self._validate_ident(sort_by, "column name")
         return await _with_fresh_pool_retry(
             lambda: self._fetch_table_once(
-                table_name, limit=limit, offset=offset
+                table_name,
+                limit=limit,
+                offset=offset,
+                sort_by=sort_by,
+                sort_dir=direction,
             )
         )
+
+    @staticmethod
+    def _normalize_sort_dir(sort_dir: str) -> str:
+        normalized = (sort_dir or "asc").strip().lower()
+        if normalized not in {"asc", "desc"}:
+            raise ValueError("sort_dir must be 'asc' or 'desc'")
+        return normalized
 
     async def _fetch_table_once(
         self,
@@ -532,18 +569,14 @@ class AdminRepository:
         *,
         limit: int,
         offset: int,
+        sort_by: str | None = None,
+        sort_dir: str = "asc",
     ) -> dict[str, Any]:
         pool = await get_pool()
         async with pool.acquire() as conn:
             if not await self._table_exists(conn, table_name):
                 raise LookupError(table_name)
 
-            total = await conn.fetchval(f'SELECT COUNT(*) FROM "{table_name}"')
-            rows = await conn.fetch(
-                f'SELECT * FROM "{table_name}" LIMIT $1 OFFSET $2',
-                limit,
-                offset,
-            )
             column_rows = await conn.fetch(
                 """
                 SELECT
@@ -569,7 +602,29 @@ class AdminRepository:
                 """,
                 table_name,
             )
+            columns = [row["column_name"] for row in column_rows]
+            if sort_by is not None and sort_by not in columns:
+                raise ValueError(f"Unknown sort column: {sort_by}")
+
             primary_key = await self._primary_key_columns(conn, table_name)
+            order_parts: list[str] = []
+            if sort_by is not None:
+                nulls = "NULLS LAST" if sort_dir == "asc" else "NULLS FIRST"
+                order_parts.append(f'"{sort_by}" {sort_dir.upper()} {nulls}')
+            for pk_column in primary_key:
+                if pk_column == sort_by:
+                    continue
+                order_parts.append(f'"{pk_column}" ASC')
+            order_sql = (
+                f"ORDER BY {', '.join(order_parts)} " if order_parts else ""
+            )
+
+            total = await conn.fetchval(f'SELECT COUNT(*) FROM "{table_name}"')
+            rows = await conn.fetch(
+                f'SELECT * FROM "{table_name}" {order_sql}LIMIT $1 OFFSET $2',
+                limit,
+                offset,
+            )
             foreign_keys = await self._foreign_keys(conn, table_name)
             column_options: dict[str, list[dict[str, Any]]] = {}
             for column, reference in foreign_keys.items():
@@ -595,9 +650,16 @@ class AdminRepository:
                     foreign_table=vocab_table,
                     foreign_column=vocab_column,
                 )
+            for (owner_table, column), values in _JSON_ARRAY_ENUM_COLUMNS.items():
+                if owner_table != table_name or column in column_options:
+                    continue
+                if not any(row["column_name"] == column for row in column_rows):
+                    continue
+                column_options[column] = [
+                    {"value": value, "label": value} for value in values
+                ]
 
         serialized_rows = [_serialize_row(row) for row in rows]
-        columns = [row["column_name"] for row in column_rows]
         column_comments = {
             row["column_name"]: row["comment"] for row in column_rows
         }
@@ -638,6 +700,8 @@ class AdminRepository:
             "total": total,
             "limit": limit,
             "offset": offset,
+            "sort_by": sort_by,
+            "sort_dir": sort_dir if sort_by is not None else None,
         }
 
     async def update_column_comment(

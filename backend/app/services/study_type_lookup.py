@@ -90,10 +90,6 @@ STUDY_TYPE_LOOKUP: list[tuple[tuple[str, ...], EndpointCategory]] = [
         "genotoxicity",
     ),
     (
-        ("pyrogenicity", "pyrogen", "endotoxin", "monocyte activation", "lal"),
-        "pyrogenicity",
-    ),
-    (
         (
             "skin absorption",
             "dermal absorption",
@@ -101,6 +97,99 @@ STUDY_TYPE_LOOKUP: list[tuple[tuple[str, ...], EndpointCategory]] = [
             "skin penetration",
         ),
         "skin_absorption",
+    ),
+    (
+        (
+            "reproductive toxicity",
+            "developmental toxicity",
+            "reproductive and developmental",
+            "prenatal developmental",
+            "two-generation reproductive",
+            "two generation reproductive",
+            "fertility",
+            "teratogenicity",
+            "embryo-fetal",
+            "embryofetal",
+            "combined screening",
+        ),
+        "reproductive_toxicity",
+    ),
+    (
+        (
+            "endocrine activity",
+            "endocrine disruption",
+            "estrogenic",
+            "androgenic",
+            "steroidogenic",
+            "estrogen receptor",
+            "androgen receptor",
+        ),
+        "endocrine_activity",
+    ),
+    (
+        (
+            "photoreactivity",
+            "photoreactive",
+            "reactive oxygen species",
+            "ros generation",
+        ),
+        "photoreactivity",
+    ),
+    (
+        (
+            "aquatic toxicity",
+            "fish embryo",
+            "fish early life",
+            "fetax",
+            "daphnia",
+            "algae growth",
+        ),
+        "aquatic_toxicity",
+    ),
+    (
+        (
+            "toxicokinetics",
+            "toxicokinetic",
+            "adme",
+            "intrinsic clearance",
+            "metabolic clearance",
+            "hepatic clearance",
+        ),
+        "toxicokinetics",
+    ),
+    (
+        (
+            "bacterial endotoxin",
+            "endotoxin test",
+            "endotoxin activity",
+            "bacterial endotoxins",
+            "lal test",
+            "lal assay",
+            "lal",
+            "bet assay",
+            "limulus amebocyte",
+            "limulus amoebocyte",
+        ),
+        "bacterial_endotoxin",
+    ),
+    (
+        (
+            "pyrogenicity",
+            "pyrogen",
+            "monocyte activation",
+            "mat assay",
+            "rabbit pyrogen",
+        ),
+        "pyrogenicity",
+    ),
+    (
+        (
+            "rabies diagnosis",
+            "rabies virus",
+            "rabies antigen",
+            "rabies detection",
+        ),
+        "rabies_diagnosis",
     ),
 ]
 

@@ -137,56 +137,68 @@ export default function ResultCard({
   regulatoryStatuses = [],
   purpose,
   purposeLabel,
+  validationStatusLabel = 'Validation status',
+  approvedJurisdictionsLabel = 'Approved jurisdictions',
   matchedParams = [],
   description,
   primaryUrl,
   matchedParamsLabel,
   sourcesLabel,
   protocolCitation,
+  referenceLabel = 'Reference',
   noCitationLabel,
   noRegulatoryCitationLabel,
   regulatoryLinkLabel = 'OECD / regulatory',
   closeLabel = 'Close',
   matchLabel = 'Match',
   highlightQuery,
+  hideTitle = false,
+  className = '',
 }) {
   const styles = threeRStyles[type] ?? threeRStyles.replacement
   // undefined badges → legacy single-type fallback; [] → no 3R qualification yet
   const displayBadges = badges ?? [{ type, label: type, rationale: null }]
   const citationText = protocolCitation?.trim() || null
   const [selectedRegulation, setSelectedRegulation] = useState(null)
+  const showHeader = !hideTitle || score != null
 
   return (
     <article
-      className={`rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding transition-colors duration-ethos hover:border-border-emphasis ${dimmed ? 'opacity-65' : ''}`}
+      className={`rounded-lg border border-border-subtle bg-surface-container-lowest transition-colors duration-ethos hover:border-border-emphasis ${hideTitle ? 'px-container-padding pb-container-padding pt-2' : 'p-container-padding'} ${dimmed ? 'opacity-65' : ''} ${className}`}
     >
-      <div className="mb-2 flex items-start justify-between gap-card-gap">
-        <h3 className="font-card-title text-card-title text-primary">
-          <HighlightedText text={title} query={highlightQuery} />
-        </h3>
-        {score != null ? (
-          <span
-            className="group relative shrink-0 text-right font-metadata text-metadata text-text-tertiary"
-            tabIndex={matchedParams.length > 0 ? 0 : undefined}
-            aria-label={
-              matchedParams.length > 0
-                ? `${matchLabel} ${score}%. ${matchedParamsLabel}: ${matchedParams.join(', ')}`
-                : undefined
-            }
-          >
-            {matchLabel}{' '}
-            <span className="font-monospace-data text-monospace-data">{score}%</span>
-            {matchedParams.length > 0 ? (
-              <span
-                role="tooltip"
-                className="pointer-events-none absolute right-0 top-full z-10 mt-1 w-max max-w-[16rem] rounded border border-border-subtle bg-surface-container-lowest px-2 py-1.5 text-left font-metadata text-metadata text-on-secondary-container opacity-0 shadow-md transition-opacity duration-ethos group-hover:opacity-100 group-focus-within:opacity-100"
-              >
-                {matchedParamsLabel}: {matchedParams.join(', ')}
-              </span>
-            ) : null}
-          </span>
-        ) : null}
-      </div>
+      {showHeader ? (
+        <div className="mb-2 flex items-start justify-between gap-card-gap">
+          {!hideTitle ? (
+            <h3 className="font-card-title text-card-title text-primary">
+              <HighlightedText text={title} query={highlightQuery} />
+            </h3>
+          ) : (
+            <span className="min-w-0 flex-1" />
+          )}
+          {score != null ? (
+            <span
+              className="group relative shrink-0 text-right font-metadata text-metadata text-text-tertiary"
+              tabIndex={matchedParams.length > 0 ? 0 : undefined}
+              aria-label={
+                matchedParams.length > 0
+                  ? `${matchLabel} ${score}%. ${matchedParamsLabel}: ${matchedParams.join(', ')}`
+                  : undefined
+              }
+            >
+              {matchLabel}{' '}
+              <span className="font-monospace-data text-monospace-data">{score}%</span>
+              {matchedParams.length > 0 ? (
+                <span
+                  role="tooltip"
+                  className="pointer-events-none absolute right-0 top-full z-10 mt-1 w-max max-w-[16rem] rounded border border-border-subtle bg-surface-container-lowest px-2 py-1.5 text-left font-metadata text-metadata text-on-secondary-container opacity-0 shadow-md transition-opacity duration-ethos group-hover:opacity-100 group-focus-within:opacity-100"
+                >
+                  {matchedParamsLabel}: {matchedParams.join(', ')}
+                </span>
+              ) : null}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
       {description && (
         <p className="mb-3 font-body-base text-body-base text-on-secondary-container">
           <HighlightedText text={description} query={highlightQuery} />
@@ -194,6 +206,8 @@ export default function ResultCard({
       )}
       {citationText ? (
         <p className="mb-3 break-words font-metadata text-metadata text-on-secondary-container">
+          {referenceLabel}:
+          <br />
           {isHttpUrl(citationText) ? (
             <ExternalLink href={citationText}>
               <HighlightedText text={citationText} query={highlightQuery} />
@@ -253,14 +267,14 @@ export default function ResultCard({
       )}
       {validationStatus && (
         <p className={`font-metadata text-metadata font-medium ${styles.accent}`}>
-          Validation Status:{' '}
+          {validationStatusLabel}:{' '}
           <HighlightedText text={validationStatus} query={highlightQuery} />
         </p>
       )}
       {regulatoryStatuses.length > 0 && (
         <div className="mt-2">
           <p className="mb-1 font-metadata text-metadata text-on-surface-variant">
-            Approved jurisdictions:
+            {approvedJurisdictionsLabel}:
           </p>
           <div className="flex flex-wrap items-center gap-fine-gap">
             {regulatoryStatuses.map((item) => (

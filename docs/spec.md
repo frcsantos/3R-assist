@@ -148,6 +148,8 @@ slug                TEXT NOT NULL UNIQUE          -- human-readable curation key
 active              BOOLEAN NOT NULL DEFAULT FALSE
 name                JSONB NOT NULL                 -- {"en-us": "...", "pt-br": "..."}
 description         JSONB NOT NULL                 -- {"en-us": "...", "pt-br": "..."}
+animal_use          TEXT                          -- none | animal_derived_material | … | mixed_or_variable
+test_system         JSONB                         -- multi-select: in_silico | in_chemico | in_vitro | …
 endpoint_category   TEXT NOT NULL                 -- FK → endpoints(code); see parameter_model.md §3.1
 routes_applicable   JSONB                         -- e.g. '["oral"]', '["dermal"]'; NULL = route-agnostic
 study_domain        TEXT NOT NULL                 -- FK → study_domains(code); ADR-020
@@ -156,27 +158,30 @@ ncit_id             TEXT                          -- NCI Thesaurus concept ID; N
 source_citation     TEXT                          -- bibliographic citation for the primary source
 source_doc_id       INTEGER                       -- FK → documents(id); primary source document
 source_db           TEXT NOT NULL                 -- 'OECD_TG' | 'ECVAM_DBALM' | 'NICEATM' | 'FARMACOPEIA_BR' | 'TSAR'
-replacement_rationale TEXT                       -- non-null/non-empty ⇒ qualifies as replacement; text is audit rationale (ADR-023)
-reduction_rationale   TEXT                       -- non-null/non-empty ⇒ qualifies as reduction
-refinement_rationale  TEXT                       -- non-null/non-empty ⇒ qualifies as refinement
+validation_status   TEXT NOT NULL DEFAULT 'not_evaluated'
+                                                  -- not_evaluated | under_validation | validated |
+                                                  -- partially_validated | not_validated | unclear
+validation_doc_id   INTEGER                       -- FK → documents(id); evidence for validation_status
+replacement_rationale JSONB                      -- {"en-us":"...","pt-br":"..."}; non-empty locale text ⇒ qualifies as replacement (ADR-023)
+reduction_rationale   JSONB                      -- localized; non-empty locale text ⇒ qualifies as reduction
+refinement_rationale  JSONB                      -- localized; non-empty locale text ⇒ qualifies as refinement
 keywords            JSONB NOT NULL DEFAULT '{"en-us":[],"pt-br":[]}'  -- localized synonym lists
 text_for_embedding  TEXT NOT NULL                 -- exact string used at embed time; English only
 embedding_json      JSONB                         -- 384-dim float array; NULL until embed_methods.py runs
 created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 ```
-> `validation_status`, `jurisdiction`, `jurisdiction_notes`, `primary_lit_url`, `regulatory_url` removed — see **MethodRegulatoryContext** below (ADR-022).
-> Column order: `active` after `slug`; endpoint/routes/domain/`oecd_ref`/`ncit_id`/`source_citation`/`source_doc_id`/`source_db`; then `*_rationale`, `keywords`, `text_for_embedding`, `embedding_json`, timestamps. Paired `*_en`/`*_pt` columns folded into localized JSONB in migration `023`. Keywords previously lived in `method_keywords` (folded in `017`).
+> Jurisdiction / regulatory recognition live in **MethodRegulatoryContext** / `regulations` (ADR-022). Scientific `validation_status` returned to `methods` in migration `042`.
+> Column order: `active` after `slug`; `animal_use`/`test_system` before `endpoint_category`; then routes/domain/`oecd_ref`/`ncit_id`/`source_*`; then `validation_status`/`validation_doc_id`; then `*_rationale`, `keywords`, `text_for_embedding`, `embedding_json`, timestamps.
 
-**MethodRegulatoryContext** *(validation status and jurisdiction per method × regulatory framework)*
+**MethodRegulatoryContext** *(regulatory recognition per method × jurisdiction)*
 ```
 id                SERIAL PRIMARY KEY
 method_id         INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE
 jurisdiction      JSONB   NOT NULL   -- {"en-us":"Brazil"|"EU"|"US"|"OECD","pt-br":"Brasil"|"UE"|"EUA"|"OCDE"}
-validation_status TEXT    NOT NULL   -- 'validated' | 'in_process_of_validation' | 'not_validated'
 regulation_status TEXT               -- 'not_approved' | 'approved' | 'recommended' | 'mandatory'
 regulation_date   DATE               -- date of regulation / recognition / adoption (YYYY-MM-DD)
-regulation_purpose TEXT              -- what the method is recognized/validated for in this context
+regulation_purpose TEXT              -- what the method is recognized for in this context
 regulatory_body   TEXT               -- 'CONCEA' | 'ANVISA' | 'ECHA' | 'EMA' | 'EPA' | 'FDA' | 'ICCVAM' | 'OECD'
 regulatory_doc_id INTEGER            -- FK → documents(id)
 regulatory_citation TEXT             -- bibliographic citation / short reference
@@ -217,8 +222,8 @@ updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 ```
 
 Seeded codes (see `parameter_model.md` §3.1–3.3 and `docs/tables.md`):
-- `endpoints`: `acute_toxicity`, `skin_irritation`, `skin_corrosion`, `ocular_irritation`, `skin_sensitisation`, `phototoxicity`, `genotoxicity`, `pyrogenicity`, `skin_absorption`
-- `routes`: `oral`, `intraperitoneal`, `intravenous`, `dermal`, `ocular`, `inhalation`, `in_vitro`, `other`
+- `endpoints`: `acute_toxicity`, `skin_irritation`, `skin_corrosion`, `ocular_irritation`, `skin_sensitisation`, `phototoxicity`, `genotoxicity`, `pyrogenicity`, `skin_absorption`, `reproductive_toxicity`, `endocrine_activity`, `photoreactivity`, `aquatic_toxicity`, `toxicokinetics`, `bacterial_endotoxin`, `rabies_diagnosis`
+- `routes`: `oral`, `intraperitoneal`, `intravenous`, `dermal`, `ocular`, `inhalation`, `other`
 - `study_domains`: `pharma`, `cosmetics`, `chemical_safety`, `general`
 
 **RouteEndpoint** *(route ↔ endpoint compatibility matrix for soft filtering)*
@@ -596,17 +601,19 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
         "slug": string,
         "name": {"en-us": string, "pt-br": string},
         "description": {"en-us": string, "pt-br": string},
-        "replacement_rationale": string|null,   -- non-null/non-empty ⇒ replacement (ADR-023)
-        "reduction_rationale": string|null,
-        "refinement_rationale": string|null,
+        "replacement_rationale": {"en-us":string,"pt-br":string}|null,  -- non-empty locale ⇒ replacement (ADR-023)
+        "reduction_rationale": {"en-us":string,"pt-br":string}|null,
+        "refinement_rationale": {"en-us":string,"pt-br":string}|null,
         "category_3r": ["replacement"|"reduction"|"refinement"],   -- derived from rationale columns
         "endpoint_category": string,
-        "oecd_ref": "TG 439"|null
+        "oecd_ref": "TG 439"|null,
+        "validation_status": "not_evaluated"|"under_validation"|"validated"|"partially_validated"|"not_validated"|"unclear",
+        "validation_doc_id": number|null,
+        "validation_url": string|null
       },
       "regulatory_contexts": [
         {
           "jurisdiction": {"en-us": string, "pt-br": string},
-          "validation_status": "validated"|"in_process_of_validation"|"not_validated",
           "regulation_status": "not_approved"|"approved"|"recommended"|"mandatory"|null,
           "regulation_date": "YYYY-MM-DD"|null,
           "regulation_purpose": string|null,

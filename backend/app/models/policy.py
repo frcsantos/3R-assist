@@ -79,6 +79,7 @@ class MatchedMethodSummary(BaseModel):
     study_domain: str
     oecd_ref: str | None = None
     source_db: str
+    validation_status: str = "not_evaluated"
     active: bool
     regulatory_contexts: list[MethodRegulatoryContext] = Field(default_factory=list)
 
@@ -107,7 +108,8 @@ class MatchedDocumentSummary(BaseModel):
     slug: str
     doc_citation: LocalizedStr
     date: str | None = None
-    category: str
+    categories: list[str] = Field(default_factory=list)
+    institution: LocalizedStr | None = None
     url: str | None = None
 
 

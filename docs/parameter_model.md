@@ -51,8 +51,15 @@ Se o protocolo não se encaixar em nenhum: `null` (o usuário corrige no S2).
 | `skin_sensitisation` | sensibilização cutânea, alergenicidade, LLNA | 429, 442A, 442B, 442C, 442D, 442E |
 | `phototoxicity` | fototoxicidade, photoirritation, 3T3 NRU | 432 |
 | `genotoxicity` | genotoxicidade, mutagenicidade, micronúcleo, Ames | 471, 476, 487 |
-| `pyrogenicity` | pirogenicidade, pirogênio, endotoxina, MAT | MAT |
+| `pyrogenicity` | pirogenicidade, pirogênio, MAT | MAT |
 | `skin_absorption` | absorção cutânea, penetração dérmica | 428 |
+| `reproductive_toxicity` | toxicidade reprodutiva e do desenvolvimento, fertilidade, teratogenicidade | — |
+| `endocrine_activity` | atividade endócrina, estrogênica, androgênica, esteroidogênica | — |
+| `photoreactivity` | fotorreatividade, ROS sob luz | — |
+| `aquatic_toxicity` | toxicidade aquática, embrião de peixe, estágios iniciais | — |
+| `toxicokinetics` | toxicocinética, ADME, depuração intrínseca | — |
+| `bacterial_endotoxin` | endotoxinas bacterianas, LAL/BET | — |
+| `rabies_diagnosis` | diagnóstico da raiva | — |
 
 Sinônimos comuns para instrução ao LLM:
 - "teste de Draize" sem especificação → `null` (ambíguo: olho ou pele?)
@@ -79,19 +86,19 @@ da substância com o tecido, não o tipo de cultura.
 | `dermal` | tópico, cutâneo, epitelial, epicutâneo, ex vivo skin disc application, membrane model | skin_irritation, skin_corrosion, skin_sensitisation, skin_absorption, phototoxicity |
 | `ocular` | ocular, conjuntival, instilação ocular, applied over cornea, applied to corneal surface, ex vivo corneal application, topical to cornea | ocular_irritation |
 | `inhalation` | inalação, respiratório, aerossol, nose-only chamber | (sem métodos no banco MVP) |
-| `in_vitro` | célula em suspensão em placa ou poço, cell suspension, well plate, monolayer culture | genotoxicity, phototoxicity |
 | `other` | qualquer via química não coberta pela lista controlada | (sem mapeamento em `route_endpoints` no MVP) |
-| `null` | irradiação UV, exposição física, radiation — not a chemical route | — |
+| `null` | irradiação UV, exposição física, radiation — not a chemical route; também células em meio sem superfície tecidual orientada (usar `test_system: in_vitro`) | — |
 
 > Vocabulários de `endpoint_category`, `route` e `study_domain` vivem nas tabelas PostgreSQL `endpoints`, `routes` e `study_domains` (`003_vocabulary_tables.sql`). Compatibilidade rota↔endpoint: tabela `route_endpoints`. Ver `docs/tables.md`.
+> Modalidade de ensaio (in silico / in chemico / in vitro / ex vivo / in vivo) NÃO é `route` — usar `methods.test_system`.
 
-**Disambiguação ex vivo vs. in_vitro:**
+**Disambiguação ex vivo vs. cultura celular:**
 
 | Sistema | `route` correto | Raciocínio |
 |---|---|---|
 | Córnea bovina em câmara de perfusão (EVEIT) + substância aplicada sobre ápice | `ocular` | A substância toca a superfície corneana — contato ocular |
 | Disco de pele excisada + substância aplicada topicamente | `dermal` | A substância toca a superfície dérmica — contato dérmico |
-| Células em placa, substância adicionada ao meio | `in_vitro` | Não há superfície tecidual orientada; substância no meio de cultura |
+| Células em placa, substância adicionada ao meio | `null` (+ `test_system: in_vitro`) | Não há superfície tecidual orientada; modalidade vai em `test_system` |
 | Membrana sintética (p.ex. Strat-M) + substância tópica | `dermal` | Superfície orientada, contato dérmico análogo |
 
 Quando o protocolo usa múltiplas vias (ex: `p.o. / i.p.`):
@@ -253,14 +260,19 @@ Log all misses (the raw `study_type` string) — these are the primary signal fo
 | skin sensitisation, skin sensitization, contact sensitisation, allergic contact, LLNA, local lymph node | `skin_sensitisation` |
 | phototoxicity, photoirritation, 3T3 NRU, photosensitization | `phototoxicity` |
 | genotoxicity, mutagenicity, clastogenicity, chromosomal aberration, ames, bacterial reverse mutation, micronucleus, comet assay, DNA strand break, HPRT, gene mutation | `genotoxicity` |
-| pyrogenicity, pyrogen, endotoxin, monocyte activation, LAL | `pyrogenicity` |
 | skin absorption, dermal absorption, percutaneous absorption, skin penetration | `skin_absorption` |
+| reproductive toxicity, developmental toxicity, reproductive and developmental, prenatal developmental, two-generation reproductive, fertility, teratogenicity, embryo-fetal, combined screening | `reproductive_toxicity` |
+| endocrine activity, endocrine disruption, estrogenic, androgenic, steroidogenic, estrogen receptor, androgen receptor | `endocrine_activity` |
+| photoreactivity, photoreactive, reactive oxygen species, ROS generation | `photoreactivity` |
+| aquatic toxicity, fish embryo, fish early life, FETAX, daphnia, algae growth | `aquatic_toxicity` |
+| toxicokinetics, toxicokinetic, ADME, intrinsic clearance, metabolic clearance, hepatic clearance | `toxicokinetics` |
+| bacterial endotoxin, endotoxin test, endotoxin activity, bacterial endotoxins, LAL test, LAL assay, BET assay, limulus amebocyte | `bacterial_endotoxin` |
+| pyrogenicity, pyrogen, monocyte activation, MAT assay, rabbit pyrogen | `pyrogenicity` |
+| rabies diagnosis, rabies virus, rabies antigen, rabies detection | `rabies_diagnosis` |
 
 **Known misses from test set (null — vocabulary gaps):**
 - "subchronic inhalation toxicity" → null
 - "28-day repeated-dose oral toxicity" → null
-- "prenatal developmental toxicity" → null
-- "two-generation reproductive toxicity" → null
 - "photocarcinogenesis" → null
 - "subacute oral toxicity" → null
 
@@ -472,18 +484,15 @@ describes substance-to-tissue contact, not the culture setup.
   dermal      ← topical, cutaneous, epicutaneous, skin application,
                   ex vivo skin disc, membrane model (Strat-M, Skin+)
 
-  in_vitro    ← substance added to culture medium in a well or plate,
-                  cell suspension assay, monolayer culture
-                  (USE THIS only when there is no oriented tissue surface —
-                  cells floating or adhered in medium, not an ex vivo disc)
-
   oral              ← p.o., gavage, gavagem, intragastric, intragástrico,
                        gastric tube, gastric intubation, dietary (mixed in feed)
   intraperitoneal   ← i.p.
   intravenous       ← i.v., endovenous
   inhalation        ← aerosol, nose-only chamber, inhalation chamber,
                        whole-body exposure
-  null              ← UV irradiation, radiation, physical exposure
+  null              ← UV irradiation, radiation, physical exposure,
+                       or cell-culture medium exposure without an oriented tissue
+                       surface (assay modality belongs in test_system, not route)
                        (radiation is not a chemical administration route)
 
 ── SPECIES SYNONYMS ─────────────────────────────────────────────────────────

@@ -36,11 +36,15 @@ class AdminTableDataResponse(BaseModel):
     total: int
     limit: int
     offset: int = 0
+    sort_by: str | None = None
+    sort_dir: str | None = None
 
 
 class AdminTableQuery(BaseModel):
     limit: int = Field(default=100, ge=1, le=500)
     offset: int = Field(default=0, ge=0)
+    sort_by: str | None = Field(default=None, min_length=1, max_length=63)
+    sort_dir: str = Field(default="asc")
 
 
 class AdminCellUpdateRequest(BaseModel):

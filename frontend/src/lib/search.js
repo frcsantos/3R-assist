@@ -100,7 +100,20 @@ const RATIONALE_FIELDS = {
 }
 
 function nonemptyRationale(value) {
-  return typeof value === 'string' && value.trim() !== ''
+  if (value == null) return false
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return false
+    const nested = tryParseLocalizedObject(trimmed)
+    if (nested) return nonemptyRationale(nested)
+    return true
+  }
+  if (typeof value === 'object') {
+    return Object.values(value).some(
+      (part) => typeof part === 'string' && part.trim() !== '',
+    )
+  }
+  return false
 }
 
 /** 3R classes present on a method (non-null/non-empty rationale columns). */
@@ -116,11 +129,11 @@ export function methodThreeRClasses(method) {
   )
 }
 
-export function methodThreeRBadges(method, t) {
+export function methodThreeRBadges(method, t, lang) {
   return methodThreeRClasses(method).map((type) => ({
     type,
     label: t(`s3.threeR.${type}`),
-    rationale: method?.[RATIONALE_FIELDS[type]] ?? null,
+    rationale: pickLocalized(method?.[RATIONALE_FIELDS[type]], lang) || null,
   }))
 }
 

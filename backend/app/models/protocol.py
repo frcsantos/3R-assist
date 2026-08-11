@@ -18,6 +18,13 @@ EndpointCategory = Literal[
     "genotoxicity",
     "pyrogenicity",
     "skin_absorption",
+    "reproductive_toxicity",
+    "endocrine_activity",
+    "photoreactivity",
+    "aquatic_toxicity",
+    "toxicokinetics",
+    "bacterial_endotoxin",
+    "rabies_diagnosis",
 ]
 
 Route = Literal[
@@ -27,7 +34,6 @@ Route = Literal[
     "dermal",
     "ocular",
     "inhalation",
-    "in_vitro",
     "other",
 ]
 
