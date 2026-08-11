@@ -154,6 +154,7 @@ export default function ResultCard({
   highlightQuery,
   hideTitle = false,
   className = '',
+  detailRows = [],
 }) {
   const styles = threeRStyles[type] ?? threeRStyles.replacement
   // undefined badges → legacy single-type fallback; [] → no 3R qualification yet
@@ -204,6 +205,18 @@ export default function ResultCard({
           <HighlightedText text={description} query={highlightQuery} />
         </p>
       )}
+      {detailRows.length > 0 ? (
+        <dl className="mb-3 space-y-2 font-metadata text-metadata text-on-secondary-container">
+          {detailRows.map((row) => (
+            <div key={row.key} className="flex flex-wrap gap-x-2">
+              <dt className="text-on-surface-variant">{row.label}</dt>
+              <dd>
+                <HighlightedText text={row.value} query={highlightQuery} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
       {citationText ? (
         <p className="mb-3 break-words font-metadata text-metadata text-on-secondary-container">
           {referenceLabel}:

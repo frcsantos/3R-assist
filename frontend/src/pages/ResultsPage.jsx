@@ -10,6 +10,7 @@ import {
   jurisdictionLabel,
   jurisdictionMatches,
   methodDescription,
+  methodDetailRows,
   methodDisplayName,
   methodThreeRBadges,
   methodThreeRClasses,
@@ -311,6 +312,7 @@ export default function ResultsPage() {
                   matchedParams={formatMatchedParams(item.matched_params, t)}
                   matchedParamsLabel={t('s3.matchedParams')}
                   description={methodDescription(method, lang)}
+                  detailRows={methodDetailRows(method, t)}
                   protocolCitation={protocolCitation}
                   noCitationLabel={t('s3.noProtocolCitation')}
                   noRegulatoryCitationLabel={t('s3.noRegulatoryCitation')}

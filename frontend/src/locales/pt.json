@@ -355,6 +355,31 @@
     "purposeLabel": "Finalidade",
     "validationStatusLabel": "Status de validação",
     "approvedJurisdictionsLabel": "Jurisdições aprovadas",
+    "routeAgnostic": "Independente de via",
+    "fields": {
+      "animalUse": "Uso de animais",
+      "testSystem": "Sistema de teste",
+      "routesApplicable": "Vias aplicáveis"
+    },
+    "enums": {
+      "animalUse": {
+        "none": "Nenhum",
+        "animal_derived_material": "Material derivado de animal",
+        "slaughterhouse_byproduct": "Subproduto de abatedouro",
+        "animals_killed_for_tissue": "Animais sacrificados para tecido",
+        "live_animals": "Animais vivos",
+        "mixed_or_variable": "Misto ou variável"
+      },
+      "testSystem": {
+        "in_silico": "In silico",
+        "in_chemico": "In chemico",
+        "in_vitro": "In vitro",
+        "ex_vivo": "Ex vivo",
+        "in_vivo": "In vivo",
+        "hybrid": "Híbrido",
+        "unclear": "Incerto"
+      }
+    },
     "threeR": {
       "replacement": "Substituição",
       "reduction": "Redução",

@@ -224,3 +224,72 @@ export function formatMatchedParams(matchedParams, t) {
   }
   return (matchedParams ?? []).map((key) => labels[key] ?? key)
 }
+
+export function methodDetailRows(method, t) {
+  if (!method) return []
+
+  const rows = []
+
+  if (method.animal_use) {
+    rows.push({
+      key: 'animal_use',
+      label: t('s3.fields.animalUse'),
+      value: t(`s3.enums.animalUse.${method.animal_use}`, {
+        defaultValue: method.animal_use,
+      }),
+    })
+  }
+
+  if (method.test_system?.length) {
+    rows.push({
+      key: 'test_system',
+      label: t('s3.fields.testSystem'),
+      value: method.test_system
+        .map((code) =>
+          t(`s3.enums.testSystem.${code}`, { defaultValue: code }),
+        )
+        .join(', '),
+    })
+  }
+
+  if (method.endpoint_category) {
+    rows.push({
+      key: 'endpoint_category',
+      label: t('s2.fields.endpointCategory'),
+      value: t(`s2.enums.endpointCategory.${method.endpoint_category}`, {
+        defaultValue: method.endpoint_category,
+      }),
+    })
+  }
+
+  if (method.routes_applicable?.length) {
+    rows.push({
+      key: 'routes_applicable',
+      label: t('s3.fields.routesApplicable'),
+      value: method.routes_applicable
+        .map((code) =>
+          t(`s2.enums.route.${code}`, { defaultValue: code }),
+        )
+        .join(', '),
+    })
+  } else if (method.routes_applicable === null) {
+    rows.push({
+      key: 'routes_applicable',
+      label: t('s3.fields.routesApplicable'),
+      value: t('s3.routeAgnostic'),
+    })
+  }
+
+  if (method.study_domain) {
+    rows.push({
+      key: 'study_domain',
+      label: t('s2.fields.studyDomain'),
+      value: t(`s2.enums.studyDomain.${method.study_domain}`, {
+        defaultValue: method.study_domain,
+      }),
+    })
+  }
+
+  return rows
+}
+

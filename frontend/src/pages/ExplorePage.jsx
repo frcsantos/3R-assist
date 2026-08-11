@@ -11,6 +11,7 @@ import {
 import {
   formatOecdReference,
   methodDescription,
+  methodDetailRows,
   methodDisplayName,
   methodThreeRBadges,
   pickLocalized,
@@ -382,6 +383,7 @@ function MethodsPanel({ lang, t }) {
             title={methodDisplayName(method, lang)}
             hideTitle
             className="rounded-none border-0 bg-transparent hover:border-transparent"
+            detailRows={methodDetailRows(method, t)}
             validationStatus={
               method.validation_status
                 ? t(`s3.validationStatus.${method.validation_status}`)
