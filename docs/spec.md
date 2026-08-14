@@ -1,6 +1,6 @@
 # spec.md — 3R Assist
 
-> Status: 🟢 Phases A–D complete. M2.5 Spec Sync applied. M3 Database sync applied. Phase 1 core pipeline (extraction → search → results) implemented.
+> Status: 🟢 Phases A–D complete. M2.5 Spec Sync applied. M3 Database sync applied. Phase 1 core pipeline implemented. Explore + general feedback (ADR-024) documented.
 > Input: `project-proposal.md` + `assumption-log.md`
 
 ---
@@ -22,14 +22,15 @@
 | F01 | Free-text protocol input (PT/EN) | Single textarea; no required fields |
 | F02 | LLM-based parameter extraction | Returns `AnalyzeResponse { experiments: ExtractionResult[] }` per `docs/parameter_model.md`. LLM produces `RawExtraction` (strict extraction only, no inference; every non-null field has a paired evidence string and `{field}_confidence`; `study_type` as free text). Application code maps `study_type` → `endpoint_category` via §4.1 lookup. See ADR-014–018 |
 | F03 | Parameter display and inline correction | S2 displays: `study_type` (what the LLM found) + `endpoint_category` (what the database covers, or "Not covered" if null); editable fields for route, study_domain, procedure_text, species, animal_counts, regulatory; per-field `{field}_confidence` badge (High/Medium/Low) with "show evidence" toggle (right-aligned) per field; original protocol text in a side panel with evidence spans highlighted; `notes` displayed below parameters when non-null. When `len(experiments) > 1`, S2 shows tabs — one per experiment — each with its own editable params and evidence (ADR-014, ADR-019). |
-| F04 | Ranked recommendations | S3 calls `POST /search` after S2 confirmation. Results sorted by relevance score; each card shows 3Rs class badge, **Match** score (%), jurisdiction, validation status, matched parameters, primary source link, and OECD/regulatory link (with `oecd_ref` when present, e.g. "OECD / regulatory (OECD TG 439)"); cards with score ≤ 65% at reduced opacity (ADR-011). When `len(experiments) > 1`, S3 shows tabs with per-experiment summary and results (ADR-019). |
-| F05 | 3Rs classification per result | Replacement / Reduction / Refinement label on each recommendation |
-| F06 | Jurisdictional validity indicator | Brazil / International / Both per result |
-| F07 | Direct database search | Structured filters: 3Rs class, endpoint, application area, jurisdiction; for users who already know what to look for |
+| F04 | Ranked recommendations | S3 calls `POST /search` after S2 confirmation. Results sorted by relevance score; each card shows 3Rs badges + rationales, **Match** score (%), detail rows (`animal_use`, `test_system`, endpoint, routes, `study_domain`), jurisdiction chips, validation status, primary source citation/link, and regulatory citation modals; cards with score ≤ 65% at reduced opacity (ADR-011). When `len(experiments) > 1`, S3 shows tabs with per-experiment summary and results (ADR-019). |
+| F05 | 3Rs classification per result | Replacement / Reduction / Refinement badge(s) from non-empty `*_rationale` columns (ADR-023) |
+| F06 | Jurisdictional validity indicator | Per-regulation jurisdiction chips with citation modal (from `regulations`) |
+| F07 | Explore catalogue | S4 `/explore` — browse Methods / Regulations / Documents; `/buscar` redirects here. Card-level general feedback (F11b) via ! icon |
 | F08 | User accounts — email magic link | Simple auth; visible anonymous bypass |
 | F09 | Query history | Registered users only; list of past queries with results |
 | F10 | PDF/CSV export | Registered users only; export button visible to anonymous users but locked on click — prompts registration. Prevents hiding the feature while maintaining the auth incentive. See ADR-009 |
-| F11 | Structured feedback questionnaire | Shown after each query; captures relevance ratings and comments |
+| F11 | Structured query feedback | Relevance ratings per recommended method (`query_feedback` table); deferred until QueryRepository + S3 rating UI |
+| F11b | General product feedback | Explore (and reusable modal): `POST /feedback` with `url`, `object` (card title), `feedback_text`; anonymous OK (ADR-024) |
 | F12 | Method suggestion form | Submissions queued for manual review by Karynn |
 | F13 | Bilingual interface | All UI copy in Portuguese and English |
 | F14 | Initial curated database | 25 methods across 9 endpoint categories, sourced from CONCEA RN 18/2014 and corresponding OECD guidelines. All entries `active = FALSE` pending Karynn review (`docs/karynn_review_checklist.md`) |
@@ -56,14 +57,14 @@
 
 ### 2.3 UI Overview
 
-Six primary screens. Detailed mockups in `/design/`. Nav has two primary items only: **Analisar** (S1) and **Buscar** (S4). S5 accessed via auth state in nav. S6 not in nav — accessed via link at bottom of S3 and app footer (see ADR-008).
+Primary product screens plus supporting pages. Detailed mockups in `/design/`. Primary nav: **Analisar** (S1), **Explore** (S4), **Glossary**, **Info**. S5 accessed via auth state when enabled. S6 not in nav — accessed via link at bottom of S3 and app footer (see ADR-008; Explore rename ADR-024).
 
 | Screen | Purpose | Key interactions |
 |---|---|---|
-| **S1 — Input** | Protocol submission | Free-text area; PT/EN language toggle inside the input shell (pills in top bar of textarea — not a global page toggle); submit CTA; link to S4 below CTA; anonymous bypass as low-prominence text below a divider |
+| **S1 — Input** | Protocol submission | Free-text area; PT/EN language toggle inside the input shell (pills in top bar of textarea — not a global page toggle); submit CTA; link to Explore below CTA; anonymous bypass as low-prominence text below a divider |
 | **S2 — Parameters** | Extracted parameter review | Per-field confidence indicator alongside "show evidence" toggle (ADR-018); `study_type` + `endpoint_category` at top (ADR-015); editable fields; protocol text side panel with evidence highlighting; when `len(experiments) > 1`, experiment tabs switch the active parameter set (ADR-019); "Search alternatives" triggers `POST /search` for **all** experiments in parallel; incomplete study_domain blocks search |
-| **S3 — Results** | Ranked recommendations | Back link to S2; when `len(experiments) > 1`, experiment tabs switch per-experiment protocol summary and result list (ADR-019); horizontal filter bar (3Rs class, jurisdiction); cards ordered by relevance with **Match** % label; score ≤ 65% at reduced opacity (ADR-011); each card: method name, 3Rs badge, jurisdiction, validation status, matched params, primary source link, OECD/regulatory link with `oecd_ref`; filter relaxation notice when Minimum Results Rule fires; export/feedback/suggest-method links deferred |
-| **S4 — Direct Search** | Filter-based discovery | Persistent sidebar filter panel (3Rs class, endpoint, application area, jurisdiction) — sidebar justified by iterative filter comparison workflow; unranked result list (no embedding step) with count of total methods |
+| **S3 — Results** | Ranked recommendations | Back link to S2; when `len(experiments) > 1`, experiment tabs switch per-experiment protocol summary and result list (ADR-019); horizontal filter bar (3Rs class, jurisdiction); cards ordered by relevance with **Match** % label; score ≤ 65% at reduced opacity (ADR-011); each card: method name, description, detail rows (`animal_use`, `test_system`, endpoint, routes, `study_domain`), 3Rs badges + rationales, validation status, jurisdiction chips + citation modal, primary source citation/link; filter relaxation notice when Minimum Results Rule fires; export / F11 ratings / suggest-method deferred |
+| **S4 — Explore** | Catalogue browse | Tabs: Methods / Regulations / Documents (`/explore/:section`; default methods). Unranked catalogue cards (no embedding). Each card has an ! control opening general feedback modal (`object` = card title, `url` = current page). Legacy `/buscar` → `/explore` |
 | **S5 — Account / History** | Query log and exports | Registered users only — anonymous users redirected to S1 with registration invite; query list with date, protocol snippet, result count; inline accordion expansion; PDF/CSV export per query |
 | **S6 — Method Suggestion** | Crowdsourced additions | Not in primary nav — accessed from S3 "Suggest method" link and footer; form: method name (required), source URL, 3Rs class, notes; auth optional (email pre-filled if logged in); expectation notice: manual review queue, no publication timeline |
 
@@ -349,7 +350,7 @@ Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension avai
 │   │   │       ├── methods.py       # GET  /methods
 │   │   │       ├── auth.py          # POST /auth/magic-link, GET /auth/verify
 │   │   │       ├── queries.py       # GET  /queries  (auth required)
-│   │   │       ├── feedback.py      # POST /feedback
+│   │   │       ├── feedback.py      # POST /feedback (general; F11b)
 │   │   │       └── suggestions.py   # POST /suggestions
 │   │   ├── services/
 │   │   │   ├── extraction.py        # Protocol text → ExtractionResult
@@ -359,7 +360,7 @@ Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension avai
 │   │   │   ├── methods.py           # MethodRepository
 │   │   │   ├── users.py             # UserRepository
 │   │   │   ├── queries.py           # QueryRepository
-│   │   │   └── feedback.py          # FeedbackRepository + SuggestionRepository
+│   │   │   └── feedback.py          # FeedbackRepository (general feedback table)
 │   │   ├── adapters/
 │   │   │   ├── llm.py               # Anthropic API → ExtractionResult (ACL)
 │   │   │   └── embedder.py          # sentence-transformers → float[] (ACL)
@@ -372,7 +373,7 @@ Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension avai
 │   │       ├── connection.py        # asyncpg connection pool (DATABASE_URL)
 │   │       └── migrations/
 │   │           ├── 001_initial.sql                    # methods, method_regulatory_contexts (+ legacy method_keywords)
-│   │           ├── 002_app_tables.sql                 # users, magic_link_tokens, queries, feedback, suggestions
+│   │           ├── 002_app_tables.sql                 # users, magic_link_tokens, queries, feedback→query_feedback (043), suggestions
 │   │           ├── 003_vocabulary_tables.sql          # endpoints, routes, study_domains, route_endpoints
 │   │           ├── 004_rename_study_domain.sql        # application_area → study_domain (legacy upgrade)
 │   │           ├── 005_method_regulatory_contexts.sql # ADR-021/022 legacy upgrade
@@ -392,6 +393,12 @@ Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension avai
 │   │           ├── 030_documents_doc_citation.sql              # doc_ref → doc_citation (localized JSONB)
 │   │           ├── 031_mrc_jurisdiction_localized.sql          # MRC jurisdiction → localized JSONB
 │   │           ├── 032_rename_regulations.sql                  # method_regulatory_contexts → regulations
+│   │           ├── 037_methods_animal_use.sql                  # methods.animal_use
+│   │           ├── 038_methods_test_system.sql                 # methods.test_system JSONB
+│   │           ├── 040_methods_rationales_localized.sql        # *_rationale → localized JSONB
+│   │           ├── 042_methods_validation_status.sql           # validation_status on methods
+│   │           ├── 043_rename_query_feedback.sql               # feedback → query_feedback (F11)
+│   │           ├── 044_feedback.sql                            # general feedback table (F11b)
 │   │           └── manual/
 │   │               └── 008_drop_category_3r.sql       # legacy gated DROP (superseded by 026)
 │   ├── scripts/
@@ -467,14 +474,14 @@ User edits/confirms parameters (S2) — one tab per experiment when `len(experim
   → return SearchResponse[] to frontend (S3) — one result set per experiment tab
 ```
 
-**W2 — Direct search (F07)**
+**W2 — Explore catalogue (F07)**
 ```
-User (S4) → POST /search {filters only, no protocol_text}
-  → RetrievalService.search(params=None, filters)
-    → MethodRepository.filter(filters) → Method[]
-    → return unranked Method[] (no embedding step)
-  → return to frontend (S4)
+User (S4 /explore) → GET catalogue endpoints (methods / regulations / documents)
+  → unranked cards; optional ! → FeedbackModal
+  → POST /feedback {url, object, feedback_text}   -- F11b general feedback
 ```
+
+Legacy filter-only direct search may still use `POST /search` with filters; primary S4 UX is catalogue browse.
 
 **W3 — Magic link auth**
 ```
@@ -492,12 +499,20 @@ User clicks link in email → GET /auth/verify?token=...
   → redirect to S1
 ```
 
-**W4 — Feedback (F11)**
+**W4a — General feedback (F11b)** — implemented
 ```
-User rates recommendation (S3) → POST /feedback {query_id, method_id, rating, comment}
-  → FeedbackRepository.save(feedback)   -- UNIQUE (query_id, method_id)
+User (Explore card !) → FeedbackModal → POST /feedback {url, object, feedback_text, user_id?}
+  → FeedbackRepository.create(...)   -- table `feedback`
+  → 201 Created {id, user_id, url, object, feedback_text, created_at}
+```
+
+**W4b — Query rating feedback (F11)** — deferred
+```
+User rates recommendation (S3) → POST /query-feedback {query_id, method_id, rating, comment}
+  → QueryFeedbackRepository.save(...)   -- table `query_feedback`; UNIQUE (query_id, method_id)
   → 201 Created
 ```
+(Endpoint name TBD when wired; do not reuse `POST /feedback`.)
 
 **W5 — Method suggestion (F12)**
 ```
@@ -638,7 +653,13 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
 - Request: `{ "email": string }`
 - Response 202: `{}` (always 202 regardless of whether email exists — prevents enumeration)
 
-`POST /feedback`
+`POST /feedback` (general product feedback — F11b)
+- Request: `{ "url": string, "object": string, "feedback_text": string, "user_id": integer|null }`
+- Response 201: `{ "id", "user_id", "url", "object", "feedback_text", "created_at" }`
+- Response 503: `DATABASE_UNAVAILABLE` when `DATABASE_URL` is not configured
+- Auth: optional (anonymous accepted; `user_id` null until accounts ship)
+
+`POST /query-feedback` (F11 relevance ratings — deferred; contract reserved)
 - Request: `{ "query_id": integer, "method_id": integer, "rating": "relevant"|"partial"|"not_relevant", "comment": string|null }`
 - Response 201: `{}`
 - Response 409: if (query_id, method_id) already has a rating — use PUT to update
@@ -688,10 +709,10 @@ Before writing any code, the following must be in place (M3.0 checklist):
 The minimum subset required to run the pilot (W1 + feedback + bilingual UI):
 
 **In scope for pilot gate:**
-F01, F02, F03, F04, F05, F06, F11, F13, F14
+F01, F02, F03, F04, F05, F06, F11b, F13, F14
 
 **In MVP but not required for pilot gate:**
-F07 (direct search), F08 (accounts), F09 (query history), F10 (export), F12 (method suggestion)
+F07 (Explore), F08 (accounts), F09 (query history), F10 (export), F11 (query ratings), F12 (method suggestion)
 
 **Rationale:** The pilot validates whether free-text → relevant recommendations works. Auth and history are necessary for a production-quality MVP but not for the 5-session pilot. Build the full Minimal feature set, but the pilot gate criteria depend only on the core recommendation loop.
 

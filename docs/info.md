@@ -27,14 +27,16 @@ Institutional backing: **Fórum Animal**.
 
 | Area | Status |
 |---|---|
-| Spec (Phases A–D) | Complete |
-| UI design (Ethos theme) | Adopted; S1–S3 implemented |
-| Backend (FastAPI + PostgreSQL) | Scaffolded; core pipeline live |
+| Spec (Phases A–D) | Complete; synced with Explore + feedback split (ADR-024) |
+| UI design (Ethos theme) | Adopted; S1–S4 implemented |
+| Backend (FastAPI + PostgreSQL) | Core pipeline live; migrations through `044_feedback` |
 | Phase 1 pipeline | Extraction → parameter review → search → results |
-| Methods database | 25 curated methods; `active = FALSE` pending Karynn review |
-| Auth, history, export, feedback | Specced; not yet fully wired for pilot |
+| Explore (S4) | Methods / Regulations / Documents catalogue; card feedback |
+| Methods database | Curated corpus; seed entries `active = FALSE` pending Karynn review |
+| General feedback (F11b) | Live on Explore (`POST /feedback`) |
+| Auth, history, export, F11 ratings | Specced; not yet wired for pilot |
 
-**Still open before pilot:** activate methods after review (`docs/karynn_review_checklist.md`); formal H1/H2/H5 assumption checks; export/feedback/suggest-method links on results.
+**Still open before pilot:** activate methods after review (`docs/karynn_review_checklist.md`); formal H1/H2/H5 assumption checks; S3 export / F11 ratings / suggest-method.
 
 Framework: AI-Assisted Project Development v1.5.
 
@@ -46,8 +48,9 @@ Framework: AI-Assisted Project Development v1.5.
 
 1. **Analisar (S1)** — Paste a free-text protocol; submit.
 2. **Parameters (S2)** — Review extracted fields, confidence badges, and evidence highlights; edit if needed; confirm.
-3. **Results (S3)** — Browse ranked alternatives (3Rs class, Match %, jurisdiction, sources). Filter by 3Rs / jurisdiction when needed.
-4. **Buscar (S4)** — Direct database search with structured filters (for users who already know what to look for).
+3. **Results (S3)** — Browse ranked alternatives (3Rs, Match %, detail rows, jurisdictions, sources). Filter by 3Rs / jurisdiction when needed.
+4. **Explore (S4)** — Browse Methods / Regulations / Documents. Use **!** on a card to send feedback about that item.
+5. **Glossary / Info** — Domain terms and project background (nav).
 
 Anonymous use is allowed. Accounts (magic link), query history, and export are for registered users when enabled.
 
@@ -78,6 +81,7 @@ Anonymous use is allowed. Accounts (magic link), query history, and export are f
 | `docs/decisions.md` | Architecture Decision Records (ADRs) |
 | `docs/patterns.md` | Design pattern preferences |
 | `docs/parameter_model.md` | Extraction & matching fields |
+| `docs/tables.md` | Database schema reference |
 | `docs/assumption-log.md` | Critical hypotheses and test status |
 | `docs/execution-log.md` | Deviations from plan |
 | `docs/dev-plan.md` | Phase-by-phase development plan |
@@ -100,11 +104,13 @@ Anonymous use is allowed. Accounts (magic link), query history, and export are f
 
 ### Product & UX
 
-- Nav primary items only: **Analisar** and **Buscar**. Method suggestion (S6) is via results/footer, not primary nav.
+- Nav: **Analisar**, **Explore**, **Glossary**, **Info**. Method suggestion (S6) is via results/footer, not primary nav (ADR-008 / ADR-024).
 - S2 is a **gate** — search runs only after the user confirms/edits parameters.
 - Multi-experiment protocols use tabs on S2/S3 (`experiments[]`).
 - Extraction: LLM returns `study_type` + evidence; app maps to `endpoint_category` via lookup (no LLM inference for DB category).
+- Result / method cards show detail rows when present: animal use, test system, endpoint, routes, study domain.
 - Result cards with Match ≤ 65% render at reduced opacity.
+- Two feedback channels: general (`feedback` / F11b on Explore) vs query ratings (`query_feedback` / F11, deferred).
 - UI copy is bilingual (PT/EN).
 
 ### Domain language

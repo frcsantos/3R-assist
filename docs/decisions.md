@@ -162,6 +162,8 @@ All compressions applied must be documented in `execution-log.md`.
 
 **Consequences:** S6 is harder to find on first use. Acceptable — method suggestion is a power-user action, not a primary job-to-be-done.
 
+**Revision (ADR-024):** Primary discovery nav item renamed **Buscar → Explore**; Glossary and Info added as supporting nav. S6 placement unchanged.
+
 ---
 
 ## ADR-009 — Export visible-but-locked for anonymous users
@@ -562,3 +564,26 @@ Inicialmente TEXT (migração `007`); depois localizadas como JSONB `{"en-us","p
 - `karynn_review_checklist.md`: preencher `*_rationale` nos 25 seeded (casos ambíguos 13, 14–15, 23–25 incluídos).
 - `spec.md` §2.6, `tables.md`: schema Method atualizado.
 - ADR-021 marcado superseded.
+
+---
+
+## ADR-024 — Feedback table split + Explore nav
+
+**Decision:**
+1. Rename recommendation-rating table `feedback` → `query_feedback` (F11).
+2. Create a separate `feedback` table for general product feedback: `user_id`, `url`, `object`, `feedback_text`, `created_at` (F11b).
+3. `POST /feedback` serves F11b only. F11 ratings will use a distinct route (reserved as `POST /query-feedback`) when wired.
+4. S4 product surface is **Explore** (`/explore` with Methods / Regulations / Documents tabs); legacy `/buscar` redirects. Primary nav includes Analisar, Explore, Glossary, Info.
+
+**Context:** Need free-text feedback on catalogue cards without colliding with per-query relevance ratings. Buscar evolved into a browse catalogue rather than filter-only search.
+
+**Pattern baseline:** Repository for feedback writes; Active Record acceptable later for simple CRUD.
+
+**Rationale:** One table cannot cleanly hold both `(query_id, method_id, rating)` and `(url, object, feedback_text)`. Renaming preserves F11 schema history via migration `043`; `044` adds the general table. Explore cards pre-fill `object` with the card title so curators know which entry the comment targets.
+
+**Reversibility:** Medium (data migration if recombined).
+
+**Consequences:**
+- Docs: `tables.md`, `spec.md` workflows W2/W4a/W4b, OpenAPI `POST /feedback` contract.
+- Frontend: `FeedbackModal` on Explore; Result cards show `animal_use` / `test_system` / route / domain detail rows.
+- ADR-008 revised for Explore + supporting nav items.

@@ -75,6 +75,20 @@ function FeedbackIcon() {
   )
 }
 
+function FeedbackButton({ label, onClick }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className="flex h-8 w-8 items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
+    >
+      <FeedbackIcon />
+    </button>
+  )
+}
+
 function isHttpUrl(value) {
   if (!value?.trim()) return false
   try {
@@ -127,7 +141,7 @@ function itemMatchesFilter(item, query) {
     .includes(query)
 }
 
-function DocumentCard({ document: doc, t, lang, highlightQuery, hideTitle = false, className = '' }) {
+function DocumentCard({ document: doc, t, lang, highlightQuery, hideTitle = false, className = '', endAction = null }) {
   const categoryLabels = (doc.categories?.length ? doc.categories : [doc.category])
     .filter(Boolean)
     .map((category) =>
@@ -149,7 +163,7 @@ function DocumentCard({ document: doc, t, lang, highlightQuery, hideTitle = fals
 
   return (
     <article
-      className={`rounded-lg border border-border-subtle bg-surface-container-lowest ${hideTitle ? 'px-container-padding pb-container-padding pt-2' : 'p-container-padding'} ${className}`}
+      className={`relative rounded-lg border border-border-subtle bg-surface-container-lowest ${hideTitle ? 'px-container-padding pb-container-padding pt-2' : 'p-container-padding'} ${className}`}
     >
       {!hideTitle ? (
         <h3 className="font-card-title text-card-title text-primary">
@@ -206,6 +220,9 @@ function DocumentCard({ document: doc, t, lang, highlightQuery, hideTitle = fals
           </div>
         ) : null}
       </dl>
+      {endAction ? (
+        <div className="absolute bottom-0 right-0 z-10">{endAction}</div>
+      ) : null}
     </article>
   )
 }
@@ -287,18 +304,14 @@ function ExpandableList({
                     id={panelId}
                     role="region"
                     aria-labelledby={buttonId}
-                    className="relative border-t border-border-subtle bg-surface-container-low"
+                    className="border-t border-border-subtle bg-surface-container-low"
                   >
-                    {renderCard(item, query)}
-                    <button
-                      type="button"
-                      aria-label={feedbackLabel}
-                      title={feedbackLabel}
-                      onClick={() => setFeedbackObject(label)}
-                      className="absolute bottom-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
-                    >
-                      <FeedbackIcon />
-                    </button>
+                    {renderCard(item, query, (
+                      <FeedbackButton
+                        label={feedbackLabel}
+                        onClick={() => setFeedbackObject(label)}
+                      />
+                    ))}
                   </div>
                 ) : null}
               </li>
@@ -368,7 +381,7 @@ function MethodsPanel({ lang, t }) {
       expandLabel={t('s4.expand')}
       collapseLabel={t('s4.collapse')}
       feedbackLabel={t('s4.reportFeedback')}
-      renderCard={(item, highlightQuery) => {
+      renderCard={(item, highlightQuery, endAction) => {
         const method = item.method
         const contexts = item.regulatory_contexts ?? []
         const primaryContext = primaryRegulatoryContext(contexts)
@@ -404,7 +417,8 @@ function MethodsPanel({ lang, t }) {
                   : context.jurisdiction
               return {
                 key: `${keyBase}-${index}`,
-                label: status ? `${jurisdiction}: ${status}` : jurisdiction,
+                label: jurisdiction,
+                status,
                 citation: context.regulatory_citation?.trim() || null,
                 url: context.regulatory_url || null,
               }
@@ -423,6 +437,7 @@ function MethodsPanel({ lang, t }) {
             regulatoryLinkLabel={t('s3.regulatoryLink')}
             closeLabel={t('s3.close')}
             highlightQuery={highlightQuery}
+            endAction={endAction}
           />
         )
       }}
@@ -480,7 +495,7 @@ function DocumentsPanel({ categories, emptyKey, t, lang }) {
       expandLabel={t('s4.expand')}
       collapseLabel={t('s4.collapse')}
       feedbackLabel={t('s4.reportFeedback')}
-      renderCard={(item, highlightQuery) => (
+      renderCard={(item, highlightQuery, endAction) => (
         <DocumentCard
           document={item}
           t={t}
@@ -488,6 +503,7 @@ function DocumentsPanel({ categories, emptyKey, t, lang }) {
           highlightQuery={highlightQuery}
           hideTitle
           className="rounded-none border-0 bg-transparent"
+          endAction={endAction}
         />
       )}
     />

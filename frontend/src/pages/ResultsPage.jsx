@@ -300,7 +300,8 @@ export default function ResultsPage() {
                         : context.jurisdiction
                     return {
                       key: `${keyBase}-${index}`,
-                      label: status ? `${jurisdiction}: ${status}` : jurisdiction,
+                      label: jurisdiction,
+                      status,
                       citation: context.regulatory_citation?.trim() || null,
                       url: context.regulatory_url || null,
                     }
