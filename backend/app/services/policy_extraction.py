@@ -1,5 +1,6 @@
 from app.adapters.llm import ExtractionError, LLMAdapter
 from app.models.policy import PolicyExtractResponse
+from app.services.language import detect_lang, language_label
 
 
 class PolicyExtractionService:
@@ -12,4 +13,12 @@ class PolicyExtractionService:
         *,
         source_url: str | None = None,
     ) -> PolicyExtractResponse | ExtractionError:
-        return self._llm.extract_policy(text, source_url=source_url)
+        lang = detect_lang(text)
+        result = self._llm.extract_policy(
+            text,
+            source_url=source_url,
+            source_language=language_label(lang),
+        )
+        if isinstance(result, ExtractionError):
+            return result
+        return result.model_copy(update={"lang": lang})

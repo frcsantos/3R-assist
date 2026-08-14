@@ -50,11 +50,15 @@ class MethodRepository:
             mrc.method_id, mrc.jurisdiction,
             mrc.regulation_status, mrc.regulation_date, mrc.regulation_purpose,
             mrc.regulatory_body, mrc.regulatory_doc_id,
-            COALESCE(
-                NULLIF(BTRIM(mrc.regulatory_citation), ''),
-                NULLIF(BTRIM(rd.doc_citation->>'en-us'), ''),
-                rd.doc_citation->>'pt-br'
-            ) AS regulatory_citation,
+            CASE
+              WHEN mrc.regulatory_citation IS NOT NULL
+               AND (
+                 NULLIF(BTRIM(mrc.regulatory_citation->>'en-us'), '') IS NOT NULL
+                 OR NULLIF(BTRIM(mrc.regulatory_citation->>'pt-br'), '') IS NOT NULL
+               )
+              THEN mrc.regulatory_citation
+              ELSE rd.doc_citation
+            END AS regulatory_citation,
             rd.url AS regulatory_url,
             mrc.notes
         FROM regulations mrc

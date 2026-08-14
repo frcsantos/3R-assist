@@ -113,6 +113,32 @@ def test_filter_only_score_uses_procedure_overlap():
     )
 
 
+def test_filter_only_score_uses_detected_language_name():
+    method = Method(
+        id=1,
+        slug="fixed-dose",
+        name=localized_str("Acute Oral Toxicity", "Procedimento de Dose Fixa"),
+        description=localized_str("desc"),
+        text_for_embedding="zzzz",
+        reduction_rationale=localized_str("Test reduction rationale"),
+        endpoint_category="acute_toxicity",
+        study_domain="general",
+        source_db="NICEATM",
+        routes_applicable=["oral"],
+        validation_status="validated",
+        active=True,
+    )
+    params = ProtocolParameters(
+        endpoint_category="acute_toxicity",
+        route=["oral"],
+        study_domain="pharma",
+        procedure_text="procedimento de dose fixa",
+    )
+    assert filter_only_score(method, params, lang="pt") > filter_only_score(
+        method, params, lang="en"
+    )
+
+
 def test_retrieval_filters_endpoint_and_route():
     embedder = StubEmbedderAdapter()
     oral_vector = embedder.embed("acute_toxicity oral general")

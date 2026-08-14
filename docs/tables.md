@@ -72,10 +72,10 @@ Regulatory recognition for a method, scoped by jurisdiction. One row per `(metho
 | `jurisdiction` | `JSONB` | NO | — | Localized regulatory jurisdiction: `{"en-us":"...","pt-br":"..."}` — Brazil/Brasil, EU/UE, US/EUA, OECD/OCDE. |
 | `regulation_status` | `TEXT` | YES | — | Regulatory standing: `not_approved`, `approved`, `recommended`, or `mandatory`. |
 | `regulation_date` | `DATE` | YES | — | Date of the regulation / recognition / adoption for this context (`YYYY-MM-DD`). |
-| `regulation_purpose` | `TEXT` | YES | — | What the method is recognized/validated for in this context (endpoint, use, or regulatory purpose). |
-| `regulatory_body` | `TEXT` | YES | — | Issuing body, e.g. `CONCEA`, `ANVISA`, `ECHA`, `EMA`, `EPA`, `FDA`, `ICCVAM`, `OECD`. |
+| `regulation_purpose` | `JSONB` | YES | — | Localized recognition purpose `{"en-us":"...","pt-br":"..."}`. |
+| `regulatory_body` | `JSONB` | YES | — | Localized issuing body `{"en-us":"...","pt-br":"..."}` (e.g. OECD/OCDE, CONCEA). |
 | `regulatory_doc_id` | `INTEGER` | YES | — | FK → `documents(id)` `ON DELETE SET NULL`. Regulatory document for this context. API exposes `regulatory_url` from `documents.url`. |
-| `regulatory_citation` | `TEXT` | YES | — | Bibliographic citation / short reference for the regulatory recognition. API responses fall back to `documents.doc_citation` (`en-us`, then `pt-br`) when null. |
+| `regulatory_citation` | `JSONB` | YES | — | Localized bibliographic citation `{"en-us":"...","pt-br":"..."}`. API responses fall back to `documents.doc_citation` when empty. |
 | `notes` | `TEXT` | YES | — | Free-text notes (applicability limits, pending verification, etc.). |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
 
@@ -357,4 +357,6 @@ Migrations that define or alter these tables:
 | `042_methods_validation_status.sql` | adds `methods.validation_status` + `validation_doc_id`; drops `regulations.validation_status` |
 | `043_rename_query_feedback.sql` | renames table `feedback` → `query_feedback` |
 | `044_feedback.sql` | creates `feedback` (`user_id`, `url`, `object`, `feedback_text`) |
+| `045_regulations_body_citation_localized.sql` | `regulations.regulatory_body` / `regulatory_citation` TEXT → localized JSONB |
+| `046_regulations_purpose_localized.sql` | `regulations.regulation_purpose` TEXT → localized JSONB |
 | `manual/008_drop_category_3r.sql` | legacy gated DROP of `category_3r` (superseded by `026`) |

@@ -2405,11 +2405,23 @@ function regulationInitialValuesFromExtracted(
     jurisdiction: isOecd ? JURISDICTION_LABELS.oecd : '',
     regulation_status: method.status ?? '',
     regulation_date: regulationDateFromDocument(documentDate),
-    regulation_purpose: method.purpose?.trim() ?? '',
+    regulation_purpose: method.purpose?.trim()
+      ? {
+          'en-us': method.purpose.trim(),
+          'pt-br': method.purpose.trim(),
+        }
+      : { 'en-us': '', 'pt-br': '' },
     regulatory_body:
-      institution?.trim() || (isOecd ? 'OECD' : ''),
+      institution && typeof institution === 'object'
+        ? institution
+        : {
+            'en-us': institution?.trim() || (isOecd ? 'OECD' : ''),
+            'pt-br':
+              (typeof institution === 'string' && institution.trim()) ||
+              (isOecd ? 'OCDE' : ''),
+          },
     regulatory_doc_id: '',
-    regulatory_citation: '',
+    regulatory_citation: { 'en-us': '', 'pt-br': '' },
     notes: [code, name].filter(Boolean).join(' — '),
   }
 }
@@ -2518,9 +2530,10 @@ function ExtractedMethodRow({
   documentUrl,
   documentType,
   documentDescription,
+  sourceLang,
 }) {
   const { t, i18n } = useTranslation()
-  const lang = i18n.language?.startsWith('pt') ? 'pt' : 'en'
+  const lang = sourceLang || (i18n.language?.startsWith('pt') ? 'pt' : 'en')
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -2555,6 +2568,7 @@ function ExtractedMethodRow({
         code: method.code,
         name: method.name,
         purpose: method.purpose,
+        lang,
       })
       setMatchResult(result)
     } catch {
@@ -2572,6 +2586,7 @@ function ExtractedMethodRow({
         code: method.code,
         name: method.name,
         purpose: method.purpose,
+        lang,
       })
       setMatchResult(result)
     } catch {
@@ -3112,6 +3127,7 @@ function ExtractPanel() {
         documentDate: result.document_date,
         institution: result.responsible_institution,
         url: documentUrl,
+        lang: result.lang,
       })
       setDocumentMatches(matched.matches ?? [])
     } catch {
@@ -3727,7 +3743,7 @@ function ExtractPanel() {
                         <div className="flex flex-wrap items-baseline justify-between gap-2">
                           <div className="flex min-w-0 items-center gap-1">
                             <p className="font-metadata text-metadata text-on-surface">
-                              {pickLocalized(doc.doc_citation, currentLanguage())}
+                              {pickLocalized(doc.doc_citation, result.lang || currentLanguage())}
                               <span className="ml-2 opacity-65">({doc.slug})</span>
                             </p>
                             <EditIconButton
@@ -3749,7 +3765,7 @@ function ExtractPanel() {
                         <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-80">
                           {[
                             (doc.categories || []).join(', ') || doc.category,
-                            pickLocalized(doc.institution, currentLanguage()),
+                            pickLocalized(doc.institution, result.lang || currentLanguage()),
                             doc.date,
                             doc.url,
                           ]
@@ -3821,6 +3837,7 @@ function ExtractPanel() {
                       documentUrl={documentUrl}
                       documentType={documentType}
                       documentDescription={result.description}
+                      sourceLang={result.lang}
                     />
                   ))}
                 </tbody>

@@ -83,6 +83,8 @@ Schema:
 }
 
 ── HINTS ────────────────────────────────────────────────────────────────────
+Detected source language: {source_language}. Keep document_name, method names,
+purpose, institution, and description in that language.
 Source URL (optional): {source_url}
 
 ── SOURCE TEXT ──────────────────────────────────────────────────────────────
@@ -95,13 +97,16 @@ def build_policy_extraction_prompt(
     policy_text: str,
     *,
     source_url: str | None = None,
+    source_language: str = "English",
 ) -> str:
     return (
         POLICY_EXTRACTION_PROMPT_TEMPLATE.replace(
             "{policy_text}",
             policy_text.strip(),
-        ).replace(
+        )
+        .replace(
             "{source_url}",
             (source_url or "none").strip() or "none",
         )
+        .replace("{source_language}", source_language)
     )

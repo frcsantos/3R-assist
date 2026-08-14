@@ -12,6 +12,7 @@ from app.config import get_settings
 from app.models.extract_estimate import ExtractEstimateResponse, ExtractMode
 from app.prompts.document_draft_extraction import build_document_draft_extraction_prompt
 from app.prompts.policy_extraction import build_policy_extraction_prompt
+from app.services.language import detect_lang, language_label
 
 logger = logging.getLogger(__name__)
 
@@ -110,13 +111,19 @@ class ExtractEstimateService:
                 estimated_cost_usd=0.0,
             )
 
+        source_language = language_label(detect_lang(text))
         if mode == "policy":
-            prompt = build_policy_extraction_prompt(text, source_url=source_url)
+            prompt = build_policy_extraction_prompt(
+                text,
+                source_url=source_url,
+                source_language=source_language,
+            )
         else:
             prompt = build_document_draft_extraction_prompt(
                 text,
                 category_hint=category_hint,
                 source_url=source_url,
+                source_language=source_language,
             )
 
         input_tokens = _approx_tokens(prompt)

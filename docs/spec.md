@@ -182,10 +182,10 @@ method_id         INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE
 jurisdiction      JSONB   NOT NULL   -- {"en-us":"Brazil"|"EU"|"US"|"OECD","pt-br":"Brasil"|"UE"|"EUA"|"OCDE"}
 regulation_status TEXT               -- 'not_approved' | 'approved' | 'recommended' | 'mandatory'
 regulation_date   DATE               -- date of regulation / recognition / adoption (YYYY-MM-DD)
-regulation_purpose TEXT              -- what the method is recognized for in this context
-regulatory_body   TEXT               -- 'CONCEA' | 'ANVISA' | 'ECHA' | 'EMA' | 'EPA' | 'FDA' | 'ICCVAM' | 'OECD'
+regulation_purpose JSONB             -- {"en-us":"...","pt-br":"..."}
+regulatory_body   JSONB              -- {"en-us":"...","pt-br":"..."}
 regulatory_doc_id INTEGER            -- FK → documents(id)
-regulatory_citation TEXT             -- bibliographic citation / short reference
+regulatory_citation JSONB            -- {"en-us":"...","pt-br":"..."}
 notes             TEXT
 created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 UNIQUE (method_id, jurisdiction)
@@ -399,6 +399,8 @@ Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension avai
 │   │           ├── 042_methods_validation_status.sql           # validation_status on methods
 │   │           ├── 043_rename_query_feedback.sql               # feedback → query_feedback (F11)
 │   │           ├── 044_feedback.sql                            # general feedback table (F11b)
+│   │           ├── 045_regulations_body_citation_localized.sql # regulatory_body / citation JSONB
+│   │           ├── 046_regulations_purpose_localized.sql       # regulation_purpose JSONB
 │   │           └── manual/
 │   │               └── 008_drop_category_3r.sql       # legacy gated DROP (superseded by 026)
 │   ├── scripts/
@@ -631,10 +633,10 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
           "jurisdiction": {"en-us": string, "pt-br": string},
           "regulation_status": "not_approved"|"approved"|"recommended"|"mandatory"|null,
           "regulation_date": "YYYY-MM-DD"|null,
-          "regulation_purpose": string|null,
-          "regulatory_body": string|null,
+          "regulation_purpose": {"en-us": string, "pt-br": string}|null,
+          "regulatory_body": {"en-us": string, "pt-br": string}|null,
           "regulatory_doc_id": number|null,
-          "regulatory_citation": string|null,  -- falls back to documents.doc_citation
+          "regulatory_citation": {"en-us": string, "pt-br": string}|null,
           "regulatory_url": string|null       -- documents.url via regulatory_doc_id
         }
       ],

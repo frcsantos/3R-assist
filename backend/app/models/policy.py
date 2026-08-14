@@ -60,12 +60,14 @@ class PolicyExtractResponse(BaseModel):
     responsible_institution: str | None = None
     url: str | None = None
     description: str | None = None
+    lang: Literal["pt", "en"] | None = None
 
 
 class PolicyMethodMatchRequest(BaseModel):
     code: str = Field(..., min_length=1, max_length=200)
     name: str = Field(..., min_length=1, max_length=500)
     purpose: str | None = Field(default=None, max_length=1000)
+    lang: Literal["pt", "en"] | None = None
     limit: int = Field(default=5, ge=1, le=20)
 
 
@@ -89,6 +91,7 @@ class PolicyDocumentMatchRequest(BaseModel):
     document_date: str | None = Field(default=None, max_length=40)
     responsible_institution: str | None = Field(default=None, max_length=500)
     url: str | None = Field(default=None, max_length=2000)
+    lang: Literal["pt", "en"] | None = None
     limit: int = Field(default=5, ge=1, le=20)
 
 

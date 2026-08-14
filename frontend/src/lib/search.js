@@ -228,9 +228,9 @@ export function formatRegulatoryStatusItems(contexts = [], lang, t) {
       label: jurisdiction,
       status,
       date: context.regulation_date || null,
-      purpose: context.regulation_purpose || null,
-      body: context.regulatory_body || null,
-      citation: context.regulatory_citation?.trim() || null,
+      purpose: pickLocalized(context.regulation_purpose, lang) || null,
+      body: pickLocalized(context.regulatory_body, lang) || null,
+      citation: pickLocalized(context.regulatory_citation, lang).trim() || null,
       url: context.regulatory_url || null,
     }
   })
@@ -243,7 +243,7 @@ export function regulatoryUrlFromContexts(contexts = []) {
 
 export function regulatoryCitationFromContexts(contexts = []) {
   const primary = primaryRegulatoryContext(contexts)
-  const citation = primary?.regulatory_citation?.trim()
+  const citation = pickLocalized(primary?.regulatory_citation).trim()
   return citation || null
 }
 

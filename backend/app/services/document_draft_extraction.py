@@ -1,5 +1,6 @@
 from app.adapters.llm import ExtractionError, LLMAdapter
 from app.models.document_draft import DocumentDraftExtractResponse
+from app.services.language import detect_lang, language_label
 
 
 class DocumentDraftExtractionService:
@@ -13,8 +14,13 @@ class DocumentDraftExtractionService:
         category_hint: str | None = None,
         source_url: str | None = None,
     ) -> DocumentDraftExtractResponse | ExtractionError:
-        return self._llm.extract_document_draft(
+        lang = detect_lang(text)
+        result = self._llm.extract_document_draft(
             text,
             category_hint=category_hint,
             source_url=source_url,
+            source_language=language_label(lang),
         )
+        if isinstance(result, ExtractionError):
+            return result
+        return result.model_copy(update={"lang": lang})

@@ -45,10 +45,10 @@ class MethodRegulatoryContext(BaseModel):
     jurisdiction: LocalizedStr
     regulation_status: RegulatoryStatus | None = None
     regulation_date: date | None = None
-    regulation_purpose: str | None = None
-    regulatory_body: str | None = None
+    regulation_purpose: LocalizedStr | None = None
+    regulatory_body: LocalizedStr | None = None
     regulatory_doc_id: int | None = None
-    regulatory_citation: str | None = None
+    regulatory_citation: LocalizedStr | None = None
     # Resolved from documents.url when regulatory_doc_id is set (not a DB column).
     regulatory_url: str | None = None
     notes: str | None = None
@@ -57,6 +57,22 @@ class MethodRegulatoryContext(BaseModel):
     @classmethod
     def _coerce_jurisdiction(cls, value):
         return parse_jurisdiction(value)
+
+    @field_validator("regulation_purpose", "regulatory_body", "regulatory_citation", mode="before")
+    @classmethod
+    def _coerce_localized(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, str) and not value.strip():
+            return None
+        if isinstance(value, str) and not value.strip().startswith("{"):
+            return localized_str(value)
+        parsed = parse_localized_str(value, required=False)
+        if parsed is None:
+            return None
+        if not parsed.en_us.strip() and not parsed.pt_br.strip():
+            return None
+        return parsed
 
 
 class Method(BaseModel):

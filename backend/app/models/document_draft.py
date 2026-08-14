@@ -40,3 +40,4 @@ class DocumentDraftFields(BaseModel):
 
 class DocumentDraftExtractResponse(BaseModel):
     fields: DocumentDraftFields
+    lang: Literal["pt", "en"] | None = None

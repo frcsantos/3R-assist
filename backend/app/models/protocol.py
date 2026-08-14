@@ -147,6 +147,7 @@ class ExperimentResult(BaseModel):
 class AnalyzeResponse(BaseModel):
     experiments: list[ExperimentResult] = Field(..., min_length=1)
     params: ProtocolParameters
+    lang: Literal["pt", "en"] | None = None
 
 
 ThreeRClass = Literal["replacement", "reduction", "refinement"]

@@ -6,6 +6,7 @@ import re
 from datetime import date, datetime
 
 from app.models.document import Document
+from app.models.i18n import LocalizedStr
 from app.models.policy import (
     MatchedDocumentSummary,
     PolicyDocumentMatchCandidate,
@@ -122,6 +123,16 @@ def _number_bonus(query_numbers: set[str], candidate_text: str) -> float:
     return 0.06 * (len(matched) / len(query_numbers))
 
 
+def _localized_text(value: LocalizedStr | None, lang: str | None) -> str:
+    if value is None:
+        return ""
+    if lang:
+        picked = value.pick(lang).strip()
+        if picked:
+            return picked
+    return value.joined()
+
+
 def document_match_score(
     request: PolicyDocumentMatchRequest,
     document: Document,
@@ -140,6 +151,7 @@ def document_match_score(
     citation_texts = [
         text for text in (citation.en_us, citation.pt_br) if text.strip()
     ]
+    citation_text = _localized_text(citation, request.lang)
 
     if name:
         name_cf = name.casefold()
@@ -154,11 +166,8 @@ def document_match_score(
     if not query_tokens:
         return 0.0, "text"
 
-    citation_text = citation.joined()
     slug_text = document.slug.replace("-", " ")
-    institution_text = (
-        document.institution.joined() if document.institution else ""
-    )
+    institution_text = _localized_text(document.institution, request.lang)
     ref_score = _overlap_ratio(query_tokens, _doc_token_keys(citation_text))
     slug_score = _overlap_ratio(query_tokens, _doc_token_keys(slug_text))
     institution_score = (

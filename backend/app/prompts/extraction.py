@@ -136,9 +136,15 @@ Do not quote entire paragraphs.
 CRITICAL: Your response must be syntactically complete JSON. Close all strings,
 objects, and arrays before ending output.
 
+Detected source language: {source_language}. Keep extracted free-text
+(study_type, procedure_text, notes, evidence quotes) in that language.
+
 Protocol description:
 {protocol_text}"""
 
 
-def build_extraction_prompt(protocol_text: str) -> str:
-    return EXTRACTION_PROMPT_TEMPLATE.replace("{protocol_text}", protocol_text.strip())
+def build_extraction_prompt(protocol_text: str, *, source_language: str = "English") -> str:
+    return EXTRACTION_PROMPT_TEMPLATE.replace(
+        "{protocol_text}",
+        protocol_text.strip(),
+    ).replace("{source_language}", source_language)

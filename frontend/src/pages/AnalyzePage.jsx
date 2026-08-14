@@ -120,10 +120,11 @@ export default function AnalyzePage({ onSubmit }) {
         protocolText: protocolText.trim(),
         lang,
       })
+      const detectedLang = result.lang || lang
       navigate('/parameters', {
         state: buildAnalysisState(result, {
           protocolText: protocolText.trim(),
-          lang,
+          lang: detectedLang,
         }),
       })
     } catch (err) {

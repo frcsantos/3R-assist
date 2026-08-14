@@ -143,7 +143,12 @@ def log_extraction_error(error: ExtractionError) -> None:
 
 class LLMAdapter(ABC):
     @abstractmethod
-    def extract_raw_experiments(self, text: str) -> list[RawExtraction] | ExtractionError:
+    def extract_raw_experiments(
+        self,
+        text: str,
+        *,
+        source_language: str = "English",
+    ) -> list[RawExtraction] | ExtractionError:
         pass
 
     @abstractmethod
@@ -152,6 +157,7 @@ class LLMAdapter(ABC):
         text: str,
         *,
         source_url: str | None = None,
+        source_language: str = "English",
     ) -> PolicyExtractResponse | ExtractionError:
         pass
 
@@ -168,6 +174,7 @@ class LLMAdapter(ABC):
         *,
         category_hint: str | None = None,
         source_url: str | None = None,
+        source_language: str = "English",
     ) -> DocumentDraftExtractResponse | ExtractionError:
         pass
 
@@ -188,7 +195,12 @@ def _has_extractable_content(raw: RawExtraction) -> bool:
 class StubLLMAdapter(LLMAdapter):
     """Heuristic extractor aligned with docs/parameter_model.md."""
 
-    def extract_raw_experiments(self, text: str) -> list[RawExtraction] | ExtractionError:
+    def extract_raw_experiments(
+        self,
+        text: str,
+        *,
+        source_language: str = "English",
+    ) -> list[RawExtraction] | ExtractionError:
         raw = self._extract_single(text)
         if isinstance(raw, ExtractionError):
             return raw
@@ -199,6 +211,7 @@ class StubLLMAdapter(LLMAdapter):
         text: str,
         *,
         source_url: str | None = None,
+        source_language: str = "English",
     ) -> PolicyExtractResponse | ExtractionError:
         normalized = text.strip()
         if len(normalized) < 20:
@@ -346,6 +359,7 @@ class StubLLMAdapter(LLMAdapter):
         *,
         category_hint: str | None = None,
         source_url: str | None = None,
+        source_language: str = "English",
     ) -> DocumentDraftExtractResponse | ExtractionError:
         normalized = text.strip()
         if len(normalized) < 20:
@@ -476,7 +490,7 @@ class StubLLMAdapter(LLMAdapter):
                 regulation_status=regulation_status,  # type: ignore[arg-type]
                 regulation_date=regulation_date,
                 regulation_purpose=None,
-                regulatory_body=body,
+                regulatory_body=localized_str(body) if body else None,
                 regulatory_citation=None,
                 notes=None,
             )
@@ -994,7 +1008,12 @@ class LlmCallAdapter(LLMAdapter):
     def __init__(self, model: str) -> None:
         self._model = _normalize_model(model)
 
-    def extract_raw_experiments(self, text: str) -> list[RawExtraction] | ExtractionError:
+    def extract_raw_experiments(
+        self,
+        text: str,
+        *,
+        source_language: str = "English",
+    ) -> list[RawExtraction] | ExtractionError:
         try:
             import llmcall
             from llmcall import CallConstraints, LLMError as LlmCallError
@@ -1003,7 +1022,7 @@ class LlmCallAdapter(LLMAdapter):
 
         result = llmcall.call(
             self._model,
-            build_extraction_prompt(text),
+            build_extraction_prompt(text, source_language=source_language),
             constraints=CallConstraints(
                 max_tokens=EXTRACTION_MAX_TOKENS,
                 response_format="json",
@@ -1042,6 +1061,7 @@ class LlmCallAdapter(LLMAdapter):
         text: str,
         *,
         source_url: str | None = None,
+        source_language: str = "English",
     ) -> PolicyExtractResponse | ExtractionError:
         try:
             import llmcall
@@ -1051,7 +1071,11 @@ class LlmCallAdapter(LLMAdapter):
 
         result = llmcall.call(
             self._model,
-            build_policy_extraction_prompt(text, source_url=source_url),
+            build_policy_extraction_prompt(
+                text,
+                source_url=source_url,
+                source_language=source_language,
+            ),
             constraints=CallConstraints(
                 max_tokens=POLICY_EXTRACTION_MAX_TOKENS,
                 response_format="json",
@@ -1138,6 +1162,7 @@ class LlmCallAdapter(LLMAdapter):
         *,
         category_hint: str | None = None,
         source_url: str | None = None,
+        source_language: str = "English",
     ) -> DocumentDraftExtractResponse | ExtractionError:
         try:
             import llmcall
@@ -1151,6 +1176,7 @@ class LlmCallAdapter(LLMAdapter):
                 text,
                 category_hint=category_hint,
                 source_url=source_url,
+                source_language=source_language,
             ),
             constraints=CallConstraints(
                 max_tokens=DOCUMENT_DRAFT_EXTRACTION_MAX_TOKENS,
@@ -1708,9 +1734,21 @@ def _regulation_draft_from_payload(
             payload.get("regulation_status")
         ),
         regulation_date=date,
-        regulation_purpose=_nullable_str(payload.get("regulation_purpose")),
-        regulatory_body=_nullable_str(payload.get("regulatory_body")),
-        regulatory_citation=_nullable_str(payload.get("regulatory_citation")),
+        regulation_purpose=_localized_str_from_payload(
+            payload,
+            "regulation_purpose",
+            "regulation_purpose_en",
+            "regulation_purpose_pt",
+        ),
+        regulatory_body=_localized_str_from_payload(
+            payload, "regulatory_body", "regulatory_body_en", "regulatory_body_pt"
+        ),
+        regulatory_citation=_localized_str_from_payload(
+            payload,
+            "regulatory_citation",
+            "regulatory_citation_en",
+            "regulatory_citation_pt",
+        ),
         notes=_nullable_str(payload.get("notes")),
     )
     return RegulationDraftExtractResponse(fields=fields)

@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.models.i18n import LocalizedStr
+from app.models.i18n import LocalizedStr, localized_str, parse_localized_str
 from app.models.method import RegulatoryStatus
 from app.models.policy import looks_like_single_url
 
@@ -30,10 +30,31 @@ class RegulationDraftFields(BaseModel):
     jurisdiction: LocalizedStr | None = None
     regulation_status: RegulatoryStatus | None = None
     regulation_date: str | None = None
-    regulation_purpose: str | None = None
-    regulatory_body: str | None = None
-    regulatory_citation: str | None = None
+    regulation_purpose: LocalizedStr | None = None
+    regulatory_body: LocalizedStr | None = None
+    regulatory_citation: LocalizedStr | None = None
     notes: str | None = None
+
+    @field_validator(
+        "regulation_purpose",
+        "regulatory_body",
+        "regulatory_citation",
+        mode="before",
+    )
+    @classmethod
+    def _coerce_localized(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, str) and not value.strip():
+            return None
+        if isinstance(value, str) and not value.strip().startswith("{"):
+            return localized_str(value)
+        parsed = parse_localized_str(value, required=False)
+        if parsed is None:
+            return None
+        if not parsed.en_us.strip() and not parsed.pt_br.strip():
+            return None
+        return parsed
 
 
 class RegulationDraftExtractResponse(BaseModel):

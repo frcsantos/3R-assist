@@ -24,11 +24,15 @@ regulation_status — exactly one of:
 - regulation_date: adoption / recognition / issuance date. Prefer ISO
   YYYY-MM-DD; year-only as YYYY-01-01 when only the year is known; else null.
 - regulation_purpose: what the method is recognized for in this context
-  (endpoint, use, or regulatory purpose). Short free text or null.
-- regulatory_body: issuing body (e.g. CONCEA, ANVISA, ECHA, EMA, EPA, FDA,
-  ICCVAM, OECD) when stated; otherwise null.
-- regulatory_citation: bibliographic citation / short reference for the
-  recognition when stated; otherwise null.
+  (endpoint, use, or regulatory purpose). Localized
+  {"en-us":"...","pt-br":"..."}. Copy into both locales when only one language
+  is present. Null if unclear.
+- regulatory_body: issuing body, localized {"en-us":"...","pt-br":"..."}.
+  Examples: OECD/OCDE, CONCEA. Copy into both locales when only one language
+  is present. Null if unclear.
+- regulatory_citation: bibliographic citation / short reference, localized
+  {"en-us":"...","pt-br":"..."}. Copy into both locales when only one language
+  is present. Null if unclear.
 - notes: free-text applicability limits or caveats when present; otherwise null.
 
 ── OUTPUT FORMAT ────────────────────────────────────────────────────────────
@@ -40,9 +44,9 @@ Schema:
   "jurisdiction": {"en-us": "string", "pt-br": "string"} or null,
   "regulation_status": "not_approved|approved|recommended|mandatory|null",
   "regulation_date": "string or null",
-  "regulation_purpose": "string or null",
-  "regulatory_body": "string or null",
-  "regulatory_citation": "string or null",
+  "regulation_purpose": {"en-us": "string", "pt-br": "string"} or null,
+  "regulatory_body": {"en-us": "string", "pt-br": "string"} or null,
+  "regulatory_citation": {"en-us": "string", "pt-br": "string"} or null,
   "notes": "string or null"
 }
 

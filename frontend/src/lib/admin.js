@@ -159,13 +159,14 @@ export function extractRegulationDraft({ text, lang, sourceUrl, signal }) {
   })
 }
 
-export function matchPolicyMethod({ code, name, purpose, limit = 5 }) {
+export function matchPolicyMethod({ code, name, purpose, lang, limit = 5 }) {
   return apiFetch('/admin/extract/policy/match-method', {
     method: 'POST',
     body: JSON.stringify({
       code,
       name,
       purpose: purpose ?? null,
+      lang: lang ?? null,
       limit,
     }),
   })
@@ -176,6 +177,7 @@ export function matchPolicyDocument({
   documentDate,
   institution,
   url,
+  lang,
   limit = 5,
 } = {}) {
   return apiFetch('/admin/extract/policy/match-document', {
@@ -185,6 +187,7 @@ export function matchPolicyDocument({
       document_date: documentDate ?? null,
       responsible_institution: institution ?? null,
       url: url ?? null,
+      lang: lang ?? null,
       limit,
     }),
   })

@@ -66,6 +66,8 @@ Schema:
 }
 
 ── HINTS ────────────────────────────────────────────────────────────────────
+Detected source language: {source_language}. Put the native title/citation
+in that locale; still fill both locales (copy when only one language is present).
 Preferred category (optional): {category_hint}
 Source URL (optional): {source_url}
 
@@ -80,6 +82,7 @@ def build_document_draft_extraction_prompt(
     *,
     category_hint: str | None = None,
     source_url: str | None = None,
+    source_language: str = "English",
 ) -> str:
     return (
         DOCUMENT_DRAFT_EXTRACTION_PROMPT_TEMPLATE.replace(
@@ -88,4 +91,5 @@ def build_document_draft_extraction_prompt(
         )
         .replace("{category_hint}", (category_hint or "none").strip() or "none")
         .replace("{source_url}", (source_url or "none").strip() or "none")
+        .replace("{source_language}", source_language)
     )

@@ -67,7 +67,10 @@ async def search_methods(
             message="Method database is not configured.",
         )
 
-    recommendations, filter_relaxation = await retrieval.search(payload.params)
+    recommendations, filter_relaxation = await retrieval.search(
+        payload.params,
+        lang=payload.lang,
+    )
     results = _apply_filters(recommendations, payload.filters)
     return SearchResponse(
         query_id=None,
