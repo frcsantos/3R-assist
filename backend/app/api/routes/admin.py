@@ -523,6 +523,9 @@ async def extract_regulation_draft(
 @router.post(
     "/extract/policy/match-method",
     response_model=PolicyMethodMatchResponse,
+    response_model_exclude={
+        "matches": {"__all__": {"method": {"embedding_json"}}},
+    },
     responses={503: {"model": ErrorEnvelope}},
 )
 async def match_policy_method(

@@ -158,6 +158,8 @@
       "matchByText": "Similaridade textual",
       "regulatoryStatus": "Status regulatório",
       "inactive": "inativo",
+      "active": "ativo",
+      "slugLabel": "Slug",
       "savedTitle": "Extrações anteriores",
       "savedMeta": "{{date}} · {{count}} métodos",
       "savedMetaDocument": "{{date}} · campos do documento",
@@ -359,6 +361,7 @@
       "mandatory": "Obrigatório"
     },
     "purposeLabel": "Finalidade",
+    "regulationStatusLabel": "Status regulatório",
     "validationStatusLabel": "Status de validação",
     "approvedJurisdictionsLabel": "Jurisdições aprovadas",
     "routeAgnostic": "Independente de via",

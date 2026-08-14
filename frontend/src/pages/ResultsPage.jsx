@@ -6,8 +6,8 @@ import ResultCard from '../components/ResultCard'
 import {
   formatMatchedParams,
   formatOecdReference,
+  formatRegulatoryStatusItems,
   isLowConfidenceScore,
-  jurisdictionLabel,
   jurisdictionMatches,
   methodDescription,
   methodDetailRows,
@@ -15,7 +15,6 @@ import {
   methodThreeRBadges,
   methodThreeRClasses,
   primaryThreeR,
-  primaryRegulatoryContext,
   scorePercent,
 } from '../lib/search'
 
@@ -265,7 +264,6 @@ export default function ResultsPage() {
             {filteredResults.map((item) => {
               const method = item.method
               const contexts = item.regulatory_contexts ?? []
-              const primaryContext = primaryRegulatoryContext(contexts)
               const percent = scorePercent(item.score)
               const threeR = primaryThreeR(method)
               const protocolCitation =
@@ -285,29 +283,13 @@ export default function ResultsPage() {
                       ? t(`s3.validationStatus.${method.validation_status}`)
                       : null
                   }
-                  regulatoryStatuses={contexts.map((context, index) => {
-                    const jurisdiction = jurisdictionLabel(
-                      context.jurisdiction,
-                      lang,
-                      t,
-                    )
-                    const status = context.regulation_status
-                      ? t(`s3.regulatoryStatus.${context.regulation_status}`)
-                      : null
-                    const keyBase =
-                      typeof context.jurisdiction === 'object'
-                        ? context.jurisdiction['en-us']
-                        : context.jurisdiction
-                    return {
-                      key: `${keyBase}-${index}`,
-                      label: jurisdiction,
-                      status,
-                      citation: context.regulatory_citation?.trim() || null,
-                      url: context.regulatory_url || null,
-                    }
-                  })}
-                  purpose={primaryContext?.regulation_purpose || null}
+                  regulatoryStatuses={formatRegulatoryStatusItems(
+                    contexts,
+                    lang,
+                    t,
+                  )}
                   purposeLabel={t('s3.purposeLabel')}
+                  regulationStatusLabel={t('s3.regulationStatusLabel')}
                   validationStatusLabel={t('s3.validationStatusLabel')}
                   approvedJurisdictionsLabel={t('s3.approvedJurisdictionsLabel')}
                   matchedParams={formatMatchedParams(item.matched_params, t)}

@@ -107,20 +107,10 @@ def _to_summary(
     method: Method,
     contexts: list[MethodRegulatoryContext] | None = None,
 ) -> MatchedMethodSummary:
-    return MatchedMethodSummary(
-        id=method.id,
-        slug=method.slug,
-        name=method.name,
-        description=method.description,
-        text_for_embedding=method.text_for_embedding,
-        endpoint_category=method.endpoint_category,
-        study_domain=method.study_domain,
-        oecd_ref=method.oecd_ref,
-        source_db=method.source_db,
-        validation_status=method.validation_status,
-        active=method.active,
-        regulatory_contexts=contexts or [],
-    )
+    payload = method.model_dump(exclude={"embedding_json"})
+    payload.pop("category_3r", None)
+    payload["regulatory_contexts"] = contexts or []
+    return MatchedMethodSummary.model_validate(payload)
 
 
 class PolicyMethodMatchService:

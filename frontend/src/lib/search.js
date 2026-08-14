@@ -86,6 +86,12 @@ export function methodDescription(method, lang) {
   return pickLocalized(method.description, lang)
 }
 
+export function methodSourceCitation(method, lang) {
+  if (!method) return null
+  const picked = pickLocalized(method.source_citation, lang).trim()
+  return picked || null
+}
+
 export function formatOecdReference(ref) {
   if (!ref?.trim()) return null
   const trimmed = ref.trim()
@@ -203,6 +209,31 @@ export function formatJurisdictionBadges(contexts = [], lang, t) {
     labels.push(label)
   }
   return labels.join(' · ')
+}
+
+export function formatRegulatoryStatusItems(contexts = [], lang, t) {
+  return (contexts ?? []).map((context, index) => {
+    const jurisdiction = jurisdictionLabel(context.jurisdiction, lang, t)
+    const status = context.regulation_status
+      ? t(`s3.regulatoryStatus.${context.regulation_status}`, {
+          defaultValue: context.regulation_status,
+        })
+      : null
+    const keyBase =
+      typeof context.jurisdiction === 'object'
+        ? context.jurisdiction['en-us']
+        : context.jurisdiction
+    return {
+      key: `${keyBase}-${index}`,
+      label: jurisdiction,
+      status,
+      date: context.regulation_date || null,
+      purpose: context.regulation_purpose || null,
+      body: context.regulatory_body || null,
+      citation: context.regulatory_citation?.trim() || null,
+      url: context.regulatory_url || null,
+    }
+  })
 }
 
 export function regulatoryUrlFromContexts(contexts = []) {

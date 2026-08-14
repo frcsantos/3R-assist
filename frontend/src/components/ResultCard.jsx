@@ -43,32 +43,6 @@ function urlsEquivalent(a, b) {
   }
 }
 
-function citationContainsUrl(citation, url) {
-  if (!citation || !url) return false
-  const trimmed = url.trim()
-  if (citation.includes(trimmed)) return true
-  try {
-    const parsed = new URL(trimmed)
-    return citation.includes(parsed.href) || citation.includes(parsed.pathname)
-  } catch {
-    return false
-  }
-}
-
-function shortSourceLabel(url, fallback) {
-  if (!url?.trim()) return fallback
-  try {
-    const parsed = new URL(url.trim())
-    if (parsed.hostname.includes('doi.org')) {
-      const doi = parsed.pathname.replace(/^\/+/, '')
-      return doi ? `DOI ${doi}` : 'DOI'
-    }
-    return parsed.hostname.replace(/^www\./, '')
-  } catch {
-    return fallback
-  }
-}
-
 function ExternalLink({ href, children, className }) {
   return (
     <a
@@ -85,45 +59,65 @@ function ExternalLink({ href, children, className }) {
   )
 }
 
+function formatRegulationDate(value) {
+  if (!value) return null
+  const text = String(value).trim()
+  if (!text) return null
+  const day = text.match(/^(\d{4}-\d{2}-\d{2})/)
+  if (day) return day[1]
+  return text
+}
+
 function RegulationDetail({
   item,
-  noCitationLabel,
-  linkLabel,
+  statusLabel,
+  purposeLabel,
   highlightQuery,
 }) {
   const citation = item.citation?.trim() || null
-  const citationIsUrl = isHttpUrl(citation)
-  const linkHref = item.url || (citationIsUrl ? citation : null)
+  const linkHref = item.url || (isHttpUrl(citation) ? citation : null)
+  const date = formatRegulationDate(item.date)
+  const statusHeading = date
+    ? `${statusLabel} (${date})`
+    : statusLabel
 
   return (
-    <div className="space-y-2 rounded-md bg-surface-container px-3 py-2 font-metadata text-metadata text-on-secondary-container">
+    <div className="space-y-1.5 rounded-md bg-surface-container px-3 py-2 font-metadata text-metadata text-on-secondary-container">
       {item.status ? (
-        <p className="text-on-surface-variant">{item.status}</p>
+        <p>
+          <span className="text-on-surface-variant">{statusHeading}: </span>
+          <HighlightedText text={item.status} query={highlightQuery} />
+        </p>
+      ) : date ? (
+        <p>
+          <span className="text-on-surface-variant">{statusLabel}: </span>
+          {date}
+        </p>
+      ) : null}
+      {item.purpose ? (
+        <p>
+          <span className="text-on-surface-variant">{purposeLabel}: </span>
+          <HighlightedText text={item.purpose} query={highlightQuery} />
+        </p>
+      ) : null}
+      {item.body ? (
+        <p>
+          <HighlightedText text={item.body} query={highlightQuery} />
+        </p>
       ) : null}
       {citation ? (
         <p className="break-words">
-          {citationIsUrl ? (
-            <ExternalLink href={citation}>
+          {linkHref ? (
+            <ExternalLink href={linkHref}>
               <HighlightedText text={citation} query={highlightQuery} />
             </ExternalLink>
           ) : (
             <HighlightedText text={citation} query={highlightQuery} />
           )}
         </p>
-      ) : (
-        <p className="text-on-surface-variant" role="status">
-          {noCitationLabel}
-        </p>
-      )}
-      {linkHref && !citationIsUrl ? (
-        <ExternalLink
-          href={linkHref}
-          className="inline-block break-all text-primary underline underline-offset-2 hover:opacity-90"
-        >
-          <HighlightedText
-            text={shortSourceLabel(item.url, linkLabel)}
-            query={highlightQuery}
-          />
+      ) : linkHref ? (
+        <ExternalLink href={linkHref}>
+          <HighlightedText text={linkHref} query={highlightQuery} />
         </ExternalLink>
       ) : null}
     </div>
@@ -138,8 +132,8 @@ export default function ResultCard({
   dimmed = false,
   validationStatus,
   regulatoryStatuses = [],
-  purpose,
   purposeLabel,
+  regulationStatusLabel = 'Regulation status',
   validationStatusLabel = 'Validation status',
   approvedJurisdictionsLabel = 'Approved jurisdictions',
   matchedParams = [],
@@ -159,6 +153,8 @@ export default function ResultCard({
   className = '',
   detailRows = [],
   endAction = null,
+  titleExtra = null,
+  headerMeta = null,
 }) {
   const { t } = useTranslation()
   const styles = threeRStyles[type] ?? threeRStyles.replacement
@@ -175,8 +171,6 @@ export default function ResultCard({
 
   const sourceHref =
     primaryUrl || (isHttpUrl(citationText) ? citationText : null)
-  const citationAlreadyHasLink =
-    sourceHref && citationContainsUrl(citationText, sourceHref)
   const citationIsOnlyUrl =
     citationText && isHttpUrl(citationText) && urlsEquivalent(citationText, sourceHref)
 
@@ -188,9 +182,13 @@ export default function ResultCard({
         {showHeader ? (
           <div className="flex items-start justify-between gap-card-gap">
             {!hideTitle ? (
-              <h3 className="font-card-title text-card-title text-primary">
-                <HighlightedText text={title} query={highlightQuery} />
-              </h3>
+              <div className="min-w-0">
+                <h3 className="font-card-title text-card-title text-primary">
+                  <HighlightedText text={title} query={highlightQuery} />
+                  {titleExtra}
+                </h3>
+                {headerMeta}
+              </div>
             ) : (
               <span className="min-w-0 flex-1" />
             )}
@@ -247,7 +245,14 @@ export default function ResultCard({
                 <span className="text-on-surface-variant">
                   {referenceLabel}:{' '}
                 </span>
-                {isHttpUrl(citationText) ? (
+                {sourceHref ? (
+                  <ExternalLink href={sourceHref}>
+                    <HighlightedText
+                      text={citationText}
+                      query={highlightQuery}
+                    />
+                  </ExternalLink>
+                ) : isHttpUrl(citationText) ? (
                   <ExternalLink href={citationText}>
                     <HighlightedText
                       text={citationText}
@@ -257,22 +262,17 @@ export default function ResultCard({
                 ) : (
                   <HighlightedText text={citationText} query={highlightQuery} />
                 )}
-                {sourceHref && !citationAlreadyHasLink ? (
-                  <>
-                    {' '}
-                    <ExternalLink href={sourceHref}>
-                      {shortSourceLabel(sourceHref, sourcesLabel)}
-                    </ExternalLink>
-                  </>
-                ) : null}
               </p>
             ) : sourceHref ? (
-              <p className="font-metadata text-metadata">
+              <p className="break-words font-metadata text-metadata">
                 <span className="text-on-surface-variant">
                   {referenceLabel}:{' '}
                 </span>
                 <ExternalLink href={sourceHref}>
-                  {shortSourceLabel(sourceHref, sourcesLabel)}
+                  <HighlightedText
+                    text={citationText && citationIsOnlyUrl ? citationText : sourceHref}
+                    query={highlightQuery}
+                  />
                 </ExternalLink>
               </p>
             ) : (
@@ -352,8 +352,7 @@ export default function ResultCard({
         ) : null}
 
         {(validationStatus ||
-          regulatoryStatuses.length > 0 ||
-          purpose) && (
+          regulatoryStatuses.length > 0) && (
           <div className="space-y-2">
             {validationStatus ? (
               <p
@@ -399,26 +398,12 @@ export default function ResultCard({
                 {selectedRegulation ? (
                   <RegulationDetail
                     item={selectedRegulation}
-                    noCitationLabel={noRegulatoryCitationLabel}
-                    linkLabel={regulatoryLinkLabel}
+                    statusLabel={regulationStatusLabel}
+                    purposeLabel={purposeLabel}
                     highlightQuery={highlightQuery}
                   />
                 ) : null}
               </div>
-            ) : null}
-            {purpose ? (
-              <p className="font-metadata text-metadata text-on-secondary-container">
-                {purposeLabel ? (
-                  <>
-                    <span className="text-on-surface-variant">
-                      {purposeLabel}:{' '}
-                    </span>
-                    <HighlightedText text={purpose} query={highlightQuery} />
-                  </>
-                ) : (
-                  <HighlightedText text={purpose} query={highlightQuery} />
-                )}
-              </p>
             ) : null}
           </div>
         )}

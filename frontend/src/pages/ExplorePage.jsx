@@ -10,14 +10,13 @@ import {
 } from '../lib/explore'
 import {
   formatOecdReference,
+  formatRegulatoryStatusItems,
   methodDescription,
   methodDetailRows,
   methodDisplayName,
   methodThreeRBadges,
   pickLocalized,
-  primaryRegulatoryContext,
   primaryThreeR,
-  jurisdictionLabel,
 } from '../lib/search'
 
 const TABS = ['methods', 'regulations', 'documents']
@@ -384,7 +383,6 @@ function MethodsPanel({ lang, t }) {
       renderCard={(item, highlightQuery, endAction) => {
         const method = item.method
         const contexts = item.regulatory_contexts ?? []
-        const primaryContext = primaryRegulatoryContext(contexts)
         const protocolCitation =
           method.source_citation?.trim() ||
           formatOecdReference(method.oecd_ref) ||
@@ -402,29 +400,9 @@ function MethodsPanel({ lang, t }) {
                 ? t(`s3.validationStatus.${method.validation_status}`)
                 : null
             }
-            regulatoryStatuses={contexts.map((context, index) => {
-              const jurisdiction = jurisdictionLabel(
-                context.jurisdiction,
-                lang,
-                t,
-              )
-              const status = context.regulation_status
-                ? t(`s3.regulatoryStatus.${context.regulation_status}`)
-                : null
-              const keyBase =
-                typeof context.jurisdiction === 'object'
-                  ? context.jurisdiction['en-us']
-                  : context.jurisdiction
-              return {
-                key: `${keyBase}-${index}`,
-                label: jurisdiction,
-                status,
-                citation: context.regulatory_citation?.trim() || null,
-                url: context.regulatory_url || null,
-              }
-            })}
-            purpose={primaryContext?.regulation_purpose || null}
+            regulatoryStatuses={formatRegulatoryStatusItems(contexts, lang, t)}
             purposeLabel={t('s3.purposeLabel')}
+            regulationStatusLabel={t('s3.regulationStatusLabel')}
             validationStatusLabel={t('s3.validationStatusLabel')}
             approvedJurisdictionsLabel={t('s3.approvedJurisdictionsLabel')}
             description={methodDescription(method, lang)}

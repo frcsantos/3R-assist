@@ -3,7 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models.i18n import LocalizedStr
-from app.models.method import MethodRegulatoryContext, RegulatoryStatus
+from app.models.method import Method, MethodRegulatoryContext, RegulatoryStatus
 
 
 def _looks_like_single_url(text: str) -> bool:
@@ -69,18 +69,7 @@ class PolicyMethodMatchRequest(BaseModel):
     limit: int = Field(default=5, ge=1, le=20)
 
 
-class MatchedMethodSummary(BaseModel):
-    id: int
-    slug: str
-    name: LocalizedStr
-    description: LocalizedStr
-    text_for_embedding: str
-    endpoint_category: str
-    study_domain: str
-    oecd_ref: str | None = None
-    source_db: str
-    validation_status: str = "not_evaluated"
-    active: bool
+class MatchedMethodSummary(Method):
     regulatory_contexts: list[MethodRegulatoryContext] = Field(default_factory=list)
 
 

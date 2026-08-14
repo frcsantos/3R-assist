@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import ResultCard from '../components/ResultCard'
 import Button from '../components/Button'
 import MarkdownRenderer from '../components/MarkdownRenderer'
 import {
@@ -25,13 +26,15 @@ import {
 } from '../lib/admin'
 import { currentLanguage } from '../lib/i18n'
 import {
-  formatOecdReference,
-  jurisdictionLabel,
+  formatRegulatoryStatusItems,
   JURISDICTION_LABELS,
   methodDescription,
+  methodDetailRows,
   methodDisplayName,
+  methodSourceCitation,
+  methodThreeRBadges,
   pickLocalized,
-  primaryRegulatoryContext,
+  primaryThreeR,
   scorePercent,
 } from '../lib/search'
 
@@ -2712,114 +2715,78 @@ function ExtractedMethodRow({
                   <ul className="space-y-2">
                     {matches.map((candidate) => {
                       const dbMethod = candidate.method
-                      const oecd = formatOecdReference(dbMethod.oecd_ref)
                       const contexts = dbMethod.regulatory_contexts ?? []
-                      const primaryContext = primaryRegulatoryContext(contexts)
+                      const protocolCitation = methodSourceCitation(
+                        dbMethod,
+                        lang,
+                      )
                       return (
-                        <li
-                          key={`${candidate.match_kind}-${dbMethod.id}`}
-                          className="rounded-md border border-border-subtle bg-surface-container-lowest px-3 py-2"
-                        >
-                          <div className="flex flex-wrap items-baseline justify-between gap-2">
-                            <div className="flex min-w-0 items-center gap-1">
-                              <p className="font-metadata text-metadata text-on-surface">
-                                {methodDisplayName(dbMethod, lang)}
-                                <span className="ml-2 opacity-65">
+                        <li key={`${candidate.match_kind}-${dbMethod.id}`}>
+                          <ResultCard
+                            type={primaryThreeR(dbMethod)}
+                            badges={methodThreeRBadges(dbMethod, t, lang)}
+                            title={methodDisplayName(dbMethod, lang)}
+                            titleExtra={
+                              <span className="ml-2 inline-flex items-center gap-1 align-middle">
+                                <span className="font-metadata text-metadata font-normal text-on-surface-variant">
                                   ({dbMethod.slug})
                                 </span>
+                                <EditIconButton
+                                  label={t('admin.edit')}
+                                  disabled={rowActionsBusy}
+                                  onClick={() => openEditMethod(dbMethod)}
+                                />
+                              </span>
+                            }
+                            headerMeta={
+                              <p className="mt-1 font-metadata text-metadata text-on-surface-variant">
+                                {dbMethod.active
+                                  ? t('admin.extract.active')
+                                  : t('admin.extract.inactive')}
+                                {' · '}
+                                {candidate.match_kind === 'oecd_ref'
+                                  ? t('admin.extract.matchByOecd')
+                                  : t('admin.extract.matchByText')}
                               </p>
-                              <EditIconButton
-                                label={t('admin.edit')}
-                                disabled={rowActionsBusy}
-                                onClick={() => openEditMethod(dbMethod)}
-                              />
-                            </div>
-                            <p className="font-metadata text-metadata text-on-secondary-container">
-                              {candidate.match_kind === 'oecd_ref'
-                                ? t('admin.extract.matchByOecd')
-                                : t('admin.extract.matchByText')}
-                              {' · '}
-                              {scorePercent(candidate.score)}%
-                              {!dbMethod.active
-                                ? ` · ${t('admin.extract.inactive')}`
-                                : ''}
-                            </p>
-                          </div>
-                          <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-80">
-                            {[
-                              oecd,
-                              dbMethod.endpoint_category,
-                              dbMethod.study_domain,
-                              dbMethod.source_db,
+                            }
+                            score={scorePercent(candidate.score)}
+                            matchLabel={t('s3.matchLabel')}
+                            dimmed={!dbMethod.active}
+                            validationStatus={
                               dbMethod.validation_status
                                 ? t(
                                     `s3.validationStatus.${dbMethod.validation_status}`,
                                   )
-                                : null,
-                            ]
-                              .filter(Boolean)
-                              .join(' · ')}
-                          </p>
-                          {primaryContext?.regulation_purpose ? (
-                            <p className="mt-1 font-metadata text-metadata text-on-secondary-container">
-                              {t('s3.purposeLabel')}: {primaryContext.regulation_purpose}
-                            </p>
-                          ) : null}
-                          {primaryContext?.regulation_status ? (
-                            <p className="mt-1 font-metadata text-metadata text-on-secondary-container">
-                              {t('admin.extract.regulatoryStatus')}:{' '}
-                              {t(
-                                `s3.regulatoryStatus.${primaryContext.regulation_status}`,
-                              )}
-                            </p>
-                          ) : null}
-                          <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-65">
-                            {methodDescription(dbMethod, lang)}
-                          </p>
-                          {contexts.length > 0 ? (
-                            <ul className="mt-2 space-y-1">
-                              {contexts.map((context, index) => {
-                                const name = jurisdictionLabel(
-                                  context.jurisdiction,
-                                  lang,
-                                  t,
-                                )
-                                const date = context.regulation_date || null
-                                const url = context.regulatory_url || null
-                                const keyBase =
-                                  typeof context.jurisdiction === 'object'
-                                    ? context.jurisdiction['en-us']
-                                    : context.jurisdiction
-                                return (
-                                  <li
-                                    key={`${keyBase}-${index}`}
-                                    className="font-metadata text-metadata text-on-secondary-container"
-                                  >
-                                    <span>{name || t('admin.extract.notFound')}</span>
-                                    <span className="opacity-65">
-                                      {' · '}
-                                      {date || t('admin.extract.notFound')}
-                                    </span>
-                                    {' · '}
-                                    {url ? (
-                                      <a
-                                        href={url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-primary underline-offset-2 hover:underline"
-                                      >
-                                        {t('s3.regulatoryLink')}
-                                      </a>
-                                    ) : (
-                                      <span className="opacity-65">
-                                        {t('admin.extract.notFound')}
-                                      </span>
-                                    )}
-                                  </li>
-                                )
-                              })}
-                            </ul>
-                          ) : null}
+                                : null
+                            }
+                            regulatoryStatuses={formatRegulatoryStatusItems(
+                              contexts,
+                              lang,
+                              t,
+                            )}
+                            purposeLabel={t('s3.purposeLabel')}
+                            regulationStatusLabel={t(
+                              's3.regulationStatusLabel',
+                            )}
+                            validationStatusLabel={t(
+                              's3.validationStatusLabel',
+                            )}
+                            approvedJurisdictionsLabel={t(
+                              's3.approvedJurisdictionsLabel',
+                            )}
+                            description={methodDescription(dbMethod, lang)}
+                            detailRows={methodDetailRows(dbMethod, t)}
+                            protocolCitation={protocolCitation}
+                            noCitationLabel={t('s3.noProtocolCitation')}
+                            noRegulatoryCitationLabel={t(
+                              's3.noRegulatoryCitation',
+                            )}
+                            primaryUrl={dbMethod.source_url || null}
+                            sourcesLabel={t('s3.sourceLink')}
+                            referenceLabel={t('s3.referenceLabel')}
+                            regulatoryLinkLabel={t('s3.regulatoryLink')}
+                            closeLabel={t('s3.close')}
+                          />
                         </li>
                       )
                     })}
