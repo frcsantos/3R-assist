@@ -14,7 +14,45 @@ class MethodRepository:
     _SELECT_COLUMNS = """
         m.id, m.slug, m.active, m.name, m.description,
         m.animal_use, m.test_system,
-        m.endpoint_category, m.routes_applicable, m.study_domain,
+        m.endpoints,
+        (
+          SELECT COALESCE(array_agg(ep.slug ORDER BY u.ord), '{}'::text[])
+          FROM unnest(COALESCE(m.endpoints, '{}'::int[]))
+            WITH ORDINALITY AS u(eid, ord)
+          JOIN endpoints ep ON ep.id = u.eid
+        ) AS endpoint_codes,
+        (
+          SELECT COALESCE(jsonb_agg(ep.name ORDER BY u.ord), '[]'::jsonb)
+          FROM unnest(COALESCE(m.endpoints, '{}'::int[]))
+            WITH ORDINALITY AS u(eid, ord)
+          JOIN endpoints ep ON ep.id = u.eid
+        ) AS endpoint_names,
+        m.routes_applicable,
+        (
+          SELECT COALESCE(array_agg(rt.slug ORDER BY u.ord), '{}'::text[])
+          FROM unnest(COALESCE(m.routes_applicable, '{}'::int[]))
+            WITH ORDINALITY AS u(rid, ord)
+          JOIN routes rt ON rt.id = u.rid
+        ) AS route_codes,
+        (
+          SELECT COALESCE(jsonb_agg(rt.name ORDER BY u.ord), '[]'::jsonb)
+          FROM unnest(COALESCE(m.routes_applicable, '{}'::int[]))
+            WITH ORDINALITY AS u(rid, ord)
+          JOIN routes rt ON rt.id = u.rid
+        ) AS route_names,
+        m.application_ids,
+        (
+          SELECT COALESCE(array_agg(ap.slug ORDER BY u.ord), '{}'::text[])
+          FROM unnest(COALESCE(m.application_ids, '{}'::int[]))
+            WITH ORDINALITY AS u(aid, ord)
+          JOIN applications ap ON ap.id = u.aid
+        ) AS application_codes,
+        (
+          SELECT COALESCE(jsonb_agg(ap.name ORDER BY u.ord), '[]'::jsonb)
+          FROM unnest(COALESCE(m.application_ids, '{}'::int[]))
+            WITH ORDINALITY AS u(aid, ord)
+          JOIN applications ap ON ap.id = u.aid
+        ) AS application_names,
         m.oecd_ref, m.ncit_id,
         COALESCE(
             NULLIF(BTRIM(m.source_citation), ''),
@@ -47,8 +85,18 @@ class MethodRepository:
 
     _SELECT_CONTEXTS = """
         SELECT
-            mrc.method_id, mrc.jurisdiction,
-            mrc.regulation_status, mrc.regulation_date, mrc.regulation_purpose,
+            mrc.id, mrc.method_id, mrc.jurisdiction,
+            mrc.regulatory_status, mrc.regulatory_date, mrc.regulatory_endpoints,
+            (
+              SELECT COALESCE(
+                jsonb_agg(e.name ORDER BY u.ord),
+                '[]'::jsonb
+              )
+              FROM unnest(COALESCE(mrc.regulatory_endpoints, '{}'::int[]))
+                WITH ORDINALITY AS u(eid, ord)
+              JOIN endpoints e ON e.id = u.eid
+            ) AS regulatory_endpoint_names,
+            mrc.endpoint_quote,
             mrc.regulatory_body, mrc.regulatory_doc_id,
             CASE
               WHEN mrc.regulatory_citation IS NOT NULL
@@ -201,9 +249,15 @@ class MethodRepository:
             embedding_json=embedding,
             created_at=row["created_at"],
             updated_at=row["updated_at"],
-            endpoint_category=row["endpoint_category"],
+            endpoints=row["endpoints"] or [],
+            endpoint_codes=list(row["endpoint_codes"] or []),
+            endpoint_names=row.get("endpoint_names") or [],
             routes_applicable=routes,
-            study_domain=row["study_domain"],
+            route_codes=list(row.get("route_codes") or []),
+            route_names=row.get("route_names") or [],
+            application_ids=row.get("application_ids") or [],
+            application_codes=list(row.get("application_codes") or []),
+            application_names=row.get("application_names") or [],
             animal_use=row.get("animal_use"),
             test_system=test_system,
             oecd_ref=row["oecd_ref"],
@@ -228,10 +282,13 @@ class MethodRepository:
     @staticmethod
     def _row_to_context(row) -> MethodRegulatoryContext:
         return MethodRegulatoryContext(
+            id=row["id"],
             jurisdiction=row["jurisdiction"],
-            regulation_status=MethodRepository._norm_vocab(row["regulation_status"]),
-            regulation_date=row["regulation_date"],
-            regulation_purpose=row["regulation_purpose"],
+            regulatory_status=MethodRepository._norm_vocab(row["regulatory_status"]),
+            regulatory_date=row["regulatory_date"],
+            regulatory_endpoints=row["regulatory_endpoints"],
+            regulatory_endpoint_names=row["regulatory_endpoint_names"] or [],
+            endpoint_quote=row["endpoint_quote"],
             regulatory_body=row["regulatory_body"],
             regulatory_doc_id=row["regulatory_doc_id"],
             regulatory_citation=row["regulatory_citation"],

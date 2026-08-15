@@ -77,12 +77,12 @@ Os textos de `description_en` e `description_pt` foram escritos a partir de docu
 - ☐ Confirmado: todos os 23 métodos OECD usam `source_db = 'OECD_TG'`
 - ☐ Exceções (listar slugs + source_db correto):
 
-### 3. study_domain — confirmar fallback `general`
+### 3. application_ids — confirmar fallback `basic-research`
 
-Todos os 25 métodos têm `study_domain = 'general'`. Confirmar se algum deveria ser `pharma`, `cosmetics` ou `chemical_safety` dado uso regulatório típico. (A maioria dos TGs OECD é genuinamente `general`.)
+Métodos mapeados de `study_domain = 'general'` receberam `application_ids` → `basic-research`. Confirmar se algum deveria ser `regulatory-use` (ou outro slug em `applications`) dado uso regulatório típico.
 
 - ☐ Confirmado sem alterações
-- ☐ Exceções (listar slugs + study_domain correto):
+- ☐ Exceções (listar slugs + application correto):
 
 ### 4. Contextos EU — [VERIFY para todos os métodos]
 

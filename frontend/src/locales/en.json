@@ -26,7 +26,11 @@
     "rowCount": "Rows {{from}}–{{to}} of {{total}}",
     "prevPage": "Previous",
     "nextPage": "Next",
+    "firstPage": "First",
+    "lastPage": "Last",
+    "goToPage": "Page",
     "pageOf": "Page {{current}} of {{total}}",
+    "pageOfTotal": "of {{total}}",
     "editHint": "Double-click to edit",
     "save": "Save",
     "cancel": "Cancel",
@@ -140,6 +144,7 @@
       "editMethodError": "Could not open the edit-method form.",
       "addRegulation": "Add regulation",
       "addRegulationError": "Could not open the add-regulation form.",
+      "editRegulationError": "Could not open the edit-regulation form.",
       "methodProtocolLabel": "Method protocol",
       "methodProtocolPlaceholder": "Paste the method protocol, guideline, or TG document text…",
       "methodProtocolHint": "Submit to ask the model to fill the form fields from the document.",
@@ -252,7 +257,7 @@
       "studyType": "Study type (extracted)",
       "endpointCategory": "Endpoint category",
       "route": "Route",
-      "studyDomain": "Study domain",
+      "application": "Application",
       "procedureText": "Procedure text",
       "species": "Species",
       "animalCounts": {
@@ -283,19 +288,37 @@
         "rabies_diagnosis": "Rabies diagnosis"
       },
       "route": {
-        "oral": "Oral",
-        "intraperitoneal": "Intraperitoneal",
-        "intravenous": "Intravenous",
-        "dermal": "Dermal",
-        "ocular": "Ocular",
+        "cutaneous": "Cutaneous",
         "inhalation": "Inhalation",
+        "oral": "Oral",
+        "ocular": "Ocular",
+        "intranasal": "Intranasal",
+        "intratracheal": "Intratracheal",
+        "intravenous": "Intravenous",
+        "intra-arterial": "Intra-arterial",
+        "intramuscular": "Intramuscular",
+        "subcutaneous": "Subcutaneous",
+        "intradermal": "Intradermal",
+        "intraperitoneal": "Intraperitoneal",
+        "rectal": "Rectal",
+        "vaginal": "Vaginal",
+        "topical-mucosal": "Topical mucosal",
+        "implantation": "Implantation",
+        "multiple": "Multiple routes",
+        "not-applicable": "Not applicable",
+        "unspecified": "Unspecified",
         "other": "Other"
       },
-      "studyDomain": {
-        "pharma": "Pharmaceutical",
-        "cosmetics": "Cosmetics",
-        "chemical_safety": "Chemical safety",
-        "general": "General research"
+      "application": {
+        "basic-research": "Basic research",
+        "translational-applied-research": "Translational and applied research",
+        "regulatory-use": "Regulatory use",
+        "routine-production": "Routine production",
+        "education-training": "Education and training",
+        "environmental-protection": "Protection of the natural environment",
+        "species-preservation": "Preservation of species",
+        "forensic-inquiry": "Forensic inquiry",
+        "other": "Other"
       },
       "species": {
         "rat": "Rat",
@@ -317,7 +340,7 @@
     "protocolSummary": "Protocol summary",
     "recommendedAlternatives": "Recommended alternatives",
     "matchedParams": "Matched parameters",
-    "matchLabel": "Match",
+    "matchLabel": "Relevance",
     "sourceLink": "Primary source",
     "referenceLabel": "Reference",
     "showMore": "Show more",
@@ -360,7 +383,7 @@
       "recommended": "Recommended",
       "mandatory": "Mandatory"
     },
-    "purposeLabel": "Purpose",
+    "purposeLabel": "Endpoint",
     "regulationStatusLabel": "Regulation status",
     "validationStatusLabel": "Validation status",
     "approvedJurisdictionsLabel": "Approved jurisdictions",
@@ -421,6 +444,8 @@
       "label": "Methods",
       "empty": "No methods in the catalogue yet."
     },
+    "associatedRegulations": "Associated regulations",
+    "noAssociatedRegulations": "No methods are linked to this document yet.",
     "regulations": {
       "label": "Regulations",
       "empty": "No regulations or guidelines in the catalogue yet."

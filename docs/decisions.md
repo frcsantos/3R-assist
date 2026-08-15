@@ -438,6 +438,8 @@ Adicionalmente, o vocabulário original de 4 valores (`pharma`, `cosmetics`, `ch
 - `embed_methods.py`: coluna `application_area` → `study_domain` na query de leitura.
 - Frontend S2: label PT "Área de aplicação" → "Domínio do estudo" / EN "Study domain".
 
+Later replaced: `study_domain` / `study_domains` → `applications` (migrations 061–063). Protocol API uses slug `application`; `methods` stores `application_ids INTEGER[]`.
+
 ---
 
 ## ADR-021 — `category_3r` de TEXT para JSONB (múltiplos Rs por método)

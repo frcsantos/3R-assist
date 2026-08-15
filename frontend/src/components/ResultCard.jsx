@@ -68,11 +68,13 @@ function formatRegulationDate(value) {
   return text
 }
 
-function RegulationDetail({
+export function RegulationDetail({
   item,
   statusLabel,
   purposeLabel,
   highlightQuery,
+  onEdit,
+  editLabel,
 }) {
   const citation = item.citation?.trim() || null
   const linkHref = item.url || (isHttpUrl(citation) ? citation : null)
@@ -82,7 +84,32 @@ function RegulationDetail({
     : statusLabel
 
   return (
-    <div className="space-y-1.5 rounded-md bg-surface-container px-3 py-2 font-metadata text-metadata text-on-secondary-container">
+    <div className={`relative space-y-1.5 rounded-md bg-surface-container px-3 py-2 font-metadata text-metadata text-on-secondary-container ${onEdit ? 'pr-10' : ''}`}>
+      {onEdit ? (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onEdit(item)
+          }}
+          aria-label={editLabel}
+          title={editLabel}
+          className="absolute right-1 top-1 inline-flex h-7 w-7 items-center justify-center rounded-md text-primary transition-colors hover:bg-surface-container-lowest"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M11.5 2.5l2 2L5 13H3v-2l8.5-8.5z" />
+          </svg>
+        </button>
+      ) : null}
       {item.status ? (
         <p>
           <span className="text-on-surface-variant">{statusHeading}: </span>
@@ -147,7 +174,7 @@ export default function ResultCard({
   noRegulatoryCitationLabel,
   regulatoryLinkLabel = 'OECD / regulatory',
   closeLabel = 'Close',
-  matchLabel = 'Match',
+  matchLabel = 'Relevance',
   highlightQuery,
   hideTitle = false,
   className = '',
@@ -155,6 +182,8 @@ export default function ResultCard({
   endAction = null,
   titleExtra = null,
   headerMeta = null,
+  onEditRegulation = null,
+  editRegulationLabel = 'Edit',
 }) {
   const { t } = useTranslation()
   const styles = threeRStyles[type] ?? threeRStyles.replacement
@@ -401,6 +430,12 @@ export default function ResultCard({
                     statusLabel={regulationStatusLabel}
                     purposeLabel={purposeLabel}
                     highlightQuery={highlightQuery}
+                    onEdit={
+                      onEditRegulation && selectedRegulation.id != null
+                        ? onEditRegulation
+                        : null
+                    }
+                    editLabel={editRegulationLabel}
                   />
                 ) : null}
               </div>

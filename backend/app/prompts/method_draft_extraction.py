@@ -43,12 +43,21 @@ endpoint_category — exactly one of:
   (or null if none fits)
 
 routes_applicable — array of zero or more of:
-  oral, intraperitoneal, intravenous, dermal, ocular, inhalation, other
+  cutaneous, inhalation, oral, ocular, intranasal, intratracheal,
+  intravenous, intra-arterial, intramuscular, subcutaneous, intradermal,
+  intraperitoneal, rectal, vaginal, topical-mucosal, implantation,
+  multiple, not-applicable, unspecified, other
   Use null (not []) when the document does not indicate applicable routes.
+  Map dermal / topical / epicutaneous to cutaneous.
   Do not use in_vitro as a route; capture culture/assay modality in test_system.
 
-study_domain — exactly one of:
-  general, pharma, cosmetics, chemical_safety
+application — exactly one of:
+  basic-research, translational-applied-research, regulatory-use,
+  routine-production, education-training, environmental-protection,
+  species-preservation, forensic-inquiry, other
+  Use basic-research when the purpose is not clearly stated.
+  Map legacy study_domain values: general→basic-research;
+  pharma/cosmetics/chemical_safety→regulatory-use.
 
 source_db — exactly one of when provenance is clear, else null:
   OECD_TG, ECVAM_DBALM, NICEATM, FARMACOPEIA_BR, TSAR
@@ -88,7 +97,7 @@ Schema:
   "test_system": ["string"] or null,
   "endpoint_category": "string or null",
   "routes_applicable": ["string"] or null,
-  "study_domain": "string or null",
+  "application": "string or null",
   "oecd_ref": "string or null",
   "ncit_id": "string or null",
   "source_citation": "string or null",

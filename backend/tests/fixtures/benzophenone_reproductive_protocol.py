@@ -35,7 +35,7 @@ EXPECTED_BENZOPHENONE_REPRODUCTIVE = ExpectedExtraction(
     study_type_keywords=("two-generation", "reproductive"),
     endpoint_category=None,
     route=["oral"],
-    study_domain={"chemical_safety", "general"},
+    application={"regulatory-use", "basic-research"},
     procedure_keywords=(
         "reproductive",
         "two-generation",

@@ -141,8 +141,12 @@ function normalizeBooleanDraft(draft) {
 /** Columns that store JSON arrays of vocabulary codes (admin multi-select). */
 const MULTI_SELECT_COLUMNS = new Set([
   'routes_applicable',
+  'application_ids',
   'categories',
   'test_system',
+  'regulatory_endpoints',
+  'endpoints',
+  'compatible_endpoints',
 ])
 
 function isMultiSelectColumn(column, type, options) {
@@ -532,14 +536,45 @@ function AddRowModal({
     }
   }
 
+  function resolveOptionValue(value, options) {
+    if (value == null || !options?.length) return value
+    if (Array.isArray(value)) {
+      return value.map((item) => resolveOptionValue(item, options))
+    }
+    const text = String(value).trim()
+    if (!text) return value
+    const exact = options.find((option) => String(option.value) === text)
+    if (exact) return exact.value
+    const lower = text.toLowerCase().replace(/_/g, '-')
+    const byCode = options.find((option) => {
+      const label = String(option.label).toLowerCase().replace(/_/g, '-')
+      return (
+        label === lower ||
+        label.startsWith(`${lower} —`) ||
+        label.startsWith(`${lower} -`)
+      )
+    })
+    return byCode ? byCode.value : value
+  }
+
   function applyExtractedFields(fields) {
+    const incoming = { ...fields }
+    if (incoming.endpoints == null && incoming.endpoint_category != null) {
+      incoming.endpoints = Array.isArray(incoming.endpoint_category)
+        ? incoming.endpoint_category
+        : [incoming.endpoint_category]
+    }
     setValues((current) => {
       const next = { ...current }
       for (const column of columns) {
         if (lockedSet.has(column) && column !== 'category_3r') continue
-        if (!(column in fields)) continue
-        const value = fields[column]
+        if (!(column in incoming)) continue
+        let value = incoming[column]
         if (value === null || value === undefined) continue
+        value = resolveOptionValue(value, fieldOptions?.[column])
+        if (column === 'endpoints' && value != null && !Array.isArray(value)) {
+          value = [value]
+        }
         if (typeof value === 'string' && value.trim() === '') continue
         if (Array.isArray(value) && value.length === 0) continue
         const draft = toDraft(value)
@@ -1249,6 +1284,7 @@ function DatabasePanel() {
   const [tables, setTables] = useState([])
   const [activeTable, setActiveTable] = useState(null)
   const [page, setPage] = useState(0)
+  const [pageInput, setPageInput] = useState('1')
   const [tableData, setTableData] = useState(null)
   const [loadingTables, setLoadingTables] = useState(true)
   const [loadingData, setLoadingData] = useState(false)
@@ -1392,6 +1428,24 @@ function DatabasePanel() {
 
   const primaryKey = tableData?.primary_key ?? []
   const totalPages = tableData ? Math.max(1, Math.ceil(tableData.total / PAGE_SIZE)) : 1
+
+  useEffect(() => {
+    setPageInput(String(page + 1))
+  }, [page])
+
+  function goToPage(raw) {
+    const parsed = Number.parseInt(String(raw).trim(), 10)
+    if (!Number.isFinite(parsed)) {
+      setPageInput(String(page + 1))
+      return
+    }
+    const next = Math.min(totalPages, Math.max(1, parsed))
+    setPage(next - 1)
+    setPageInput(String(next))
+  }
+
+  const pagerButtonClass =
+    'rounded-md border border-border-subtle px-3 py-1.5 font-metadata text-metadata text-on-surface transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-40'
   const selectedKeys = Object.keys(selected)
   const selectedCount = selectedKeys.length
   const pageRowKeys =
@@ -1974,25 +2028,65 @@ function DatabasePanel() {
                     </div>
 
                     {tableData.total > PAGE_SIZE && (
-                      <div className="mt-card-gap flex items-center justify-between gap-4">
+                      <div className="mt-card-gap flex flex-wrap items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          disabled={page === 0}
+                          onClick={() => setPage(0)}
+                          className={pagerButtonClass}
+                        >
+                          {t('admin.firstPage')}
+                        </button>
                         <button
                           type="button"
                           disabled={page === 0}
                           onClick={() => setPage((current) => current - 1)}
-                          className="rounded-md border border-border-subtle px-3 py-1.5 font-metadata text-metadata text-on-surface transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-40"
+                          className={pagerButtonClass}
                         >
                           {t('admin.prevPage')}
                         </button>
-                        <span className="font-metadata text-metadata text-on-secondary-container">
-                          {t('admin.pageOf', { current: page + 1, total: totalPages })}
-                        </span>
+                        <form
+                          className="flex items-center gap-2"
+                          onSubmit={(event) => {
+                            event.preventDefault()
+                            goToPage(pageInput)
+                          }}
+                        >
+                          <label
+                            htmlFor="admin-page-input"
+                            className="font-metadata text-metadata text-on-secondary-container"
+                          >
+                            {t('admin.goToPage')}
+                          </label>
+                          <input
+                            id="admin-page-input"
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="off"
+                            value={pageInput}
+                            onChange={(event) => setPageInput(event.target.value)}
+                            onBlur={() => goToPage(pageInput)}
+                            className="w-14 rounded border border-border-subtle bg-surface-container-lowest px-2 py-1.5 text-center font-metadata text-metadata text-on-surface outline-none focus:border-primary"
+                          />
+                          <span className="font-metadata text-metadata text-on-secondary-container">
+                            {t('admin.pageOfTotal', { total: totalPages })}
+                          </span>
+                        </form>
                         <button
                           type="button"
                           disabled={page >= totalPages - 1}
                           onClick={() => setPage((current) => current + 1)}
-                          className="rounded-md border border-border-subtle px-3 py-1.5 font-metadata text-metadata text-on-surface transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-40"
+                          className={pagerButtonClass}
                         >
                           {t('admin.nextPage')}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={page >= totalPages - 1}
+                          onClick={() => setPage(totalPages - 1)}
+                          className={pagerButtonClass}
+                        >
+                          {t('admin.lastPage')}
                         </button>
                       </div>
                     )}
@@ -2403,14 +2497,10 @@ function regulationInitialValuesFromExtracted(
   return {
     method_id: topMatch?.id ?? '',
     jurisdiction: isOecd ? JURISDICTION_LABELS.oecd : '',
-    regulation_status: method.status ?? '',
-    regulation_date: regulationDateFromDocument(documentDate),
-    regulation_purpose: method.purpose?.trim()
-      ? {
-          'en-us': method.purpose.trim(),
-          'pt-br': method.purpose.trim(),
-        }
-      : { 'en-us': '', 'pt-br': '' },
+    regulatory_status: method.status ?? '',
+    regulatory_date: regulationDateFromDocument(documentDate),
+    regulatory_endpoints: [],
+    endpoint_quote: '',
     regulatory_body:
       institution && typeof institution === 'object'
         ? institution
@@ -2551,6 +2641,11 @@ function ExtractedMethodRow({
   const [editMethodOpen, setEditMethodOpen] = useState(false)
   const [editMethodLoadingId, setEditMethodLoadingId] = useState(null)
   const [editMethodError, setEditMethodError] = useState(null)
+  const [editRegulationSchema, setEditRegulationSchema] = useState(null)
+  const [editRegulationRow, setEditRegulationRow] = useState(null)
+  const [editRegulationOpen, setEditRegulationOpen] = useState(false)
+  const [editRegulationLoadingId, setEditRegulationLoadingId] = useState(null)
+  const [editRegulationError, setEditRegulationError] = useState(null)
 
   async function toggle() {
     const next = !open
@@ -2597,7 +2692,7 @@ function ExtractedMethodRow({
   }
 
   async function openAddMethod() {
-    if (addMethodLoading || addRegulationLoading || editMethodLoadingId != null) return
+    if (addMethodLoading || addRegulationLoading || editMethodLoadingId != null || editRegulationLoadingId != null) return
     setAddMethodError(null)
     setAddMethodLoading(true)
     try {
@@ -2612,7 +2707,7 @@ function ExtractedMethodRow({
   }
 
   async function openAddRegulation() {
-    if (addRegulationLoading || addMethodLoading || editMethodLoadingId != null) return
+    if (addRegulationLoading || addMethodLoading || editMethodLoadingId != null || editRegulationLoadingId != null) return
     setAddRegulationError(null)
     setAddRegulationLoading(true)
     try {
@@ -2632,6 +2727,7 @@ function ExtractedMethodRow({
   async function openEditMethod(dbMethod) {
     if (
       editMethodLoadingId != null ||
+      editRegulationLoadingId != null ||
       addMethodLoading ||
       addRegulationLoading ||
       !dbMethod?.id
@@ -2649,6 +2745,30 @@ function ExtractedMethodRow({
       setEditMethodError(t('admin.extract.editMethodError'))
     } finally {
       setEditMethodLoadingId(null)
+    }
+  }
+
+  async function openEditRegulation(item) {
+    if (
+      editRegulationLoadingId != null ||
+      editMethodLoadingId != null ||
+      addMethodLoading ||
+      addRegulationLoading ||
+      item?.id == null
+    ) {
+      return
+    }
+    setEditRegulationError(null)
+    setEditRegulationLoadingId(item.id)
+    try {
+      const { schema, row } = await fetchAdminRowById('regulations', item.id)
+      setEditRegulationSchema(schema)
+      setEditRegulationRow(row)
+      setEditRegulationOpen(true)
+    } catch {
+      setEditRegulationError(t('admin.extract.editRegulationError'))
+    } finally {
+      setEditRegulationLoadingId(null)
     }
   }
 
@@ -2670,8 +2790,16 @@ function ExtractedMethodRow({
       (column) => !(editMethodSchema.auto_columns ?? []).includes(column),
     ) ?? []
   const editMethodPrimaryKey = editMethodSchema?.primary_key ?? []
+  const editRegulationColumns =
+    editRegulationSchema?.columns.filter(
+      (column) => !(editRegulationSchema.auto_columns ?? []).includes(column),
+    ) ?? []
+  const editRegulationPrimaryKey = editRegulationSchema?.primary_key ?? []
   const rowActionsBusy =
-    addMethodLoading || addRegulationLoading || editMethodLoadingId != null
+    addMethodLoading ||
+    addRegulationLoading ||
+    editMethodLoadingId != null ||
+    editRegulationLoadingId != null
 
   return (
     <>
@@ -2790,7 +2918,7 @@ function ExtractedMethodRow({
                               's3.approvedJurisdictionsLabel',
                             )}
                             description={methodDescription(dbMethod, lang)}
-                            detailRows={methodDetailRows(dbMethod, t)}
+                            detailRows={methodDetailRows(dbMethod, t, lang)}
                             protocolCitation={protocolCitation}
                             noCitationLabel={t('s3.noProtocolCitation')}
                             noRegulatoryCitationLabel={t(
@@ -2801,6 +2929,8 @@ function ExtractedMethodRow({
                             referenceLabel={t('s3.referenceLabel')}
                             regulatoryLinkLabel={t('s3.regulatoryLink')}
                             closeLabel={t('s3.close')}
+                            onEditRegulation={openEditRegulation}
+                            editRegulationLabel={t('admin.edit')}
                           />
                         </li>
                       )
@@ -2861,6 +2991,14 @@ function ExtractedMethodRow({
                     role="alert"
                   >
                     {editMethodError}
+                  </p>
+                ) : null}
+                {editRegulationError ? (
+                  <p
+                    className="font-metadata text-metadata text-error"
+                    role="alert"
+                  >
+                    {editRegulationError}
                   </p>
                 ) : null}
               </div>
@@ -2948,6 +3086,38 @@ function ExtractedMethodRow({
               onSaved={async () => {
                 setEditMethodOpen(false)
                 setEditMethodRow(null)
+                await refreshMatches()
+              }}
+            />,
+            document.body,
+          )
+        : null}
+      {editRegulationOpen && editRegulationSchema && editRegulationRow
+        ? createPortal(
+            <AddRowModal
+              key={`extract-edit-regulation-${editRegulationRow.id}`}
+              table="regulations"
+              columns={editRegulationColumns}
+              comments={editRegulationSchema.column_comments}
+              types={editRegulationSchema.column_types}
+              requiredColumns={editRegulationSchema.required_columns}
+              foreignKeys={editRegulationSchema.foreign_keys}
+              columnOptions={editRegulationSchema.column_options}
+              mode="edit"
+              title={t('admin.editRow')}
+              initialValues={editRegulationRow}
+              lockedColumns={editRegulationPrimaryKey}
+              primaryKey={primaryKeyValues(
+                editRegulationRow,
+                editRegulationPrimaryKey,
+              )}
+              onClose={() => {
+                setEditRegulationOpen(false)
+                setEditRegulationRow(null)
+              }}
+              onSaved={async () => {
+                setEditRegulationOpen(false)
+                setEditRegulationRow(null)
                 await refreshMatches()
               }}
             />,

@@ -1,4 +1,5 @@
 from typing import Literal
+import json
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -28,15 +29,38 @@ class RegulationDraftExtractRequest(BaseModel):
 
 class RegulationDraftFields(BaseModel):
     jurisdiction: LocalizedStr | None = None
-    regulation_status: RegulatoryStatus | None = None
-    regulation_date: str | None = None
-    regulation_purpose: LocalizedStr | None = None
+    regulatory_status: RegulatoryStatus | None = None
+    regulatory_date: str | None = None
+    regulatory_endpoints: list[int] | None = None
+    endpoint_quote: str | None = None
     regulatory_body: LocalizedStr | None = None
     regulatory_citation: LocalizedStr | None = None
     notes: str | None = None
 
+    @field_validator("regulatory_endpoints", mode="before")
+    @classmethod
+    def _coerce_endpoint_ids(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, str) and not value.strip():
+            return None
+        if isinstance(value, str):
+            parsed = value.strip()
+            if parsed.startswith("["):
+                value = json.loads(parsed)
+            else:
+                return None
+        if isinstance(value, (tuple, list)):
+            ids: list[int] = []
+            for item in value:
+                try:
+                    ids.append(int(item))
+                except (TypeError, ValueError):
+                    continue
+            return ids or None
+        return None
+
     @field_validator(
-        "regulation_purpose",
         "regulatory_body",
         "regulatory_citation",
         mode="before",

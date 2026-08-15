@@ -124,7 +124,7 @@ Use glossary terms consistently (see `glossary_en.md` / `glossary_pt.md`):
 | **Methodology** | Broader experimental strategy (may combine methods) |
 | **Route** | How the test substance contacts the biological system; `null` = any route |
 
-Prefer `study_domain` over the deprecated name `application_area` (ADR-020).
+Prefer `application` (protocol) / `application_ids` (methods) over the deprecated names `study_domain` and `application_area`.
 
 ### Process
 

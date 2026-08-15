@@ -172,10 +172,10 @@ export default function ResultsPage() {
             />
             <ParamSummaryRow label={t('s2.fields.route')} value={routeLabel} />
             <ParamSummaryRow
-              label={t('s2.fields.studyDomain')}
+              label={t('s2.fields.application')}
               value={
-                params.study_domain
-                  ? t(`s2.enums.studyDomain.${params.study_domain}`)
+                params.application
+                  ? t(`s2.enums.application.${params.application}`)
                   : null
               }
             />
@@ -295,7 +295,7 @@ export default function ResultsPage() {
                   matchedParams={formatMatchedParams(item.matched_params, t)}
                   matchedParamsLabel={t('s3.matchedParams')}
                   description={methodDescription(method, lang)}
-                  detailRows={methodDetailRows(method, t)}
+                  detailRows={methodDetailRows(method, t, lang)}
                   protocolCitation={protocolCitation}
                   noCitationLabel={t('s3.noProtocolCitation')}
                   noRegulatoryCitationLabel={t('s3.noRegulatoryCitation')}

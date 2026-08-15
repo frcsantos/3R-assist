@@ -10,8 +10,7 @@ Engine: PostgreSQL via Neon (Vercel Postgres) or a local PostgreSQL instance. Dr
 | [regulations](#regulations) | Per-method regulatory recognition by jurisdiction |
 | [endpoints](#endpoints) | Controlled vocabulary for toxicological endpoints |
 | [routes](#routes) | Controlled vocabulary for administration routes |
-| [study_domains](#study_domains) | Controlled vocabulary for study domains |
-| [route_endpoints](#route_endpoints) | Route ↔ endpoint compatibility matrix |
+| [applications](#applications) | Controlled vocabulary for intended use / purpose |
 | [users](#users) | Authenticated users (email magic link) |
 | [magic_link_tokens](#magic_link_tokens) | Single-use magic-link tokens |
 | [queries](#queries) | Protocol analysis / search sessions |
@@ -36,9 +35,9 @@ Curated catalogue of alternative methods (replacement, reduction, refinement). O
 | `description` | `JSONB` | NO | — | Localized full description: `{"en-us": "...", "pt-br": "..."}`. |
 | `animal_use` | `TEXT` | YES | — | How the method uses animals or animal materials: `none`, `animal_derived_material`, `slaughterhouse_byproduct`, `animals_killed_for_tissue`, `live_animals`, `mixed_or_variable`. |
 | `test_system` | `JSONB` | YES | — | Test system kinds (multi-select array): `in_silico`, `in_chemico`, `in_vitro`, `ex_vivo`, `in_vivo`, `hybrid`, `unclear`. |
-| `endpoint_category` | `TEXT` | NO | — | Toxicological endpoint code; FK → `endpoints(code)`. |
-| `routes_applicable` | `JSONB` | YES | — | Array of applicable route codes (e.g. `["dermal"]`). `NULL` means route-agnostic. |
-| `study_domain` | `TEXT` | NO | — | Primary study domain code; FK → `study_domains(code)`. Values: `general`, `pharma`, `cosmetics`, `chemical_safety`. |
+| `endpoints` | `INTEGER[]` | NO | — | Ordered vector of endpoint ids (`endpoints.id`). API also exposes `endpoint_codes` from `endpoints.slug`. |
+| `routes_applicable` | `INTEGER[]` | YES | — | Applicable route ids (`routes.id`). `NULL` means route-agnostic. API also exposes `route_codes` / `route_names`. |
+| `application_ids` | `INTEGER[]` | NO | — | Ordered vector of application ids (`applications.id`). API also exposes `application_codes` / `application_names`. |
 | `oecd_ref` | `TEXT` | YES | — | OECD Test Guideline or Guidance Document reference (e.g. `TG 439`, `GD 129`). `NULL` for non-OECD methods. |
 | `ncit_id` | `TEXT` | YES | — | NCI Thesaurus concept ID for the endpoint category. |
 | `source_citation` | `TEXT` | YES | — | Bibliographic citation for the primary source document. API responses fall back to `documents.doc_citation` (`en-us`, then `pt-br`) when null. |
@@ -55,7 +54,7 @@ Curated catalogue of alternative methods (replacement, reduction, refinement). O
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
 | `updated_at` | `TIMESTAMPTZ` | NO | `NOW()` | Last update time. |
 
-**Indexes:** `endpoint_category`, `active`, `source_doc_id`, `validation_doc_id`, GIN on `test_system`.
+**Indexes:** GIN on `endpoints`, GIN on `routes_applicable`, GIN on `application_ids`, `active`, `source_doc_id`, `validation_doc_id`, GIN on `test_system`.
 
 **3R qualification:** presence of a non-null `*_rationale` object with non-empty text in either locale means the method qualifies for that R. There is no separate companion flag column. Filter semantics: `replacement_rationale IS NOT NULL` (and likewise for reduction/refinement).
 
@@ -70,9 +69,10 @@ Regulatory recognition for a method, scoped by jurisdiction. One row per `(metho
 | `id` | `SERIAL` | NO | auto | Primary key. |
 | `method_id` | `INTEGER` | NO | — | FK → `methods(id)` `ON DELETE CASCADE`. |
 | `jurisdiction` | `JSONB` | NO | — | Localized regulatory jurisdiction: `{"en-us":"...","pt-br":"..."}` — Brazil/Brasil, EU/UE, US/EUA, OECD/OCDE. |
-| `regulation_status` | `TEXT` | YES | — | Regulatory standing: `not_approved`, `approved`, `recommended`, or `mandatory`. |
-| `regulation_date` | `DATE` | YES | — | Date of the regulation / recognition / adoption for this context (`YYYY-MM-DD`). |
-| `regulation_purpose` | `JSONB` | YES | — | Localized recognition purpose `{"en-us":"...","pt-br":"..."}`. |
+| `regulatory_status` | `TEXT` | YES | — | Regulatory standing: `not_approved`, `approved`, `recommended`, or `mandatory`. |
+| `regulatory_date` | `DATE` | YES | — | Date of the regulation / recognition / adoption for this context (`YYYY-MM-DD`). |
+| `regulatory_endpoints` | `INTEGER[]` | YES | — | Ordered vector of recognized endpoint ids (`endpoints.id`). API also exposes `regulatory_endpoint_names` from `endpoints.name`. |
+| `endpoint_quote` | `TEXT` | YES | — | Supporting quotation for `regulatory_endpoints`. |
 | `regulatory_body` | `JSONB` | YES | — | Localized issuing body `{"en-us":"...","pt-br":"..."}` (e.g. OECD/OCDE, CONCEA). |
 | `regulatory_doc_id` | `INTEGER` | YES | — | FK → `documents(id)` `ON DELETE SET NULL`. Regulatory document for this context. API exposes `regulatory_url` from `documents.url`. |
 | `regulatory_citation` | `JSONB` | YES | — | Localized bibliographic citation `{"en-us":"...","pt-br":"..."}`. API responses fall back to `documents.doc_citation` when empty. |
@@ -87,11 +87,15 @@ Regulatory recognition for a method, scoped by jurisdiction. One row per `(metho
 
 ## endpoints
 
-Controlled vocabulary for toxicological endpoint categories (`parameter_model.md` §3.1). Referenced by `methods.endpoint_category`.
+Controlled vocabulary for toxicological endpoint categories (`parameter_model.md` §3.1). Referenced by `methods.endpoints` and `routes.compatible_endpoints`.
 
 | Column | Type | Nullable | Default | Description |
 | --- | --- | --- | --- | --- |
-| `code` | `TEXT` | NO | — | Primary key code (e.g. `skin_irritation`, `acute_toxicity`). |
+| `slug` | `TEXT` | NO | — | Primary key, hyphenated (e.g. `skin-irritation`, `acute-toxicity`). |
+| `id` | `INTEGER` | NO | auto | Unique integer id referenced by `methods.endpoints` and `regulations.regulatory_endpoints`. |
+| `parent_id` | `INTEGER` | YES | `NULL` | Self-FK → `endpoints(id)` `ON DELETE SET NULL`. Parent endpoint in a hierarchy. |
+| `code` | `TEXT` | YES | `NULL` | Hierarchical code (e.g. `2.1.1.1`). |
+| `external_oht_codes` | `JSONB` | YES | — | OECD Harmonised Template codes as a JSON string array (e.g. `["58","66-1"]`). |
 | `name` | `JSONB` | NO | — | Localized display name: `{"en-us": "...", "pt-br": "..."}`. |
 | `description` | `JSONB` | YES | — | Localized longer description / examples. |
 | `sort_order` | `INTEGER` | NO | `0` | Display order in UI lists. |
@@ -99,7 +103,7 @@ Controlled vocabulary for toxicological endpoint categories (`parameter_model.md
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
 | `updated_at` | `TIMESTAMPTZ` | NO | `NOW()` | Last update time (trigger-maintained). |
 
-**Seeded codes:** `acute_toxicity`, `skin_irritation`, `skin_corrosion`, `ocular_irritation`, `skin_sensitisation`, `phototoxicity`, `genotoxicity`, `pyrogenicity`, `skin_absorption`, `reproductive_toxicity`, `endocrine_activity`, `photoreactivity`, `aquatic_toxicity`, `toxicokinetics`, `bacterial_endotoxin`, `rabies_diagnosis`.
+**Catalogue:** 54 hierarchical endpoints (ids 1–54) covering toxicokinetics, human-health effects, mechanistic activities, ecotoxicology, product-safety contaminants, and diagnostic targets.
 
 ---
 
@@ -109,25 +113,28 @@ Controlled vocabulary for chemical administration routes (`parameter_model.md` �
 
 | Column | Type | Nullable | Default | Description |
 | --- | --- | --- | --- | --- |
-| `code` | `TEXT` | NO | — | Primary key code (e.g. `oral`, `dermal`). |
+| `slug` | `TEXT` | NO | — | Primary key (e.g. `oral`, `cutaneous`). |
+| `id` | `INTEGER` | NO | auto | Unique integer id. |
 | `name` | `JSONB` | NO | — | Localized display name: `{"en-us": "...", "pt-br": "..."}`. |
 | `description` | `JSONB` | YES | — | Localized longer description / synonyms. |
+| `compatible_endpoints` | `INTEGER[]` | YES | — | Endpoint ids (`endpoints.id`) compatible with this route. |
 | `sort_order` | `INTEGER` | NO | `0` | Display order in UI lists. |
 | `active` | `BOOLEAN` | NO | `TRUE` | Whether the value is selectable. |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
 | `updated_at` | `TIMESTAMPTZ` | NO | `NOW()` | Last update time (trigger-maintained). |
 
-**Seeded codes:** `oral`, `intraperitoneal`, `intravenous`, `dermal`, `ocular`, `inhalation`, `other`.
+**Seeded slugs:** `cutaneous`, `inhalation`, `oral`, `ocular`, `intranasal`, `intratracheal`, `intravenous`, `intra-arterial`, `intramuscular`, `subcutaneous`, `intradermal`, `intraperitoneal`, `rectal`, `vaginal`, `topical-mucosal`, `implantation`, `multiple`, `not-applicable`, `unspecified`, `other`.
 
 ---
 
-## study_domains
+## applications
 
-Controlled vocabulary for study / regulatory domains (`parameter_model.md` §3.3). Referenced by `methods.study_domain`.
+Controlled vocabulary for the intended use of a method or study. Referenced by `methods.application_ids`.
 
 | Column | Type | Nullable | Default | Description |
 | --- | --- | --- | --- | --- |
-| `code` | `TEXT` | NO | — | Primary key code (e.g. `pharma`, `general`). |
+| `slug` | `TEXT` | NO | — | Primary key (e.g. `basic-research`, `regulatory-use`). |
+| `id` | `INTEGER` | NO | auto | Unique integer id. |
 | `name` | `JSONB` | NO | — | Localized display name: `{"en-us": "...", "pt-br": "..."}`. |
 | `description` | `JSONB` | YES | — | Localized longer description. |
 | `sort_order` | `INTEGER` | NO | `0` | Display order in UI lists. |
@@ -135,22 +142,7 @@ Controlled vocabulary for study / regulatory domains (`parameter_model.md` §3.3
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Row creation time. |
 | `updated_at` | `TIMESTAMPTZ` | NO | `NOW()` | Last update time (trigger-maintained). |
 
-**Seeded codes:** `pharma`, `cosmetics`, `chemical_safety`, `general`.
-
----
-
-## route_endpoints
-
-Compatibility matrix between administration routes and endpoints. Used for route-based soft filtering in retrieval.
-
-| Column | Type | Nullable | Default | Description |
-| --- | --- | --- | --- | --- |
-| `route_code` | `TEXT` | NO | — | FK → `routes(code)` `ON DELETE CASCADE`. Part of composite PK. |
-| `endpoint_code` | `TEXT` | NO | — | FK → `endpoints(code)` `ON DELETE CASCADE`. Part of composite PK. |
-
-**Constraints:** `PRIMARY KEY (route_code, endpoint_code)`.
-
-**Indexes:** `endpoint_code`.
+**Seeded slugs:** `basic-research`, `translational-applied-research`, `regulatory-use`, `routine-production`, `education-training`, `environmental-protection`, `species-preservation`, `forensic-inquiry`, `other`.
 
 ---
 
@@ -193,7 +185,7 @@ One row per protocol analysis or search session (F09). Stores extraction output 
 | `id` | `SERIAL` | NO | auto | Primary key. |
 | `user_id` | `INTEGER` | YES | — | FK → `users(id)` `ON DELETE SET NULL`. `NULL` = anonymous session. |
 | `protocol_text` | `TEXT` | NO | — | Raw protocol input text (stored with user consent). |
-| `extracted_params` | `JSONB` | YES | — | Extraction result per `parameter_model.md`: `{ endpoint_category, route, study_domain, procedure_text, species, n_animals, regulatory, confidence, raw_text_excerpt }`. |
+| `extracted_params` | `JSONB` | YES | — | Extraction result per `parameter_model.md`: `{ endpoint_category, route, application, procedure_text, species, n_animals, regulatory, … }`. |
 | `confidence` | `TEXT` | YES | — | Overall extraction confidence: `high`, `medium`, or `low`. |
 | `results_snapshot` | `JSONB` | YES | — | Recommendations at query time: `[{ method_id, slug, score }, ...]`. |
 | `created_at` | `TIMESTAMPTZ` | NO | `NOW()` | Query time. |
@@ -305,9 +297,8 @@ erDiagram
     documents ||--o{ methods : sources
     documents ||--o{ regulations : regulates
     endpoints ||--o{ methods : categorizes
-    study_domains ||--o{ methods : scopes
-    routes ||--o{ route_endpoints : maps
-    endpoints ||--o{ route_endpoints : maps
+    applications ||--o{ methods : scopes
+    routes ||--o{ methods : applies
 ```
 
 Migrations that define or alter these tables:
@@ -359,4 +350,21 @@ Migrations that define or alter these tables:
 | `044_feedback.sql` | creates `feedback` (`user_id`, `url`, `object`, `feedback_text`) |
 | `045_regulations_body_citation_localized.sql` | `regulations.regulatory_body` / `regulatory_citation` TEXT → localized JSONB |
 | `046_regulations_purpose_localized.sql` | `regulations.regulation_purpose` TEXT → localized JSONB |
+| `047_regulations_regulatory_prefix.sql` | rename `regulation_*` → `regulatory_*`; backfill status/body/date/citation from documents |
+| `048_regulations_regulatory_endpoints.sql` | `regulatory_purpose` → `regulatory_endpoints INTEGER[]`; adds `endpoints.id` |
+| `049_endpoint_ids.sql` | `methods.endpoint_category` and `route_endpoints.endpoint_id` → `endpoints.id` |
+| `050_methods_endpoint_index.sql` | recreates `idx_methods_endpoint` on `methods.endpoint_category` |
+| `051_methods_endpoints_array.sql` | `methods.endpoint_category` INTEGER → `methods.endpoints INTEGER[]` |
+| `052_endpoints_code_to_slug.sql` | `endpoints.code` → `slug`; underscores → hyphens |
+| `053_endpoints_parent_code.sql` | adds `endpoints.parent_id` and `endpoints.code` |
+| `054_replace_endpoints_catalogue.sql` | replaces endpoints catalogue; adds `external_oht_codes` |
+| `055_regulations_endpoint_quote.sql` | adds `regulations.endpoint_quote` TEXT |
+| `056_regulations_endpoint_quote_backfill.sql` | backfills `regulations.regulatory_endpoints` and `endpoint_quote` |
+| `057_methods_endpoints_backfill.sql` | backfills `methods.endpoints` |
+| `058_routes_compatible_endpoints.sql` | adds `routes.compatible_endpoints INTEGER[]`; backfills from `route_endpoints` |
+| `059_replace_routes_catalogue.sql` | `routes.code` → `slug`; replaces routes catalogue; remaps `dermal` → `cutaneous` |
+| `060_drop_route_endpoints.sql` | drops `route_endpoints`; compatibility is `routes.compatible_endpoints` |
+| `061_applications_replace_study_domain.sql` | adds `applications`; `methods.study_domain` → `application`; drops `study_domains` |
+| `062_routes_applications_id.sql` | adds unique integer `id` on `routes` and `applications` |
+| `063_methods_application_route_ids.sql` | `methods.application` → `application_ids`; `routes_applicable` → `INTEGER[]` |
 | `manual/008_drop_category_3r.sql` | legacy gated DROP of `category_3r` (superseded by `026`) |

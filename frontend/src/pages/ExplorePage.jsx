@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
-import ResultCard from '../components/ResultCard'
+import ResultCard, { RegulationDetail } from '../components/ResultCard'
 import FeedbackModal from '../components/FeedbackModal'
 import HighlightedText from '../components/HighlightedText'
 import {
@@ -140,7 +140,28 @@ function itemMatchesFilter(item, query) {
     .includes(query)
 }
 
-function DocumentCard({ document: doc, t, lang, highlightQuery, hideTitle = false, className = '', endAction = null }) {
+function regulationsForDocument(document, methodItems) {
+  const entries = []
+  for (const item of methodItems) {
+    for (const context of item.regulatory_contexts ?? []) {
+      if (context.regulatory_doc_id === document.id) {
+        entries.push({ method: item.method, context })
+      }
+    }
+  }
+  return entries
+}
+
+function DocumentCard({
+  document: doc,
+  t,
+  lang,
+  highlightQuery,
+  hideTitle = false,
+  className = '',
+  endAction = null,
+  associatedRegulations = null,
+}) {
   const categoryLabels = (doc.categories?.length ? doc.categories : [doc.category])
     .filter(Boolean)
     .map((category) =>
@@ -219,6 +240,40 @@ function DocumentCard({ document: doc, t, lang, highlightQuery, hideTitle = fals
           </div>
         ) : null}
       </dl>
+      {associatedRegulations ? (
+        <div className="mt-4 space-y-2">
+          <h4 className="font-metadata text-metadata text-on-surface-variant">
+            {t('s4.associatedRegulations')}
+          </h4>
+          {associatedRegulations.length === 0 ? (
+            <p className="font-metadata text-metadata text-on-surface-variant">
+              {t('s4.noAssociatedRegulations')}
+            </p>
+          ) : (
+            associatedRegulations.map((item) => (
+              <div key={item.key} className="space-y-1">
+                {item.methodName ? (
+                  <p className="font-body-base text-body-base text-primary">
+                    <HighlightedText text={item.methodName} query={highlightQuery} />
+                    {item.label ? (
+                      <span className="text-on-surface-variant">
+                        {' '}
+                        ({item.label})
+                      </span>
+                    ) : null}
+                  </p>
+                ) : null}
+                <RegulationDetail
+                  item={item}
+                  statusLabel={t('s3.regulationStatusLabel')}
+                  purposeLabel={t('s3.purposeLabel')}
+                  highlightQuery={highlightQuery}
+                />
+              </div>
+            ))
+          )}
+        </div>
+      ) : null}
       {endAction ? (
         <div className="absolute bottom-0 right-0 z-10">{endAction}</div>
       ) : null}
@@ -394,7 +449,7 @@ function MethodsPanel({ lang, t }) {
             title={methodDisplayName(method, lang)}
             hideTitle
             className="rounded-none border-0 bg-transparent hover:border-transparent"
-            detailRows={methodDetailRows(method, t)}
+            detailRows={methodDetailRows(method, t, lang)}
             validationStatus={
               method.validation_status
                 ? t(`s3.validationStatus.${method.validation_status}`)
@@ -423,7 +478,7 @@ function MethodsPanel({ lang, t }) {
   )
 }
 
-function DocumentsPanel({ categories, emptyKey, t, lang }) {
+function DocumentsPanel({ categories, emptyKey, t, lang, includeRegulations = false }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -432,9 +487,34 @@ function DocumentsPanel({ categories, emptyKey, t, lang }) {
     let cancelled = false
     setLoading(true)
     setError(null)
-    fetchDocumentsCatalogue(categories)
-      .then((result) => {
-        if (!cancelled) setItems(result.documents ?? [])
+    Promise.all([
+      fetchDocumentsCatalogue(categories),
+      includeRegulations
+        ? fetchMethodsCatalogue(lang)
+        : Promise.resolve({ methods: [] }),
+    ])
+      .then(([docsResult, methodsResult]) => {
+        if (cancelled) return
+        const documents = docsResult.documents ?? []
+        const methods = methodsResult.methods ?? []
+        setItems(
+          documents.map((document) => {
+            const linked = includeRegulations
+              ? regulationsForDocument(document, methods)
+              : []
+            return {
+              document,
+              regulations: linked.map(({ method, context }, index) => {
+                const [item] = formatRegulatoryStatusItems([context], lang, t)
+                return {
+                  ...item,
+                  key: `${document.slug}-${method.slug}-${item.key}-${index}`,
+                  methodName: methodDisplayName(method, lang),
+                }
+              }),
+            }
+          }),
+        )
       })
       .catch((err) => {
         if (!cancelled) setError(err.message || t('s4.loadError'))
@@ -445,7 +525,7 @@ function DocumentsPanel({ categories, emptyKey, t, lang }) {
     return () => {
       cancelled = true
     }
-  }, [categories, t])
+  }, [categories, includeRegulations, lang, t])
 
   if (loading) {
     return (
@@ -465,8 +545,8 @@ function DocumentsPanel({ categories, emptyKey, t, lang }) {
   return (
     <ExpandableList
       items={items}
-      getKey={(item) => item.slug}
-      getLabel={(item) => pickLocalized(item.doc_citation, lang)}
+      getKey={(item) => item.document.slug}
+      getLabel={(item) => pickLocalized(item.document.doc_citation, lang)}
       emptyLabel={t(emptyKey)}
       noMatchesLabel={t('s4.noMatches')}
       filterPlaceholder={t('s4.filterPlaceholder')}
@@ -475,13 +555,16 @@ function DocumentsPanel({ categories, emptyKey, t, lang }) {
       feedbackLabel={t('s4.reportFeedback')}
       renderCard={(item, highlightQuery, endAction) => (
         <DocumentCard
-          document={item}
+          document={item.document}
           t={t}
           lang={lang}
           highlightQuery={highlightQuery}
           hideTitle
           className="rounded-none border-0 bg-transparent"
           endAction={endAction}
+          associatedRegulations={
+            includeRegulations ? item.regulations : null
+          }
         />
       )}
     />
@@ -544,6 +627,7 @@ export default function ExplorePage() {
             emptyKey={`s4.${activeTab}.empty`}
             t={t}
             lang={lang}
+            includeRegulations={activeTab === 'regulations'}
           />
         )}
       </div>

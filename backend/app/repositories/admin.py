@@ -26,7 +26,11 @@ _IDENT_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 # JSONB array columns that pick values from a vocabulary table (multi-select in admin UI).
 # (table, column) -> (vocab_table, vocab_value_column)
 _JSON_ARRAY_VOCAB_COLUMNS: dict[tuple[str, str], tuple[str, str]] = {
-    ("methods", "routes_applicable"): ("routes", "code"),
+    ("methods", "routes_applicable"): ("routes", "id"),
+    ("methods", "application_ids"): ("applications", "id"),
+    ("methods", "endpoints"): ("endpoints", "id"),
+    ("regulations", "regulatory_endpoints"): ("endpoints", "id"),
+    ("routes", "compatible_endpoints"): ("endpoints", "id"),
 }
 # JSONB array columns with fixed enum values (multi-select in admin UI).
 # (table, column) -> allowed values
@@ -211,12 +215,18 @@ def _coerce_value(value: Any, data_type: str, udt_name: str) -> Any:
             return json.loads(value)
         raise ValueError(f"Invalid JSON value: {value!r}")
 
-    if data_type == "ARRAY" or udt_name.startswith("_"):
-        if isinstance(value, list):
-            return value
+    if (
+        data_type == "ARRAY"
+        or data_type.endswith("[]")
+        or (udt_name or "").startswith("_")
+    ):
         if isinstance(value, str):
-            return json.loads(value)
-        raise ValueError(f"Invalid array value: {value!r}")
+            value = json.loads(value)
+        if not isinstance(value, list):
+            raise ValueError(f"Invalid array value: {value!r}")
+        if "int" in (data_type or "") or (udt_name or "") in ("_int2", "_int4", "_int8"):
+            return [int(item) for item in value]
+        return value
 
     return value
 
@@ -491,9 +501,22 @@ class AdminRepository:
             order_parts.append(order_label_expr)
             order_parts.append(f'"{foreign_column}"')
             order_sql = ", ".join(order_parts)
+            slug_or_code = None
+            if foreign_column not in ("code", "slug"):
+                if await self._table_has_column(conn, foreign_table, "code"):
+                    slug_or_code = "code"
+                elif await self._table_has_column(conn, foreign_table, "slug"):
+                    slug_or_code = "slug"
+            if slug_or_code == label_column:
+                slug_or_code = None
+            code_sql = (
+                f', "{slug_or_code}" AS option_code' if slug_or_code else ""
+            )
+            include_code = bool(slug_or_code)
             rows = await conn.fetch(
                 f'SELECT "{foreign_column}" AS value, '
-                f"{label_expr} AS label "
+                f"{label_expr} AS label"
+                f"{code_sql} "
                 f'FROM "{foreign_table}" '
                 f"ORDER BY {order_sql} "
                 f"LIMIT $1",
@@ -503,10 +526,16 @@ class AdminRepository:
             for row in rows:
                 value = _serialize_value(row["value"])
                 label = row["label"]
+                option_code = row["option_code"] if include_code else None
                 id_text = (
                     f"id: {value}" if foreign_column == "id" else str(value)
                 )
-                if label is None or str(label) == str(value):
+                if option_code:
+                    if label and str(label) != str(option_code):
+                        label_text = f"{option_code} — {label}"
+                    else:
+                        label_text = str(option_code)
+                elif label is None or str(label) == str(value):
                     label_text = id_text
                 elif label_column == "slug":
                     # Prefer slug-first so alphabetical order matches the visible text.

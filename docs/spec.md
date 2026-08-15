@@ -21,8 +21,8 @@
 |---|---|---|
 | F01 | Free-text protocol input (PT/EN) | Single textarea; no required fields |
 | F02 | LLM-based parameter extraction | Returns `AnalyzeResponse { experiments: ExtractionResult[] }` per `docs/parameter_model.md`. LLM produces `RawExtraction` (strict extraction only, no inference; every non-null field has a paired evidence string and `{field}_confidence`; `study_type` as free text). Application code maps `study_type` → `endpoint_category` via §4.1 lookup. See ADR-014–018 |
-| F03 | Parameter display and inline correction | S2 displays: `study_type` (what the LLM found) + `endpoint_category` (what the database covers, or "Not covered" if null); editable fields for route, study_domain, procedure_text, species, animal_counts, regulatory; per-field `{field}_confidence` badge (High/Medium/Low) with "show evidence" toggle (right-aligned) per field; original protocol text in a side panel with evidence spans highlighted; `notes` displayed below parameters when non-null. When `len(experiments) > 1`, S2 shows tabs — one per experiment — each with its own editable params and evidence (ADR-014, ADR-019). |
-| F04 | Ranked recommendations | S3 calls `POST /search` after S2 confirmation. Results sorted by relevance score; each card shows 3Rs badges + rationales, **Match** score (%), detail rows (`animal_use`, `test_system`, endpoint, routes, `study_domain`), jurisdiction chips, validation status, primary source citation/link, and regulatory citation modals; cards with score ≤ 65% at reduced opacity (ADR-011). When `len(experiments) > 1`, S3 shows tabs with per-experiment summary and results (ADR-019). |
+| F03 | Parameter display and inline correction | S2 displays: `study_type` (what the LLM found) + `endpoint_category` (what the database covers, or "Not covered" if null); editable fields for route, application, procedure_text, species, animal_counts, regulatory; per-field `{field}_confidence` badge (High/Medium/Low) with "show evidence" toggle (right-aligned) per field; original protocol text in a side panel with evidence spans highlighted; `notes` displayed below parameters when non-null. When `len(experiments) > 1`, S2 shows tabs — one per experiment — each with its own editable params and evidence (ADR-014, ADR-019). |
+| F04 | Ranked recommendations | S3 calls `POST /search` after S2 confirmation. Results sorted by relevance score; each card shows 3Rs badges + rationales, **Match** score (%), detail rows (`animal_use`, `test_system`, endpoint, routes, application), jurisdiction chips, validation status, primary source citation/link, and regulatory citation modals; cards with score ≤ 65% at reduced opacity (ADR-011). When `len(experiments) > 1`, S3 shows tabs with per-experiment summary and results (ADR-019). |
 | F05 | 3Rs classification per result | Replacement / Reduction / Refinement badge(s) from non-empty `*_rationale` columns (ADR-023) |
 | F06 | Jurisdictional validity indicator | Per-regulation jurisdiction chips with citation modal (from `regulations`) |
 | F07 | Explore catalogue | S4 `/explore` — browse Methods / Regulations / Documents; `/buscar` redirects here. Card-level general feedback (F11b) via ! icon |
@@ -62,8 +62,8 @@ Primary product screens plus supporting pages. Detailed mockups in `/design/`. P
 | Screen | Purpose | Key interactions |
 |---|---|---|
 | **S1 — Input** | Protocol submission | Free-text area; PT/EN language toggle inside the input shell (pills in top bar of textarea — not a global page toggle); submit CTA; link to Explore below CTA; anonymous bypass as low-prominence text below a divider |
-| **S2 — Parameters** | Extracted parameter review | Per-field confidence indicator alongside "show evidence" toggle (ADR-018); `study_type` + `endpoint_category` at top (ADR-015); editable fields; protocol text side panel with evidence highlighting; when `len(experiments) > 1`, experiment tabs switch the active parameter set (ADR-019); "Search alternatives" triggers `POST /search` for **all** experiments in parallel; incomplete study_domain blocks search |
-| **S3 — Results** | Ranked recommendations | Back link to S2; when `len(experiments) > 1`, experiment tabs switch per-experiment protocol summary and result list (ADR-019); horizontal filter bar (3Rs class, jurisdiction); cards ordered by relevance with **Match** % label; score ≤ 65% at reduced opacity (ADR-011); each card: method name, description, detail rows (`animal_use`, `test_system`, endpoint, routes, `study_domain`), 3Rs badges + rationales, validation status, jurisdiction chips + citation modal, primary source citation/link; filter relaxation notice when Minimum Results Rule fires; export / F11 ratings / suggest-method deferred |
+| **S2 — Parameters** | Extracted parameter review | Per-field confidence indicator alongside "show evidence" toggle (ADR-018); `study_type` + `endpoint_category` at top (ADR-015); editable fields; protocol text side panel with evidence highlighting; when `len(experiments) > 1`, experiment tabs switch the active parameter set (ADR-019); "Search alternatives" triggers `POST /search` for **all** experiments in parallel; incomplete `application` blocks search |
+| **S3 — Results** | Ranked recommendations | Back link to S2; when `len(experiments) > 1`, experiment tabs switch per-experiment protocol summary and result list (ADR-019); horizontal filter bar (3Rs class, jurisdiction); cards ordered by relevance with **Match** % label; score ≤ 65% at reduced opacity (ADR-011); each card: method name, description, detail rows (`animal_use`, `test_system`, endpoint, routes, application), 3Rs badges + rationales, validation status, jurisdiction chips + citation modal, primary source citation/link; filter relaxation notice when Minimum Results Rule fires; export / F11 ratings / suggest-method deferred |
 | **S4 — Explore** | Catalogue browse | Tabs: Methods / Regulations / Documents (`/explore/:section`; default methods). Unranked catalogue cards (no embedding). Each card has an ! control opening general feedback modal (`object` = card title, `url` = current page). Legacy `/buscar` → `/explore` |
 | **S5 — Account / History** | Query log and exports | Registered users only — anonymous users redirected to S1 with registration invite; query list with date, protocol snippet, result count; inline accordion expansion; PDF/CSV export per query |
 | **S6 — Method Suggestion** | Crowdsourced additions | Not in primary nav — accessed from S3 "Suggest method" link and footer; form: method name (required), source URL, 3Rs class, notes; auth optional (email pre-filled if logged in); expectation notice: manual review queue, no publication timeline |
@@ -151,9 +151,9 @@ name                JSONB NOT NULL                 -- {"en-us": "...", "pt-br": 
 description         JSONB NOT NULL                 -- {"en-us": "...", "pt-br": "..."}
 animal_use          TEXT                          -- none | animal_derived_material | … | mixed_or_variable
 test_system         JSONB                         -- multi-select: in_silico | in_chemico | in_vitro | …
-endpoint_category   TEXT NOT NULL                 -- FK → endpoints(code); see parameter_model.md §3.1
-routes_applicable   JSONB                         -- e.g. '["oral"]', '["dermal"]'; NULL = route-agnostic
-study_domain        TEXT NOT NULL                 -- FK → study_domains(code); ADR-020
+endpoints              INTEGER[] NOT NULL         -- FK ids → endpoints(id)
+routes_applicable   INTEGER[]                     -- routes.id values; NULL = route-agnostic
+application_ids     INTEGER[] NOT NULL            -- applications.id values
 oecd_ref            TEXT                          -- e.g. 'TG 439', 'GD 129'; NULL for non-OECD methods
 ncit_id             TEXT                          -- NCI Thesaurus concept ID; NULL until Karynn maps
 source_citation     TEXT                          -- bibliographic citation for the primary source
@@ -173,16 +173,17 @@ created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 ```
 > Jurisdiction / regulatory recognition live in **MethodRegulatoryContext** / `regulations` (ADR-022). Scientific `validation_status` returned to `methods` in migration `042`.
-> Column order: `active` after `slug`; `animal_use`/`test_system` before `endpoint_category`; then routes/domain/`oecd_ref`/`ncit_id`/`source_*`; then `validation_status`/`validation_doc_id`; then `*_rationale`, `keywords`, `text_for_embedding`, `embedding_json`, timestamps.
+> Column order: `active` after `slug`; `animal_use`/`test_system` before `endpoints`; then `routes_applicable` / `application_ids` / `oecd_ref` / `ncit_id` / `source_*`; then `validation_status`/`validation_doc_id`; then `*_rationale`, `keywords`, `text_for_embedding`, `embedding_json`, timestamps.
 
 **MethodRegulatoryContext** *(regulatory recognition per method × jurisdiction)*
 ```
 id                SERIAL PRIMARY KEY
 method_id         INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE
 jurisdiction      JSONB   NOT NULL   -- {"en-us":"Brazil"|"EU"|"US"|"OECD","pt-br":"Brasil"|"UE"|"EUA"|"OCDE"}
-regulation_status TEXT               -- 'not_approved' | 'approved' | 'recommended' | 'mandatory'
-regulation_date   DATE               -- date of regulation / recognition / adoption (YYYY-MM-DD)
-regulation_purpose JSONB             -- {"en-us":"...","pt-br":"..."}
+regulatory_status TEXT               -- 'not_approved' | 'approved' | 'recommended' | 'mandatory'
+regulatory_date   DATE               -- date of regulation / recognition / adoption (YYYY-MM-DD)
+regulatory_endpoints INTEGER[]       -- recognized endpoints.id values
+endpoint_quote    TEXT               -- supporting quotation for regulatory_endpoints
 regulatory_body   JSONB              -- {"en-us":"...","pt-br":"..."}
 regulatory_doc_id INTEGER            -- FK → documents(id)
 regulatory_citation JSONB            -- {"en-us":"...","pt-br":"..."}
@@ -209,30 +210,41 @@ WHERE m.active = TRUE
   )
 ```
 
-**Endpoint / Route / StudyDomain** *(controlled vocabularies — source of truth: `003_vocabulary_tables.sql`)*
+**Endpoint / Route / Application** *(controlled vocabularies)*
 
-Shared shape for `endpoints`, `routes`, and `study_domains`:
+`applications` PK is `slug`:
 ```
-code            TEXT PRIMARY KEY
-name            JSONB NOT NULL    -- {"en-us": "...", "pt-br": "..."}
-description     JSONB             -- {"en-us": "...", "pt-br": "..."} (nullable)
+slug            TEXT PRIMARY KEY
+id              INTEGER UNIQUE NOT NULL
+name            JSONB NOT NULL
+description     JSONB
 sort_order      INTEGER NOT NULL DEFAULT 0
 active          BOOLEAN NOT NULL DEFAULT TRUE
 created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 ```
 
-Seeded codes (see `parameter_model.md` §3.1–3.3 and `docs/tables.md`):
-- `endpoints`: `acute_toxicity`, `skin_irritation`, `skin_corrosion`, `ocular_irritation`, `skin_sensitisation`, `phototoxicity`, `genotoxicity`, `pyrogenicity`, `skin_absorption`, `reproductive_toxicity`, `endocrine_activity`, `photoreactivity`, `aquatic_toxicity`, `toxicokinetics`, `bacterial_endotoxin`, `rabies_diagnosis`
-- `routes`: `oral`, `intraperitoneal`, `intravenous`, `dermal`, `ocular`, `inhalation`, `other`
-- `study_domains`: `pharma`, `cosmetics`, `chemical_safety`, `general`
+`study_domains` was replaced by `applications` (migration 061). `routes` PK is `slug`:
+```
+slug            TEXT PRIMARY KEY
+id              INTEGER UNIQUE NOT NULL
+name            JSONB NOT NULL    -- {"en-us": "...", "pt-br": "..."}
+description     JSONB             -- {"en-us": "...", "pt-br": "..."} (nullable)
+compatible_endpoints INTEGER[]    -- endpoints.id values
+sort_order      INTEGER NOT NULL DEFAULT 0
+active          BOOLEAN NOT NULL DEFAULT TRUE
+created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+```
 
-**RouteEndpoint** *(route ↔ endpoint compatibility matrix for soft filtering)*
-```
-route_code      TEXT NOT NULL REFERENCES routes(code) ON DELETE CASCADE
-endpoint_code   TEXT NOT NULL REFERENCES endpoints(code) ON DELETE CASCADE
-PRIMARY KEY (route_code, endpoint_code)
-```
+`endpoints` uses `slug` (hyphenated TEXT PK) instead of `code`, plus a unique integer `id`.
+
+Seeded keys (see `parameter_model.md` §3.1–3.3 and `docs/tables.md`):
+- `endpoints`: `acute-toxicity`, `skin-irritation`, `skin-corrosion`, `ocular-irritation`, `skin-sensitisation`, `phototoxicity`, `genotoxicity`, `pyrogenicity`, `skin-absorption`, `reproductive-toxicity`, `endocrine-activity`, `photoreactivity`, `aquatic-toxicity`, `toxicokinetics`, `bacterial-endotoxin`, `rabies-diagnosis`
+- `routes`: `cutaneous`, `inhalation`, `oral`, `ocular`, `intranasal`, `intratracheal`, `intravenous`, `intra-arterial`, `intramuscular`, `subcutaneous`, `intradermal`, `intraperitoneal`, `rectal`, `vaginal`, `topical-mucosal`, `implantation`, `multiple`, `not-applicable`, `unspecified`, `other`
+- `applications`: `basic-research`, `translational-applied-research`, `regulatory-use`, `routine-production`, `education-training`, `environmental-protection`, `species-preservation`, `forensic-inquiry`, `other`
+
+**Route compatibility** lives on `routes.compatible_endpoints INTEGER[]` (`endpoints.id` values).
 
 **User** *(source of truth: `002_app_tables.sql`)*
 ```
@@ -300,9 +312,9 @@ applied_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 
 At 25 methods, full corpus embedding comparison is trivially fast. No vector index or approximate nearest-neighbor library needed. Algorithm (see `docs/parameter_model.md` §6 for full specification):
 
-1. Embed the confirmed protocol parameters (`endpoint_category` + `procedure_text` + `study_domain` + routes) using `sentence-transformers`.
-2. **Hard filter:** retain only methods where `endpoint_category` matches the protocol (if not null).
-3. **Soft filter:** retain methods where `routes_applicable IS NULL` OR `routes_applicable` contains any protocol route (if route not null).
+1. Embed the confirmed protocol parameters (`endpoint_category` + `procedure_text` + `application` + routes) using `sentence-transformers`.
+2. **Hard filter:** retain only methods whose `endpoints` include the protocol endpoint (if not null).
+3. **Soft filter:** retain methods where `routes_applicable IS NULL` OR the method's route ids (`route_codes`) include any protocol route (if route is not null). Application matching uses `application_ids` / `application_codes` against protocol `application`.
 4. Load filtered method embeddings from the database (in-memory, negligible at this scale).
 5. Compute cosine similarity between the query vector and each method embedding.
 6. Return all results sorted by score descending.
@@ -401,6 +413,23 @@ Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension avai
 │   │           ├── 044_feedback.sql                            # general feedback table (F11b)
 │   │           ├── 045_regulations_body_citation_localized.sql # regulatory_body / citation JSONB
 │   │           ├── 046_regulations_purpose_localized.sql       # regulation_purpose JSONB
+│   │           ├── 047_regulations_regulatory_prefix.sql       # status/date/purpose rename + backfill
+│   │           ├── 048_regulations_regulatory_endpoints.sql    # purpose → INTEGER[] endpoint ids
+│   │           ├── 049_endpoint_ids.sql                        # methods/route_endpoints → endpoints.id
+│   │           ├── 050_methods_endpoint_index.sql              # recreate idx_methods_endpoint
+│   │           ├── 051_methods_endpoints_array.sql             # endpoint_category → endpoints INTEGER[]
+│   │           ├── 052_endpoints_code_to_slug.sql              # endpoints.code → slug (hyphenated)
+│   │           ├── 053_endpoints_parent_code.sql               # endpoints.parent_id + code
+│   │           ├── 054_replace_endpoints_catalogue.sql         # hierarchical endpoints + OHT codes
+│   │           ├── 055_regulations_endpoint_quote.sql          # regulations.endpoint_quote TEXT
+│   │           ├── 056_regulations_endpoint_quote_backfill.sql # backfill endpoints + quotes
+│   │           ├── 057_methods_endpoints_backfill.sql          # backfill methods.endpoints
+│   │           ├── 058_routes_compatible_endpoints.sql         # routes.compatible_endpoints INTEGER[]
+│   │           ├── 059_replace_routes_catalogue.sql            # replace routes; code → slug
+│   │           ├── 060_drop_route_endpoints.sql                # drop route_endpoints
+│   │           ├── 061_applications_replace_study_domain.sql   # applications; drop study_domains
+│   │           ├── 062_routes_applications_id.sql              # routes.id + applications.id
+│   │           ├── 063_methods_application_route_ids.sql       # methods application/route id arrays
 │   │           └── manual/
 │   │               └── 008_drop_category_3r.sql       # legacy gated DROP (superseded by 026)
 │   ├── scripts/
@@ -553,8 +582,8 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
         "study_type": string,
         "route": ["oral","intraperitoneal"]|null,
         "route_evidence": string|null,
-        "study_domain": "pharma"|"cosmetics"|"chemical_safety"|"general",
-        "study_domain_evidence": string|null,
+        "application": "basic-research"|"translational-applied-research"|"regulatory-use"|"routine-production"|"education-training"|"environmental-protection"|"species-preservation"|"forensic-inquiry"|"other",
+        "application_evidence": string|null,
         "procedure_text": string|null,
         "procedure_text_evidence": string|null,
         "species": "rat"|"mouse"|...|null,
@@ -594,7 +623,7 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
   "params": {
     "endpoint_category": "acute_toxicity"|null,
     "route": ["oral"]|null,
-    "study_domain": "general",
+    "application": "basic-research",
     "procedure_text": string|null,
     "species": "rat"|null,
     "n_animals": integer|null,
@@ -622,7 +651,8 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
         "reduction_rationale": {"en-us":string,"pt-br":string}|null,
         "refinement_rationale": {"en-us":string,"pt-br":string}|null,
         "category_3r": ["replacement"|"reduction"|"refinement"],   -- derived from rationale columns
-        "endpoint_category": string,
+        "endpoints": [1, 2],
+        "endpoint_codes": ["skin-irritation", "skin-corrosion"],
         "oecd_ref": "TG 439"|null,
         "validation_status": "not_evaluated"|"under_validation"|"validated"|"partially_validated"|"not_validated"|"unclear",
         "validation_doc_id": number|null,
@@ -631,9 +661,11 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
       "regulatory_contexts": [
         {
           "jurisdiction": {"en-us": string, "pt-br": string},
-          "regulation_status": "not_approved"|"approved"|"recommended"|"mandatory"|null,
-          "regulation_date": "YYYY-MM-DD"|null,
-          "regulation_purpose": {"en-us": string, "pt-br": string}|null,
+          "regulatory_status": "not_approved"|"approved"|"recommended"|"mandatory"|null,
+          "regulatory_date": "YYYY-MM-DD"|null,
+          "regulatory_endpoints": [1, 2]|null,
+          "regulatory_endpoint_names": [{"en-us": string, "pt-br": string}]|[],
+          "endpoint_quote": string|null,
           "regulatory_body": {"en-us": string, "pt-br": string}|null,
           "regulatory_doc_id": number|null,
           "regulatory_citation": {"en-us": string, "pt-br": string}|null,

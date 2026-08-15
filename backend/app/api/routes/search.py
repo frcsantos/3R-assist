@@ -5,7 +5,7 @@ from app.api.deps import get_retrieval_service
 from app.api.errors import error_response
 from app.config import get_settings
 from app.models.jurisdiction import jurisdiction_matches
-from app.models.protocol import SearchFilters, SearchRequest, SearchResponse
+from app.models.protocol import SearchFilters, SearchRequest, SearchResponse, normalize_endpoint_slug
 from app.models.recommendation import Recommendation
 from app.services.retrieval import RetrievalService
 
@@ -50,7 +50,10 @@ def _apply_filters(
         filtered = [
             item
             for item in filtered
-            if item.method.endpoint_category == filters.endpoint
+            if normalize_endpoint_slug(filters.endpoint) in {
+                normalize_endpoint_slug(code)
+                for code in (item.method.endpoint_codes or [])
+            }
         ]
     return filtered
 

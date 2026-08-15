@@ -26,7 +26,11 @@
     "rowCount": "Registros {{from}}–{{to}} de {{total}}",
     "prevPage": "Anterior",
     "nextPage": "Próxima",
+    "firstPage": "Primeira",
+    "lastPage": "Última",
+    "goToPage": "Página",
     "pageOf": "Página {{current}} de {{total}}",
+    "pageOfTotal": "de {{total}}",
     "editHint": "Clique duas vezes para editar",
     "save": "Salvar",
     "cancel": "Cancelar",
@@ -140,6 +144,7 @@
       "editMethodError": "Não foi possível abrir o formulário de edição do método.",
       "addRegulation": "Adicionar regulamentação",
       "addRegulationError": "Não foi possível abrir o formulário de nova regulamentação.",
+      "editRegulationError": "Não foi possível abrir o formulário de edição da regulamentação.",
       "methodProtocolLabel": "Protocolo do método",
       "methodProtocolPlaceholder": "Cole o texto do protocolo, diretriz ou documento TG do método…",
       "methodProtocolHint": "Envie para o modelo preencher os campos do formulário a partir do documento.",
@@ -250,9 +255,9 @@
     },
     "fields": {
       "studyType": "Tipo de estudo (extraído)",
-      "endpointCategory": "Categoria de endpoint",
+      "endpointCategory": "Categoria de desfecho (endpoint)",
       "route": "Via de administração",
-      "studyDomain": "Domínio do estudo",
+      "application": "Aplicação",
       "procedureText": "Texto do procedimento",
       "species": "Espécie",
       "animalCounts": {
@@ -283,19 +288,37 @@
         "rabies_diagnosis": "Diagnóstico da raiva"
       },
       "route": {
-        "oral": "Oral",
-        "intraperitoneal": "Intraperitoneal",
-        "intravenous": "Intravenosa",
-        "dermal": "Dérmica",
-        "ocular": "Ocular",
+        "cutaneous": "Cutânea",
         "inhalation": "Inalação",
+        "oral": "Oral",
+        "ocular": "Ocular",
+        "intranasal": "Intranasal",
+        "intratracheal": "Intratraqueal",
+        "intravenous": "Intravenosa",
+        "intra-arterial": "Intra-arterial",
+        "intramuscular": "Intramuscular",
+        "subcutaneous": "Subcutânea",
+        "intradermal": "Intradérmica",
+        "intraperitoneal": "Intraperitoneal",
+        "rectal": "Retal",
+        "vaginal": "Vaginal",
+        "topical-mucosal": "Tópica em mucosa",
+        "implantation": "Implantação",
+        "multiple": "Múltiplas vias",
+        "not-applicable": "Não aplicável",
+        "unspecified": "Não especificada",
         "other": "Outra"
       },
-      "studyDomain": {
-        "pharma": "Farmacêutica",
-        "cosmetics": "Cosméticos",
-        "chemical_safety": "Segurança química",
-        "general": "Pesquisa geral"
+      "application": {
+        "basic-research": "Pesquisa básica",
+        "translational-applied-research": "Pesquisa translacional e aplicada",
+        "regulatory-use": "Uso regulatório",
+        "routine-production": "Produção de rotina",
+        "education-training": "Ensino e treinamento",
+        "environmental-protection": "Proteção do meio ambiente natural",
+        "species-preservation": "Preservação de espécies",
+        "forensic-inquiry": "Investigação forense",
+        "other": "Outro"
       },
       "species": {
         "rat": "Rato",
@@ -317,7 +340,7 @@
     "protocolSummary": "Resumo do protocolo",
     "recommendedAlternatives": "Alternativas recomendadas",
     "matchedParams": "Parâmetros correspondentes",
-    "matchLabel": "Match",
+    "matchLabel": "Relevância",
     "sourceLink": "Fonte primária",
     "referenceLabel": "Referência",
     "showMore": "Mostrar mais",
@@ -360,7 +383,7 @@
       "recommended": "Recomendado",
       "mandatory": "Obrigatório"
     },
-    "purposeLabel": "Finalidade",
+    "purposeLabel": "Desfecho",
     "regulationStatusLabel": "Status regulatório",
     "validationStatusLabel": "Status de validação",
     "approvedJurisdictionsLabel": "Jurisdições aprovadas",
@@ -421,6 +444,8 @@
       "label": "Métodos",
       "empty": "Ainda não há métodos no catálogo."
     },
+    "associatedRegulations": "Regulamentos associados",
+    "noAssociatedRegulations": "Nenhum método está vinculado a este documento ainda.",
     "regulations": {
       "label": "Regulamentos",
       "empty": "Ainda não há regulamentos ou diretrizes no catálogo."

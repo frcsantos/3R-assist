@@ -23,7 +23,7 @@ Registrar como ADR se afetar o contrato do `POST /analyze`.
 |---|---|---|---|---|
 | `endpoint_category` | enum (ver §3.1) | sim | **matching** | Hard filter — só retorna métodos com o mesmo endpoint |
 | `route` | enum (ver §3.2), nullable | não | **matching** | Soft filter — exclui métodos com via incompatível |
-| `study_domain` | enum (ver §3.3) | sim | **matching** | Soft filter — prioriza métodos do mesmo domínio de aplicação |
+| `application` | enum (ver §3.3) | sim | **matching** | Soft filter — prioriza métodos com o mesmo intended use (`application_ids`) |
 | `procedure_text` | string livre | não | **matching** | Concatenado ao embedding do protocolo |
 | `species` | enum (ver §3.4), nullable | não | **display** | Exibido no S2; contexto para o usuário |
 | `n_animals` | integer, nullable | não | **display** | Exibido no S2; contexto para o usuário |
@@ -80,16 +80,29 @@ da substância com o tecido, não o tipo de cultura.
 
 | Valor | Sinônimos | Métodos compatíveis (endpoint_category) |
 |---|---|---|
-| `oral` | p.o., gavagem, intragástrico, oral, gastric tube, gastric intubation, dietary (mixed in feed) | acute_toxicity |
+| `cutaneous` | tópico, dérmico, cutâneo, epicutâneo, ex vivo skin disc, membrane model | skin_irritation, skin_corrosion, skin_sensitisation, skin_absorption, phototoxicity |
+| `oral` | p.o., gavagem, intragástrico, oral, gastric tube, dietary | acute_toxicity |
 | `intraperitoneal` | i.p. | acute_toxicity |
 | `intravenous` | i.v., endovenoso | acute_toxicity |
-| `dermal` | tópico, cutâneo, epitelial, epicutâneo, ex vivo skin disc application, membrane model | skin_irritation, skin_corrosion, skin_sensitisation, skin_absorption, phototoxicity |
-| `ocular` | ocular, conjuntival, instilação ocular, applied over cornea, applied to corneal surface, ex vivo corneal application, topical to cornea | ocular_irritation |
-| `inhalation` | inalação, respiratório, aerossol, nose-only chamber | (sem métodos no banco MVP) |
-| `other` | qualquer via química não coberta pela lista controlada | (sem mapeamento em `route_endpoints` no MVP) |
-| `null` | irradiação UV, exposição física, radiation — not a chemical route; também células em meio sem superfície tecidual orientada (usar `test_system: in_vitro`) | — |
+| `intramuscular` | i.m. | — |
+| `subcutaneous` | s.c. | — |
+| `intradermal` | i.d. | — |
+| `ocular` | conjuntival, instilação ocular, ex vivo corneal application | ocular_irritation |
+| `inhalation` | aerossol, nose-only chamber | — |
+| `intranasal` | nasal | — |
+| `intratracheal` | intra-traqueal | — |
+| `intra-arterial` | intra-arterial | — |
+| `rectal` | retal | — |
+| `vaginal` | vaginal | — |
+| `topical-mucosal` | mucosa tópica | — |
+| `implantation` | implante | — |
+| `multiple` | múltiplas vias não discriminadas | — |
+| `not-applicable` | sem via em nível de organismo | — |
+| `unspecified` | via não informada | — |
+| `other` | via conhecida fora do vocabulário | — |
+| `null` | irradiação UV, exposição física; células em meio sem superfície orientada (`test_system: in_vitro`) | — |
 
-> Vocabulários de `endpoint_category`, `route` e `study_domain` vivem nas tabelas PostgreSQL `endpoints`, `routes` e `study_domains` (`003_vocabulary_tables.sql`). Compatibilidade rota↔endpoint: tabela `route_endpoints`. Ver `docs/tables.md`.
+> Vocabulários de `endpoint_category`, `route` e `application` vivem nas tabelas PostgreSQL `endpoints`, `routes` e `applications`. Compatibilidade rota↔endpoint: `routes.compatible_endpoints`. Ver `docs/tables.md`.
 > Modalidade de ensaio (in silico / in chemico / in vitro / ex vivo / in vivo) NÃO é `route` — usar `methods.test_system`.
 
 **Disambiguação ex vivo vs. cultura celular:**
@@ -97,9 +110,9 @@ da substância com o tecido, não o tipo de cultura.
 | Sistema | `route` correto | Raciocínio |
 |---|---|---|
 | Córnea bovina em câmara de perfusão (EVEIT) + substância aplicada sobre ápice | `ocular` | A substância toca a superfície corneana — contato ocular |
-| Disco de pele excisada + substância aplicada topicamente | `dermal` | A substância toca a superfície dérmica — contato dérmico |
+| Disco de pele excisada + substância aplicada topicamente | `cutaneous` | A substância toca a superfície dérmica — contato cutâneo |
 | Células em placa, substância adicionada ao meio | `null` (+ `test_system: in_vitro`) | Não há superfície tecidual orientada; modalidade vai em `test_system` |
-| Membrana sintética (p.ex. Strat-M) + substância tópica | `dermal` | Superfície orientada, contato dérmico análogo |
+| Membrana sintética (p.ex. Strat-M) + substância tópica | `cutaneous` | Superfície orientada, contato cutâneo análogo |
 
 Quando o protocolo usa múltiplas vias (ex: `p.o. / i.p.`):
 → Extrair como array: `["oral", "intraperitoneal"]`
@@ -108,39 +121,25 @@ Quando o protocolo usa múltiplas vias (ex: `p.o. / i.p.`):
 Quando `route` é `null`:
 → Sem filtro de via; o RetrievalService retorna todos os métodos do endpoint
 
-### 3.3 `study_domain`
+### 3.3 `application`
 
-Domínio de aplicação do protocolo. Responde à pergunta "em qual domínio este estudo existe?" — não implica que um framework regulatório necessariamente existe. Determina relevância de indicadores de jurisdição e priorização de métodos no RetrievalService.
-
-> **ADR-020:** renomeado de `application_area` para `study_domain`. Ver `decisions.md`.
-
-**Vocabulário MVP (Phase 1–2):**
+Intended use of the method or study. Controlled vocabulary in `applications`.
 
 | Valor | Quando usar |
 |---|---|
-| `pharma` | segurança farmacêutica, testes regulatórios de medicamentos, vacinas, dispositivos médicos |
-| `cosmetics` | cosméticos, produtos de higiene pessoal |
-| `chemical_safety` | substâncias químicas, agrotóxicos, produtos industriais, ingredientes alimentares (food additive safety) |
-| `general` | fallback — múltiplos domínios, não determinável, ou validação de método alternativo |
+| `basic-research` | conhecimento fundamental, sem objetivo prático ou regulatório imediato |
+| `translational-applied-research` | aplicar conhecimento a um objetivo prático (prevenção, diagnóstico, tratamento, bem-estar) |
+| `regulatory-use` | gerar informação exigida, recomendada ou aceita por legislação ou autoridade regulatória |
+| `routine-production` | fabricação, consistência, controle de qualidade, potência, liberação de lote |
+| `education-training` | ensino, demonstração, aquisição ou avaliação de competências |
+| `environmental-protection` | proteger o meio ambiente natural |
+| `species-preservation` | conservação ou sobrevivência de espécie/população |
+| `forensic-inquiry` | fins legais, judiciais ou criminalísticos |
+| `other` | finalidade conhecida fora desta lista |
 
-**Vocabulário Phase 3 (candidatos — pendente validação por Karynn):**
+**Regra de fallback:** se não for possível determinar com segurança → `basic-research`.
 
-| Valor | Quando usar |
-|---|---|
-| `behavioral` | neurociência comportamental, modelos de ansiedade, depressão, dor, cognição, vício |
-| `education` | treinamento cirúrgico, demonstração de técnicas, ensino de procedimentos |
-| `basic_research` | pesquisa sem aplicação regulatória ou domínio setorial declarado |
-
-Esses valores não devem ser adicionados ao vocabulário ativo até que (a) Karynn confirme que protocolos do piloto os requerem e (b) existam métodos correspondentes no banco. Adicionar valores sem cobertura no banco gera expectativa falsa no S2.
-
-**Regra de fallback:** se não for possível determinar com segurança → `general`.
-
-**Regras adicionais para `general`:**
-1. O estudo valida ou caracteriza um método alternativo (o objeto é o método em si, não um produto específico). Ex: EVEIT validação com BAC + lágrima artificial → `general`.
-2. As substâncias testadas pertencem a múltiplos domínios sem um predominante.
-3. Nenhum dos valores MVP se aplica com segurança.
-
-**Regra para `chemical_safety` vs. `pharma`/`cosmetics`:** o campo descreve o contexto do estudo, não da substância isolada. BAC (benzalkonium chloride) é usado em cosméticos E em fármacos E como preservante industrial — a presença de BAC sozinha não determina `cosmetics`.
+Valores legados `study_domain`: `general` → `basic-research`; `pharma` / `cosmetics` / `chemical_safety` → `regulatory-use`.
 
 ### 3.4 `species` (display-only)
 
@@ -197,9 +196,9 @@ class RawExtraction:
     route_evidence:              Optional[str]
     route_confidence:            Optional[Literal["high","medium","low"]]  # null if route is null
 
-    study_domain:                str            # §3.3 controlled vocab; 'general' if not determinable
-    study_domain_evidence:       Optional[str]
-    study_domain_confidence:     Optional[Literal["high","medium","low"]]
+    application:                 str            # §3.3 slug; 'basic-research' if not determinable
+    application_evidence:        Optional[str]
+    application_confidence:      Optional[Literal["high","medium","low"]]
 
     procedure_text:              Optional[str]  # max 30 words; English
     procedure_text_evidence:     Optional[str]
@@ -320,12 +319,12 @@ Quando `len(experiments) > 1`, S2 e S3 exibem abas por experimento (ADR-019) —
 O embedding do protocolo (usado no cosine similarity) é gerado sobre:
 
 ```
-{endpoint_category} {raw.procedure_text} {raw.study_domain}
+{endpoint_category} {raw.procedure_text} {raw.application}
 ```
 
 Exemplo (protocolo do protótipo):
 ```
-acute_toxicity Single-dose acute toxicity LD50 Litchfield-Wilcoxon oral intraperitoneal general
+acute_toxicity Single-dose acute toxicity LD50 Litchfield-Wilcoxon oral intraperitoneal basic-research
 ```
 
 Regras:
@@ -348,15 +347,19 @@ Regras:
 2. SOFT FILTER: route
    → Se protocol.route is not None:
        incluir methods WHERE (routes_applicable IS NULL
-                              OR routes_applicable contém qualquer rota de protocol.route)
+                              OR route_codes contém qualquer rota de protocol.route)
+   → Matching usa slugs (`route_codes`); no banco `routes_applicable` é INTEGER[] de `routes.id`
    → Se None: sem filtro de via
 
-3. RANKING: cosine_similarity(protocol_embedding, method.embedding_json)
-   → Calcular sobre os métodos que passaram nos filtros 1 e 2
+3. SOFT FILTER: application
+   → Protocolo envia slug `application`; métodos têm `application_ids` (INTEGER[]) e `application_codes`
+
+4. RANKING: cosine_similarity(protocol_embedding, method.embedding_json)
+   → Calcular sobre os métodos que passaram nos filtros 1–3
    → Retornar todos, ordenados por score DESC
    → Frontend aplica opacidade para scores ≤ 65% (ADR-011)
 
-4. MINIMUM RESULTS RULE:
+5. MINIMUM RESULTS RULE:
    → Se resultado dos filtros < 3 métodos: relaxar filtro de route (manter só endpoint)
    → Se ainda < 3: retornar os 3 de maior score sem nenhum filtro
    → Registrar o relaxamento nos logs (para análise H3 no piloto)
@@ -379,7 +382,7 @@ AnalyzeResponse(experiments=[
         raw=RawExtraction(
             study_type          = "acute toxicity LD50 study",
             route               = ["oral", "intraperitoneal"],
-            study_domain        = "general",
+            application         = "basic-research",
             procedure_text      = "Single-dose acute toxicity LD50 Litchfield-Wilcoxon",
             species             = "rat",
             animal_counts         = AnimalCounts(male=60),
@@ -393,12 +396,12 @@ AnalyzeResponse(experiments=[
 
 **Texto para embedding:**
 ```
-acute_toxicity Single-dose acute toxicity LD50 Litchfield-Wilcoxon oral intraperitoneal general
+acute_toxicity Single-dose acute toxicity LD50 Litchfield-Wilcoxon oral intraperitoneal basic-research
 ```
 
 **Filtros aplicados:**
 1. endpoint_category = 'acute_toxicity' → retém: TG 420, 423, 425, GD 129
-2. route contém 'oral' ou 'intraperitoneal' → todos os 4 passam (routes_applicable = ["oral"])
+2. route contém 'oral' ou 'intraperitoneal' → passam métodos cujo `route_codes` inclui alguma dessas vias (ou `routes_applicable IS NULL`)
 
 **Resultado esperado no S3:** TG 420, 423, 425, GD 129 — ordenados por cosine similarity.
 
@@ -406,27 +409,27 @@ acute_toxicity Single-dose acute toxicity LD50 Litchfield-Wilcoxon oral intraper
 
 ## 8. Campos `routes_applicable` na tabela `methods` — valores por método
 
-Para popular via UPDATE (ver `patch_routes.sql`):
+No banco: `INTEGER[]` de `routes.id`. Abaixo, slugs (`route_codes`) para leitura.
 
 | slug | routes_applicable |
 |---|---|
-| oecd-tg439-epiderm | `["dermal"]` |
-| oecd-tg439-episkin | `["dermal"]` |
-| oecd-tg431-rhe-corrosion | `["dermal"]` |
-| oecd-tg430-ter-corrosion | `["dermal"]` |
-| oecd-tg435-membrane-barrier | `["dermal"]` |
+| oecd-tg439-epiderm | `["cutaneous"]` |
+| oecd-tg439-episkin | `["cutaneous"]` |
+| oecd-tg431-rhe-corrosion | `["cutaneous"]` |
+| oecd-tg430-ter-corrosion | `["cutaneous"]` |
+| oecd-tg435-membrane-barrier | `["cutaneous"]` |
 | oecd-tg437-bcop | `["ocular"]` |
 | oecd-tg438-ice | `["ocular"]` |
 | oecd-tg492-rce | `["ocular"]` |
 | oecd-tg460-fluorescein-leakage | `["ocular"]` |
-| oecd-tg442c-dpra | `["dermal"]` |
-| oecd-tg442d-keratinosens | `["dermal"]` |
-| oecd-tg442e-hclat | `["dermal"]` |
-| oecd-tg429-llna | `["dermal"]` |
-| oecd-tg442a-llna-da | `["dermal"]` |
-| oecd-tg442b-llna-brdu | `["dermal"]` |
-| oecd-tg432-3t3nru | `["dermal"]` |
-| oecd-tg428-skin-absorption-vitro | `["dermal"]` |
+| oecd-tg442c-dpra | `["cutaneous"]` |
+| oecd-tg442d-keratinosens | `["cutaneous"]` |
+| oecd-tg442e-hclat | `["cutaneous"]` |
+| oecd-tg429-llna | `["cutaneous"]` |
+| oecd-tg442a-llna-da | `["cutaneous"]` |
+| oecd-tg442b-llna-brdu | `["cutaneous"]` |
+| oecd-tg432-3t3nru | `["cutaneous"]` |
+| oecd-tg428-skin-absorption-vitro | `["cutaneous"]` |
 | oecd-tg471-ames | `null` (in vitro, route-agnostic) |
 | oecd-tg476-hprt | `null` |
 | oecd-tg487-micronucleus | `null` |
@@ -481,7 +484,7 @@ describes substance-to-tissue contact, not the culture setup.
                   (USE THIS for EVEIT, BCOP, ICE — even though they are
                   ex vivo systems, the substance contacts the corneal surface)
 
-  dermal      ← topical, cutaneous, epicutaneous, skin application,
+  cutaneous   ← topical, dermal, epicutaneous, skin application,
                   ex vivo skin disc, membrane model (Strat-M, Skin+)
 
   oral              ← p.o., gavage, gavagem, intragastric, intragástrico,
@@ -532,12 +535,16 @@ Per-field confidence scale:
       "route_evidence": "exact quote from text, MAX 15 WORDS" or null,
       "route_confidence": "high"|"medium"|"low" or null if route is null,
 
-      "study_domain": one of [pharma, cosmetics, chemical_safety, general],
-      "study_domain_evidence": "exact quote from text, MAX 15 WORDS" or null,
-      "study_domain_confidence": "high"|"medium"|"low",
-      // Use "general" when: (a) the study is validating a method rather than
+      "application": one of [basic-research, translational-applied-research,
+        regulatory-use, routine-production, education-training,
+        environmental-protection, species-preservation, forensic-inquiry, other],
+      "application_evidence": "exact quote from text, MAX 15 WORDS" or null,
+      "application_confidence": "high"|"medium"|"low",
+      // Use "basic-research" when: (a) the study is validating a method rather than
       // testing a specific product class; (b) test substances span multiple
-      // domains; (c) no single application domain is declared.
+      // domains; (c) no single intended use is declared.
+      // Use "regulatory-use" when the study exists to generate information
+      // required or accepted by a regulator.
       // The identity of the test substance alone does not determine this field —
       // BAC is used in pharma, cosmetics, and industrial contexts equally.
 
@@ -625,8 +632,8 @@ AnalyzeResponse(experiments=[
             study_type               = "subchronic inhalation toxicity study",
             route                    = ["inhalation"],
             route_evidence           = "exposed to CB in the nose-only inhalation chamber",
-            study_domain             = "chemical_safety",
-            study_domain_evidence    = "occupational exposure limit of 3.5 mg/m³ CB per 8 hrs work shift (established by OSHA and NIOSH)",
+            application              = "regulatory-use",
+            application_evidence     = "occupational exposure limit of 3.5 mg/m³ CB per 8 hrs work shift (established by OSHA and NIOSH)",
             procedure_text           = "90-day repeated-dose nose-only inhalation exposure to carbon black; lung function, histopathology, apoptosis, cytokine analysis",
             procedure_text_evidence  = "exposed to CB in the nose-only inhalation chamber at 30 mg/m³ for 6 hrs/day for 90 days",
             species                  = "rat",
@@ -659,8 +666,8 @@ AnalyzeResponse(experiments=[
             study_type               = "acute toxicity LD50 study",
             route                    = ["oral", "intraperitoneal"],
             route_evidence           = "administered a single dose of T. parthenium by two routes of administration—p.o. and i.p.",
-            study_domain             = "general",
-            study_domain_evidence    = None,
+            application              = "basic-research",
+            application_evidence     = None,
             procedure_text           = "Single-dose acute toxicity LD50 study by Litchfield-Wilcoxon method in Wistar rats, p.o. and i.p.",
             species                  = "rat",
             species_evidence         = "60 male Wistar rats",
@@ -677,8 +684,8 @@ AnalyzeResponse(experiments=[
             study_type               = "28-day subacute repeated-dose oral toxicity study",
             route                    = ["oral"],
             route_evidence           = "treated once a day orally by gastric tube for 28 days",
-            study_domain             = "general",
-            study_domain_evidence    = None,
+            application              = "basic-research",
+            application_evidence     = None,
             procedure_text           = "28-day repeated-dose oral toxicity with hematological, serum biochemical, and histopathological evaluation",
             procedure_text_evidence  = "treated once a day orally by gastric tube for 28 days... blood samples were drawn for the examination of hematological and serum biochemical parameters",
             species                  = "rat",
@@ -705,14 +712,14 @@ AnalyzeResponse(experiments=[
 
 ---
 
-### 11.3 EVEIT — sistema ex vivo (caso de disambiguação de rota e study_domain)
+### 11.3 EVEIT — sistema ex vivo (caso de disambiguação de rota e application)
 
 **Fonte:** Materials & Methods do EVEIT (Ex Vivo Eye Irritation Test) usando córneas
 bovinas de abatedouro.
 
 **Casos de falha conhecidos em outros modelos:**
 - `route: in_vitro` (errado) em vez de `ocular` — o sistema ex vivo não determina a rota; a rota é o contato da substância com o tecido. Ver §3.2 tabela de disambiguação.
-- `study_domain: cosmetics` (errado) em vez de `general` — BAC presente no texto não determina `cosmetics`. Ver §3.3 regra para estudos de validação de método.
+- `application: regulatory-use` (errado) em vez de `basic-research` — BAC presente no texto não determina uso regulatório. Ver §3.3 regra para estudos de validação de método.
 - top-level `confidence` na saída do LLM (errado) — proibido; usar `{field}_confidence` por campo (ADR-018).
 
 **AnalyzeResponse esperada:**
@@ -727,14 +734,14 @@ AnalyzeResponse(experiments=[
             # route = "ocular" because the test substance contacts the corneal
             # surface. The perfusion chamber / MEM medium is the biological system,
             # not the route. See §3.2 ex vivo disambiguation table.
-            study_domain             = "general",
-            study_domain_evidence    = None,
-            study_domain_confidence  = "medium",
-            # study_domain = "general" because: (a) the study characterizes
+            application              = "basic-research",
+            application_evidence     = None,
+            application_confidence   = "medium",
+            # application = "basic-research" because: (a) the study characterizes
             # the EVEIT method itself, not a product class; (b) test substances
             # span pharma (HYLO-LASOP), preservative (BAC), and saline control.
             # BAC's presence alone does not imply cosmetics. See §3.3 rule 1.
-            # evidence = None because "general" follows from rule, not explicit text.
+            # evidence = None because "basic-research" follows from rule, not explicit text.
             # confidence = "medium" because classification requires interpretation.
             procedure_text           = "Ex vivo bovine cornea perfusion (EVEIT); hourly topical application; fluorescein staining, lactate, glucose, pH monitoring",
             procedure_text_evidence  = "A 20µl drop of each solution was applied hourly... All defects were stained daily with fluorescein",

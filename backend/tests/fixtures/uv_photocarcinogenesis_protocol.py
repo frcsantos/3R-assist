@@ -29,7 +29,7 @@ EXPECTED_UV_PHOTOCARCINOGENESIS = ExpectedExtraction(
     study_type_keywords=("photocarcinogenesis", "uv", "tumor"),
     endpoint_category=None,
     route=None,
-    study_domain={"general"},
+    application={"basic-research"},
     procedure_keywords=(
         "uv",
         "photocarcinogen",

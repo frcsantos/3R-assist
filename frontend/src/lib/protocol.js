@@ -1,8 +1,10 @@
 import {
-  STUDY_DOMAINS,
+  APPLICATIONS,
   ENDPOINT_CATEGORIES,
   ROUTES,
   SPECIES,
+  canonicalApplication,
+  canonicalRoute,
 } from './parameterVocabulary'
 
 export const ANIMAL_COUNT_FIELDS = [
@@ -34,14 +36,14 @@ export const MATCHING_FIELDS = [
     confidenceKey: 'route',
   },
   {
-    key: 'study_domain',
-    labelKey: 's2.fields.studyDomain',
+    key: 'application',
+    labelKey: 's2.fields.application',
     type: 'select',
-    options: STUDY_DOMAINS,
-    enumPrefix: 'studyDomain',
+    options: APPLICATIONS,
+    enumPrefix: 'application',
     required: true,
-    evidenceKey: 'study_domain',
-    confidenceKey: 'study_domain',
+    evidenceKey: 'application',
+    confidenceKey: 'application',
   },
   {
     key: 'procedure_text',
@@ -75,12 +77,12 @@ const EMPTY_ANIMAL_COUNTS = {
 
 function normalizeRoutes(route) {
   if (Array.isArray(route)) {
-    return route.filter((item) => ROUTES.includes(item))
+    return route.map(canonicalRoute).filter((item) => ROUTES.includes(item))
   }
   if (typeof route === 'string' && route.trim()) {
     return route
       .split(',')
-      .map((part) => part.trim())
+      .map((part) => canonicalRoute(part.trim()))
       .filter((item) => ROUTES.includes(item))
   }
   return []
@@ -129,7 +131,9 @@ export function normalizeParamsFromExperiment(experiment) {
   return normalizeParams({
     endpoint_category: experiment?.endpoint_category ?? params.endpoint_category,
     route: raw.route ?? params.route,
-    study_domain: raw.study_domain ?? params.study_domain,
+    application: canonicalApplication(
+      raw.application ?? raw.study_domain ?? params.application ?? params.study_domain,
+    ),
     procedure_text: raw.procedure_text ?? params.procedure_text,
     species: raw.species ?? params.species,
     animal_counts: raw.animal_counts,
@@ -141,7 +145,9 @@ export function normalizeParams(params) {
   return {
     endpoint_category: params?.endpoint_category ?? '',
     route: normalizeRoutes(params?.route),
-    study_domain: params?.study_domain ?? 'general',
+    application: canonicalApplication(
+      params?.application ?? params?.study_domain ?? 'basic-research',
+    ),
     procedure_text: params?.procedure_text ?? '',
     species: params?.species ?? '',
     animal_counts: normalizeAnimalCounts(
@@ -158,7 +164,7 @@ export function serializeParams(form) {
   return {
     endpoint_category: form.endpoint_category || null,
     route: routes.length ? routes : null,
-    study_domain: form.study_domain || 'general',
+    application: form.application || 'basic-research',
     procedure_text: form.procedure_text?.trim() || null,
     species: form.species || null,
     animal_counts,
@@ -168,14 +174,14 @@ export function serializeParams(form) {
 
 export function emptyParameterKeys(params) {
   const keys = []
-  if (!params?.study_domain?.trim()) keys.push('study_domain')
+  if (!params?.application?.trim()) keys.push('application')
   return keys
 }
 
 export function extractEvidence(raw = {}) {
   return {
     route: raw.route_evidence ?? null,
-    study_domain: raw.study_domain_evidence ?? null,
+    application: raw.application_evidence ?? raw.study_domain_evidence ?? null,
     procedure_text: raw.procedure_text_evidence ?? null,
     species: raw.species_evidence ?? null,
     animal_counts: raw.animal_counts_evidence ?? null,
@@ -185,7 +191,7 @@ export function extractEvidence(raw = {}) {
 export function extractFieldConfidence(raw = {}) {
   return {
     route: raw.route_confidence ?? null,
-    study_domain: raw.study_domain_confidence ?? null,
+    application: raw.application_confidence ?? raw.study_domain_confidence ?? null,
     procedure_text: raw.procedure_text_confidence ?? null,
     species: raw.species_confidence ?? null,
     animal_counts: raw.animal_counts_confidence ?? null,

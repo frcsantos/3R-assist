@@ -23,8 +23,9 @@ def _method(**overrides) -> Method:
             "alternative to the rabbit pyrogen test, employing Limulus amebocyte "
             "lysate via gel-clot, turbidimetric, or chromogenic techniques."
         ),
-        endpoint_category="pyrogenicity",
-        study_domain="pharma",
+        endpoints=[1],
+        endpoint_codes=["pyrogenicity"],
+        application_codes=["regulatory-use"],
         source_db="FARMACOPEIA_BR",
         keywords=localized_str_list(
             [
@@ -90,6 +91,7 @@ def test_unrelated_method_stays_low():
             ["ocular", "irritation"],
             ["ocular", "irritacao"],
         ),
-        endpoint_category="ocular_irritation",
+        endpoints=[2],
+        endpoint_codes=["ocular_irritation"],
     )
     assert text_for_embedding_score(query, other) < _MIN_TEXT_SCORE

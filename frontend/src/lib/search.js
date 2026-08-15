@@ -214,21 +214,30 @@ export function formatJurisdictionBadges(contexts = [], lang, t) {
 export function formatRegulatoryStatusItems(contexts = [], lang, t) {
   return (contexts ?? []).map((context, index) => {
     const jurisdiction = jurisdictionLabel(context.jurisdiction, lang, t)
-    const status = context.regulation_status
-      ? t(`s3.regulatoryStatus.${context.regulation_status}`, {
-          defaultValue: context.regulation_status,
+    const status = context.regulatory_status
+      ? t(`s3.regulatoryStatus.${context.regulatory_status}`, {
+          defaultValue: context.regulatory_status,
         })
       : null
     const keyBase =
       typeof context.jurisdiction === 'object'
         ? context.jurisdiction['en-us']
         : context.jurisdiction
+    const endpoints = (context.regulatory_endpoint_names ?? [])
+      .map((name) => pickLocalized(name, lang))
+      .filter(Boolean)
+      .join(', ')
+    const quote = String(context.endpoint_quote ?? '').trim()
+    const purpose = quote && endpoints
+      ? `${quote} (${endpoints})`
+      : quote || endpoints || null
     return {
       key: `${keyBase}-${index}`,
+      id: context.id ?? null,
       label: jurisdiction,
       status,
-      date: context.regulation_date || null,
-      purpose: pickLocalized(context.regulation_purpose, lang) || null,
+      date: context.regulatory_date || null,
+      purpose,
       body: pickLocalized(context.regulatory_body, lang) || null,
       citation: pickLocalized(context.regulatory_citation, lang).trim() || null,
       url: context.regulatory_url || null,
@@ -251,12 +260,12 @@ export function formatMatchedParams(matchedParams, t) {
   const labels = {
     endpoint_category: t('s2.fields.endpointCategory'),
     route: t('s2.fields.route'),
-    study_domain: t('s2.fields.studyDomain'),
+    application: t('s2.fields.application'),
   }
   return (matchedParams ?? []).map((key) => labels[key] ?? key)
 }
 
-export function methodDetailRows(method, t) {
+export function methodDetailRows(method, t, lang) {
   if (!method) return []
 
   const rows = []
@@ -283,25 +292,33 @@ export function methodDetailRows(method, t) {
     })
   }
 
-  if (method.endpoint_category) {
+  if (method.endpoint_names?.length || method.endpoint_codes?.length) {
+    const labels = (method.endpoint_names ?? [])
+      .map((name) => pickLocalized(name, lang))
+      .filter(Boolean)
+    const fallback = (method.endpoint_codes ?? [])
+      .map((code) => {
+        const key = String(code).replaceAll('-', '_')
+        return t(`s2.enums.endpointCategory.${key}`, { defaultValue: code })
+      })
     rows.push({
-      key: 'endpoint_category',
+      key: 'endpoints',
       label: t('s2.fields.endpointCategory'),
-      value: t(`s2.enums.endpointCategory.${method.endpoint_category}`, {
-        defaultValue: method.endpoint_category,
-      }),
+      value: (labels.length ? labels : fallback).join(', '),
     })
   }
 
-  if (method.routes_applicable?.length) {
+  if (method.route_names?.length || method.route_codes?.length) {
+    const labels = (method.route_names ?? [])
+      .map((name) => pickLocalized(name, lang))
+      .filter(Boolean)
+    const fallback = (method.route_codes ?? []).map((code) =>
+      t(`s2.enums.route.${code}`, { defaultValue: code }),
+    )
     rows.push({
       key: 'routes_applicable',
       label: t('s3.fields.routesApplicable'),
-      value: method.routes_applicable
-        .map((code) =>
-          t(`s2.enums.route.${code}`, { defaultValue: code }),
-        )
-        .join(', '),
+      value: (labels.length ? labels : fallback).join(', '),
     })
   } else if (method.routes_applicable === null) {
     rows.push({
@@ -311,13 +328,17 @@ export function methodDetailRows(method, t) {
     })
   }
 
-  if (method.study_domain) {
+  if (method.application_names?.length || method.application_codes?.length) {
+    const labels = (method.application_names ?? [])
+      .map((name) => pickLocalized(name, lang))
+      .filter(Boolean)
+    const fallback = (method.application_codes ?? []).map((code) =>
+      t(`s2.enums.application.${code}`, { defaultValue: code }),
+    )
     rows.push({
-      key: 'study_domain',
-      label: t('s2.fields.studyDomain'),
-      value: t(`s2.enums.studyDomain.${method.study_domain}`, {
-        defaultValue: method.study_domain,
-      }),
+      key: 'application_ids',
+      label: t('s2.fields.application'),
+      value: (labels.length ? labels : fallback).join(', '),
     })
   }
 

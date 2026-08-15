@@ -1,3 +1,4 @@
+import json
 from datetime import date, datetime
 from typing import Literal
 
@@ -7,7 +8,6 @@ from app.models.i18n import LocalizedStr, LocalizedStrList, localized_str, parse
 from app.models.jurisdiction import parse_jurisdiction
 
 ThreeRClass = Literal["replacement", "reduction", "refinement"]
-StudyDomain = Literal["pharma", "cosmetics", "chemical_safety", "general"]
 AnimalUse = Literal[
     "none",
     "animal_derived_material",
@@ -42,10 +42,14 @@ _THREE_R_ORDER: tuple[ThreeRClass, ...] = ("replacement", "reduction", "refineme
 
 
 class MethodRegulatoryContext(BaseModel):
+    id: int | None = None
     jurisdiction: LocalizedStr
-    regulation_status: RegulatoryStatus | None = None
-    regulation_date: date | None = None
-    regulation_purpose: LocalizedStr | None = None
+    regulatory_status: RegulatoryStatus | None = None
+    regulatory_date: date | None = None
+    regulatory_endpoints: list[int] | None = None
+    # Resolved from endpoints.name for regulatory_endpoints (not a DB column).
+    regulatory_endpoint_names: list[LocalizedStr] = Field(default_factory=list)
+    endpoint_quote: str | None = None
     regulatory_body: LocalizedStr | None = None
     regulatory_doc_id: int | None = None
     regulatory_citation: LocalizedStr | None = None
@@ -58,7 +62,39 @@ class MethodRegulatoryContext(BaseModel):
     def _coerce_jurisdiction(cls, value):
         return parse_jurisdiction(value)
 
-    @field_validator("regulation_purpose", "regulatory_body", "regulatory_citation", mode="before")
+    @field_validator("regulatory_endpoints", mode="before")
+    @classmethod
+    def _coerce_endpoint_ids(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, str) and not value.strip():
+            return None
+        if isinstance(value, str):
+            value = json.loads(value)
+        if isinstance(value, (tuple, list)):
+            return [int(item) for item in value]
+        raise TypeError(f"Unsupported regulatory_endpoints value: {type(value)!r}")
+
+    @field_validator("regulatory_endpoint_names", mode="before")
+    @classmethod
+    def _coerce_endpoint_names(cls, value):
+        if value is None:
+            return []
+        if isinstance(value, str) and not value.strip():
+            return []
+        if not isinstance(value, list):
+            return []
+        names: list[LocalizedStr] = []
+        for item in value:
+            parsed = parse_localized_str(item, required=False)
+            if parsed is None:
+                continue
+            if not parsed.en_us.strip() and not parsed.pt_br.strip():
+                continue
+            names.append(parsed)
+        return names
+
+    @field_validator("regulatory_body", "regulatory_citation", mode="before")
     @classmethod
     def _coerce_localized(cls, value):
         if value is None:
@@ -83,9 +119,18 @@ class Method(BaseModel):
     description: LocalizedStr
     animal_use: AnimalUse | None = None
     test_system: list[TestSystem] | None = None
-    endpoint_category: str
-    routes_applicable: list[str] | None = None
-    study_domain: StudyDomain
+    endpoints: list[int] = Field(default_factory=list)
+    # Resolved from endpoints.slug for methods.endpoints (not a DB column).
+    endpoint_codes: list[str] = Field(default_factory=list)
+    endpoint_names: list[LocalizedStr] = Field(default_factory=list)
+    routes_applicable: list[int] | None = None
+    # Resolved from routes.slug for methods.routes_applicable (not a DB column).
+    route_codes: list[str] = Field(default_factory=list)
+    route_names: list[LocalizedStr] = Field(default_factory=list)
+    application_ids: list[int] = Field(default_factory=list)
+    # Resolved from applications.slug for methods.application_ids (not a DB column).
+    application_codes: list[str] = Field(default_factory=list)
+    application_names: list[LocalizedStr] = Field(default_factory=list)
     oecd_ref: str | None = None
     ncit_id: str | None = None
     source_citation: str | None = None
@@ -105,6 +150,69 @@ class Method(BaseModel):
     embedding_json: list[float] | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+
+    @field_validator("endpoints", "application_ids", mode="before")
+    @classmethod
+    def _coerce_method_endpoint_ids(cls, value):
+        if value is None:
+            return []
+        if isinstance(value, str) and not value.strip():
+            return []
+        if isinstance(value, str):
+            value = json.loads(value)
+        if isinstance(value, int):
+            return [value]
+        if isinstance(value, (tuple, list)):
+            return [int(item) for item in value]
+        raise TypeError(f"Unsupported integer-array value: {type(value)!r}")
+
+    @field_validator("routes_applicable", mode="before")
+    @classmethod
+    def _coerce_route_ids(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, str) and not value.strip():
+            return None
+        if isinstance(value, str):
+            value = json.loads(value)
+        if isinstance(value, int):
+            return [value]
+        if isinstance(value, (tuple, list)):
+            return [int(item) for item in value]
+        raise TypeError(f"Unsupported routes_applicable value: {type(value)!r}")
+
+    @field_validator("endpoint_codes", "route_codes", "application_codes", mode="before")
+    @classmethod
+    def _coerce_endpoint_codes(cls, value):
+        if value is None:
+            return []
+        if isinstance(value, str):
+            text = value.strip()
+            return [text] if text else []
+        if isinstance(value, (tuple, list)):
+            return [str(item) for item in value if str(item).strip()]
+        return []
+
+    @field_validator(
+        "endpoint_names", "route_names", "application_names", mode="before"
+    )
+    @classmethod
+    def _coerce_endpoint_names(cls, value):
+        if value is None:
+            return []
+        if isinstance(value, str) and not value.strip():
+            return []
+        if not isinstance(value, list):
+            return []
+        names: list[LocalizedStr] = []
+        for item in value:
+            parsed = parse_localized_str(item, required=False)
+            if parsed is None:
+                continue
+            if not parsed.en_us.strip() and not parsed.pt_br.strip():
+                continue
+            names.append(parsed)
+        return names
 
     @field_validator(
         "replacement_rationale",

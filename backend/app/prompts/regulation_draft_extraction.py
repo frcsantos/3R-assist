@@ -16,17 +16,18 @@ jurisdiction — prefer one of these localized pairs when supported:
   Return {"en-us":"...","pt-br":"..."}. If only one language is present, copy
   into both locales. Null if unclear.
 
-regulation_status — exactly one of:
+regulatory_status — exactly one of:
   not_approved, approved, recommended, mandatory
   (or null if unclear)
 
 ── FIELD GUIDANCE ───────────────────────────────────────────────────────────
-- regulation_date: adoption / recognition / issuance date. Prefer ISO
+- regulatory_date: adoption / recognition / issuance date. Prefer ISO
   YYYY-MM-DD; year-only as YYYY-01-01 when only the year is known; else null.
-- regulation_purpose: what the method is recognized for in this context
-  (endpoint, use, or regulatory purpose). Localized
-  {"en-us":"...","pt-br":"..."}. Copy into both locales when only one language
-  is present. Null if unclear.
+- regulatory_endpoints: integer ids of recognized endpoints when the
+  text names specific toxicological endpoints and those ids are known;
+  otherwise null. Do not invent ids.
+- endpoint_quote: verbatim supporting quotation from the text for the
+  recognized endpoints; otherwise null. Do not paraphrase.
 - regulatory_body: issuing body, localized {"en-us":"...","pt-br":"..."}.
   Examples: OECD/OCDE, CONCEA. Copy into both locales when only one language
   is present. Null if unclear.
@@ -42,9 +43,10 @@ Your first character must be `{`. Do not write reasoning before the JSON object.
 Schema:
 {
   "jurisdiction": {"en-us": "string", "pt-br": "string"} or null,
-  "regulation_status": "not_approved|approved|recommended|mandatory|null",
-  "regulation_date": "string or null",
-  "regulation_purpose": {"en-us": "string", "pt-br": "string"} or null,
+  "regulatory_status": "not_approved|approved|recommended|mandatory|null",
+  "regulatory_date": "string or null",
+  "regulatory_endpoints": [1, 2] or null,
+  "endpoint_quote": "string or null",
   "regulatory_body": {"en-us": "string", "pt-br": "string"} or null,
   "regulatory_citation": {"en-us": "string", "pt-br": "string"} or null,
   "notes": "string or null"

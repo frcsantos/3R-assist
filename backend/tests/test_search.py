@@ -15,7 +15,7 @@ def _context(
     return MethodRegulatoryContext(
         jurisdiction=jurisdiction,
         regulatory_body="OECD",
-        regulation_date=None,
+        regulatory_date=None,
         regulatory_citation="https://example.org/tg420",
     )
 
@@ -40,10 +40,12 @@ def _method(
         name=localized_str(f"{slug} EN", f"{slug} PT"),
         description=localized_str("desc"),
         text_for_embedding="acute oral LD50",
-        endpoint_category=endpoint,
-        study_domain="general",
+        endpoints=[1],
+        endpoint_codes=[endpoint],
+        application_codes=["basic-research"],
         source_db="NICEATM",
-        routes_applicable=routes,
+        route_codes=routes or [],
+        routes_applicable=None if routes is None else [1] * len(routes),
         validation_status="validated",
         active=True,
         **_rationales_from_classes(category_3r),
@@ -92,7 +94,7 @@ def test_search_returns_ranked_recommendations():
             "params": {
                 "endpoint_category": "acute_toxicity",
                 "route": ["oral"],
-                "study_domain": "general",
+                "application": "basic-research",
                 "procedure_text": "LD50 single dose",
             }
         },
@@ -127,7 +129,7 @@ def test_search_applies_three_r_filter():
             "params": {
                 "endpoint_category": "acute_toxicity",
                 "route": ["oral"],
-                "study_domain": "general",
+                "application": "basic-research",
             },
             "filters": {"three_r_class": "replacement"},
         },
@@ -163,7 +165,7 @@ def test_search_applies_jurisdiction_filter():
         json={
             "params": {
                 "endpoint_category": "acute_toxicity",
-                "study_domain": "general",
+                "application": "basic-research",
             },
             "filters": {"jurisdiction": "brazil"},
         },
@@ -188,7 +190,7 @@ def test_search_without_database_returns_503(monkeypatch):
         json={
             "params": {
                 "endpoint_category": "acute_toxicity",
-                "study_domain": "general",
+                "application": "basic-research",
             }
         },
     )

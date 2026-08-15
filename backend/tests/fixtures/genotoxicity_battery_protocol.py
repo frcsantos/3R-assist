@@ -41,7 +41,7 @@ EXPECTED_GENOTOXICITY_BATTERY = ExpectedExtraction(
     study_type_keywords=("genotoxicity", "comet", "micronucleus"),
     endpoint_category="genotoxicity",
     route=["oral"],
-    study_domain={"chemical_safety", "general"},
+    application={"regulatory-use", "basic-research"},
     procedure_keywords=(
         "genotox",
         "comet",

@@ -7,7 +7,7 @@ from collections.abc import Callable
 
 from app.adapters.embedder import EmbedderAdapter
 from app.models.method import Method, MethodRegulatoryContext
-from app.models.protocol import ProtocolParameters
+from app.models.protocol import ProtocolParameters, normalize_endpoint_slug, normalize_route_slug, normalize_application_slug
 from app.models.recommendation import Recommendation
 from app.repositories.methods import MethodRepository
 
@@ -22,8 +22,8 @@ def build_query_text(params: ProtocolParameters) -> str:
         parts.append(params.endpoint_category)
     if params.procedure_text:
         parts.append(params.procedure_text)
-    if params.study_domain:
-        parts.append(params.study_domain)
+    if params.application:
+        parts.append(params.application)
     if params.route:
         parts.extend(params.route)
     return " ".join(parts)
@@ -65,21 +65,44 @@ def _match_corpus(method: Method, lang: str | None) -> str:
 def _matches_endpoint(method: Method, params: ProtocolParameters) -> bool:
     if params.endpoint_category is None:
         return True
-    return method.endpoint_category == params.endpoint_category
+    wanted = normalize_endpoint_slug(params.endpoint_category)
+    return wanted in {
+        normalize_endpoint_slug(code) for code in (method.endpoint_codes or [])
+    }
+
+
+_NON_FILTER_ROUTES = frozenset(
+    {"other", "multiple", "not-applicable", "unspecified"}
+)
 
 
 def _filterable_routes(params: ProtocolParameters) -> list[str]:
-    """Routes that participate in soft filtering (`other` is display-only)."""
-    return [route for route in (params.route or []) if route != "other"]
+    """Routes that participate in soft filtering (catch-all slugs are display-only)."""
+    routes: list[str] = []
+    for route in params.route or []:
+        slug = normalize_route_slug(route) or route
+        if slug not in _NON_FILTER_ROUTES and slug not in routes:
+            routes.append(slug)
+    return routes
+
+
+def _method_route_slugs(method: Method) -> set[str] | None:
+    codes = method.route_codes or []
+    if codes:
+        return {normalize_route_slug(code) or code for code in codes}
+    if method.routes_applicable is None:
+        return None
+    return set()
 
 
 def _matches_route(method: Method, params: ProtocolParameters) -> bool:
     routes = _filterable_routes(params)
     if not routes:
         return True
-    if not method.routes_applicable:
+    method_slugs = _method_route_slugs(method)
+    if method_slugs is None:
         return True
-    return any(route in method.routes_applicable for route in routes)
+    return any(route in method_slugs for route in routes)
 
 
 def _apply_filters(
@@ -101,16 +124,23 @@ def _apply_filters(
 
 def _matched_params(method: Method, params: ProtocolParameters) -> list[str]:
     matched: list[str] = []
-    if params.endpoint_category and method.endpoint_category == params.endpoint_category:
+    if params.endpoint_category and normalize_endpoint_slug(
+        params.endpoint_category
+    ) in {
+        normalize_endpoint_slug(code) for code in (method.endpoint_codes or [])
+    }:
         matched.append("endpoint_category")
     routes = _filterable_routes(params)
-    if routes and (
-        not method.routes_applicable
-        or any(route in method.routes_applicable for route in routes)
-    ):
+    method_slugs = _method_route_slugs(method)
+    if routes and (method_slugs is None or any(route in method_slugs for route in routes)):
         matched.append("route")
-    if params.study_domain and method.study_domain == params.study_domain:
-        matched.append("study_domain")
+    wanted_app = normalize_application_slug(params.application) if params.application else None
+    app_codes = {
+        normalize_application_slug(code) or code
+        for code in (method.application_codes or [])
+    }
+    if wanted_app and (not app_codes or wanted_app in app_codes):
+        matched.append("application")
     return matched
 
 

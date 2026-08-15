@@ -9,11 +9,13 @@ from typing import Literal
 
 from app.models.protocol import (
     AnimalCounts,
-    StudyDomain,
+    Application,
     EndpointCategory,
     RawExtraction,
     Route,
     Species,
+    coerce_application,
+    coerce_route_list,
 )
 from app.models.method import AnimalUse, RegulatoryStatus, TestSystem
 from app.models.method_draft import MethodDraftExtractResponse, MethodDraftFields
@@ -71,19 +73,18 @@ _ENDPOINT_CATEGORY_VALUES: frozenset[str] = frozenset(
         "rabies_diagnosis",
     }
 )
-_ROUTE_VALUES: frozenset[str] = frozenset(
+_APPLICATION_VALUES: frozenset[str] = frozenset(
     {
-        "oral",
-        "intraperitoneal",
-        "intravenous",
-        "dermal",
-        "ocular",
-        "inhalation",
+        "basic-research",
+        "translational-applied-research",
+        "regulatory-use",
+        "routine-production",
+        "education-training",
+        "environmental-protection",
+        "species-preservation",
+        "forensic-inquiry",
         "other",
     }
-)
-_STUDY_DOMAIN_VALUES: frozenset[str] = frozenset(
-    {"pharma", "cosmetics", "chemical_safety", "general"}
 )
 _ANIMAL_USE_VALUES: frozenset[str] = frozenset(
     {
@@ -325,7 +326,7 @@ class StubLLMAdapter(LLMAdapter):
 
         endpoint = self._method_endpoint(normalized.lower())
         routes = self._extract_routes(normalized.lower())
-        study_domain = self._extract_study_domain(normalized.lower())
+        study_domain = self._extract_application(normalized.lower())
         animal_use = self._extract_animal_use(normalized.lower())
         test_system = self._extract_test_system(normalized.lower())
         slug_seed = (
@@ -343,7 +344,7 @@ class StubLLMAdapter(LLMAdapter):
             test_system=test_system,
             endpoint_category=endpoint,
             routes_applicable=routes,
-            study_domain=study_domain,
+            application=study_domain,
             oecd_ref=oecd_ref,
             source_db="OECD_TG" if oecd_ref else None,
             text_for_embedding=" — ".join(
@@ -446,24 +447,24 @@ class StubLLMAdapter(LLMAdapter):
         elif re.search(r"\bus\b|united states|\bfda\b|\bepa\b|iccvam", lowered):
             jurisdiction = jurisdiction_for_code("us")
 
-        regulation_status = None
+        regulatory_status = None
         if re.search(r"\bmandatory\b|obrigat", lowered):
-            regulation_status = "mandatory"
+            regulatory_status = "mandatory"
         elif re.search(r"\brecommended\b|recomend", lowered):
-            regulation_status = "recommended"
+            regulatory_status = "recommended"
         elif re.search(r"\bapproved\b|aprovad", lowered):
-            regulation_status = "approved"
+            regulatory_status = "approved"
         elif re.search(r"not approved|não aprov|nao aprov", lowered):
-            regulation_status = "not_approved"
+            regulatory_status = "not_approved"
 
-        regulation_date = None
+        regulatory_date = None
         date_match = re.search(
             r"\b(20\d{2}-\d{2}-\d{2}|\d{1,2}[./]\d{1,2}[./]20\d{2}|20\d{2})\b",
             normalized,
         )
         if date_match:
             raw_date = date_match.group(1)
-            regulation_date = (
+            regulatory_date = (
                 f"{raw_date}-01-01"
                 if re.fullmatch(r"20\d{2}", raw_date)
                 else raw_date
@@ -487,9 +488,10 @@ class StubLLMAdapter(LLMAdapter):
         return RegulationDraftExtractResponse(
             fields=RegulationDraftFields(
                 jurisdiction=jurisdiction,
-                regulation_status=regulation_status,  # type: ignore[arg-type]
-                regulation_date=regulation_date,
-                regulation_purpose=None,
+                regulatory_status=regulatory_status,  # type: ignore[arg-type]
+                regulatory_date=regulatory_date,
+                regulatory_endpoints=None,
+                endpoint_quote=None,
                 regulatory_body=localized_str(body) if body else None,
                 regulatory_citation=None,
                 notes=None,
@@ -549,13 +551,13 @@ class StubLLMAdapter(LLMAdapter):
         species = self._extract_species(lowered)
         animal_counts = self._extract_animal_counts(lowered)
         regulatory = self._extract_regulatory(lowered)
-        study_domain = self._extract_study_domain(lowered)
+        study_domain = self._extract_application(lowered)
         procedure_text = self._extract_procedure_text(normalized, study_type)
 
         raw = RawExtraction(
             study_type=study_type,
             route=routes,
-            study_domain=study_domain,
+            application=study_domain,
             procedure_text=procedure_text,
             species=species,
             animal_counts=animal_counts,
@@ -599,7 +601,7 @@ class StubLLMAdapter(LLMAdapter):
         if re.search(r"\bi\.?\s*v\.?\b|intravenous|endovenos", text):
             routes.append("intravenous")
         if re.search(r"dermal|cut[aâ]ne|t[oó]pic|epicut", text):
-            routes.append("dermal")
+            routes.append("cutaneous")
         if re.search(r"ocular|conjunctiv", text):
             routes.append("ocular")
         if re.search(r"inala|inhalation|aerossol|respirat", text):
@@ -651,17 +653,29 @@ class StubLLMAdapter(LLMAdapter):
         return None
 
     @staticmethod
-    def _extract_study_domain(text: str) -> StudyDomain:
-        if re.search(r"vaccine|pharma|medicinal|drug safety", text):
-            return "pharma"
+    def _extract_application(text: str) -> Application:
+        if re.search(r"educat|training|ensino|treinamento", text):
+            return "education-training"
+        if re.search(r"forensic|criminalist|judicial", text):
+            return "forensic-inquiry"
+        if re.search(r"conservat|species preservation|endangered", text):
+            return "species-preservation"
+        if re.search(r"environment|ecolog|meio ambiente", text):
+            return "environmental-protection"
+        if re.search(r"batch release|potency testing|quality control|manufactur", text):
+            return "routine-production"
+        if re.search(r"oecd|regulatory|guideline|reach|anvisa|fda", text):
+            return "regulatory-use"
+        if re.search(r"vaccine|pharma|medicinal|drug safety|diagnos|treatment", text):
+            return "translational-applied-research"
         if re.search(r"cosmetic|higiene pessoal", text):
-            return "cosmetics"
+            return "regulatory-use"
         if re.search(
             r"chemical|agrot[oó]x|industrial|essential oil|plant extract|subst[aâ]ncia",
             text,
         ):
-            return "chemical_safety"
-        return "general"
+            return "regulatory-use"
+        return "basic-research"
 
     @staticmethod
     def _extract_animal_use(text: str) -> AnimalUse | None:
@@ -856,10 +870,15 @@ def _coerce_animal_counts(payload: dict) -> AnimalCounts | None:
     return None
 
 
-def _coerce_study_domain(payload: dict) -> None:
-    domain = payload.get("study_domain")
-    if domain is None or (isinstance(domain, str) and not domain.strip()):
-        payload["study_domain"] = "general"
+def _coerce_application(payload: dict) -> None:
+    raw = payload.get("application")
+    if raw is None or (isinstance(raw, str) and not raw.strip()):
+        raw = payload.get("study_domain")
+    payload["application"] = coerce_application(raw)
+    if payload.get("application_evidence") is None:
+        payload["application_evidence"] = payload.get("study_domain_evidence")
+    if payload.get("application_confidence") is None:
+        payload["application_confidence"] = payload.get("study_domain_confidence")
 
 
 def _is_null_route_marker(value: object) -> bool:
@@ -923,7 +942,7 @@ def _raw_from_experiment_item(item: object) -> RawExtraction | None:
     payload.pop("endpoint_category", None)
     payload.pop("confidence", None)
     payload.pop("raw_text_excerpt", None)
-    _coerce_study_domain(payload)
+    _coerce_application(payload)
     _coerce_route(payload)
     _coerce_species(payload)
     payload["animal_counts"] = _coerce_animal_counts(payload)
@@ -1282,6 +1301,28 @@ def _nullable_regulatory_status(value: object) -> RegulatoryStatus | None:
     return None
 
 
+def _int_list_from_payload(value: object) -> list[int] | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        text = value.strip()
+        if not text or text.lower() in {"null", "none", "n/a", "na"}:
+            return None
+        try:
+            value = json.loads(text)
+        except json.JSONDecodeError:
+            return None
+    if not isinstance(value, list):
+        return None
+    ids: list[int] = []
+    for item in value:
+        try:
+            ids.append(int(item))
+        except (TypeError, ValueError):
+            continue
+    return ids or None
+
+
 def _policy_from_payload(
     payload: object,
     *,
@@ -1454,18 +1495,7 @@ def _enum_or_none(value: object, allowed: frozenset[str]) -> str | None:
 
 
 def _routes_or_none(value: object) -> list[str] | None:
-    if value is None:
-        return None
-    if isinstance(value, str):
-        value = [value]
-    if not isinstance(value, list):
-        return None
-    routes: list[str] = []
-    for item in value:
-        route = _enum_or_none(item, _ROUTE_VALUES)
-        if route and route not in routes:
-            routes.append(route)
-    return routes or None
+    return coerce_route_list(value)
 
 
 def _enum_list_or_none(value: object, allowed: frozenset[str]) -> list[str] | None:
@@ -1560,7 +1590,9 @@ def _method_draft_from_payload(
         slug = _ensure_oecd_slug(seed, oecd_ref)
 
     endpoint = _enum_or_none(payload.get("endpoint_category"), _ENDPOINT_CATEGORY_VALUES)
-    study_domain = _enum_or_none(payload.get("study_domain"), _STUDY_DOMAIN_VALUES)
+    application = coerce_application(
+        payload.get("application") or payload.get("study_domain")
+    )
     text_for_embedding = _nullable_str(payload.get("text_for_embedding"))
     if not text_for_embedding:
         text_for_embedding = " — ".join(
@@ -1589,7 +1621,7 @@ def _method_draft_from_payload(
         ),
         endpoint_category=endpoint,  # type: ignore[arg-type]
         routes_applicable=_routes_or_none(payload.get("routes_applicable")),  # type: ignore[arg-type]
-        study_domain=study_domain,  # type: ignore[arg-type]
+        application=application,
         oecd_ref=oecd_ref,
         ncit_id=_nullable_str(payload.get("ncit_id")),
         source_citation=_nullable_str(payload.get("source_citation")),
@@ -1724,22 +1756,22 @@ def _regulation_draft_from_payload(
         except (TypeError, ValueError):
             jurisdiction = None
 
-    date = _nullable_str(payload.get("regulation_date"))
+    date = _nullable_str(
+        payload.get("regulatory_date") or payload.get("regulation_date")
+    )
     if date and re.fullmatch(r"20\d{2}", date):
         date = f"{date}-01-01"
 
     fields = RegulationDraftFields(
         jurisdiction=jurisdiction,
-        regulation_status=_nullable_regulatory_status(
-            payload.get("regulation_status")
+        regulatory_status=_nullable_regulatory_status(
+            payload.get("regulatory_status") or payload.get("regulation_status")
         ),
-        regulation_date=date,
-        regulation_purpose=_localized_str_from_payload(
-            payload,
-            "regulation_purpose",
-            "regulation_purpose_en",
-            "regulation_purpose_pt",
+        regulatory_date=date,
+        regulatory_endpoints=_int_list_from_payload(
+            payload.get("regulatory_endpoints")
         ),
+        endpoint_quote=_nullable_str(payload.get("endpoint_quote")),
         regulatory_body=_localized_str_from_payload(
             payload, "regulatory_body", "regulatory_body_en", "regulatory_body_pt"
         ),
