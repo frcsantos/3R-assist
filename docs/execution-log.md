@@ -117,4 +117,18 @@ H2 and H5 remain formally Untested in `assumption-log.md` until the structured c
 | S2 UI | Experiment tabs; protocol side panel; per-field confidence + evidence |
 | S3 UI | Live `ResultCard` results; experiment tabs; Match score; OECD on regulatory link |
 
-**Still open for pilot:** methods `active = TRUE`; S3 export/feedback/suggest links; `QueryRepository`; H1/H2/H5 formal checks.
+**Still open for pilot:** methods `active = TRUE`; S3 export / F11 query ratings / suggest links; `QueryRepository`; H1/H2/H5 formal checks.
+
+---
+
+## M3+ — Schema evolution, Explore, general feedback (2026-08)
+
+| Area | Change |
+|---|---|
+| Methods columns | `animal_use`, `test_system`, localized `*_rationale`, `validation_status` on methods (migrations 037–042) |
+| Feedback split | `feedback` → `query_feedback` (F11); new `feedback` for general comments (043–044); ADR-024 |
+| Explore (S4) | `/explore` Methods / Regulations / Documents; `/buscar` redirect; nav + Glossary / Info |
+| F11b UI | Explore card ! → `FeedbackModal` → `POST /feedback` |
+| Result cards | Detail rows: animal use, test system, endpoint, routes, study domain |
+
+**Still open for pilot:** methods `active = TRUE`; S3 export / F11 ratings / suggest; `QueryRepository`; H1/H2/H5 formal checks.

@@ -27,7 +27,4 @@ async def analyze_protocol(
             message=result.message,
         )
 
-    return AnalyzeResponse(
-        experiments=result.experiments,
-        params=result.params,
-    )
+    return result

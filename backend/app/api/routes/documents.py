@@ -9,7 +9,7 @@ from app.config import get_settings
 from app.models.catalogue import DocumentsCatalogueResponse
 from app.repositories.documents import DocumentRepository
 
-DocumentCategory = Literal["method_protocol", "guideline", "regulation"]
+DocumentCategory = Literal["method_protocol", "guideline", "regulation", "other"]
 
 router = APIRouter(tags=["documents"])
 

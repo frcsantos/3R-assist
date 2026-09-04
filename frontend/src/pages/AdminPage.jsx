@@ -1,34 +1,62 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import ResultCard from '../components/ResultCard'
 import Button from '../components/Button'
+import MarkdownRenderer from '../components/MarkdownRenderer'
 import {
   deleteAdminRows,
+  estimateExtract,
+  extractDocumentDraft,
   extractMethodDraft,
   extractPolicy,
+  extractRegulationDraft,
+  fetchAdminRowById,
+  fetchAdminSettings,
   fetchAdminTable,
   fetchAdminTables,
   insertAdminRow,
   matchPolicyDocument,
   matchPolicyMethod,
+  resolveExtractSource,
   updateAdminCell,
   updateAdminColumnComment,
+  uploadExtractSource,
 } from '../lib/admin'
 import { currentLanguage } from '../lib/i18n'
 import {
-  formatOecdReference,
-  jurisdictionLabel,
+  formatRegulatoryStatusItems,
   JURISDICTION_LABELS,
   methodDescription,
+  methodDetailRows,
   methodDisplayName,
+  methodSourceCitation,
+  methodThreeRBadges,
   pickLocalized,
-  primaryRegulatoryContext,
+  primaryThreeR,
   scorePercent,
 } from '../lib/search'
 
 const PAGE_SIZE = 10
 const MAIN_TABS = ['database', 'extract', 'docs', 'settings']
+
+const PROJECT_DOC_MODULES = import.meta.glob('../../../docs/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+})
+
+const PROJECT_DOCS = Object.entries(PROJECT_DOC_MODULES)
+  .map(([path, content]) => {
+    const filename = path.split(/[/\\]/).pop() ?? path
+    return {
+      id: filename,
+      filename,
+      content: typeof content === 'string' ? content : String(content ?? ''),
+    }
+  })
+  .sort((a, b) => a.filename.localeCompare(b.filename))
 
 function formatCell(value) {
   if (value === null || value === undefined) {
@@ -67,12 +95,59 @@ function toMultiSelectDraft(selected) {
   return JSON.stringify(selected, null, 2)
 }
 
+function normalizeDraftForCompare(draft) {
+  const trimmed = String(draft ?? '').trim()
+  if (!trimmed) return ''
+  try {
+    return JSON.stringify(JSON.parse(trimmed))
+  } catch {
+    return trimmed
+  }
+}
+
+function draftsEqual(a, b) {
+  return normalizeDraftForCompare(a) === normalizeDraftForCompare(b)
+}
+
+function formatOriginalDraft(draft) {
+  const trimmed = String(draft ?? '').trim()
+  if (!trimmed) return '—'
+  try {
+    return JSON.stringify(JSON.parse(trimmed))
+  } catch {
+    return trimmed
+  }
+}
+
 function isJsonColumnType(type) {
   return type === 'jsonb' || type === 'json'
 }
 
+function isBooleanColumnType(type) {
+  return type === 'boolean'
+}
+
+function normalizeBooleanDraft(draft) {
+  const trimmed = String(draft ?? '').trim().toLowerCase()
+  if (trimmed === 'true' || trimmed === 't' || trimmed === '1' || trimmed === 'yes') {
+    return 'true'
+  }
+  if (trimmed === 'false' || trimmed === 'f' || trimmed === '0' || trimmed === 'no') {
+    return 'false'
+  }
+  return ''
+}
+
 /** Columns that store JSON arrays of vocabulary codes (admin multi-select). */
-const MULTI_SELECT_COLUMNS = new Set(['routes_applicable'])
+const MULTI_SELECT_COLUMNS = new Set([
+  'routes_applicable',
+  'application_ids',
+  'categories',
+  'test_system',
+  'regulatory_endpoints',
+  'endpoints',
+  'compatible_endpoints',
+])
 
 function isMultiSelectColumn(column, type, options) {
   if (!options?.length) return false
@@ -86,9 +161,34 @@ const RATIONALE_3R_COLUMNS = [
   ['refinement_rationale', 'refinement'],
 ]
 
+function nonemptyRationaleDraft(value) {
+  if (value == null) return false
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return false
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return Object.values(parsed).some(
+          (part) => typeof part === 'string' && part.trim() !== '',
+        )
+      }
+    } catch {
+      /* plain string rationale */
+    }
+    return true
+  }
+  if (typeof value === 'object') {
+    return Object.values(value).some(
+      (part) => typeof part === 'string' && part.trim() !== '',
+    )
+  }
+  return false
+}
+
 function category3rFromRationales(values) {
-  return RATIONALE_3R_COLUMNS.filter(
-    ([column]) => String(values[column] ?? '').trim() !== '',
+  return RATIONALE_3R_COLUMNS.filter(([column]) =>
+    nonemptyRationaleDraft(values[column]),
   ).map(([, label]) => label)
 }
 
@@ -104,7 +204,7 @@ function withDerivedCategory3r(values, columns) {
   }
 }
 
-function fromDraft(draft, original) {
+function fromDraft(draft, original, type) {
   const trimmed = draft.trim()
   if (trimmed === '') {
     return null
@@ -112,7 +212,7 @@ function fromDraft(draft, original) {
   if (typeof original === 'object' && original !== null) {
     return JSON.parse(trimmed)
   }
-  if (typeof original === 'boolean') {
+  if (typeof original === 'boolean' || isBooleanColumnType(type)) {
     const lower = trimmed.toLowerCase()
     if (lower === 'true') return true
     if (lower === 'false') return false
@@ -265,6 +365,11 @@ function AddRowModal({
 }) {
   const { t } = useTranslation()
   const isEdit = mode === 'edit'
+  const documentAssist = table === 'documents' && isEdit
+  const methodAssist = table === 'methods' && (protocolAssist || isEdit)
+  const regulationAssist = table === 'regulations' && isEdit
+  const sourceAssist = methodAssist || documentAssist || regulationAssist
+  const showOriginalValues = isEdit && sourceAssist
   const requiredSet = new Set(requiredColumns)
   const lockedSet = new Set(lockedColumns)
   const derivesCategory3r =
@@ -284,12 +389,24 @@ function AddRowModal({
       columns,
     ),
   )
+  const [originalValues] = useState(() =>
+    Object.fromEntries(
+      columns.map((column) => [
+        column,
+        initialValues ? toDraft(initialValues[column]) : '',
+      ]),
+    ),
+  )
   const [fieldOptions, setFieldOptions] = useState(() => columnOptions ?? {})
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [protocolText, setProtocolText] = useState('')
   const [extracting, setExtracting] = useState(false)
   const [extractElapsedSeconds, setExtractElapsedSeconds] = useState(0)
+  const [uploadedFileName, setUploadedFileName] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
+  const uploadInputId = useId()
   const [nestedDocumentSchema, setNestedDocumentSchema] = useState(null)
   const [nestedDocumentOpen, setNestedDocumentOpen] = useState(false)
   const [nestedDocumentLoading, setNestedDocumentLoading] = useState(false)
@@ -305,6 +422,7 @@ function AddRowModal({
         event.key === 'Escape' &&
         !saving &&
         !extracting &&
+        !uploading &&
         !nestedDocumentOpen
       ) {
         onClose()
@@ -312,7 +430,7 @@ function AddRowModal({
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose, saving, extracting, nestedDocumentOpen])
+  }, [onClose, saving, extracting, uploading, nestedDocumentOpen])
 
   useEffect(() => {
     if (!extracting) {
@@ -341,7 +459,13 @@ function AddRowModal({
   }
 
   async function openNestedDocument() {
-    if (nestedDocumentLoading || saving || extracting || nestedDocumentOpen) {
+    if (
+      nestedDocumentLoading ||
+      saving ||
+      extracting ||
+      uploading ||
+      nestedDocumentOpen
+    ) {
       return
     }
     setNestedDocumentError(null)
@@ -376,9 +500,94 @@ function AddRowModal({
     }
   }
 
+  function clearUploadedFile() {
+    setUploadedFileName(null)
+    setProtocolText('')
+    setError(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  function protocolUploadErrorMessage(err) {
+    const code = err?.code
+    if (code === 'FILE_TYPE_UNSUPPORTED') return t('admin.extract.uploadTypeError')
+    if (code === 'FILE_TOO_LARGE') return t('admin.extract.uploadTooLarge')
+    if (code === 'FILE_NO_TEXT') return t('admin.extract.uploadNoText')
+    if (code === 'FILE_READ_FAILED') return t('admin.extract.uploadReadError')
+    return err.message ?? t('admin.extract.error')
+  }
+
+  async function handleProtocolUploadChange(event) {
+    const file = event.target.files?.[0]
+    if (!file || extracting || saving || uploading) return
+
+    setError(null)
+    setUploading(true)
+    try {
+      const uploaded = await uploadExtractSource(file)
+      setProtocolText(uploaded.text ?? '')
+      setUploadedFileName(uploaded.filename || file.name)
+    } catch (err) {
+      clearUploadedFile()
+      setError(protocolUploadErrorMessage(err))
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  function resolveOptionValue(value, options) {
+    if (value == null || !options?.length) return value
+    if (Array.isArray(value)) {
+      return value.map((item) => resolveOptionValue(item, options))
+    }
+    const text = String(value).trim()
+    if (!text) return value
+    const exact = options.find((option) => String(option.value) === text)
+    if (exact) return exact.value
+    const lower = text.toLowerCase().replace(/_/g, '-')
+    const byCode = options.find((option) => {
+      const label = String(option.label).toLowerCase().replace(/_/g, '-')
+      return (
+        label === lower ||
+        label.startsWith(`${lower} —`) ||
+        label.startsWith(`${lower} -`)
+      )
+    })
+    return byCode ? byCode.value : value
+  }
+
+  function applyExtractedFields(fields) {
+    const incoming = { ...fields }
+    if (incoming.endpoints == null && incoming.endpoint_category != null) {
+      incoming.endpoints = Array.isArray(incoming.endpoint_category)
+        ? incoming.endpoint_category
+        : [incoming.endpoint_category]
+    }
+    setValues((current) => {
+      const next = { ...current }
+      for (const column of columns) {
+        if (lockedSet.has(column) && column !== 'category_3r') continue
+        if (!(column in incoming)) continue
+        let value = incoming[column]
+        if (value === null || value === undefined) continue
+        value = resolveOptionValue(value, fieldOptions?.[column])
+        if (column === 'endpoints' && value != null && !Array.isArray(value)) {
+          value = [value]
+        }
+        if (typeof value === 'string' && value.trim() === '') continue
+        if (Array.isArray(value) && value.length === 0) continue
+        const draft = toDraft(value)
+        if (draftsEqual(draft, current[column])) continue
+        next[column] = draft
+      }
+      return withDerivedCategory3r(next, columns)
+    })
+  }
+
   async function extractFromProtocol(event) {
     event?.preventDefault?.()
-    if (extracting || saving) return
+    if (extracting || saving || uploading) return
     const trimmed = protocolText.trim()
     if (trimmed.length < POLICY_TEXT_MIN) {
       setError(t('admin.extract.tooShort', { min: POLICY_TEXT_MIN }))
@@ -392,19 +601,7 @@ function AddRowModal({
         text: trimmed,
         lang: currentLanguage(),
       })
-      const fields = result.fields ?? {}
-      setValues((current) => {
-        const next = { ...current }
-        for (const column of columns) {
-          if (lockedSet.has(column) && column !== 'category_3r') continue
-          if (!(column in fields)) continue
-          const value = fields[column]
-          if (value === null || value === undefined) continue
-          if (typeof value === 'string' && value.trim() === '') continue
-          next[column] = toDraft(value)
-        }
-        return withDerivedCategory3r(next, columns)
-      })
+      applyExtractedFields(result.fields ?? {})
     } catch (err) {
       setError(err.message ?? t('admin.extract.methodDraftError'))
     } finally {
@@ -412,8 +609,78 @@ function AddRowModal({
     }
   }
 
+  function documentExtractErrorMessage(err) {
+    const code = err?.code
+    if (code === 'INVALID_URL') return t('admin.extract.urlInvalid')
+    if (code === 'URL_FETCH_FAILED') return t('admin.extract.urlFetchFailed')
+    if (code === 'URL_NO_TEXT') return t('admin.extract.urlNoText')
+    return err.message ?? t('admin.extract.documentDraftError')
+  }
+
+  async function extractFromDocument(event) {
+    event?.preventDefault?.()
+    if (extracting || saving || uploading) return
+    const trimmed = protocolText.trim()
+    const looksLikeUrl =
+      /^(https?:\/\/|www\.)/i.test(trimmed) && !/\s/.test(trimmed)
+    if (!looksLikeUrl && trimmed.length < POLICY_TEXT_MIN) {
+      setError(t('admin.extract.tooShort', { min: POLICY_TEXT_MIN }))
+      return
+    }
+
+    setExtracting(true)
+    setError(null)
+    try {
+      const categoryHint = parseMultiSelectDraft(values.categories)[0]
+      const result = await extractDocumentDraft({
+        text: trimmed,
+        lang: currentLanguage(),
+        ...(categoryHint ? { categoryHint } : {}),
+      })
+      applyExtractedFields(result.fields ?? {})
+    } catch (err) {
+      setError(documentExtractErrorMessage(err))
+    } finally {
+      setExtracting(false)
+    }
+  }
+
+  function regulationExtractErrorMessage(err) {
+    const code = err?.code
+    if (code === 'INVALID_URL') return t('admin.extract.urlInvalid')
+    if (code === 'URL_FETCH_FAILED') return t('admin.extract.urlFetchFailed')
+    if (code === 'URL_NO_TEXT') return t('admin.extract.urlNoText')
+    return err.message ?? t('admin.extract.regulationDraftError')
+  }
+
+  async function extractFromRegulation(event) {
+    event?.preventDefault?.()
+    if (extracting || saving || uploading) return
+    const trimmed = protocolText.trim()
+    const looksLikeUrl =
+      /^(https?:\/\/|www\.)/i.test(trimmed) && !/\s/.test(trimmed)
+    if (!looksLikeUrl && trimmed.length < POLICY_TEXT_MIN) {
+      setError(t('admin.extract.tooShort', { min: POLICY_TEXT_MIN }))
+      return
+    }
+
+    setExtracting(true)
+    setError(null)
+    try {
+      const result = await extractRegulationDraft({
+        text: trimmed,
+        lang: currentLanguage(),
+      })
+      applyExtractedFields(result.fields ?? {})
+    } catch (err) {
+      setError(regulationExtractErrorMessage(err))
+    } finally {
+      setExtracting(false)
+    }
+  }
+
   async function submit() {
-    if (saving || extracting) return
+    if (saving || extracting || uploading) return
 
     const missing = columns.filter(
       (column) =>
@@ -467,15 +734,48 @@ function AddRowModal({
     'w-full rounded border border-border-subtle bg-surface-container-lowest px-3 py-2 font-metadata text-metadata text-on-surface outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60'
   const firstEditableIndex = columns.findIndex((column) => !lockedSet.has(column))
   const protocolTrimmedLength = protocolText.trim().length
+  const protocolBusy = extracting || saving || uploading
+  const protocolTextLocked = Boolean(uploadedFileName)
+  const sourceLooksLikeUrl =
+    /^(https?:\/\/|www\.)/i.test(protocolText.trim()) &&
+    !/\s/.test(protocolText.trim())
   const canExtract =
-    protocolAssist &&
-    protocolTrimmedLength >= POLICY_TEXT_MIN &&
-    !extracting &&
-    !saving
+    sourceAssist &&
+    !protocolBusy &&
+    ((documentAssist || regulationAssist)
+      ? sourceLooksLikeUrl || protocolTrimmedLength >= POLICY_TEXT_MIN
+      : protocolTrimmedLength >= POLICY_TEXT_MIN)
   const nestedDocumentColumns =
     nestedDocumentSchema?.columns.filter(
       (column) => !(nestedDocumentSchema.auto_columns ?? []).includes(column),
     ) ?? []
+  const sourceTextId = documentAssist
+    ? 'document-source-text'
+    : regulationAssist
+      ? 'regulation-source-text'
+      : 'method-protocol-text'
+  const onExtractSubmit = documentAssist
+    ? extractFromDocument
+    : regulationAssist
+      ? extractFromRegulation
+      : extractFromProtocol
+  const sourceLabel = documentAssist
+    ? t('admin.extract.documentSourceLabel')
+    : regulationAssist
+      ? t('admin.extract.regulationSourceLabel')
+      : t('admin.extract.methodProtocolLabel')
+  const sourcePlaceholder = protocolTextLocked
+    ? t('admin.extract.uploadPlaceholder')
+    : documentAssist
+      ? t('admin.extract.documentSourcePlaceholder')
+      : regulationAssist
+        ? t('admin.extract.regulationSourcePlaceholder')
+        : t('admin.extract.methodProtocolPlaceholder')
+  const sourceHint = documentAssist
+    ? t('admin.extract.documentSourceHint')
+    : regulationAssist
+      ? t('admin.extract.regulationSourceHint')
+      : t('admin.extract.methodProtocolHint')
 
   return (
     <>
@@ -498,7 +798,7 @@ function AddRowModal({
           </h2>
           <CloseIconButton
             label={t('admin.close')}
-            disabled={saving || extracting}
+            disabled={protocolBusy}
             onClick={onClose}
           />
         </div>
@@ -510,29 +810,72 @@ function AddRowModal({
         )}
 
         <div className="min-h-0 flex-1 space-y-card-gap overflow-y-auto pr-1">
-          {protocolAssist ? (
+          {sourceAssist ? (
             <form
-              onSubmit={extractFromProtocol}
+              onSubmit={onExtractSubmit}
               className="space-y-2 border-b border-border-subtle pb-card-gap"
             >
-              <label className="block min-w-0" htmlFor="method-protocol-text">
-                <span className="mb-1 block font-label-caps text-label-caps uppercase text-on-surface-variant">
-                  {t('admin.extract.methodProtocolLabel')}
-                </span>
-                <textarea
-                  id="method-protocol-text"
-                  rows={6}
-                  value={protocolText}
-                  disabled={saving || extracting}
-                  onChange={(event) => setProtocolText(event.target.value)}
-                  placeholder={t('admin.extract.methodProtocolPlaceholder')}
-                  className="w-full rounded border border-border-subtle bg-surface-container-lowest px-3 py-2 font-metadata text-metadata text-on-surface outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
-                />
-              </label>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <label
+                  htmlFor={sourceTextId}
+                  className="block font-label-caps text-label-caps uppercase text-on-surface-variant"
+                >
+                  {sourceLabel}
+                </label>
+                <div className="flex flex-wrap items-center gap-2">
+                  {uploadedFileName ? (
+                    <span className="inline-flex max-w-[16rem] items-center gap-2 rounded-md border border-border-subtle bg-surface-container-low px-2 py-1 font-metadata text-metadata text-on-surface">
+                      <span className="truncate" title={uploadedFileName}>
+                        {uploadedFileName}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={protocolBusy}
+                        onClick={clearUploadedFile}
+                        className="shrink-0 text-on-secondary-container transition-colors hover:text-error disabled:opacity-50"
+                        title={t('admin.extract.clearUpload')}
+                        aria-label={t('admin.extract.clearUpload')}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ) : null}
+                  <input
+                    ref={fileInputRef}
+                    id={uploadInputId}
+                    type="file"
+                    accept=".pdf,.html,.htm,.txt,application/pdf,text/html,text/plain"
+                    className="sr-only"
+                    disabled={protocolBusy}
+                    onChange={handleProtocolUploadChange}
+                  />
+                  <label
+                    htmlFor={uploadInputId}
+                    className={`inline-flex cursor-pointer items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-3 py-1.5 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container ${
+                      protocolBusy ? 'pointer-events-none opacity-50' : ''
+                    }`}
+                  >
+                    {uploading
+                      ? t('admin.extract.uploading')
+                      : t('admin.extract.upload')}
+                  </label>
+                </div>
+              </div>
+              <textarea
+                id={sourceTextId}
+                rows={6}
+                value={protocolText}
+                disabled={protocolBusy || protocolTextLocked}
+                readOnly={protocolTextLocked}
+                onChange={(event) => setProtocolText(event.target.value)}
+                placeholder={sourcePlaceholder}
+                className="w-full rounded border border-border-subtle bg-surface-container-lowest px-3 py-2 font-metadata text-metadata text-on-surface outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+              />
               <p className="font-metadata text-metadata text-on-secondary-container opacity-65">
-                {t('admin.extract.methodProtocolHint')}
+                {sourceHint}
               </p>
               {protocolTrimmedLength > 0 &&
+              !sourceLooksLikeUrl &&
               protocolTrimmedLength < POLICY_TEXT_MIN ? (
                 <p className="font-metadata text-metadata text-error" role="alert">
                   {t('admin.extract.tooShort', { min: POLICY_TEXT_MIN })}
@@ -558,7 +901,8 @@ function AddRowModal({
             const foreignKey = foreignKeys?.[column]
             const useSelect = options.length > 0
             const useMultiSelect = isMultiSelectColumn(column, type, options)
-            const autoFocus = !protocolAssist && index === firstEditableIndex
+            const useBooleanSelect = !useSelect && isBooleanColumnType(type)
+            const autoFocus = !sourceAssist && index === firstEditableIndex
             const labelId = `row-field-${column}-label`
             const fieldId = `row-field-${column}`
             const selectedValues = useMultiSelect
@@ -566,6 +910,12 @@ function AddRowModal({
               : []
             const canAddDocument =
               column === 'source_doc_id' && foreignKey?.table === 'documents'
+            const showOriginal =
+              showOriginalValues &&
+              !draftsEqual(values[column], originalValues[column])
+            const booleanDraft = useBooleanSelect
+              ? normalizeBooleanDraft(values[column])
+              : ''
 
             function toggleMultiOption(optionValue) {
               const next = selectedValues.includes(optionValue)
@@ -621,7 +971,7 @@ function AddRowModal({
                               id={optionId}
                               type="checkbox"
                               checked={checked}
-                              disabled={saving || extracting || locked}
+                              disabled={protocolBusy || locked}
                               autoFocus={autoFocus && optionIndex === 0}
                               onChange={() => toggleMultiOption(optionValue)}
                               className="h-4 w-4 shrink-0 rounded border-border-subtle text-primary accent-primary"
@@ -631,12 +981,30 @@ function AddRowModal({
                         )
                       })}
                     </div>
+                  ) : useBooleanSelect ? (
+                    <select
+                      id={fieldId}
+                      autoFocus={autoFocus}
+                      value={booleanDraft}
+                      disabled={protocolBusy || locked}
+                      required={required}
+                      onChange={(event) => updateValue(column, event.target.value)}
+                      className={fieldClass}
+                    >
+                      <option value="">
+                        {required
+                          ? t('admin.selectRequired')
+                          : t('admin.selectOptional')}
+                      </option>
+                      <option value="true">{t('admin.booleanTrue')}</option>
+                      <option value="false">{t('admin.booleanFalse')}</option>
+                    </select>
                   ) : useSelect ? (
                     <select
                       id={fieldId}
                       autoFocus={autoFocus}
                       value={values[column] ?? ''}
-                      disabled={saving || extracting || locked}
+                      disabled={protocolBusy || locked}
                       required={required}
                       onChange={(event) => updateValue(column, event.target.value)}
                       className={fieldClass}
@@ -661,19 +1029,31 @@ function AddRowModal({
                       type="text"
                       autoFocus={autoFocus}
                       value={values[column] ?? ''}
-                      disabled={saving || extracting || locked}
+                      disabled={protocolBusy || locked}
                       required={required}
                       onChange={(event) => updateValue(column, event.target.value)}
                       className={fieldClass}
                     />
                   )}
+                  {showOriginal ? (
+                    <button
+                      type="button"
+                      disabled={protocolBusy || locked}
+                      onClick={() => updateValue(column, originalValues[column] ?? '')}
+                      title={t('admin.restoreOriginal')}
+                      className="mt-1 block max-w-full text-left whitespace-pre-wrap break-words font-metadata text-metadata text-on-secondary-container underline decoration-dotted underline-offset-2 opacity-70 transition-opacity hover:opacity-100 disabled:cursor-not-allowed disabled:no-underline disabled:opacity-40"
+                    >
+                      {t('admin.originalValue', {
+                        value: formatOriginalDraft(originalValues[column]),
+                      })}
+                    </button>
+                  ) : null}
                     {canAddDocument ? (
                       <div className="mt-2 flex flex-wrap items-center gap-3">
                         <button
                           type="button"
                           disabled={
-                            saving ||
-                            extracting ||
+                            protocolBusy ||
                             locked ||
                             nestedDocumentLoading ||
                             nestedDocumentOpen
@@ -707,7 +1087,7 @@ function AddRowModal({
         <div className="mt-card-gap flex gap-3 border-t border-border-subtle pt-card-gap">
           <button
             type="button"
-            disabled={saving || extracting}
+            disabled={protocolBusy}
             onClick={submit}
             className="font-metadata text-metadata text-primary hover:underline disabled:opacity-40"
           >
@@ -715,7 +1095,7 @@ function AddRowModal({
           </button>
           <button
             type="button"
-            disabled={saving || extracting}
+            disabled={protocolBusy}
             onClick={onClose}
             className="font-metadata text-metadata text-on-secondary-container hover:underline disabled:opacity-40"
           >
@@ -904,6 +1284,7 @@ function DatabasePanel() {
   const [tables, setTables] = useState([])
   const [activeTable, setActiveTable] = useState(null)
   const [page, setPage] = useState(0)
+  const [pageInput, setPageInput] = useState('1')
   const [tableData, setTableData] = useState(null)
   const [loadingTables, setLoadingTables] = useState(true)
   const [loadingData, setLoadingData] = useState(false)
@@ -916,6 +1297,16 @@ function DatabasePanel() {
   const [commentColumn, setCommentColumn] = useState(null)
   const [rowModal, setRowModal] = useState(null)
   const [exporting, setExporting] = useState(false)
+  const [sortBy, setSortBy] = useState(null)
+  const [sortDir, setSortDir] = useState('asc')
+
+  function tableFetchOpts({ limit = PAGE_SIZE, offset = 0 } = {}) {
+    return {
+      limit,
+      offset,
+      ...(sortBy ? { sortBy, sortDir } : {}),
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -949,7 +1340,14 @@ function DatabasePanel() {
 
     const fromHash = location.hash.replace(/^#/, '')
     if (fromHash && tables.includes(fromHash)) {
-      setActiveTable(fromHash)
+      setActiveTable((current) => {
+        if (current !== fromHash) {
+          setPage(0)
+          setSortBy(null)
+          setSortDir('asc')
+        }
+        return fromHash
+      })
       return
     }
 
@@ -959,12 +1357,28 @@ function DatabasePanel() {
   function selectTable(table) {
     setActiveTable(table)
     setPage(0)
+    setSortBy(null)
+    setSortDir('asc')
     setEdit(null)
     setSelected({})
     setConfirmDelete(false)
     setCommentColumn(null)
     setRowModal(null)
     navigate(`/admin/database#${table}`, { replace: true })
+  }
+
+  function toggleSort(column) {
+    if (saving || deleting || exporting || loadingData) return
+    setPage(0)
+    setSelected({})
+    setConfirmDelete(false)
+    setEdit(null)
+    if (sortBy === column) {
+      setSortDir((current) => (current === 'asc' ? 'desc' : 'asc'))
+      return
+    }
+    setSortBy(column)
+    setSortDir('asc')
   }
 
   useEffect(() => {
@@ -984,10 +1398,13 @@ function DatabasePanel() {
       setCommentColumn(null)
       setRowModal(null)
       try {
-        const result = await fetchAdminTable(activeTable, {
-          limit: PAGE_SIZE,
-          offset: page * PAGE_SIZE,
-        })
+        const result = await fetchAdminTable(
+          activeTable,
+          tableFetchOpts({
+            limit: PAGE_SIZE,
+            offset: page * PAGE_SIZE,
+          }),
+        )
         if (!cancelled) {
           setTableData(result)
         }
@@ -1007,10 +1424,28 @@ function DatabasePanel() {
     return () => {
       cancelled = true
     }
-  }, [activeTable, page, t])
+  }, [activeTable, page, sortBy, sortDir, t])
 
   const primaryKey = tableData?.primary_key ?? []
   const totalPages = tableData ? Math.max(1, Math.ceil(tableData.total / PAGE_SIZE)) : 1
+
+  useEffect(() => {
+    setPageInput(String(page + 1))
+  }, [page])
+
+  function goToPage(raw) {
+    const parsed = Number.parseInt(String(raw).trim(), 10)
+    if (!Number.isFinite(parsed)) {
+      setPageInput(String(page + 1))
+      return
+    }
+    const next = Math.min(totalPages, Math.max(1, parsed))
+    setPage(next - 1)
+    setPageInput(String(next))
+  }
+
+  const pagerButtonClass =
+    'rounded-md border border-border-subtle px-3 py-1.5 font-metadata text-metadata text-on-surface transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-40'
   const selectedKeys = Object.keys(selected)
   const selectedCount = selectedKeys.length
   const pageRowKeys =
@@ -1050,10 +1485,13 @@ function DatabasePanel() {
       let offset = 0
       let total = Infinity
       while (offset < total) {
-        const result = await fetchAdminTable(activeTable, {
-          limit: EXPORT_PAGE_SIZE,
-          offset,
-        })
+        const result = await fetchAdminTable(
+          activeTable,
+          tableFetchOpts({
+            limit: EXPORT_PAGE_SIZE,
+            offset,
+          }),
+        )
         rows.push(...result.rows)
         total = result.total
         offset += result.rows.length
@@ -1134,10 +1572,13 @@ function DatabasePanel() {
       if (page > maxPage) {
         setPage(maxPage)
       } else {
-        const refreshed = await fetchAdminTable(activeTable, {
-          limit: PAGE_SIZE,
-          offset: page * PAGE_SIZE,
-        })
+        const refreshed = await fetchAdminTable(
+          activeTable,
+          tableFetchOpts({
+            limit: PAGE_SIZE,
+            offset: page * PAGE_SIZE,
+          }),
+        )
         setTableData(refreshed)
       }
     } catch (err) {
@@ -1152,7 +1593,11 @@ function DatabasePanel() {
 
     let value
     try {
-      value = fromDraft(edit.draft, edit.original)
+      value = fromDraft(
+        edit.draft,
+        edit.original,
+        tableData?.column_types?.[edit.column],
+      )
     } catch {
       setError(t('admin.invalidValue'))
       return
@@ -1330,13 +1775,40 @@ function DatabasePanel() {
                             ) : null}
                             {tableData.columns.map((column) => {
                               const comment = tableData.column_comments?.[column] ?? null
+                              const isSorted = sortBy === column
+                              const sortLabel = isSorted
+                                ? sortDir === 'asc'
+                                  ? t('admin.sortAscending')
+                                  : t('admin.sortDescending')
+                                : t('admin.sortByColumn', { column })
                               return (
                                 <th
                                   key={column}
                                   className="whitespace-nowrap px-3 py-2 font-label-caps text-label-caps uppercase text-on-surface-variant"
+                                  aria-sort={
+                                    isSorted
+                                      ? sortDir === 'asc'
+                                        ? 'ascending'
+                                        : 'descending'
+                                      : 'none'
+                                  }
                                 >
-                                  <span className="inline-flex items-center">
-                                    {column}
+                                  <span className="inline-flex items-center gap-0.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleSort(column)}
+                                      disabled={saving || deleting || exporting || loadingData}
+                                      title={sortLabel}
+                                      aria-label={sortLabel}
+                                      className="inline-flex items-center gap-1 rounded px-0.5 py-0.5 transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                      <span>{column}</span>
+                                      {isSorted ? (
+                                        <span aria-hidden="true" className="font-metadata text-metadata normal-case text-primary">
+                                          {sortDir === 'asc' ? '↑' : '↓'}
+                                        </span>
+                                      ) : null}
+                                    </button>
                                     <HintIcon
                                       label={t('admin.columnCommentHint', {
                                         column,
@@ -1394,8 +1866,12 @@ function DatabasePanel() {
                                   const isEditing =
                                     edit?.rowKey === currentRowKey &&
                                     edit?.column === column
+                                  const columnType = tableData.column_types?.[column]
+                                  const useBooleanSelect =
+                                    isEditing && isBooleanColumnType(columnType)
                                   const useTextarea =
                                     isEditing &&
+                                    !useBooleanSelect &&
                                     (typeof edit.original === 'object' ||
                                       edit.draft.length > 60)
 
@@ -1418,7 +1894,44 @@ function DatabasePanel() {
                                     >
                                       {isEditing ? (
                                         <div className="flex min-w-[12rem] flex-col gap-1">
-                                          {useTextarea ? (
+                                          {useBooleanSelect ? (
+                                            <select
+                                              autoFocus
+                                              value={normalizeBooleanDraft(edit.draft)}
+                                              disabled={saving}
+                                              onChange={(event) =>
+                                                setEdit((current) =>
+                                                  current
+                                                    ? {
+                                                        ...current,
+                                                        draft: event.target.value,
+                                                      }
+                                                    : current,
+                                                )
+                                              }
+                                              onKeyDown={(event) => {
+                                                if (event.key === 'Escape') {
+                                                  event.preventDefault()
+                                                  cancelEdit()
+                                                }
+                                                if (event.key === 'Enter') {
+                                                  event.preventDefault()
+                                                  saveEdit()
+                                                }
+                                              }}
+                                              className="w-full min-w-[12rem] rounded border border-border-subtle bg-surface-container-lowest px-2 py-1 font-metadata text-metadata text-on-surface outline-none focus:border-primary"
+                                            >
+                                              <option value="">
+                                                {t('admin.selectOptional')}
+                                              </option>
+                                              <option value="true">
+                                                {t('admin.booleanTrue')}
+                                              </option>
+                                              <option value="false">
+                                                {t('admin.booleanFalse')}
+                                              </option>
+                                            </select>
+                                          ) : useTextarea ? (
                                             <textarea
                                               autoFocus
                                               rows={4}
@@ -1515,25 +2028,65 @@ function DatabasePanel() {
                     </div>
 
                     {tableData.total > PAGE_SIZE && (
-                      <div className="mt-card-gap flex items-center justify-between gap-4">
+                      <div className="mt-card-gap flex flex-wrap items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          disabled={page === 0}
+                          onClick={() => setPage(0)}
+                          className={pagerButtonClass}
+                        >
+                          {t('admin.firstPage')}
+                        </button>
                         <button
                           type="button"
                           disabled={page === 0}
                           onClick={() => setPage((current) => current - 1)}
-                          className="rounded-md border border-border-subtle px-3 py-1.5 font-metadata text-metadata text-on-surface transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-40"
+                          className={pagerButtonClass}
                         >
                           {t('admin.prevPage')}
                         </button>
-                        <span className="font-metadata text-metadata text-on-secondary-container">
-                          {t('admin.pageOf', { current: page + 1, total: totalPages })}
-                        </span>
+                        <form
+                          className="flex items-center gap-2"
+                          onSubmit={(event) => {
+                            event.preventDefault()
+                            goToPage(pageInput)
+                          }}
+                        >
+                          <label
+                            htmlFor="admin-page-input"
+                            className="font-metadata text-metadata text-on-secondary-container"
+                          >
+                            {t('admin.goToPage')}
+                          </label>
+                          <input
+                            id="admin-page-input"
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="off"
+                            value={pageInput}
+                            onChange={(event) => setPageInput(event.target.value)}
+                            onBlur={() => goToPage(pageInput)}
+                            className="w-14 rounded border border-border-subtle bg-surface-container-lowest px-2 py-1.5 text-center font-metadata text-metadata text-on-surface outline-none focus:border-primary"
+                          />
+                          <span className="font-metadata text-metadata text-on-secondary-container">
+                            {t('admin.pageOfTotal', { total: totalPages })}
+                          </span>
+                        </form>
                         <button
                           type="button"
                           disabled={page >= totalPages - 1}
                           onClick={() => setPage((current) => current + 1)}
-                          className="rounded-md border border-border-subtle px-3 py-1.5 font-metadata text-metadata text-on-surface transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-40"
+                          className={pagerButtonClass}
                         >
                           {t('admin.nextPage')}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={page >= totalPages - 1}
+                          onClick={() => setPage(totalPages - 1)}
+                          className={pagerButtonClass}
+                        >
+                          {t('admin.lastPage')}
                         </button>
                       </div>
                     )}
@@ -1578,10 +2131,10 @@ function DatabasePanel() {
                     return
                   }
                   try {
-                    const refreshed = await fetchAdminTable(activeTable, {
-                      limit: PAGE_SIZE,
-                      offset: 0,
-                    })
+                    const refreshed = await fetchAdminTable(
+                      activeTable,
+                      tableFetchOpts({ limit: PAGE_SIZE, offset: 0 }),
+                    )
                     setTableData(refreshed)
                   } catch (err) {
                     setError(err.message ?? t('admin.loadError'))
@@ -1602,10 +2155,13 @@ function DatabasePanel() {
                   return
                 }
                 try {
-                  const refreshed = await fetchAdminTable(activeTable, {
-                    limit: PAGE_SIZE,
-                    offset: page * PAGE_SIZE,
-                  })
+                  const refreshed = await fetchAdminTable(
+                    activeTable,
+                    tableFetchOpts({
+                      limit: PAGE_SIZE,
+                      offset: page * PAGE_SIZE,
+                    }),
+                  )
                   setTableData(refreshed)
                 } catch (err) {
                   setError(err.message ?? t('admin.loadError'))
@@ -1640,13 +2196,161 @@ function DatabasePanel() {
   )
 }
 
-function PlaceholderPanel({ messageKey }) {
+function SettingsPanel() {
   const { t } = useTranslation()
+  const [settings, setSettings] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    fetchAdminSettings()
+      .then((data) => {
+        if (!cancelled) setSettings(data)
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err?.message || t('admin.settings.error'))
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [t])
+
+  if (loading) {
+    return (
+      <p className="font-body-base text-body-base text-on-secondary-container opacity-65">
+        {t('admin.settings.loading')}
+      </p>
+    )
+  }
+
+  if (error || !settings) {
+    return (
+      <p className="font-body-base text-body-base text-error">
+        {error || t('admin.settings.error')}
+      </p>
+    )
+  }
+
+  const rows = [
+    { key: 'environment', label: t('admin.settings.environment'), value: settings.app_env },
+    { key: 'modelName', label: t('admin.settings.modelName'), value: settings.llm_model },
+  ]
 
   return (
-    <p className="font-body-base text-body-base text-on-secondary-container opacity-65">
-      {t(messageKey)}
-    </p>
+    <dl className="divide-y divide-border-subtle rounded-lg border border-border-subtle bg-surface-container-lowest">
+      {rows.map((row) => (
+        <div
+          key={row.key}
+          className="flex flex-col gap-1 px-container-padding py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
+        >
+          <dt className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+            {row.label}
+          </dt>
+          <dd className="font-monospace-data text-monospace-data text-on-surface sm:text-right">
+            {row.value || '—'}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+function ProjectDocModal({ doc, onClose, closeLabel }) {
+  const titleId = useId()
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
+  if (!doc) return null
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 px-container-padding py-section-gap"
+      role="presentation"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="flex max-h-[min(90vh,56rem)] w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-border-subtle bg-surface-container-lowest shadow-lg"
+      >
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border-subtle px-container-padding py-3">
+          <h3
+            id={titleId}
+            className="font-card-title text-card-title text-primary"
+          >
+            {doc.filename}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="-mr-1 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded text-2xl leading-none text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
+            aria-label={closeLabel}
+          >
+            ×
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-container-padding py-card-gap">
+          <MarkdownRenderer>{doc.content}</MarkdownRenderer>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
+function DocsPanel() {
+  const { t } = useTranslation()
+  const [openDocId, setOpenDocId] = useState(null)
+  const openDoc = PROJECT_DOCS.find((doc) => doc.id === openDocId) ?? null
+
+  if (PROJECT_DOCS.length === 0) {
+    return (
+      <p className="font-body-base text-body-base text-on-secondary-container opacity-65">
+        {t('admin.docs.empty')}
+      </p>
+    )
+  }
+
+  return (
+    <>
+      <ul className="divide-y divide-border-subtle rounded-lg border border-border-subtle bg-surface-container-lowest">
+        {PROJECT_DOCS.map((doc) => (
+          <li key={doc.id}>
+            <button
+              type="button"
+              onClick={() => setOpenDocId(doc.id)}
+              className="flex w-full items-center px-container-padding py-3 text-left transition-colors hover:bg-surface-container-low"
+            >
+              <span className="min-w-0 flex-1 font-body-base text-body-base text-primary">
+                {doc.filename}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {openDoc ? (
+        <ProjectDocModal
+          doc={openDoc}
+          onClose={() => setOpenDocId(null)}
+          closeLabel={t('admin.docs.close')}
+        />
+      ) : null}
+    </>
   )
 }
 
@@ -1654,6 +2358,29 @@ const POLICY_TEXT_MIN = 20
 const POLICY_TEXT_MAX = 50000
 const EXTRACT_HISTORY_KEY = '3r_assist.extract.history'
 const EXTRACT_HISTORY_MAX = 20
+
+function looksLikeDocumentUrl(value) {
+  const candidate = String(value ?? '').trim()
+  if (!candidate || /\s/.test(candidate)) return false
+  try {
+    const withScheme = /^https?:\/\//i.test(candidate)
+      ? candidate
+      : candidate.toLowerCase().startsWith('www.')
+        ? `https://${candidate}`
+        : null
+    if (!withScheme) return false
+    const parsed = new URL(withScheme)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function normalizeDocumentUrl(value) {
+  const candidate = String(value ?? '').trim()
+  if (!looksLikeDocumentUrl(candidate)) return ''
+  return /^https?:\/\//i.test(candidate) ? candidate : `https://${candidate}`
+}
 
 function readExtractHistory() {
   try {
@@ -1671,6 +2398,14 @@ function writeExtractHistory(entries) {
 }
 
 function extractionLabel(entry) {
+  if (entry?.kind === 'document') {
+    const citation = entry?.documentFields?.doc_citation
+    const localized =
+      citation && typeof citation === 'object'
+        ? citation['en-us'] || citation['pt-br']
+        : null
+    if (localized?.trim()) return localized.trim()
+  }
   const name = entry?.result?.document_name?.trim()
   if (name) return name
   const preview = entry?.text?.trim()?.slice(0, 48)
@@ -1680,8 +2415,8 @@ function extractionLabel(entry) {
 
 function oecdTgNumberFromRef(ref) {
   if (!ref) return null
-  const match = String(ref).match(/\b(?:OECD\s+)?TG\s*(\d{3,4})\b/i)
-  return match?.[1] ?? null
+  const match = String(ref).match(/\b(?:OECD\s+)?TG\s*(\d{3,4}[A-Z]?)\b/i)
+  return match?.[1]?.toUpperCase() ?? null
 }
 
 function oecdTestSearchUrl(testNumber) {
@@ -1762,31 +2497,100 @@ function regulationInitialValuesFromExtracted(
   return {
     method_id: topMatch?.id ?? '',
     jurisdiction: isOecd ? JURISDICTION_LABELS.oecd : '',
-    validation_status: 'validated',
-    regulation_status: method.status ?? '',
-    regulation_date: regulationDateFromDocument(documentDate),
-    regulation_purpose: method.purpose?.trim() ?? '',
+    regulatory_status: method.status ?? '',
+    regulatory_date: regulationDateFromDocument(documentDate),
+    regulatory_endpoints: [],
+    endpoint_quote: '',
     regulatory_body:
-      institution?.trim() || (isOecd ? 'OECD' : ''),
+      institution && typeof institution === 'object'
+        ? institution
+        : {
+            'en-us': institution?.trim() || (isOecd ? 'OECD' : ''),
+            'pt-br':
+              (typeof institution === 'string' && institution.trim()) ||
+              (isOecd ? 'OCDE' : ''),
+          },
     regulatory_doc_id: '',
-    regulatory_citation: '',
+    regulatory_citation: { 'en-us': '', 'pt-br': '' },
     notes: [code, name].filter(Boolean).join(' — '),
   }
+}
+
+const DOCUMENT_TYPE_OPTIONS = [
+  { value: 'regulation', labelKey: 'admin.extract.documentType.regulation' },
+  { value: 'method_protocol', labelKey: 'admin.extract.documentType.protocol' },
+  { value: 'guideline', labelKey: 'admin.extract.documentType.guideline' },
+  { value: 'other', labelKey: 'admin.extract.documentType.other' },
+]
+
+function isPolicyExtractionType(documentType) {
+  return !documentType || documentType === 'regulation'
 }
 
 function documentInitialValuesFromExtracted({
   documentName,
   documentDate,
   url,
+  categories,
+  category,
+  institution,
+  slug,
+  docCitation,
+  description,
 } = {}) {
   const citation = documentName?.trim() ?? ''
+  const citationValue =
+    docCitation && typeof docCitation === 'object'
+      ? docCitation
+      : { 'en-us': citation, 'pt-br': citation }
+  const descriptionValue =
+    description && typeof description === 'object'
+      ? description
+      : {
+          'en-us': typeof description === 'string' ? description.trim() : '',
+          'pt-br': typeof description === 'string' ? description.trim() : '',
+        }
+  const institutionValue =
+    institution && typeof institution === 'object'
+      ? institution
+      : institution
+        ? {
+            'en-us': String(institution).trim(),
+            'pt-br': String(institution).trim(),
+          }
+        : { 'en-us': '', 'pt-br': '' }
+  const categoryList = Array.isArray(categories)
+    ? categories.filter(Boolean)
+    : category
+      ? [category]
+      : ['regulation']
   return {
-    slug: slugifyMethodDraft(citation),
-    doc_citation: { 'en-us': citation, 'pt-br': citation },
+    slug: slug || slugifyMethodDraft(citation || citationValue['en-us']),
+    doc_citation: citationValue,
+    description: descriptionValue,
     date: regulationDateFromDocument(documentDate),
-    category: 'regulation',
+    categories: categoryList,
+    institution: institutionValue,
     url: url?.trim() ?? '',
   }
+}
+
+function documentInitialValuesFromDraftFields(fields, { categoryHint, sourceUrl } = {}) {
+  return documentInitialValuesFromExtracted({
+    slug: fields?.slug,
+    documentDate: fields?.date,
+    url: fields?.url || sourceUrl || '',
+    categories: fields?.categories?.length
+      ? fields.categories
+      : fields?.category
+        ? [fields.category]
+        : categoryHint
+          ? [categoryHint]
+          : ['other'],
+    institution: fields?.institution,
+    docCitation: fields?.doc_citation,
+    description: fields?.description,
+  })
 }
 
 function ExpandArrow({ open }) {
@@ -1814,9 +2618,12 @@ function ExtractedMethodRow({
   institution,
   documentName,
   documentUrl,
+  documentType,
+  documentDescription,
+  sourceLang,
 }) {
   const { t, i18n } = useTranslation()
-  const lang = i18n.language?.startsWith('pt') ? 'pt' : 'en'
+  const lang = sourceLang || (i18n.language?.startsWith('pt') ? 'pt' : 'en')
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -1829,6 +2636,16 @@ function ExtractedMethodRow({
   const [addRegulationOpen, setAddRegulationOpen] = useState(false)
   const [addRegulationLoading, setAddRegulationLoading] = useState(false)
   const [addRegulationError, setAddRegulationError] = useState(null)
+  const [editMethodSchema, setEditMethodSchema] = useState(null)
+  const [editMethodRow, setEditMethodRow] = useState(null)
+  const [editMethodOpen, setEditMethodOpen] = useState(false)
+  const [editMethodLoadingId, setEditMethodLoadingId] = useState(null)
+  const [editMethodError, setEditMethodError] = useState(null)
+  const [editRegulationSchema, setEditRegulationSchema] = useState(null)
+  const [editRegulationRow, setEditRegulationRow] = useState(null)
+  const [editRegulationOpen, setEditRegulationOpen] = useState(false)
+  const [editRegulationLoadingId, setEditRegulationLoadingId] = useState(null)
+  const [editRegulationError, setEditRegulationError] = useState(null)
 
   async function toggle() {
     const next = !open
@@ -1840,11 +2657,31 @@ function ExtractedMethodRow({
     setMatchResult(null)
     setAddMethodError(null)
     setAddRegulationError(null)
+    setEditMethodError(null)
     try {
       const result = await matchPolicyMethod({
         code: method.code,
         name: method.name,
         purpose: method.purpose,
+        lang,
+      })
+      setMatchResult(result)
+    } catch {
+      setError(t('admin.extract.matchError'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function refreshMatches() {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await matchPolicyMethod({
+        code: method.code,
+        name: method.name,
+        purpose: method.purpose,
+        lang,
       })
       setMatchResult(result)
     } catch {
@@ -1855,7 +2692,7 @@ function ExtractedMethodRow({
   }
 
   async function openAddMethod() {
-    if (addMethodLoading || addRegulationLoading) return
+    if (addMethodLoading || addRegulationLoading || editMethodLoadingId != null || editRegulationLoadingId != null) return
     setAddMethodError(null)
     setAddMethodLoading(true)
     try {
@@ -1870,7 +2707,7 @@ function ExtractedMethodRow({
   }
 
   async function openAddRegulation() {
-    if (addRegulationLoading || addMethodLoading) return
+    if (addRegulationLoading || addMethodLoading || editMethodLoadingId != null || editRegulationLoadingId != null) return
     setAddRegulationError(null)
     setAddRegulationLoading(true)
     try {
@@ -1887,6 +2724,54 @@ function ExtractedMethodRow({
     }
   }
 
+  async function openEditMethod(dbMethod) {
+    if (
+      editMethodLoadingId != null ||
+      editRegulationLoadingId != null ||
+      addMethodLoading ||
+      addRegulationLoading ||
+      !dbMethod?.id
+    ) {
+      return
+    }
+    setEditMethodError(null)
+    setEditMethodLoadingId(dbMethod.id)
+    try {
+      const { schema, row } = await fetchAdminRowById('methods', dbMethod.id)
+      setEditMethodSchema(schema)
+      setEditMethodRow(row)
+      setEditMethodOpen(true)
+    } catch {
+      setEditMethodError(t('admin.extract.editMethodError'))
+    } finally {
+      setEditMethodLoadingId(null)
+    }
+  }
+
+  async function openEditRegulation(item) {
+    if (
+      editRegulationLoadingId != null ||
+      editMethodLoadingId != null ||
+      addMethodLoading ||
+      addRegulationLoading ||
+      item?.id == null
+    ) {
+      return
+    }
+    setEditRegulationError(null)
+    setEditRegulationLoadingId(item.id)
+    try {
+      const { schema, row } = await fetchAdminRowById('regulations', item.id)
+      setEditRegulationSchema(schema)
+      setEditRegulationRow(row)
+      setEditRegulationOpen(true)
+    } catch {
+      setEditRegulationError(t('admin.extract.editRegulationError'))
+    } finally {
+      setEditRegulationLoadingId(null)
+    }
+  }
+
   const matches = matchResult?.matches ?? []
   const oecdTgNumber =
     oecdTgNumberFromRef(matchResult?.normalized_oecd_ref) ??
@@ -1900,6 +2785,21 @@ function ExtractedMethodRow({
     addRegulationSchema?.columns.filter(
       (column) => !(addRegulationSchema.auto_columns ?? []).includes(column),
     ) ?? []
+  const editMethodColumns =
+    editMethodSchema?.columns.filter(
+      (column) => !(editMethodSchema.auto_columns ?? []).includes(column),
+    ) ?? []
+  const editMethodPrimaryKey = editMethodSchema?.primary_key ?? []
+  const editRegulationColumns =
+    editRegulationSchema?.columns.filter(
+      (column) => !(editRegulationSchema.auto_columns ?? []).includes(column),
+    ) ?? []
+  const editRegulationPrimaryKey = editRegulationSchema?.primary_key ?? []
+  const rowActionsBusy =
+    addMethodLoading ||
+    addRegulationLoading ||
+    editMethodLoadingId != null ||
+    editRegulationLoadingId != null
 
   return (
     <>
@@ -1958,102 +2858,80 @@ function ExtractedMethodRow({
                   <ul className="space-y-2">
                     {matches.map((candidate) => {
                       const dbMethod = candidate.method
-                      const oecd = formatOecdReference(dbMethod.oecd_ref)
                       const contexts = dbMethod.regulatory_contexts ?? []
-                      const primaryContext = primaryRegulatoryContext(contexts)
+                      const protocolCitation = methodSourceCitation(
+                        dbMethod,
+                        lang,
+                      )
                       return (
-                        <li
-                          key={`${candidate.match_kind}-${dbMethod.id}`}
-                          className="rounded-md border border-border-subtle bg-surface-container-lowest px-3 py-2"
-                        >
-                          <div className="flex flex-wrap items-baseline justify-between gap-2">
-                            <p className="font-metadata text-metadata text-on-surface">
-                              {methodDisplayName(dbMethod, lang)}
-                              <span className="ml-2 opacity-65">
-                                ({dbMethod.slug})
+                        <li key={`${candidate.match_kind}-${dbMethod.id}`}>
+                          <ResultCard
+                            type={primaryThreeR(dbMethod)}
+                            badges={methodThreeRBadges(dbMethod, t, lang)}
+                            title={methodDisplayName(dbMethod, lang)}
+                            titleExtra={
+                              <span className="ml-2 inline-flex items-center gap-1 align-middle">
+                                <span className="font-metadata text-metadata font-normal text-on-surface-variant">
+                                  ({dbMethod.slug})
+                                </span>
+                                <EditIconButton
+                                  label={t('admin.edit')}
+                                  disabled={rowActionsBusy}
+                                  onClick={() => openEditMethod(dbMethod)}
+                                />
                               </span>
-                            </p>
-                            <p className="font-metadata text-metadata text-on-secondary-container">
-                              {candidate.match_kind === 'oecd_ref'
-                                ? t('admin.extract.matchByOecd')
-                                : t('admin.extract.matchByText')}
-                              {' · '}
-                              {scorePercent(candidate.score)}%
-                              {!dbMethod.active
-                                ? ` · ${t('admin.extract.inactive')}`
-                                : ''}
-                            </p>
-                          </div>
-                          <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-80">
-                            {[
-                              oecd,
-                              dbMethod.endpoint_category,
-                              dbMethod.study_domain,
-                              dbMethod.source_db,
-                            ]
-                              .filter(Boolean)
-                              .join(' · ')}
-                          </p>
-                          {primaryContext?.regulation_purpose ? (
-                            <p className="mt-1 font-metadata text-metadata text-on-secondary-container">
-                              {t('s3.purposeLabel')}: {primaryContext.regulation_purpose}
-                            </p>
-                          ) : null}
-                          {primaryContext?.regulation_status ? (
-                            <p className="mt-1 font-metadata text-metadata text-on-secondary-container">
-                              {t('admin.extract.regulatoryStatus')}:{' '}
-                              {t(
-                                `s3.regulatoryStatus.${primaryContext.regulation_status}`,
-                              )}
-                            </p>
-                          ) : null}
-                          <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-65">
-                            {methodDescription(dbMethod, lang)}
-                          </p>
-                          {contexts.length > 0 ? (
-                            <ul className="mt-2 space-y-1">
-                              {contexts.map((context, index) => {
-                                const name = jurisdictionLabel(
-                                  context.jurisdiction,
-                                  lang,
-                                  t,
-                                )
-                                const date = context.regulation_date || null
-                                const url = context.regulatory_url || null
-                                const keyBase =
-                                  typeof context.jurisdiction === 'object'
-                                    ? context.jurisdiction['en-us']
-                                    : context.jurisdiction
-                                return (
-                                  <li
-                                    key={`${keyBase}-${index}`}
-                                    className="font-metadata text-metadata text-on-secondary-container"
-                                  >
-                                    <span>{name || t('admin.extract.notFound')}</span>
-                                    <span className="opacity-65">
-                                      {' · '}
-                                      {date || t('admin.extract.notFound')}
-                                    </span>
-                                    {' · '}
-                                    {url ? (
-                                      <a
-                                        href={url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-primary underline-offset-2 hover:underline"
-                                      >
-                                        {t('s3.regulatoryLink')}
-                                      </a>
-                                    ) : (
-                                      <span className="opacity-65">
-                                        {t('admin.extract.notFound')}
-                                      </span>
-                                    )}
-                                  </li>
-                                )
-                              })}
-                            </ul>
-                          ) : null}
+                            }
+                            headerMeta={
+                              <p className="mt-1 font-metadata text-metadata text-on-surface-variant">
+                                {dbMethod.active
+                                  ? t('admin.extract.active')
+                                  : t('admin.extract.inactive')}
+                                {' · '}
+                                {candidate.match_kind === 'oecd_ref'
+                                  ? t('admin.extract.matchByOecd')
+                                  : t('admin.extract.matchByText')}
+                              </p>
+                            }
+                            score={scorePercent(candidate.score)}
+                            matchLabel={t('s3.matchLabel')}
+                            dimmed={!dbMethod.active}
+                            validationStatus={
+                              dbMethod.validation_status
+                                ? t(
+                                    `s3.validationStatus.${dbMethod.validation_status}`,
+                                  )
+                                : null
+                            }
+                            regulatoryStatuses={formatRegulatoryStatusItems(
+                              contexts,
+                              lang,
+                              t,
+                            )}
+                            purposeLabel={t('s3.purposeLabel')}
+                            regulationStatusLabel={t(
+                              's3.regulationStatusLabel',
+                            )}
+                            validationStatusLabel={t(
+                              's3.validationStatusLabel',
+                            )}
+                            approvedJurisdictionsLabel={t(
+                              's3.approvedJurisdictionsLabel',
+                            )}
+                            description={methodDescription(dbMethod, lang)}
+                            detailRows={methodDetailRows(dbMethod, t, lang)}
+                            protocolCitation={protocolCitation}
+                            noCitationLabel={t('s3.noProtocolCitation')}
+                            noRegulatoryCitationLabel={t(
+                              's3.noRegulatoryCitation',
+                            )}
+                            primaryUrl={dbMethod.source_url || null}
+                            sourcesLabel={t('s3.sourceLink')}
+                            referenceLabel={t('s3.referenceLabel')}
+                            regulatoryLinkLabel={t('s3.regulatoryLink')}
+                            closeLabel={t('s3.close')}
+                            onEditRegulation={openEditRegulation}
+                            editRegulationLabel={t('admin.edit')}
+                          />
                         </li>
                       )
                     })}
@@ -2062,7 +2940,7 @@ function ExtractedMethodRow({
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
-                    disabled={addRegulationLoading || addMethodLoading}
+                    disabled={rowActionsBusy}
                     onClick={openAddRegulation}
                     className="order-1 inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -2072,7 +2950,7 @@ function ExtractedMethodRow({
                   </button>
                   <button
                     type="button"
-                    disabled={addMethodLoading || addRegulationLoading}
+                    disabled={rowActionsBusy}
                     onClick={openAddMethod}
                     className="order-2 inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -2105,6 +2983,22 @@ function ExtractedMethodRow({
                     role="alert"
                   >
                     {addMethodError}
+                  </p>
+                ) : null}
+                {editMethodError ? (
+                  <p
+                    className="font-metadata text-metadata text-error"
+                    role="alert"
+                  >
+                    {editMethodError}
+                  </p>
+                ) : null}
+                {editRegulationError ? (
+                  <p
+                    className="font-metadata text-metadata text-error"
+                    role="alert"
+                  >
+                    {editRegulationError}
                   </p>
                 ) : null}
               </div>
@@ -2155,6 +3049,9 @@ function ExtractedMethodRow({
                 documentName,
                 documentDate,
                 url: documentUrl,
+                category: documentType,
+                institution,
+                description: documentDescription,
               })}
               initialValues={methodInitialValuesFromExtracted(
                 method,
@@ -2166,14 +3063,83 @@ function ExtractedMethodRow({
             document.body,
           )
         : null}
+      {editMethodOpen && editMethodSchema && editMethodRow
+        ? createPortal(
+            <AddRowModal
+              key={`extract-edit-method-${editMethodRow.id}`}
+              table="methods"
+              columns={editMethodColumns}
+              comments={editMethodSchema.column_comments}
+              types={editMethodSchema.column_types}
+              requiredColumns={editMethodSchema.required_columns}
+              foreignKeys={editMethodSchema.foreign_keys}
+              columnOptions={editMethodSchema.column_options}
+              mode="edit"
+              title={t('admin.editRow')}
+              initialValues={editMethodRow}
+              lockedColumns={editMethodPrimaryKey}
+              primaryKey={primaryKeyValues(editMethodRow, editMethodPrimaryKey)}
+              onClose={() => {
+                setEditMethodOpen(false)
+                setEditMethodRow(null)
+              }}
+              onSaved={async () => {
+                setEditMethodOpen(false)
+                setEditMethodRow(null)
+                await refreshMatches()
+              }}
+            />,
+            document.body,
+          )
+        : null}
+      {editRegulationOpen && editRegulationSchema && editRegulationRow
+        ? createPortal(
+            <AddRowModal
+              key={`extract-edit-regulation-${editRegulationRow.id}`}
+              table="regulations"
+              columns={editRegulationColumns}
+              comments={editRegulationSchema.column_comments}
+              types={editRegulationSchema.column_types}
+              requiredColumns={editRegulationSchema.required_columns}
+              foreignKeys={editRegulationSchema.foreign_keys}
+              columnOptions={editRegulationSchema.column_options}
+              mode="edit"
+              title={t('admin.editRow')}
+              initialValues={editRegulationRow}
+              lockedColumns={editRegulationPrimaryKey}
+              primaryKey={primaryKeyValues(
+                editRegulationRow,
+                editRegulationPrimaryKey,
+              )}
+              onClose={() => {
+                setEditRegulationOpen(false)
+                setEditRegulationRow(null)
+              }}
+              onSaved={async () => {
+                setEditRegulationOpen(false)
+                setEditRegulationRow(null)
+                await refreshMatches()
+              }}
+            />,
+            document.body,
+          )
+        : null}
     </>
   )
+}
+
+function formatUsd(amount) {
+  const value = Number(amount)
+  if (!Number.isFinite(value)) return '$0.00'
+  if (value === 0) return '$0.00'
+  if (value < 0.01) return `$${value.toFixed(4)}`
+  return `$${value.toFixed(3)}`
 }
 
 function ExtractPanel() {
   const { t, i18n } = useTranslation()
   const [text, setText] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [submitPhase, setSubmitPhase] = useState(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
@@ -2185,11 +3151,27 @@ function ExtractPanel() {
   const [addDocumentOpen, setAddDocumentOpen] = useState(false)
   const [addDocumentLoading, setAddDocumentLoading] = useState(false)
   const [addDocumentError, setAddDocumentError] = useState(null)
+  const [editDocumentSchema, setEditDocumentSchema] = useState(null)
+  const [editDocumentRow, setEditDocumentRow] = useState(null)
+  const [editDocumentOpen, setEditDocumentOpen] = useState(false)
+  const [editDocumentLoadingId, setEditDocumentLoadingId] = useState(null)
+  const [editDocumentError, setEditDocumentError] = useState(null)
+  const [documentDraftValues, setDocumentDraftValues] = useState(null)
   const [history, setHistory] = useState(() => readExtractHistory())
   const [activeHistoryId, setActiveHistoryId] = useState(null)
+  const [documentType, setDocumentType] = useState('')
+  const [costEstimate, setCostEstimate] = useState(null)
+  const [readyToProceed, setReadyToProceed] = useState(false)
+  const [resolvedSourceText, setResolvedSourceText] = useState(null)
+  const [resolvedSourceUrl, setResolvedSourceUrl] = useState('')
+  const [uploadedFileName, setUploadedFileName] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
+  const uploadInputId = useId()
+  const submitAbortRef = useRef(null)
 
   useEffect(() => {
-    if (!submitting) {
+    if (!submitPhase) {
       setElapsedSeconds(0)
       return undefined
     }
@@ -2201,11 +3183,47 @@ function ExtractPanel() {
     }, 250)
 
     return () => window.clearInterval(timer)
-  }, [submitting])
+  }, [submitPhase])
+
+  useEffect(() => {
+    return () => {
+      submitAbortRef.current?.abort()
+    }
+  }, [])
 
   const trimmedLength = text.trim().length
-  const canSubmit = trimmedLength >= POLICY_TEXT_MIN && !submitting
+  const inputIsUrl = !uploadedFileName && looksLikeDocumentUrl(text)
+  const busy =
+    submitPhase != null ||
+    addDocumentLoading ||
+    editDocumentLoadingId != null ||
+    uploading
+  const textLocked = Boolean(uploadedFileName)
+  const canSubmit =
+    (inputIsUrl || trimmedLength >= POLICY_TEXT_MIN) &&
+    (!busy || submitPhase != null)
   const dateLocale = i18n.language?.startsWith('pt') ? 'pt-BR' : 'en-US'
+
+  function clearCostEstimate() {
+    setCostEstimate(null)
+    setReadyToProceed(false)
+    setResolvedSourceText(null)
+    setResolvedSourceUrl('')
+  }
+
+  function cancelSubmit() {
+    submitAbortRef.current?.abort()
+  }
+
+  function clearUploadedFile() {
+    setUploadedFileName(null)
+    setText('')
+    clearCostEstimate()
+    setError(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
 
   function persistHistory(entries) {
     setHistory(entries)
@@ -2219,12 +3237,54 @@ function ExtractPanel() {
 
   function loadHistoryEntry(entry) {
     setError(null)
+    setUploadedFileName(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
     setText(entry.text ?? '')
-    setResult(entry.result ?? null)
-    setDocumentUrl('')
+    setDocumentType(entry.documentType ?? '')
+    setDocumentUrl(
+      entry.result?.url
+        || (looksLikeDocumentUrl(entry.text) ? normalizeDocumentUrl(entry.text) : '')
+        || entry.documentFields?.url
+        || '',
+    )
     clearDocumentSearch()
     setAddDocumentError(null)
+    clearCostEstimate()
     setActiveHistoryId(entry.id)
+
+    if (entry.kind === 'document') {
+      setResult(null)
+      void openDocumentDraftForm(
+        documentInitialValuesFromDraftFields(entry.documentFields, {
+          categoryHint: entry.documentType,
+          sourceUrl: looksLikeDocumentUrl(entry.text)
+            ? normalizeDocumentUrl(entry.text)
+            : '',
+        }),
+      )
+      return
+    }
+
+    setDocumentDraftValues(null)
+    setAddDocumentOpen(false)
+    setResult(entry.result ?? null)
+  }
+
+  async function openDocumentDraftForm(initialValues) {
+    setAddDocumentError(null)
+    setAddDocumentLoading(true)
+    try {
+      const schema = await fetchAdminTable('documents', { limit: 1, offset: 0 })
+      setAddDocumentSchema(schema)
+      setDocumentDraftValues(initialValues)
+      setAddDocumentOpen(true)
+    } catch {
+      setAddDocumentError(t('admin.extract.addDocumentError'))
+    } finally {
+      setAddDocumentLoading(false)
+    }
   }
 
   async function searchDocuments() {
@@ -2237,6 +3297,7 @@ function ExtractPanel() {
         documentDate: result.document_date,
         institution: result.responsible_institution,
         url: documentUrl,
+        lang: result.lang,
       })
       setDocumentMatches(matched.matches ?? [])
     } catch {
@@ -2248,17 +3309,49 @@ function ExtractPanel() {
   }
 
   async function openAddDocument() {
-    if (addDocumentLoading || !result) return
+    if (addDocumentLoading || editDocumentLoadingId != null || !result) return
     setAddDocumentError(null)
     setAddDocumentLoading(true)
     try {
       const schema = await fetchAdminTable('documents', { limit: 1, offset: 0 })
       setAddDocumentSchema(schema)
+      setDocumentDraftValues(
+        documentInitialValuesFromExtracted({
+          documentName: result.document_name,
+          documentDate: result.document_date,
+          url: documentUrl,
+          category: documentType || 'regulation',
+          institution: result.responsible_institution,
+          description: result.description,
+        }),
+      )
       setAddDocumentOpen(true)
     } catch {
       setAddDocumentError(t('admin.extract.addDocumentError'))
     } finally {
       setAddDocumentLoading(false)
+    }
+  }
+
+  async function openEditDocument(doc) {
+    if (
+      editDocumentLoadingId != null ||
+      addDocumentLoading ||
+      !doc?.id
+    ) {
+      return
+    }
+    setEditDocumentError(null)
+    setEditDocumentLoadingId(doc.id)
+    try {
+      const { schema, row } = await fetchAdminRowById('documents', doc.id)
+      setEditDocumentSchema(schema)
+      setEditDocumentRow(row)
+      setEditDocumentOpen(true)
+    } catch {
+      setEditDocumentError(t('admin.extract.editDocumentError'))
+    } finally {
+      setEditDocumentLoadingId(null)
     }
   }
 
@@ -2270,37 +3363,237 @@ function ExtractPanel() {
     }
   }
 
+  function extractionErrorMessage(err) {
+    const code = err?.code
+    if (code === 'ABORTED' || err?.name === 'AbortError') {
+      return t('admin.extract.cancelled')
+    }
+    if (code === 'INVALID_URL') return t('admin.extract.urlInvalid')
+    if (code === 'URL_FETCH_FAILED') return t('admin.extract.urlFetchFailed')
+    if (code === 'URL_NO_TEXT') return t('admin.extract.urlNoText')
+    if (code === 'FILE_TYPE_UNSUPPORTED') return t('admin.extract.uploadTypeError')
+    if (code === 'FILE_TOO_LARGE') return t('admin.extract.uploadTooLarge')
+    if (code === 'FILE_NO_TEXT') return t('admin.extract.uploadNoText')
+    if (code === 'FILE_READ_FAILED') return t('admin.extract.uploadReadError')
+    return err.message ?? t('admin.extract.error')
+  }
+
+  async function runCostEstimate({
+    workingText,
+    workingUrl = '',
+    type = documentType,
+    signal,
+  }) {
+    const policyMode = isPolicyExtractionType(type)
+    setSubmitPhase('estimating')
+    const estimate = await estimateExtract({
+      text: workingText,
+      lang: currentLanguage(),
+      mode: policyMode ? 'policy' : 'document',
+      categoryHint: policyMode ? undefined : type,
+      sourceUrl: workingUrl || undefined,
+      signal,
+    })
+    setCostEstimate(estimate)
+    setReadyToProceed(true)
+    return estimate
+  }
+
+  async function estimateUploadedText(sourceText, type = documentType) {
+    const trimmed = sourceText.trim()
+    if (trimmed.length < POLICY_TEXT_MIN) return
+
+    cancelSubmit()
+    const controller = new AbortController()
+    submitAbortRef.current = controller
+    setError(null)
+    clearCostEstimate()
+
+    try {
+      await runCostEstimate({
+        workingText: trimmed,
+        type,
+        signal: controller.signal,
+      })
+    } catch (err) {
+      clearCostEstimate()
+      if (err?.code !== 'ABORTED' && err?.name !== 'AbortError') {
+        setError(extractionErrorMessage(err))
+      } else {
+        setError(null)
+      }
+    } finally {
+      if (submitAbortRef.current === controller) {
+        submitAbortRef.current = null
+      }
+      setSubmitPhase(null)
+    }
+  }
+
+  async function handleUploadChange(event) {
+    const file = event.target.files?.[0]
+    if (!file || busy) return
+
+    setError(null)
+    setUploading(true)
+    clearCostEstimate()
+    try {
+      const uploaded = await uploadExtractSource(file)
+      const uploadedText = uploaded.text ?? ''
+      setText(uploadedText)
+      setUploadedFileName(uploaded.filename || file.name)
+      setResult(null)
+      setDocumentUrl('')
+      clearDocumentSearch()
+      setUploading(false)
+      await estimateUploadedText(uploadedText, documentType)
+    } catch (err) {
+      clearUploadedFile()
+      setError(extractionErrorMessage(err))
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function handleDocumentTypeChange(event) {
+    const nextType = event.target.value
+    setDocumentType(nextType)
+    clearCostEstimate()
+    if (uploadedFileName && text.trim().length >= POLICY_TEXT_MIN && !busy) {
+      await estimateUploadedText(text, nextType)
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
+    if (submitPhase) {
+      cancelSubmit()
+      return
+    }
     if (!canSubmit) return
 
     setError(null)
-    setSubmitting(true)
+    const sourceText = text.trim()
+    const sourceUrl = inputIsUrl ? normalizeDocumentUrl(sourceText) : ''
+    const policyMode = isPolicyExtractionType(documentType)
+    const controller = new AbortController()
+    submitAbortRef.current = controller
+    const { signal } = controller
+
+    if (!readyToProceed) {
+      try {
+        let workingText = resolvedSourceText || sourceText
+        let workingUrl = resolvedSourceUrl || sourceUrl
+
+        if (inputIsUrl && !resolvedSourceText) {
+          setSubmitPhase('fetching')
+          const resolved = await resolveExtractSource({
+            text: sourceText,
+            signal,
+          })
+          workingText = resolved.text
+          workingUrl = resolved.source_url || sourceUrl
+          setResolvedSourceText(workingText)
+          setResolvedSourceUrl(workingUrl)
+        }
+
+        await runCostEstimate({
+          workingText,
+          workingUrl,
+          signal,
+        })
+      } catch (err) {
+        clearCostEstimate()
+        if (err?.code !== 'ABORTED' && err?.name !== 'AbortError') {
+          setError(extractionErrorMessage(err))
+        } else {
+          setError(null)
+        }
+      } finally {
+        if (submitAbortRef.current === controller) {
+          submitAbortRef.current = null
+        }
+        setSubmitPhase(null)
+      }
+      return
+    }
+
+    setSubmitPhase('extracting')
+    const extractText = resolvedSourceText || sourceText
+    const extractUrl = resolvedSourceUrl || sourceUrl
     try {
-      const sourceText = text.trim()
-      const extracted = await extractPolicy({
-        text: sourceText,
+      if (policyMode) {
+        const extracted = await extractPolicy({
+          text: extractText,
+          lang: currentLanguage(),
+          sourceUrl: extractUrl || undefined,
+          signal,
+        })
+        const entry = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          savedAt: new Date().toISOString(),
+          text: sourceText,
+          documentType,
+          kind: 'policy',
+          result: extracted,
+        }
+        persistHistory([entry, ...history].slice(0, EXTRACT_HISTORY_MAX))
+        setActiveHistoryId(entry.id)
+        setResult(extracted)
+        setDocumentDraftValues(null)
+        setAddDocumentOpen(false)
+        setDocumentUrl(extracted.url || extractUrl || '')
+        clearDocumentSearch()
+        setAddDocumentError(null)
+        clearCostEstimate()
+        return
+      }
+
+      const extracted = await extractDocumentDraft({
+        text: extractText,
         lang: currentLanguage(),
+        categoryHint: documentType,
+        sourceUrl: extractUrl || undefined,
+        signal,
+      })
+      const fields = extracted.fields ?? {}
+      const initialValues = documentInitialValuesFromDraftFields(fields, {
+        categoryHint: documentType,
+        sourceUrl: extractUrl,
       })
       const entry = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         savedAt: new Date().toISOString(),
         text: sourceText,
-        result: extracted,
+        documentType,
+        kind: 'document',
+        documentFields: fields,
+        result: null,
       }
       persistHistory([entry, ...history].slice(0, EXTRACT_HISTORY_MAX))
       setActiveHistoryId(entry.id)
-      setResult(extracted)
-      setDocumentUrl('')
-      clearDocumentSearch()
-      setAddDocumentError(null)
-    } catch (err) {
       setResult(null)
-      setDocumentUrl('')
+      setDocumentUrl(extractUrl || fields.url || '')
       clearDocumentSearch()
-      setError(err.message ?? t('admin.extract.error'))
+      clearCostEstimate()
+      await openDocumentDraftForm(initialValues)
+    } catch (err) {
+      if (err?.code === 'ABORTED' || err?.name === 'AbortError') {
+        setError(null)
+      } else {
+        setResult(null)
+        setDocumentUrl('')
+        clearDocumentSearch()
+        setAddDocumentOpen(false)
+        setDocumentDraftValues(null)
+        clearCostEstimate()
+        setError(extractionErrorMessage(err))
+      }
     } finally {
-      setSubmitting(false)
+      if (submitAbortRef.current === controller) {
+        submitAbortRef.current = null
+      }
+      setSubmitPhase(null)
     }
   }
 
@@ -2308,15 +3601,23 @@ function ExtractPanel() {
     addDocumentSchema?.columns.filter(
       (column) => !(addDocumentSchema.auto_columns ?? []).includes(column),
     ) ?? []
+  const editDocumentColumns =
+    editDocumentSchema?.columns.filter(
+      (column) => !(editDocumentSchema.auto_columns ?? []).includes(column),
+    ) ?? []
+  const editDocumentPrimaryKey = editDocumentSchema?.primary_key ?? []
+  const documentActionsBusy =
+    addDocumentLoading || editDocumentLoadingId != null
 
   return (
     <div className="space-y-section-gap">
+      <div className="space-y-[calc(var(--spacing-section-gap)/2)]">
       {history.length > 0 ? (
         <section className="rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding">
           <h2 className="mb-card-gap font-label-caps text-label-caps uppercase text-on-surface-variant">
             {t('admin.extract.savedTitle')}
           </h2>
-          <ul className="divide-y divide-border-subtle">
+          <ul className="max-h-[11.25rem] divide-y divide-border-subtle overflow-y-auto">
             {history.map((entry) => {
               const isActive = entry.id === activeHistoryId
               const methodCount = entry.result?.methods?.length ?? 0
@@ -2324,6 +3625,13 @@ function ExtractPanel() {
                 dateStyle: 'short',
                 timeStyle: 'short',
               })
+              const metaLabel =
+                entry.kind === 'document'
+                  ? t('admin.extract.savedMetaDocument', { date: savedLabel })
+                  : t('admin.extract.savedMeta', {
+                      date: savedLabel,
+                      count: methodCount,
+                    })
               return (
                 <li
                   key={entry.id}
@@ -2340,10 +3648,7 @@ function ExtractPanel() {
                       {extractionLabel(entry)}
                     </span>
                     <span className="block font-metadata text-metadata text-on-secondary-container opacity-65">
-                      {t('admin.extract.savedMeta', {
-                        date: savedLabel,
-                        count: methodCount,
-                      })}
+                      {metaLabel}
                     </span>
                   </button>
                   <button
@@ -2366,25 +3671,73 @@ function ExtractPanel() {
         onSubmit={handleSubmit}
         className="rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding"
       >
-        <label
-          htmlFor="policy-extraction-text"
-          className="mb-card-gap block font-label-caps text-label-caps uppercase text-on-surface-variant"
-        >
-          {t('admin.extract.policyLabel')}
-        </label>
+        <div className="mb-card-gap flex flex-wrap items-start justify-between gap-3">
+          <label
+            htmlFor="document-extraction-text"
+            className="block font-label-caps text-label-caps uppercase text-on-surface-variant"
+          >
+            {t('admin.extract.policyLabel')}
+          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            {uploadedFileName ? (
+              <span className="inline-flex max-w-[16rem] items-center gap-2 rounded-md border border-border-subtle bg-surface-container-low px-2 py-1 font-metadata text-metadata text-on-surface">
+                <span className="truncate" title={uploadedFileName}>
+                  {uploadedFileName}
+                </span>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={clearUploadedFile}
+                  className="shrink-0 text-on-secondary-container transition-colors hover:text-error disabled:opacity-50"
+                  title={t('admin.extract.clearUpload')}
+                  aria-label={t('admin.extract.clearUpload')}
+                >
+                  ×
+                </button>
+              </span>
+            ) : null}
+            <input
+              ref={fileInputRef}
+              id={uploadInputId}
+              type="file"
+              accept=".pdf,.html,.htm,.txt,application/pdf,text/html,text/plain"
+              className="sr-only"
+              disabled={busy}
+              onChange={handleUploadChange}
+            />
+            <label
+              htmlFor={uploadInputId}
+              className={`inline-flex cursor-pointer items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-3 py-1.5 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container ${
+                busy ? 'pointer-events-none opacity-50' : ''
+              }`}
+            >
+              {uploading
+                ? t('admin.extract.uploading')
+                : t('admin.extract.upload')}
+            </label>
+          </div>
+        </div>
         <div className="relative">
           <textarea
-            id="policy-extraction-text"
+            id="document-extraction-text"
             value={text}
-            onChange={(event) => setText(event.target.value)}
+            onChange={(event) => {
+              setText(event.target.value)
+              clearCostEstimate()
+            }}
             maxLength={POLICY_TEXT_MAX}
             rows={12}
-            disabled={submitting}
-            placeholder={t('admin.extract.policyPlaceholder')}
-            className="w-full resize-y rounded-lg border border-border-emphasis bg-surface-container-low p-container-padding font-monospace-data text-monospace-data text-on-surface outline-none transition-colors duration-ethos placeholder:text-text-tertiary focus:border-primary disabled:opacity-60"
+            disabled={busy || textLocked}
+            readOnly={textLocked}
+            placeholder={
+              textLocked
+                ? t('admin.extract.uploadPlaceholder')
+                : t('admin.extract.policyPlaceholder')
+            }
+            className="w-full resize-y rounded-lg border border-border-emphasis bg-surface-container-low p-container-padding pb-10 font-monospace-data text-monospace-data text-on-surface outline-none transition-colors duration-ethos placeholder:text-text-tertiary focus:border-primary disabled:opacity-60"
           />
           <div
-            className="pointer-events-none absolute bottom-4 right-4 font-metadata text-metadata text-text-tertiary"
+            className="pointer-events-none absolute bottom-3 right-4 font-metadata text-metadata text-text-tertiary"
             aria-live="polite"
           >
             {t('admin.extract.charCount', {
@@ -2394,7 +3747,7 @@ function ExtractPanel() {
           </div>
         </div>
 
-        {trimmedLength > 0 && trimmedLength < POLICY_TEXT_MIN ? (
+        {trimmedLength > 0 && !inputIsUrl && trimmedLength < POLICY_TEXT_MIN ? (
           <p className="mt-card-gap font-metadata text-metadata text-error" role="alert">
             {t('admin.extract.tooShort', { min: POLICY_TEXT_MIN })}
           </p>
@@ -2406,14 +3759,61 @@ function ExtractPanel() {
           </p>
         ) : null}
 
-        <div className="mt-card-gap flex justify-end">
+        <div className="mt-card-gap flex flex-wrap items-end justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap items-end gap-3">
+            <div className="min-w-[12rem]">
+              <label
+                htmlFor="document-extraction-type"
+                className="mb-1 block font-label-caps text-label-caps uppercase text-on-surface-variant"
+              >
+                {t('admin.extract.documentTypeLabel')}
+              </label>
+              <select
+                id="document-extraction-type"
+                value={documentType}
+                disabled={busy}
+                onChange={handleDocumentTypeChange}
+                className="w-full rounded-md border border-border-emphasis bg-surface-container-low px-3 py-2 font-metadata text-metadata text-on-surface outline-none transition-colors duration-ethos focus:border-primary disabled:opacity-60"
+              >
+                <option value="">{t('admin.selectOptional')}</option>
+                {DOCUMENT_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(option.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {costEstimate ? (
+              <p
+                className="pb-2 font-metadata text-metadata text-on-secondary-container"
+                aria-live="polite"
+              >
+                {t('admin.extract.costEstimate', {
+                  cost: formatUsd(costEstimate.estimated_cost_usd),
+                  inputTokens: costEstimate.input_tokens ?? 0,
+                  outputTokens: costEstimate.output_tokens ?? 0,
+                })}
+              </p>
+            ) : null}
+          </div>
           <Button type="submit" disabled={!canSubmit}>
-            {submitting
-              ? t('admin.extract.submittingSeconds', { seconds: elapsedSeconds })
-              : t('admin.extract.submit')}
+            {submitPhase === 'fetching'
+              ? t('admin.extract.fetchingSeconds', { seconds: elapsedSeconds })
+              : submitPhase === 'estimating'
+                ? t('admin.extract.estimatingSeconds', {
+                    seconds: elapsedSeconds,
+                  })
+                : submitPhase === 'extracting'
+                  ? t('admin.extract.submittingSeconds', {
+                      seconds: elapsedSeconds,
+                    })
+                  : readyToProceed
+                    ? t('admin.extract.proceed')
+                    : t('admin.extract.submit')}
           </Button>
         </div>
       </form>
+      </div>
 
       {result ? (
         <section className="rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding">
@@ -2444,6 +3844,14 @@ function ExtractPanel() {
               </dt>
               <dd className="mt-1 font-metadata text-metadata text-on-surface">
                 {result.responsible_institution || t('admin.extract.notFound')}
+              </dd>
+            </div>
+            <div className="sm:col-span-3">
+              <dt className="font-label-caps text-label-caps uppercase text-on-surface-variant">
+                {t('admin.extract.documentDescription')}
+              </dt>
+              <dd className="mt-1 font-metadata text-metadata text-on-surface">
+                {result.description || t('admin.extract.notFound')}
               </dd>
             </div>
           </dl>
@@ -2503,10 +3911,17 @@ function ExtractPanel() {
                         className="rounded-md border border-border-subtle bg-surface-container/40 px-3 py-2"
                       >
                         <div className="flex flex-wrap items-baseline justify-between gap-2">
-                          <p className="font-metadata text-metadata text-on-surface">
-                            {pickLocalized(doc.doc_citation, currentLanguage())}
-                            <span className="ml-2 opacity-65">({doc.slug})</span>
-                          </p>
+                          <div className="flex min-w-0 items-center gap-1">
+                            <p className="font-metadata text-metadata text-on-surface">
+                              {pickLocalized(doc.doc_citation, result.lang || currentLanguage())}
+                              <span className="ml-2 opacity-65">({doc.slug})</span>
+                            </p>
+                            <EditIconButton
+                              label={t('admin.edit')}
+                              disabled={documentActionsBusy}
+                              onClick={() => openEditDocument(doc)}
+                            />
+                          </div>
                           <p className="font-metadata text-metadata text-on-secondary-container">
                             {candidate.match_kind === 'doc_citation'
                               ? t('admin.extract.matchByDocCitation')
@@ -2519,7 +3934,8 @@ function ExtractPanel() {
                         </div>
                         <p className="mt-1 font-metadata text-metadata text-on-secondary-container opacity-80">
                           {[
-                            doc.category,
+                            (doc.categories || []).join(', ') || doc.category,
+                            pickLocalized(doc.institution, result.lang || currentLanguage()),
                             doc.date,
                             doc.url,
                           ]
@@ -2536,7 +3952,7 @@ function ExtractPanel() {
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                disabled={addDocumentLoading}
+                disabled={documentActionsBusy}
                 onClick={openAddDocument}
                 className="inline-flex items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -2548,6 +3964,11 @@ function ExtractPanel() {
             {addDocumentError ? (
               <p className="font-metadata text-metadata text-error" role="alert">
                 {addDocumentError}
+              </p>
+            ) : null}
+            {editDocumentError ? (
+              <p className="font-metadata text-metadata text-error" role="alert">
+                {editDocumentError}
               </p>
             ) : null}
           </div>
@@ -2584,6 +4005,9 @@ function ExtractPanel() {
                       institution={result.responsible_institution}
                       documentName={result.document_name}
                       documentUrl={documentUrl}
+                      documentType={documentType}
+                      documentDescription={result.description}
+                      sourceLang={result.lang}
                     />
                   ))}
                 </tbody>
@@ -2596,10 +4020,10 @@ function ExtractPanel() {
           )}
         </section>
       ) : null}
-      {addDocumentOpen && addDocumentSchema
+      {addDocumentOpen && addDocumentSchema && documentDraftValues
         ? createPortal(
             <AddRowModal
-              key={`extract-add-document-${result?.document_name ?? 'doc'}`}
+              key={`extract-add-document-${documentDraftValues.slug ?? 'doc'}-${activeHistoryId ?? 'new'}`}
               table="documents"
               columns={addDocumentColumns}
               comments={addDocumentSchema.column_comments}
@@ -2609,13 +4033,47 @@ function ExtractPanel() {
               columnOptions={addDocumentSchema.column_options}
               mode="create"
               title={t('admin.extract.addDocument')}
-              initialValues={documentInitialValuesFromExtracted({
-                documentName: result?.document_name,
-                documentDate: result?.document_date,
-                url: documentUrl,
-              })}
-              onClose={() => setAddDocumentOpen(false)}
-              onSaved={() => setAddDocumentOpen(false)}
+              initialValues={documentDraftValues}
+              onClose={() => {
+                setAddDocumentOpen(false)
+                setDocumentDraftValues(null)
+              }}
+              onSaved={() => {
+                setAddDocumentOpen(false)
+                setDocumentDraftValues(null)
+              }}
+            />,
+            document.body,
+          )
+        : null}
+      {editDocumentOpen && editDocumentSchema && editDocumentRow
+        ? createPortal(
+            <AddRowModal
+              key={`extract-edit-document-${editDocumentRow.id}`}
+              table="documents"
+              columns={editDocumentColumns}
+              comments={editDocumentSchema.column_comments}
+              types={editDocumentSchema.column_types}
+              requiredColumns={editDocumentSchema.required_columns}
+              foreignKeys={editDocumentSchema.foreign_keys}
+              columnOptions={editDocumentSchema.column_options}
+              mode="edit"
+              title={t('admin.editRow')}
+              initialValues={editDocumentRow}
+              lockedColumns={editDocumentPrimaryKey}
+              primaryKey={primaryKeyValues(
+                editDocumentRow,
+                editDocumentPrimaryKey,
+              )}
+              onClose={() => {
+                setEditDocumentOpen(false)
+                setEditDocumentRow(null)
+              }}
+              onSaved={async () => {
+                setEditDocumentOpen(false)
+                setEditDocumentRow(null)
+                await searchDocuments()
+              }}
             />,
             document.body,
           )
@@ -2680,9 +4138,9 @@ export default function AdminPage() {
         ) : activeSection === 'extract' ? (
           <ExtractPanel />
         ) : activeSection === 'docs' ? (
-          <PlaceholderPanel messageKey="admin.docs.placeholder" />
+          <DocsPanel />
         ) : (
-          <PlaceholderPanel messageKey="admin.settings.placeholder" />
+          <SettingsPanel />
         )}
       </div>
     </main>

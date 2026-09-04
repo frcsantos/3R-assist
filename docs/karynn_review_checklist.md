@@ -77,12 +77,12 @@ Os textos de `description_en` e `description_pt` foram escritos a partir de docu
 - ☐ Confirmado: todos os 23 métodos OECD usam `source_db = 'OECD_TG'`
 - ☐ Exceções (listar slugs + source_db correto):
 
-### 3. study_domain — confirmar fallback `general`
+### 3. application_ids — confirmar fallback `basic-research`
 
-Todos os 25 métodos têm `study_domain = 'general'`. Confirmar se algum deveria ser `pharma`, `cosmetics` ou `chemical_safety` dado uso regulatório típico. (A maioria dos TGs OECD é genuinamente `general`.)
+Métodos mapeados de `study_domain = 'general'` receberam `application_ids` → `basic-research`. Confirmar se algum deveria ser `regulatory-use` (ou outro slug em `applications`) dado uso regulatório típico.
 
 - ☐ Confirmado sem alterações
-- ☐ Exceções (listar slugs + study_domain correto):
+- ☐ Exceções (listar slugs + application correto):
 
 ### 4. Contextos EU — [VERIFY para todos os métodos]
 
@@ -104,7 +104,7 @@ Métodos com maior probabilidade de contexto EU validado:
 
 ### 5. Rationales 3R — preencher nos 25 seeded (ADR-023)
 
-Cada R aplicável tem uma coluna TEXT: `replacement_rationale`, `reduction_rationale`, `refinement_rationale`.
+Cada R aplicável tem uma coluna JSONB localizada: `replacement_rationale`, `reduction_rationale`, `refinement_rationale` (`{"en-us","pt-br"}`).
 Valor não-nulo/não-vazio = o método qualifica para aquele R; o texto é a justificativa auditável.
 
 Após a migração `007` + `backfill_3r_rationales.py`, colunas aplicáveis contêm o placeholder
@@ -115,7 +115,7 @@ Colunas `NULL` = aquele R **não se aplica** (não preencher com string vazia).
 Para preencher:
 ```sql
 UPDATE methods
-SET replacement_rationale = '<justificativa auditável>'
+SET replacement_rationale = '{"en-us":"<justificativa>", "pt-br":"<justificativa>"}'::jsonb
 WHERE slug = '<slug>';
 -- idem reduction_rationale / refinement_rationale
 ```

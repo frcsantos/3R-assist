@@ -16,17 +16,18 @@ class StubMethodRepository:
             name=localized_str("Reconstructed epidermis", "Epiderme reconstruída"),
             description=localized_str("Skin irritation method", "Método de irritação cutânea"),
             text_for_embedding="skin irritation",
-            endpoint_category="skin_irritation",
-            study_domain="general",
+            endpoints=[1],
+            endpoint_codes=["skin_irritation"],
+            application_codes=["basic-research"],
             source_db="OECD_TG",
             oecd_ref="TG 439",
+            validation_status="validated",
             active=True,
             embedding_json=[0.1, 0.2],
         )
         contexts = [
             MethodRegulatoryContext(
                 jurisdiction="oecd",
-                validation_status="validated",
                 regulatory_body="OECD",
                 regulatory_citation="OECD TG 439",
             )
@@ -42,7 +43,7 @@ class StubDocumentRepository:
                 slug="rn-18-2014",
                 doc_citation=localized_str("RN 18/2014"),
                 date=None,
-                category="regulation",
+                categories=["regulation"],
                 url="https://example.org/rn18",
             ),
             Document(
@@ -50,7 +51,7 @@ class StubDocumentRepository:
                 slug="oecd-tg439",
                 doc_citation=localized_str("OECD TG 439"),
                 date=None,
-                category="method_protocol",
+                categories=["method_protocol"],
                 url=None,
             ),
             Document(
@@ -58,14 +59,19 @@ class StubDocumentRepository:
                 slug="gd-129",
                 doc_citation=localized_str("OECD GD 129"),
                 date=None,
-                category="guideline",
+                categories=["guideline"],
                 url=None,
             ),
         ]
 
     async def list_all(self, *, categories: list[str] | None = None):
         if categories:
-            return [doc for doc in self.documents if doc.category in categories]
+            wanted = set(categories)
+            return [
+                doc
+                for doc in self.documents
+                if wanted.intersection(doc.categories)
+            ]
         return list(self.documents)
 
 

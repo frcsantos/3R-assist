@@ -89,7 +89,7 @@ EXPECTED_CARBON_BLACK_INHALATION = ExpectedExtraction(
     study_type_keywords=("subchronic", "inhalation"),
     endpoint_category=None,
     route=["inhalation"],
-    study_domain={"chemical_safety", "general"},
+    application={"regulatory-use", "basic-research"},
     procedure_keywords=("90", "inhalation", "cb", "repeated", "subacute", "chronic", "lung"),
     species="rat",
     animal_counts=ExpectedAnimalCounts(total=32),

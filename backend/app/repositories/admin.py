@@ -26,7 +26,30 @@ _IDENT_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 # JSONB array columns that pick values from a vocabulary table (multi-select in admin UI).
 # (table, column) -> (vocab_table, vocab_value_column)
 _JSON_ARRAY_VOCAB_COLUMNS: dict[tuple[str, str], tuple[str, str]] = {
-    ("methods", "routes_applicable"): ("routes", "code"),
+    ("methods", "routes_applicable"): ("routes", "id"),
+    ("methods", "application_ids"): ("applications", "id"),
+    ("methods", "endpoints"): ("endpoints", "id"),
+    ("regulations", "regulatory_endpoints"): ("endpoints", "id"),
+    ("routes", "compatible_endpoints"): ("endpoints", "id"),
+}
+# JSONB array columns with fixed enum values (multi-select in admin UI).
+# (table, column) -> allowed values
+_JSON_ARRAY_ENUM_COLUMNS: dict[tuple[str, str], list[str]] = {
+    ("documents", "categories"): [
+        "method_protocol",
+        "guideline",
+        "regulation",
+        "other",
+    ],
+    ("methods", "test_system"): [
+        "in_silico",
+        "in_chemico",
+        "in_vitro",
+        "ex_vivo",
+        "in_vivo",
+        "hybrid",
+        "unclear",
+    ],
 }
 _AUTO_DEFAULT_MARKERS = (
     "nextval(",
@@ -192,37 +215,45 @@ def _coerce_value(value: Any, data_type: str, udt_name: str) -> Any:
             return json.loads(value)
         raise ValueError(f"Invalid JSON value: {value!r}")
 
-    if data_type == "ARRAY" or udt_name.startswith("_"):
-        if isinstance(value, list):
-            return value
+    if (
+        data_type == "ARRAY"
+        or data_type.endswith("[]")
+        or (udt_name or "").startswith("_")
+    ):
         if isinstance(value, str):
-            return json.loads(value)
-        raise ValueError(f"Invalid array value: {value!r}")
+            value = json.loads(value)
+        if not isinstance(value, list):
+            raise ValueError(f"Invalid array value: {value!r}")
+        if "int" in (data_type or "") or (udt_name or "") in ("_int2", "_int4", "_int8"):
+            return [int(item) for item in value]
+        return value
 
     return value
 
 
-_MRC_VALIDATION_STATUS_MAP = {
-    "accepted": "in_process_of_validation",
+_METHODS_VALIDATION_STATUS_MAP = {
+    "accepted": "under_validation",
     "emerging": "not_validated",
+    "in_process_of_validation": "under_validation",
+    "not_evaluated": "not_evaluated",
+    "under_validation": "under_validation",
     "validated": "validated",
-    "in_process_of_validation": "in_process_of_validation",
+    "partially_validated": "partially_validated",
     "not_validated": "not_validated",
+    "unclear": "unclear",
 }
 
 
 def _normalize_admin_value(table_name: str, column: str, value: Any) -> Any:
     """Normalize legacy values accepted by old UI/import paths."""
-    if table_name != "regulations":
-        return value
-    if column != "validation_status":
+    if table_name != "methods" or column != "validation_status":
         return value
     if value is None:
         return value
     text = str(value).strip().lower()
     if not text:
         return value
-    return _MRC_VALIDATION_STATUS_MAP.get(text, value)
+    return _METHODS_VALIDATION_STATUS_MAP.get(text, value)
 
 
 class AdminRepository:
@@ -470,9 +501,22 @@ class AdminRepository:
             order_parts.append(order_label_expr)
             order_parts.append(f'"{foreign_column}"')
             order_sql = ", ".join(order_parts)
+            slug_or_code = None
+            if foreign_column not in ("code", "slug"):
+                if await self._table_has_column(conn, foreign_table, "code"):
+                    slug_or_code = "code"
+                elif await self._table_has_column(conn, foreign_table, "slug"):
+                    slug_or_code = "slug"
+            if slug_or_code == label_column:
+                slug_or_code = None
+            code_sql = (
+                f', "{slug_or_code}" AS option_code' if slug_or_code else ""
+            )
+            include_code = bool(slug_or_code)
             rows = await conn.fetch(
                 f'SELECT "{foreign_column}" AS value, '
-                f"{label_expr} AS label "
+                f"{label_expr} AS label"
+                f"{code_sql} "
                 f'FROM "{foreign_table}" '
                 f"ORDER BY {order_sql} "
                 f"LIMIT $1",
@@ -482,10 +526,16 @@ class AdminRepository:
             for row in rows:
                 value = _serialize_value(row["value"])
                 label = row["label"]
+                option_code = row["option_code"] if include_code else None
                 id_text = (
                     f"id: {value}" if foreign_column == "id" else str(value)
                 )
-                if label is None or str(label) == str(value):
+                if option_code:
+                    if label and str(label) != str(option_code):
+                        label_text = f"{option_code} — {label}"
+                    else:
+                        label_text = str(option_code)
+                elif label is None or str(label) == str(value):
                     label_text = id_text
                 elif label_column == "slug":
                     # Prefer slug-first so alphabetical order matches the visible text.
@@ -518,13 +568,29 @@ class AdminRepository:
         *,
         limit: int = 100,
         offset: int = 0,
+        sort_by: str | None = None,
+        sort_dir: str = "asc",
     ) -> dict[str, Any]:
         self._validate_ident(table_name, "table name")
+        direction = self._normalize_sort_dir(sort_dir)
+        if sort_by is not None:
+            self._validate_ident(sort_by, "column name")
         return await _with_fresh_pool_retry(
             lambda: self._fetch_table_once(
-                table_name, limit=limit, offset=offset
+                table_name,
+                limit=limit,
+                offset=offset,
+                sort_by=sort_by,
+                sort_dir=direction,
             )
         )
+
+    @staticmethod
+    def _normalize_sort_dir(sort_dir: str) -> str:
+        normalized = (sort_dir or "asc").strip().lower()
+        if normalized not in {"asc", "desc"}:
+            raise ValueError("sort_dir must be 'asc' or 'desc'")
+        return normalized
 
     async def _fetch_table_once(
         self,
@@ -532,18 +598,14 @@ class AdminRepository:
         *,
         limit: int,
         offset: int,
+        sort_by: str | None = None,
+        sort_dir: str = "asc",
     ) -> dict[str, Any]:
         pool = await get_pool()
         async with pool.acquire() as conn:
             if not await self._table_exists(conn, table_name):
                 raise LookupError(table_name)
 
-            total = await conn.fetchval(f'SELECT COUNT(*) FROM "{table_name}"')
-            rows = await conn.fetch(
-                f'SELECT * FROM "{table_name}" LIMIT $1 OFFSET $2',
-                limit,
-                offset,
-            )
             column_rows = await conn.fetch(
                 """
                 SELECT
@@ -569,7 +631,29 @@ class AdminRepository:
                 """,
                 table_name,
             )
+            columns = [row["column_name"] for row in column_rows]
+            if sort_by is not None and sort_by not in columns:
+                raise ValueError(f"Unknown sort column: {sort_by}")
+
             primary_key = await self._primary_key_columns(conn, table_name)
+            order_parts: list[str] = []
+            if sort_by is not None:
+                nulls = "NULLS LAST" if sort_dir == "asc" else "NULLS FIRST"
+                order_parts.append(f'"{sort_by}" {sort_dir.upper()} {nulls}')
+            for pk_column in primary_key:
+                if pk_column == sort_by:
+                    continue
+                order_parts.append(f'"{pk_column}" ASC')
+            order_sql = (
+                f"ORDER BY {', '.join(order_parts)} " if order_parts else ""
+            )
+
+            total = await conn.fetchval(f'SELECT COUNT(*) FROM "{table_name}"')
+            rows = await conn.fetch(
+                f'SELECT * FROM "{table_name}" {order_sql}LIMIT $1 OFFSET $2',
+                limit,
+                offset,
+            )
             foreign_keys = await self._foreign_keys(conn, table_name)
             column_options: dict[str, list[dict[str, Any]]] = {}
             for column, reference in foreign_keys.items():
@@ -595,9 +679,16 @@ class AdminRepository:
                     foreign_table=vocab_table,
                     foreign_column=vocab_column,
                 )
+            for (owner_table, column), values in _JSON_ARRAY_ENUM_COLUMNS.items():
+                if owner_table != table_name or column in column_options:
+                    continue
+                if not any(row["column_name"] == column for row in column_rows):
+                    continue
+                column_options[column] = [
+                    {"value": value, "label": value} for value in values
+                ]
 
         serialized_rows = [_serialize_row(row) for row in rows]
-        columns = [row["column_name"] for row in column_rows]
         column_comments = {
             row["column_name"]: row["comment"] for row in column_rows
         }
@@ -638,6 +729,8 @@ class AdminRepository:
             "total": total,
             "limit": limit,
             "offset": offset,
+            "sort_by": sort_by,
+            "sort_dir": sort_dir if sort_by is not None else None,
         }
 
     async def update_column_comment(

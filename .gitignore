@@ -7,3 +7,4 @@ backend/data/*.db-journal
 backend/data/pubmed_baseline/
 backend/**/__pycache__/
 backend/.pytest_cache/
+docs/oecd_files/

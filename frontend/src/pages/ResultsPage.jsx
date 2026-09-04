@@ -6,15 +6,15 @@ import ResultCard from '../components/ResultCard'
 import {
   formatMatchedParams,
   formatOecdReference,
+  formatRegulatoryStatusItems,
   isLowConfidenceScore,
-  jurisdictionLabel,
   jurisdictionMatches,
   methodDescription,
+  methodDetailRows,
   methodDisplayName,
   methodThreeRBadges,
   methodThreeRClasses,
   primaryThreeR,
-  primaryRegulatoryContext,
   scorePercent,
 } from '../lib/search'
 
@@ -172,10 +172,10 @@ export default function ResultsPage() {
             />
             <ParamSummaryRow label={t('s2.fields.route')} value={routeLabel} />
             <ParamSummaryRow
-              label={t('s2.fields.studyDomain')}
+              label={t('s2.fields.application')}
               value={
-                params.study_domain
-                  ? t(`s2.enums.studyDomain.${params.study_domain}`)
+                params.application
+                  ? t(`s2.enums.application.${params.application}`)
                   : null
               }
             />
@@ -264,7 +264,6 @@ export default function ResultsPage() {
             {filteredResults.map((item) => {
               const method = item.method
               const contexts = item.regulatory_contexts ?? []
-              const primaryContext = primaryRegulatoryContext(contexts)
               const percent = scorePercent(item.score)
               const threeR = primaryThreeR(method)
               const protocolCitation =
@@ -275,45 +274,34 @@ export default function ResultsPage() {
                 <ResultCard
                   key={method.slug}
                   type={threeR}
-                  badges={methodThreeRBadges(method, t)}
+                  badges={methodThreeRBadges(method, t, lang)}
                   title={methodDisplayName(method, lang)}
                   score={percent}
                   dimmed={isLowConfidenceScore(item.score)}
                   validationStatus={
-                    primaryContext
-                      ? t(`s3.validationStatus.${primaryContext.validation_status}`)
+                    method.validation_status
+                      ? t(`s3.validationStatus.${method.validation_status}`)
                       : null
                   }
-                  regulatoryStatuses={contexts.map((context, index) => {
-                    const jurisdiction = jurisdictionLabel(
-                      context.jurisdiction,
-                      lang,
-                      t,
-                    )
-                    const status = context.regulation_status
-                      ? t(`s3.regulatoryStatus.${context.regulation_status}`)
-                      : null
-                    const keyBase =
-                      typeof context.jurisdiction === 'object'
-                        ? context.jurisdiction['en-us']
-                        : context.jurisdiction
-                    return {
-                      key: `${keyBase}-${index}`,
-                      label: status ? `${jurisdiction}: ${status}` : jurisdiction,
-                      citation: context.regulatory_citation?.trim() || null,
-                      url: context.regulatory_url || null,
-                    }
-                  })}
-                  purpose={primaryContext?.regulation_purpose || null}
+                  regulatoryStatuses={formatRegulatoryStatusItems(
+                    contexts,
+                    lang,
+                    t,
+                  )}
                   purposeLabel={t('s3.purposeLabel')}
+                  regulationStatusLabel={t('s3.regulationStatusLabel')}
+                  validationStatusLabel={t('s3.validationStatusLabel')}
+                  approvedJurisdictionsLabel={t('s3.approvedJurisdictionsLabel')}
                   matchedParams={formatMatchedParams(item.matched_params, t)}
                   matchedParamsLabel={t('s3.matchedParams')}
                   description={methodDescription(method, lang)}
+                  detailRows={methodDetailRows(method, t, lang)}
                   protocolCitation={protocolCitation}
                   noCitationLabel={t('s3.noProtocolCitation')}
                   noRegulatoryCitationLabel={t('s3.noRegulatoryCitation')}
                   primaryUrl={method.source_url || null}
                   sourcesLabel={t('s3.sourceLink')}
+                  referenceLabel={t('s3.referenceLabel')}
                   regulatoryLinkLabel={t('s3.regulatoryLink')}
                   closeLabel={t('s3.close')}
                   matchLabel={t('s3.matchLabel')}

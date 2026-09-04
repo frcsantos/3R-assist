@@ -10,7 +10,7 @@ def test_experiments_payload_parses_multi_experiment_response():
             {
                 "study_type": "acute toxicity LD50 study",
                 "route": ["oral", "intraperitoneal"],
-                "study_domain": "general",
+                "application": "basic-research",
                 "procedure_text": "Single-dose acute toxicity LD50 study.",
                 "species": "rat",
                 "animal_counts": {"female": None, "male": 60, "total": None, "per_group": None},
@@ -20,7 +20,7 @@ def test_experiments_payload_parses_multi_experiment_response():
             {
                 "study_type": "28-day subacute repeated-dose oral toxicity study",
                 "route": ["oral"],
-                "study_domain": "general",
+                "application": "basic-research",
                 "procedure_text": "28-day repeated-dose oral toxicity study.",
                 "species": "rat",
                 "animal_counts": {"female": None, "male": 20, "total": None, "per_group": None},
@@ -73,7 +73,7 @@ def test_null_route_array_coerces_to_none():
                 {
                     "study_type": "UV photocarcinogenesis study",
                     "route": [None],
-                    "study_domain": "general",
+                    "application": "basic-research",
                     "procedure_text": "Chronic UV exposure in mice.",
                     "species": "mouse",
                 }
@@ -91,7 +91,7 @@ def test_string_null_route_array_coerces_to_none():
                 {
                     "study_type": "UV photocarcinogenesis study",
                     "route": ["null"],
-                    "study_domain": "general",
+                    "application": "basic-research",
                     "procedure_text": "Chronic UV exposure in mice.",
                     "species": "mouse",
                 }
@@ -109,7 +109,7 @@ def test_mixed_route_array_drops_null_markers():
                 {
                     "study_type": "acute toxicity LD50 study",
                     "route": ["oral", "null"],
-                    "study_domain": "general",
+                    "application": "basic-research",
                     "procedure_text": "LD50 study in rats.",
                     "species": "rat",
                 }
@@ -132,7 +132,7 @@ def test_string_route_coerces_to_single_item_array():
                         "nose-only inhalation chamber"
                     ),
                     "route_confidence": "high",
-                    "study_domain": "chemical_safety",
+                    "application": "regulatory-use",
                     "procedure_text": (
                         "Rats were exposed to carbon black aerosol nose-only "
                         "for 6 hrs/day for 90 days"
@@ -154,14 +154,14 @@ def test_string_route_coerces_to_single_item_array():
     assert result[0].species == "rat"
 
 
-def test_null_study_domain_defaults_to_general():
+def test_null_application_defaults_to_basic_research():
     result = _raw_experiments_from_payload(
         {
             "experiments": [
                 {
                     "study_type": "acute toxicity LD50 study",
                     "route": ["oral"],
-                    "study_domain": None,
+                    "application": None,
                     "procedure_text": "LD50 study in rats.",
                     "species": "rat",
                     "animal_counts": {"male": 60},
@@ -171,7 +171,7 @@ def test_null_study_domain_defaults_to_general():
         }
     )
     assert not isinstance(result, ExtractionError)
-    assert result[0].study_domain == "general"
+    assert result[0].application == "basic-research"
 
 
 def test_guard_response_returns_error():
@@ -190,7 +190,7 @@ def test_bovine_species_coerces_to_other():
                 {
                     "study_type": "ex vivo eye irritation test",
                     "route": ["ocular"],
-                    "study_domain": "general",
+                    "application": "basic-research",
                     "procedure_text": "Ex vivo bovine cornea perfusion.",
                     "species": "bovine",
                 }
@@ -209,8 +209,8 @@ def test_per_field_confidence_parsed():
                     "study_type": "acute toxicity LD50 study",
                     "route": ["oral"],
                     "route_confidence": "high",
-                    "study_domain": "general",
-                    "study_domain_confidence": "medium",
+                    "application": "basic-research",
+                    "application_confidence": "medium",
                     "procedure_text": "LD50 study in rats.",
                     "species": "rat",
                     "species_confidence": "high",
@@ -220,7 +220,7 @@ def test_per_field_confidence_parsed():
     )
     assert not isinstance(result, ExtractionError)
     assert result[0].route_confidence == "high"
-    assert result[0].study_domain_confidence == "medium"
+    assert result[0].application_confidence == "medium"
     assert result[0].species_confidence == "high"
 
 
@@ -230,7 +230,7 @@ def test_parse_json_payload_extracts_object_from_leading_prose():
     raw = (
         'We are given a protocol description. Here is the JSON:\n'
         '{"experiments": [{"study_type": "acute toxicity LD50 study", "route": ["oral"], '
-        '"study_domain": "general", "procedure_text": "LD50 study", "species": "rat", '
+        '"application": "basic-research", "procedure_text": "LD50 study", "species": "rat", '
         '"regulatory": true, "notes": null}]}'
     )
     payload = _parse_json_payload(raw)
@@ -287,11 +287,11 @@ def test_parse_json_payload_repairs_truncated_after_property_comma():
 
     raw = (
         '{"experiments": [{"study_type": "reproductive toxicity study", "route": ["oral"], '
-        '"route_evidence": "mixed into NIH-07M diet", "study_domain": "chemical_safety",'
+        '"route_evidence": "mixed into NIH-07M diet", "application": "regulatory-use",'
     )
     payload = _parse_json_payload(raw)
     experiment = payload["experiments"][0]
-    assert experiment["study_domain"] == "chemical_safety"
+    assert experiment["application"] == "regulatory-use"
     assert experiment["route"] == ["oral"]
 
 
@@ -312,7 +312,7 @@ def test_parse_json_payload_repairs_missing_opening_brace():
 
     raw = (
         'experiments": [{"study_type": "acute toxicity LD50 study", "route": ["oral"], '
-        '"study_domain": "general", "procedure_text": "LD50 study", '
+        '"application": "basic-research", "procedure_text": "LD50 study", '
         '"species": "rat", "animal_counts": {"total": 60}, "regulatory": true, '
         '"notes": null}]}'
     )
@@ -332,7 +332,7 @@ def test_legacy_payload_maps_endpoint_category_to_study_type():
             {
                 "endpoint_category": "genotoxicity",
                 "route": ["oral"],
-                "study_domain": "chemical_safety",
+                "application": "regulatory-use",
                 "procedure_text": "Comet assay battery",
                 "species": "rat",
                 "n_animals": 5,

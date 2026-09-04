@@ -5,9 +5,13 @@ from app.adapters.llm import LLMAdapter, build_llm_adapter
 from app.config import get_settings
 from app.repositories.admin import AdminRepository
 from app.repositories.documents import DocumentRepository
+from app.repositories.feedback import FeedbackRepository
 from app.repositories.methods import MethodRepository
 from app.services.extraction import ExtractionService
+from app.services.document_draft_extraction import DocumentDraftExtractionService
+from app.services.extract_estimate import ExtractEstimateService
 from app.services.method_draft_extraction import MethodDraftExtractionService
+from app.services.regulation_draft_extraction import RegulationDraftExtractionService
 from app.services.policy_document_match import PolicyDocumentMatchService
 from app.services.policy_extraction import PolicyExtractionService
 from app.services.policy_method_match import PolicyMethodMatchService
@@ -43,6 +47,10 @@ def get_admin_repository() -> AdminRepository:
     return AdminRepository()
 
 
+def get_feedback_repository() -> FeedbackRepository:
+    return FeedbackRepository()
+
+
 def get_extraction_service() -> ExtractionService:
     return ExtractionService(llm=get_llm_adapter())
 
@@ -53,6 +61,18 @@ def get_policy_extraction_service() -> PolicyExtractionService:
 
 def get_method_draft_extraction_service() -> MethodDraftExtractionService:
     return MethodDraftExtractionService(llm=get_llm_adapter())
+
+
+def get_document_draft_extraction_service() -> DocumentDraftExtractionService:
+    return DocumentDraftExtractionService(llm=get_llm_adapter())
+
+
+def get_regulation_draft_extraction_service() -> RegulationDraftExtractionService:
+    return RegulationDraftExtractionService(llm=get_llm_adapter())
+
+
+def get_extract_estimate_service() -> ExtractEstimateService:
+    return ExtractEstimateService()
 
 
 def get_policy_method_match_service() -> PolicyMethodMatchService:
