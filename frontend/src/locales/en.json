@@ -2,6 +2,7 @@
   "nav": {
     "analyze": "Analyze",
     "explore": "Explore",
+    "literature": "Literature",
     "glossary": "Glossary",
     "info": "Info",
     "admin": "Admin",
@@ -455,6 +456,54 @@
       "empty": "No documents in the catalogue yet."
     }
   },
+  "litSearch": {
+    "title": "Literature search",
+    "subtitle": "Paste a study description including hypothesis, objectives, and methods. The system will search PubMed for alternatives.",
+    "inputLabel": "Study description",
+    "placeholder": "Include:\n• Scientific hypothesis — what question is this study answering?\n• Objectives — what outcomes are measured?\n• Detailed methods — species, procedure, duration, guideline followed\n\nExample: We hypothesize that compound X causes acute dermal irritation. The objective is to determine its irritation potential for REACH registration. Wistar rats (n=10) will receive occlusive patch application of 0.5 mL/kg for 4 hours under OECD TG 404...",
+    "tooShort": "Minimum {{min}} characters",
+    "submit": "Search literature",
+    "analyzing": "Searching PubMed literature…",
+    "error": "Could not complete the literature search. Please try again.",
+    "retry": "Retry"
+  },
+  "pubmed": {
+    "cta": {
+      "label": "Search emerging literature →",
+      "description": "Search the full PubMed database for non-validated alternatives not yet recognized by regulatory bodies."
+    },
+    "page": {
+      "title": "Emerging literature alternatives",
+      "subtitle": "PubMed-wide search for methods that may reduce, replace, or refine animal use — not yet validated by regulatory bodies.",
+      "backToResults": "Back to validated alternatives",
+      "analyzing": "Searching PubMed literature…",
+      "error": "Could not complete the literature search. Please try again.",
+      "retry": "Retry",
+      "endpointHypothesis": "Endpoint / hypothesis:",
+      "literatureAlternatives": "Literature candidates",
+      "totalSearched": "Searched {{count}} candidate records",
+      "noLiterature": "No relevant literature was found for this protocol. The PubMed index may not yet contain emerging alternatives for this endpoint."
+    },
+    "necessity": {
+      "title": "Animal use necessity",
+      "not_necessary": "Not necessary",
+      "possibly_avoidable": "Possibly avoidable",
+      "necessary": "Necessary",
+      "keyConcerns": "Key concerns",
+      "confidence": {
+        "high": "High confidence",
+        "medium": "Medium confidence",
+        "low": "Low confidence"
+      }
+    },
+    "summary": {
+      "title": "Evidence synthesis",
+      "citedArticles": "Cited articles"
+    },
+    "results": {
+      "scoreLabel": "Relevance:",
+      "pubmedLink": "View on PubMed"
+    }
   "feedback": {
     "title": "Send feedback",
     "objectLabel": "About",

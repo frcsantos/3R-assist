@@ -12,6 +12,7 @@ Accepts a free-text description of an experimental protocol → extracts core pa
 |---|---|---|
 | Animal ethics & welfare, data curation | Karynn | 4h/week |
 | Software development & AI integration | Leo | 4h/week |
+| RAG production, b_2 data ingestion | Felipe | 4h/week |
 
 Institutional backing: **Fórum Animal**
 

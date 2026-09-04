@@ -21,9 +21,16 @@ class SentenceTransformerEmbedder(EmbedderAdapter):
 
     def _get_model(self):
         if self._model is None:
+            import torch
             from sentence_transformers import SentenceTransformer
 
-            self._model = SentenceTransformer(self._model_name)
+            if torch.backends.mps.is_available():
+                device = "mps"
+            elif torch.cuda.is_available():
+                device = "cuda"
+            else:
+                device = "cpu"
+            self._model = SentenceTransformer(self._model_name, device=device)
         return self._model
 
     def embed(self, text: str) -> list[float]:
@@ -48,6 +55,6 @@ class StubEmbedderAdapter(EmbedderAdapter):
 @lru_cache
 def build_embedder() -> EmbedderAdapter:
     settings = get_settings()
-    if not settings.semantic_ranking:
+    if not settings.embedding_model:
         return StubEmbedderAdapter()
     return SentenceTransformerEmbedder(settings.embedding_model)

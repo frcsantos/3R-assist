@@ -300,7 +300,7 @@ ALTER TABLE methods
         FOREIGN KEY (endpoint_category) REFERENCES endpoints(code);
 
 ALTER TABLE methods
-    DROP CONSTRAINT methods_study_domain_check;
+    DROP CONSTRAINT IF EXISTS methods_study_domain_check;
 
 ALTER TABLE methods
     ADD CONSTRAINT fk_methods_study_domain

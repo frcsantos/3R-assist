@@ -7,6 +7,8 @@ import ExplorePage from './pages/ExplorePage'
 import GlossaryPage from './pages/GlossaryPage'
 import InfoPage from './pages/InfoPage'
 import ParametersPage from './pages/ParametersPage'
+import LiteratureSearchPage from './pages/LiteratureSearchPage'
+import PubMedResultsPage from './pages/PubMedResultsPage'
 import ResultsPage from './pages/ResultsPage'
 
 export default function App() {
@@ -23,6 +25,8 @@ export default function App() {
         <Route path="/explore/:section" element={<ExplorePage />} />
         <Route path="/resultados" element={<Navigate to="/results" replace />} />
         <Route path="/buscar" element={<Navigate to="/explore" replace />} />
+        <Route path="/literature" element={<PubMedResultsPage />} />
+        <Route path="/literature-search" element={<LiteratureSearchPage />} />
         <Route path="/glossary" element={<GlossaryPage />} />
         <Route path="/info" element={<InfoPage />} />
       </Routes>
