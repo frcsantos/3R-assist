@@ -14,7 +14,7 @@ export default function ConfidenceBadge({ level }) {
     <span
       className={`inline-flex shrink-0 items-center rounded border px-2.5 py-1 font-badge-button text-badge-button ${styles[level] ?? styles.medium}`}
     >
-      {t(`s2.confidence.${level}`)}
+      {t(`pubmed.necessity.confidence.${level}`, { defaultValue: t(`s2.fieldConfidence.level.${level}`) })}
     </span>
   )
 }

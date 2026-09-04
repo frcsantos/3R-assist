@@ -38,6 +38,7 @@ ALTER INDEX IF EXISTS idx_application_areas_active
     RENAME TO idx_study_domains_active;
 
 DROP TRIGGER IF EXISTS application_areas_updated_at ON study_domains;
+DROP TRIGGER IF EXISTS study_domains_updated_at ON study_domains;
 
 CREATE TRIGGER study_domains_updated_at
     BEFORE UPDATE ON study_domains

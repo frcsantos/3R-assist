@@ -311,6 +311,23 @@ export default function ResultsPage() {
           </div>
         )}
       </section>
+
+      <div className="border-t border-border-subtle pt-section-gap">
+        <Link
+          to="/literature"
+          state={{
+            protocol_text: state.protocolText,
+            params: activeResult?.params,
+            lang,
+          }}
+          className="inline-flex items-center gap-fine-gap rounded-lg border border-primary px-container-padding py-3 font-badge-button text-badge-button text-primary transition-colors hover:bg-primary hover:text-on-primary"
+        >
+          {t('pubmed.cta.label')} ↗
+        </Link>
+        <p className="mt-fine-gap font-metadata text-metadata text-on-secondary-container">
+          {t('pubmed.cta.description')}
+        </p>
+      </div>
     </main>
   )
 }
