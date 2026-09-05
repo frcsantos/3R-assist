@@ -7,6 +7,8 @@ from pubmed.models.record import Author, PubMedRecord
 
 # ── Vector search queries ────────────────────────────────────────────────────
 
+_SET_PROBES = "SET ivfflat.probes = 100"
+
 _SEARCH_ENDPOINT = """
     SELECT
         pmid, title, authors, institutions,
@@ -38,9 +40,9 @@ _INSERT_RECORD = """
         pmid, title, authors, institutions,
         pub_year, pub_month, journal,
         abstract_text, endpoint_text, method_text, mesh_terms, cluster,
-        endpoint_embedding, method_embedding
+        endpoint_embedding, method_embedding, doi, source, published_doi
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::vector, $14::vector)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::vector, $14::vector, $15, $16, $17)
     ON CONFLICT (pmid) DO UPDATE SET
         title               = EXCLUDED.title,
         authors             = EXCLUDED.authors,
@@ -55,8 +57,14 @@ _INSERT_RECORD = """
         cluster             = EXCLUDED.cluster,
         endpoint_embedding  = EXCLUDED.endpoint_embedding,
         method_embedding    = EXCLUDED.method_embedding,
+        doi                 = EXCLUDED.doi,
+        source              = EXCLUDED.source,
+        published_doi       = EXCLUDED.published_doi,
         indexed_at          = NOW()
 """
+
+_DOI_EXISTS = "SELECT 1 FROM pubmed_abstracts WHERE doi = $1 LIMIT 1"
+_BATCH_DOI_EXISTS = "SELECT doi FROM pubmed_abstracts WHERE doi = ANY($1::text[])"
 
 _COUNT_RECORDS = "SELECT COUNT(*) FROM pubmed_abstracts"
 
@@ -85,9 +93,9 @@ class PubMedRepository:
         *,
         top_k: int = 12,
     ) -> list[tuple[PubMedRecord, float]]:
-        """Path A: search by endpoint/hypothesis embedding."""
         pool = await get_pool()
         async with pool.acquire() as conn:
+            await conn.execute(_SET_PROBES)
             rows = await conn.fetch(_SEARCH_ENDPOINT, _vec_str(embedding), top_k)
         return [(self._row_to_record(row), float(row["score"])) for row in rows]
 
@@ -97,9 +105,9 @@ class PubMedRepository:
         *,
         top_k: int = 15,
     ) -> list[tuple[PubMedRecord, float]]:
-        """Path B: search by method/technique embedding."""
         pool = await get_pool()
         async with pool.acquire() as conn:
+            await conn.execute(_SET_PROBES)
             rows = await conn.fetch(_SEARCH_METHOD, _vec_str(embedding), top_k)
         return [(self._row_to_record(row), float(row["score"])) for row in rows]
 
@@ -132,9 +140,26 @@ class PubMedRepository:
                         record.cluster,
                         _vec_str(ep_emb),
                         _vec_str(meth_emb),
+                        record.doi,
+                        record.source,
+                        record.published_doi,
                     )
                     count += 1
         return count
+
+    async def doi_exists(self, doi: str) -> bool:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(_DOI_EXISTS, doi.lower())
+            return row is not None
+
+    async def batch_doi_exists(self, dois: list[str]) -> set[str]:
+        if not dois:
+            return set()
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(_BATCH_DOI_EXISTS, dois)
+        return {row["doi"] for row in rows}
 
     async def count(self) -> int:
         pool = await get_pool()

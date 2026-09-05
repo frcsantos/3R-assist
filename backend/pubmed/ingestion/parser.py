@@ -135,6 +135,13 @@ def _parse_mesh_terms(citation: ET.Element) -> list[str]:
     return terms
 
 
+def _parse_doi(citation: ET.Element) -> str | None:
+    for el in citation.findall(".//ELocationID"):
+        if el.get("EIdType") == "doi" and el.text:
+            return el.text.strip().lower()
+    return None
+
+
 def _parse_journal(article: ET.Element) -> str | None:
     journal_el = article.find("Journal")
     if journal_el is None:
@@ -167,13 +174,12 @@ def _parse_article(citation: ET.Element) -> PubMedRecord | None:
 
     mesh_terms = _parse_mesh_terms(citation)
 
-    cluster = match_cluster(title, abstract_text, mesh_terms)
-    if cluster is None:
-        return None
+    cluster = match_cluster(title, abstract_text, mesh_terms) or "general"
 
     pub_year, pub_month = _parse_pub_date(article)
     authors, institutions = _parse_authors(article)
     journal = _parse_journal(article)
+    doi = _parse_doi(citation)
 
     return PubMedRecord(
         pmid=pmid_el.text.strip(),
@@ -188,6 +194,8 @@ def _parse_article(citation: ET.Element) -> PubMedRecord | None:
         method_text=method_text,
         mesh_terms=mesh_terms,
         cluster=cluster,
+        doi=doi,
+        source="pubmed",
     )
 
 

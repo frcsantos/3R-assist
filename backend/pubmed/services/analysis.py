@@ -29,7 +29,7 @@ class PubMedAnalysisService:
             await self._retrieval.search(params, request.protocol_text)
         )
 
-        summary, citations = self._retrieval.generate_summary(params, recommendations)
+        summary, citations = await self._retrieval.generate_summary(params, recommendations)
 
         return PubMedAnalysisResponse(
             necessity=None,

@@ -11,20 +11,31 @@ lsof -ti:8000 | xargs kill -9 2>/dev/null
 lsof -ti:5173 | xargs kill -9 2>/dev/null
 sleep 1
 
-echo "==> Checking Ollama..."
-if ! pgrep -x ollama > /dev/null; then
-    echo "    Starting Ollama in background..."
-    ollama serve > /tmp/ollama.log 2>&1 &
-    sleep 2
+echo "==> Restarting Cloudflare tunnel..."
+if launchctl kickstart -k "gui/$(id -u)/com.3rassist.cloudflared" 2>/dev/null; then
+    echo "    Tunnel restarted."
 else
-    echo "    Ollama already running."
+    echo "    Tunnel not loaded — loading it..."
+    launchctl load ~/Library/LaunchAgents/com.3rassist.cloudflared.plist 2>/dev/null
 fi
+
+echo "==> Restarting Ollama (num_ctx=16384)..."
+pkill -x ollama 2>/dev/null
+pkill -f llama-server 2>/dev/null
+sleep 2
+OLLAMA_NUM_CTX=16384 OLLAMA_KEEP_ALIVE=-1 ollama serve > /tmp/ollama.log 2>&1 &
+sleep 3
+
+echo "==> Clearing Python bytecode cache..."
+find "$PROJECT/backend" -name "*.pyc" -delete 2>/dev/null
+find "$PROJECT/backend" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null
+echo "    Done."
 
 echo "==> Opening backend (port 8000)..."
 osascript -e "
 tell application \"Terminal\"
     activate
-    do script \"echo '=== BACKEND ===' && cd '$PROJECT/backend' && $UVICORN app.main:app --reload --host 127.0.0.1 --port 8000\"
+    do script \"echo '=== BACKEND ===' && cd '$PROJECT/backend' && PYTHONDONTWRITEBYTECODE=1 $UVICORN app.main:app --reload --host 127.0.0.1 --port 8000\"
 end tell"
 
 echo "==> Opening frontend (port 5173)..."
