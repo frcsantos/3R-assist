@@ -11,7 +11,6 @@
   "glossary": {
     "title": "Glossary"
   },
-
   "info": {
     "title": "Info",
     "placeholder": "About 3R Assist, methodology, and documentation — coming soon."
@@ -70,8 +69,6 @@
     "booleanFalse": "false",
     "originalValue": "Original: {{value}}",
     "restoreOriginal": "Restore original value",
-
-
 
     "database": {
       "label": "Database",
@@ -470,19 +467,20 @@
   "pubmed": {
     "cta": {
       "label": "Search emerging literature →",
-      "description": "Search the full PubMed database for non-validated alternatives not yet recognized by regulatory bodies."
+      "description": "Search the scientific literature for alternatives to animal use."
     },
     "page": {
       "title": "Emerging literature alternatives",
-      "subtitle": "PubMed-wide search for methods that may reduce, replace, or refine animal use — not yet validated by regulatory bodies.",
+      "subtitle": "Search across PubMed and bioRxiv for methods that may reduce, replace, or refine animal use.",
       "backToResults": "Back to validated alternatives",
-      "analyzing": "Searching PubMed literature…",
+      "analyzing": "Searching scientific literature…",
       "error": "Could not complete the literature search. Please try again.",
+      "serverBusy": "The server is busy processing other requests. Please wait a moment and try again.",
       "retry": "Retry",
       "endpointHypothesis": "Endpoint / hypothesis:",
       "literatureAlternatives": "Literature candidates",
       "totalSearched": "Searched {{count}} candidate records",
-      "noLiterature": "No relevant literature was found for this protocol. The PubMed index may not yet contain emerging alternatives for this endpoint."
+      "noLiterature": "No relevant literature was found for this protocol. The scientific literature index may not yet contain emerging alternatives for this endpoint."
     },
     "necessity": {
       "title": "Animal use necessity",
@@ -502,7 +500,11 @@
     },
     "results": {
       "scoreLabel": "Relevance:",
-      "pubmedLink": "View on PubMed"
+      "pubmedLink": "View article",
+      "pathEndpoint": "Endpoint search",
+      "pathAlternative": "Alternative search",
+      "showSimilar": "{{count}} related paper(s) on same method",
+      "hideSimilar": "Hide related papers"
     }
   "feedback": {
     "title": "Send feedback",

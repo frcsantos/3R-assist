@@ -22,7 +22,6 @@ CLUSTER_3RS = frozenset(
         "animal-free",
         "animal testing alternative",
         "animal use alternative",
-        "humane endpoint",
         "nam",
         "new approach method",
         "new approach methods",

@@ -11,7 +11,6 @@
   "glossary": {
     "title": "Glossário"
   },
-
   "info": {
     "title": "Info",
     "placeholder": "Sobre o 3R Assist, metodologia e documentação — em breve."
@@ -70,8 +69,6 @@
     "booleanFalse": "false",
     "originalValue": "Original: {{value}}",
     "restoreOriginal": "Restaurar valor original",
-
-
 
     "database": {
       "label": "Banco de dados",
@@ -470,19 +467,20 @@
   "pubmed": {
     "cta": {
       "label": "Buscar literatura emergente →",
-      "description": "Pesquise o banco completo do PubMed em busca de alternativas ainda não reconhecidas por órgãos regulatórios."
+      "description": "Pesquise a literatura científica em busca de alternativas ao uso animal."
     },
     "page": {
       "title": "Alternativas na literatura emergente",
-      "subtitle": "Busca ampla no PubMed por métodos que podem reduzir, substituir ou refinar o uso animal — ainda não validados por órgãos regulatórios.",
+      "subtitle": "Busca no PubMed e bioRxiv por métodos que podem reduzir, substituir ou refinar o uso animal.",
       "backToResults": "Voltar às alternativas validadas",
-      "analyzing": "Buscando na literatura do PubMed…",
+      "analyzing": "Buscando na literatura científica…",
       "error": "Não foi possível concluir a busca na literatura. Tente novamente.",
+      "serverBusy": "O servidor está ocupado processando outras solicitações. Aguarde um momento e tente novamente.",
       "retry": "Tentar novamente",
       "endpointHypothesis": "Endpoint / hipótese:",
       "literatureAlternatives": "Candidatos na literatura",
       "totalSearched": "{{count}} registros candidatos pesquisados",
-      "noLiterature": "Nenhuma literatura relevante encontrada para este protocolo. O índice do PubMed pode ainda não conter alternativas emergentes para este endpoint."
+      "noLiterature": "Nenhuma literatura relevante encontrada para este protocolo. O índice de literatura científica pode ainda não conter alternativas emergentes para este endpoint."
     },
     "necessity": {
       "title": "Necessidade do uso animal",
@@ -502,7 +500,11 @@
     },
     "results": {
       "scoreLabel": "Relevância:",
-      "pubmedLink": "Ver no PubMed"
+      "pubmedLink": "Ver artigo",
+      "pathEndpoint": "Busca por endpoint",
+      "pathAlternative": "Busca por alternativa",
+      "showSimilar": "{{count}} artigo(s) relacionado(s) sobre o mesmo método",
+      "hideSimilar": "Ocultar artigos relacionados"
     }
   "feedback": {
     "title": "Enviar feedback",

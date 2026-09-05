@@ -1,5 +1,6 @@
 .env
 backend/.env
+frontend/.env
 backend/.venv/
 backend/venv/
 backend/data/*.db
@@ -8,3 +9,4 @@ backend/data/pubmed_baseline/
 backend/**/__pycache__/
 backend/.pytest_cache/
 docs/oecd_files/
+backend/*.log

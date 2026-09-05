@@ -21,28 +21,31 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
+from collections import defaultdict
 from dataclasses import dataclass, field
 
 from app.adapters.embedder import EmbedderAdapter
 from app.adapters.llm import LLMAdapter
 from app.models.protocol import ProtocolParameters
 from pubmed.db.repository import PubMedRepository
-from pubmed.models.analysis import Citation, LLMProposedAlternative, PubMedRecommendation
+from pubmed.models.analysis import Citation, LLMProposedAlternative, PubMedRecommendation, SupportingPaper
 from pubmed.models.record import Author, PubMedRecord
 from pubmed.prompts.alternative_query import build_alternative_query_prompt
 from pubmed.prompts.ranking import build_ranking_prompt
 from pubmed.prompts.study_summary import build_study_summary_prompt
 from pubmed.prompts.summary import build_summary_prompt
+from pubmed.skills import classify_domain
 
 logger = logging.getLogger(__name__)
 
 # How many vector-search candidates each query retrieves.
 # Replacement gets the most — biases the candidate pool before scoring.
-TOP_K_ENDPOINT = 12
+TOP_K_ENDPOINT = 15
 TOP_K_BY_CLASS: dict[str, int] = {
-    "replacement": 15,
-    "reduction":   10,
-    "refinement":   5,
+    "replacement": 20,
+    "reduction":   15,
+    "refinement":   8,
 }
 
 # Final score = cosine × weight. Replace stays at 1.0 so a strong replacement
@@ -54,11 +57,28 @@ THREE_R_WEIGHTS: dict[str, float] = {
 }
 
 _PLAN_MAX_TOKENS = 512
-_RANK_MAX_TOKENS = 1024
-_SUMMARY_MAX_TOKENS = 256
-_CANDIDATES_FOR_LLM = 10  # max candidates passed to the ranking LLM
-_ABSTRACT_CHAR_LIMIT = 400  # truncate abstracts sent to LLM to keep prompts short
+_RANK_MAX_TOKENS = 6000
+_SUMMARY_MAX_TOKENS = 512
+_CANDIDATES_FOR_LLM = 15       # used by cosine fallback
+_MAX_PATH_A_FOR_LLM = 5        # Path A candidates sent to ranker
+_ABSTRACT_CHAR_LIMIT = 1000  # truncate abstracts sent to LLM — enough to reach Methods section
 _MIN_COSINE_FALLBACK = 0.5  # if LLM includes nothing, return candidates above this score
+
+
+# Words stripped before building the grouping key so that minor label variants
+# ("HepaRG model" vs "HepaRG assay") map to the same canonical key.
+_GROUP_STOP = frozenset({
+    "a", "an", "the", "for", "of", "in", "on", "to", "and", "or",
+    "with", "as", "by", "using", "via", "based", "derived",
+    "model", "assay", "method", "test", "approach",
+})
+
+
+def _normalize_group_key(label: str) -> str:
+    """Return a canonical, order-independent key for grouping method labels."""
+    words = re.sub(r"[^\w\s]", "", label.lower()).split()
+    significant = [w for w in words if w not in _GROUP_STOP] or words
+    return " ".join(sorted(significant))
 
 
 @dataclass
@@ -66,19 +86,20 @@ class _Candidate:
     record: PubMedRecord
     cosine: float
     source_class: str | None = None   # three_r_class from whichever path found it first
+    source_query: str | None = None   # Path B only: the specific alternative method text
 
 
 @dataclass
 class StudySummary:
     scientific_question: str
-    endpoint_description: str
+    endpoint_descriptions: list[str]
     current_method: str
 
 
 @dataclass
 class SearchPlan:
     endpoint_hypothesis: str
-    endpoint_search_query: str
+    endpoint_search_queries: list[str]
     alternatives: list[LLMProposedAlternative] = field(default_factory=list)
 
 
@@ -107,22 +128,39 @@ class PubMedRetrievalService:
             recommendations     — literature-backed results, ranked and filtered
             endpoint_hypothesis — the LLM's understanding of what is being tested
             total_candidates    — number of unique papers evaluated
-
-        LLM-proposed alternatives are used internally as Path B search queries
-        and are never surfaced in the response (to avoid hallucinations).
         """
-        plan = self._generate_search_plan(protocol_text, params)
+        plan, rank_guidance = await self._generate_search_plan(protocol_text, params)
 
-        # Run both paths concurrently
-        path_a_task = asyncio.create_task(
-            self._path_a_endpoint(plan.endpoint_search_query)
+        logger.info(
+            "Search plan — endpoint_queries: %d, alternatives: %d, hypothesis: %s",
+            len(plan.endpoint_search_queries),
+            len(plan.alternatives),
+            (plan.endpoint_hypothesis or "")[:120],
         )
+        for i, q in enumerate(plan.endpoint_search_queries):
+            logger.info("  Path A[%d]: %s", i, q[:100])
+        for a in plan.alternatives:
+            logger.info("  Path B [%s]: %s", a.three_r_class, a.method_description[:80])
+
+        path_a_tasks = [
+            asyncio.create_task(self._path_a_endpoint(q))
+            for q in plan.endpoint_search_queries
+        ]
         path_b_task = asyncio.create_task(
             self._path_b_reconstruction(plan.alternatives)
         )
-        path_a_results, path_b_results = await asyncio.gather(path_a_task, path_b_task)
 
-        # Merge: keep the highest cosine per PMID
+        gathered = await asyncio.gather(*path_a_tasks + [path_b_task])
+        path_b_results = gathered[-1]
+        path_a_batches = gathered[:-1]
+        path_a_results = [c for batch in path_a_batches for c in batch]
+
+        logger.info(
+            "Candidates — Path A: %d, Path B: %d",
+            len(path_a_results), len(path_b_results),
+        )
+
+        # Merge: keep the highest cosine per PMID.
         merged: dict[str, _Candidate] = {}
         for candidate in path_a_results + path_b_results:
             existing = merged.get(candidate.record.pmid)
@@ -130,11 +168,33 @@ class PubMedRetrievalService:
                 merged[candidate.record.pmid] = candidate
 
         total_candidates = len(merged)
+        logger.info("Merged unique candidates: %d → sending to ranker", total_candidates)
         if not merged:
             return [], plan.endpoint_hypothesis, 0
 
-        # Sort by cosine descending and pass the top slice to the LLM ranker
         sorted_candidates = sorted(merged.values(), key=lambda c: -c.cosine)
+
+        # Split candidates into Path A (no source_query) and Path B (specific alternative).
+        path_a = [c for c in sorted_candidates if not c.source_query]
+        path_b = [c for c in sorted_candidates if c.source_query]
+
+        # Pre-group Path B by the specific alternative query that retrieved each paper.
+        # Send only the top-scoring representative per group to the ranker — siblings are
+        # auto-promoted as supporting papers if their rep is included.
+        path_b_by_query: dict[str, list[_Candidate]] = defaultdict(list)
+        for c in path_b:
+            path_b_by_query[c.source_query].append(c)
+
+        path_b_reps: list[_Candidate] = []
+        path_b_siblings: dict[str, list[_Candidate]] = {}  # rep pmid → sibling candidates
+        for group in path_b_by_query.values():
+            group.sort(key=lambda c: -c.cosine)
+            rep = group[0]
+            path_b_reps.append(rep)
+            if len(group) > 1:
+                path_b_siblings[rep.record.pmid] = group[1:]
+
+        llm_candidates = path_a[:_MAX_PATH_A_FOR_LLM] + path_b_reps
         llm_input = [
             {
                 "pmid": c.record.pmid,
@@ -142,16 +202,59 @@ class PubMedRetrievalService:
                 "abstract_text": (c.record.abstract_text or "")[:_ABSTRACT_CHAR_LIMIT],
                 "source_class": c.source_class,
             }
-            for c in sorted_candidates[:_CANDIDATES_FOR_LLM]
+            for c in llm_candidates
         ]
+
+        logger.info(
+            "LLM input — path_a: %d, path_b reps: %d (siblings held: %d)",
+            len(path_a[:_MAX_PATH_A_FOR_LLM]), len(path_b_reps),
+            sum(len(v) for v in path_b_siblings.values()),
+        )
 
         record_by_pmid = {c.record.pmid: c.record for c in sorted_candidates}
         cosine_by_pmid = {c.record.pmid: c.cosine for c in sorted_candidates}
-
-        ranked_meta = self._rank_with_llm(params, llm_input)
+        path_by_pmid = {
+            c.record.pmid: ("alternative_search" if c.source_class else "endpoint_search")
+            for c in sorted_candidates
+        }
+        ranked_meta = await self._rank_with_llm(params, llm_input, endpoint_hypothesis=plan.endpoint_hypothesis, rank_guidance=rank_guidance)
         if ranked_meta:
+            # Inject siblings of included Path B reps — they share the same method group.
+            already_included = {r["pmid"] for r in ranked_meta if r.get("include")}
+            extra: list[dict] = []
+            for entry in ranked_meta:
+                if not entry.get("include"):
+                    continue
+                siblings = path_b_siblings.get(entry.get("pmid", ""), [])
+                if not siblings:
+                    continue
+                # If the primary has no method_group, assign a synthetic key so it
+                # and all its siblings share the same group in _build_recommendations.
+                if not entry.get("method_group"):
+                    entry["method_group"] = f"_group_{entry['pmid']}"
+                for sibling in siblings:
+                    if sibling.record.pmid not in already_included:
+                        extra.append({
+                            "pmid": sibling.record.pmid,
+                            "include": True,
+                            "three_r_class": entry.get("three_r_class"),
+                            "method_group": entry.get("method_group"),
+                            "relevance_explanation": "Supporting paper from the same method group.",
+                            "endpoint_category": entry.get("endpoint_category"),
+                        })
+                        already_included.add(sibling.record.pmid)
+            if extra:
+                ranked_meta = ranked_meta + extra
+
+            included = [r for r in ranked_meta if r.get("include")]
+            excluded = [r for r in ranked_meta if not r.get("include")]
+            logger.info("Ranker: %d included (%d siblings), %d excluded", len(included), len(extra), len(excluded))
+            for r in included:
+                logger.info("  INCLUDE [%s] %s | group: %s", r.get("three_r_class"), r.get("pmid"), r.get("method_group"))
+            for r in excluded[:5]:
+                logger.info("  EXCLUDE %s — %s", r.get("pmid"), r.get("relevance_explanation", "")[:60])
             recommendations = self._build_recommendations(
-                ranked_meta, record_by_pmid, cosine_by_pmid
+                ranked_meta, record_by_pmid, cosine_by_pmid, path_by_pmid
             )
             if recommendations:
                 return recommendations, plan.endpoint_hypothesis, total_candidates
@@ -200,7 +303,7 @@ class PubMedRetrievalService:
             embedding, top_k=top_k
         )
         return [
-            _Candidate(record=rec, cosine=score, source_class=alt.three_r_class)
+            _Candidate(record=rec, cosine=score, source_class=alt.three_r_class, source_query=alt.method_description)
             for rec, score in rows
         ]
 
@@ -208,16 +311,28 @@ class PubMedRetrievalService:
     # LLM-based ranking and filtering
     # ──────────────────────────────────────────────────────────────────────────
 
-    def _rank_with_llm(
-        self, params: ProtocolParameters, candidates: list[dict]
+    async def _rank_with_llm(
+        self,
+        params: ProtocolParameters,
+        candidates: list[dict],
+        endpoint_hypothesis: str | None = None,
+        rank_guidance: str = "",
     ) -> list[dict] | None:
         prompt = build_ranking_prompt(
             endpoint_category=params.endpoint_category,
             study_domain=params.study_domain,
             procedure_text=params.procedure_text,
+            endpoint_hypothesis=endpoint_hypothesis,
             candidates=candidates,
+            rank_guidance=rank_guidance,
         )
-        raw = self._llm.call(prompt, max_tokens=_RANK_MAX_TOKENS, json_mode=True)
+        raw = await self._llm.async_call(prompt, max_tokens=_RANK_MAX_TOKENS, json_mode=True)
+        try:
+            with open("/tmp/rank_debug.json", "w") as _f:
+                import json as _json
+                _json.dump({"prompt": prompt, "response": raw}, _f, indent=2)
+        except Exception:
+            pass
         if raw is None:
             logger.warning("LLM ranking unavailable — no model configured or call failed")
             return None
@@ -236,6 +351,7 @@ class PubMedRetrievalService:
         ranked_meta: list[dict],
         record_by_pmid: dict[str, PubMedRecord],
         cosine_by_pmid: dict[str, float],
+        path_by_pmid: dict[str, str],
     ) -> list[PubMedRecommendation]:
         scored: list[tuple[PubMedRecord, float, dict]] = []
         for item in ranked_meta:
@@ -245,7 +361,7 @@ class PubMedRetrievalService:
             record = record_by_pmid.get(pmid)
             if record is None:
                 continue
-            three_r = item.get("three_r_class", "refinement")
+            three_r = item.get("three_r_class") or "refinement"
             if three_r not in THREE_R_WEIGHTS:
                 three_r = "refinement"
             cosine = cosine_by_pmid.get(pmid, 0.0)
@@ -254,16 +370,46 @@ class PubMedRetrievalService:
 
         scored.sort(key=lambda x: -x[1])
 
+        # Group by method_group label. Papers without a label each stand alone.
+        # Normalize the key so minor wording differences ("HepaRG model" vs
+        # "HepaRG assay") still group together.
+        groups: dict[str, list[tuple[PubMedRecord, float, dict]]] = defaultdict(list)
+        for entry in scored:
+            record, _, meta = entry
+            label = (meta.get("method_group") or "").strip()
+            key = _normalize_group_key(label) if label else f"__solo_{record.pmid}"
+            groups[key].append(entry)
+
+        # Best-scored paper in each group is primary; others become supporting_papers.
+        primaries: list[tuple[PubMedRecord, float, dict, list[SupportingPaper]]] = []
+        for entries in groups.values():
+            primary_record, primary_weighted, primary_meta = entries[0]
+            supporting = [
+                SupportingPaper(
+                    pmid=rec.pmid,
+                    doi=rec.doi,
+                    title=rec.title,
+                    pub_year=rec.pub_year,
+                )
+                for rec, _, _ in entries[1:]
+            ]
+            primaries.append((primary_record, primary_weighted, primary_meta, supporting))
+
+        primaries.sort(key=lambda x: -x[1])
+
         return [
             PubMedRecommendation(
                 record=record,
                 relevance_score=weighted,
-                relevance_explanation=meta.get("relevance_explanation", ""),
-                three_r_class=meta.get("three_r_class", "refinement"),
+                relevance_explanation=meta.get("relevance_explanation") or "",
+                three_r_class=meta.get("three_r_class") or "refinement",
                 endpoint_category=meta.get("endpoint_category") or None,
                 rank=rank,
+                search_path=path_by_pmid.get(record.pmid, "endpoint_search"),
+                method_group=(meta.get("method_group") or "").strip() or None,
+                supporting_papers=supporting,
             )
-            for rank, (record, weighted, meta) in enumerate(scored, start=1)
+            for rank, (record, weighted, meta, supporting) in enumerate(primaries, start=1)
         ]
 
     @staticmethod
@@ -285,6 +431,7 @@ class PubMedRetrievalService:
                     three_r_class=three_r,
                     endpoint_category=None,
                     rank=rank,
+                    search_path="alternative_search" if c.source_class else "endpoint_search",
                 )
             )
         return results
@@ -293,7 +440,7 @@ class PubMedRetrievalService:
     # Post-ranking synthesis: summary + citations
     # ──────────────────────────────────────────────────────────────────────────
 
-    def generate_summary(
+    async def generate_summary(
         self,
         params: ProtocolParameters,
         recommendations: list[PubMedRecommendation],
@@ -325,7 +472,7 @@ class PubMedRetrievalService:
             recommendations=llm_input,
         )
 
-        raw = self._llm.call(prompt, max_tokens=_SUMMARY_MAX_TOKENS, json_mode=True)
+        raw = await self._llm.async_call(prompt, max_tokens=_SUMMARY_MAX_TOKENS, json_mode=True)
         if raw is None:
             logger.warning("Summary LLM unavailable — no model configured or call failed")
             return None, []
@@ -370,33 +517,36 @@ class PubMedRetrievalService:
     # LLM search plan generation
     # ──────────────────────────────────────────────────────────────────────────
 
-    def _generate_search_plan(
+    async def _generate_search_plan(
         self, protocol_text: str, params: ProtocolParameters
-    ) -> SearchPlan:
+    ) -> tuple[SearchPlan, str]:
+        """Returns (plan, rank_guidance) — rank_guidance is passed to the ranker."""
+        profile = classify_domain(protocol_text, params.endpoint_category)
+        logger.info("Domain profile: %s", profile.name)
+
+        fallback_query = self._fallback_endpoint_query(params)
         fallback = SearchPlan(
             endpoint_hypothesis=None,
-            endpoint_search_query=self._fallback_endpoint_query(params),
+            endpoint_search_queries=[fallback_query],
             alternatives=[],
         )
 
-        # Step 1: extract scientific_question, endpoint_description, current_method
-        summary = self._summarize_study(protocol_text)
+        # Step 1: extract scientific_question, endpoint_descriptions, current_method
+        summary = await self._summarize_study(protocol_text)
         if summary:
             logger.info(
-                "Study summary — question: %s | endpoint: %s | method: %s",
+                "Study summary — question: %s | endpoints: %d | method: %s",
                 summary.scientific_question[:80],
-                summary.endpoint_description[:80],
+                len(summary.endpoint_descriptions),
                 summary.current_method[:80],
             )
-            # endpoint_description drives Path A; use it as the endpoint_search_query
             fallback = SearchPlan(
                 endpoint_hypothesis=summary.scientific_question,
-                endpoint_search_query=summary.endpoint_description,
+                endpoint_search_queries=summary.endpoint_descriptions,
                 alternatives=[],
             )
 
-        # Step 2: generate Path B alternative method descriptions
-        # Pass the current_method summary so the LLM knows exactly what to replace
+        # Step 2: generate Path B alternative method descriptions using profile vocabulary
         enriched_text = (
             f"{protocol_text.strip()}\n\n"
             f"[CURRENT METHOD SUMMARY]: {summary.current_method}"
@@ -409,46 +559,68 @@ class PubMedRetrievalService:
             species=params.species,
             route=params.route,
             procedure_text=params.procedure_text,
+            vocabulary=profile.vocabulary,
         )
-        raw = self._llm.call(prompt, max_tokens=_PLAN_MAX_TOKENS, json_mode=True)
+        raw = await self._llm.async_call(prompt, max_tokens=_PLAN_MAX_TOKENS, json_mode=True)
         if raw is None:
             logger.warning("Search plan LLM unavailable — using keyword fallback")
-            return fallback
+            return fallback, profile.rank_guidance
         try:
             payload = json.loads(raw)
         except (json.JSONDecodeError, AttributeError) as exc:
             logger.warning("Search plan parse error: %s", exc)
-            return fallback
+            return fallback, profile.rank_guidance
 
         alternatives = [
             LLMProposedAlternative(
-                three_r_class=alt.get("three_r_class", "refinement"),
+                three_r_class=alt.get("three_r_class") or "refinement",
                 method_description=alt.get("method_description", ""),
             )
             for alt in payload.get("alternatives", [])
             if alt.get("method_description")
         ]
-        # Enforce Replace > Reduce > Refine order so Path B searches are dispatched
-        # in priority order (asyncio.gather preserves task order in results).
+
+        # Step 3: add profile-defined injections
+        # Always-on injections come first (highest priority)
+        for inj in profile.base_path_b:
+            alternatives.insert(0, inj)
+            logger.info("Profile Path B injection [%s]: %s", inj.three_r_class, inj.method_description[:60])
+
+        # Subacute / organ-toxicity extension — only when the profile defines signals
+        # and the protocol text contains them
+        has_subacute = profile.has_subacute(protocol_text)
+        if has_subacute:
+            for inj in profile.subacute_path_b:
+                alternatives.insert(0, inj)
+                logger.info("Subacute Path B injection [%s]: %s", inj.three_r_class, inj.method_description[:60])
+
+        # Enforce Replace > Reduce > Refine order
         _ORDER = {"replacement": 0, "reduction": 1, "refinement": 2}
         alternatives.sort(key=lambda a: _ORDER.get(a.three_r_class, 3))
+
+        # Endpoint queries: LLM-generated + profile injections
+        endpoint_queries = list(
+            summary.endpoint_descriptions if summary
+            else [payload.get("endpoint_search_query") or self._fallback_endpoint_query(params)]
+        )
+        endpoint_queries.extend(profile.base_path_a)
+        if has_subacute:
+            endpoint_queries.extend(profile.subacute_path_a)
+            logger.info("Subacute Path A endpoint queries injected")
 
         return SearchPlan(
             endpoint_hypothesis=(
                 summary.scientific_question if summary
                 else payload.get("endpoint_hypothesis")
             ),
-            endpoint_search_query=(
-                summary.endpoint_description if summary
-                else payload.get("endpoint_search_query", self._fallback_endpoint_query(params))
-            ),
+            endpoint_search_queries=endpoint_queries,
             alternatives=alternatives,
-        )
+        ), profile.rank_guidance
 
-    def _summarize_study(self, study_text: str) -> StudySummary | None:
-        """Extract scientific_question, endpoint_description, current_method from free text."""
+    async def _summarize_study(self, study_text: str) -> StudySummary | None:
+        """Extract scientific_question, endpoint_descriptions, current_method from free text."""
         prompt = build_study_summary_prompt(study_text)
-        raw = self._llm.call(prompt, max_tokens=512, json_mode=True)
+        raw = await self._llm.async_call(prompt, max_tokens=600, json_mode=True)
         if raw is None:
             return None
         try:
@@ -457,13 +629,20 @@ class PubMedRetrievalService:
             logger.warning("Study summary parse error: %s", exc)
             return None
         q = payload.get("scientific_question", "").strip()
-        e = payload.get("endpoint_description", "").strip()
         m = payload.get("current_method", "").strip()
-        if not (q and e and m):
+        # Accept list or legacy single string for endpoint_descriptions
+        raw_endpoints = payload.get("endpoint_descriptions") or payload.get("endpoint_description")
+        if isinstance(raw_endpoints, str):
+            endpoints = [raw_endpoints.strip()] if raw_endpoints.strip() else []
+        elif isinstance(raw_endpoints, list):
+            endpoints = [e.strip() for e in raw_endpoints if isinstance(e, str) and e.strip()]
+        else:
+            endpoints = []
+        if not (q and endpoints and m):
             return None
         return StudySummary(
             scientific_question=q,
-            endpoint_description=e,
+            endpoint_descriptions=endpoints,
             current_method=m,
         )
 

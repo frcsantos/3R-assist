@@ -148,6 +148,13 @@ class LLMAdapter(ABC):
         """Send a single-turn prompt; return raw text or None on failure/stub."""
         return None
 
+    async def async_call(self, prompt: str, *, max_tokens: int, json_mode: bool = False) -> str | None:
+        """Non-blocking wrapper around call() for use in async contexts."""
+        import asyncio
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: self.call(prompt, max_tokens=max_tokens, json_mode=json_mode)
+        )
+
     @abstractmethod
     def extract_raw_experiments(
         self,
@@ -875,6 +882,46 @@ def _coerce_animal_counts(payload: dict) -> AnimalCounts | None:
     return None
 
 
+_VALID_STUDY_DOMAINS = frozenset({"pharma", "cosmetics", "chemical_safety", "general"})
+_VALID_SPECIES = frozenset(
+    {"rat", "mouse", "rabbit", "guinea_pig", "chicken", "zebrafish", "in_vitro", "other"}
+)
+_VALID_ROUTES = frozenset(
+    {"oral", "intraperitoneal", "intravenous", "dermal", "ocular", "inhalation", "in_vitro", "other"}
+)
+_SPECIES_ALIASES: dict[str, str] = {
+    "bovine": "other", "cow": "other", "cattle": "other",
+    "porcine": "other", "pig": "other", "swine": "other",
+    "canine": "other", "dog": "other",
+    "feline": "other", "cat": "other",
+    "ovine": "other", "sheep": "other",
+    "caprine": "other", "goat": "other",
+    "equine": "other", "horse": "other",
+    "wistar": "rat", "sprague": "rat", "sprague-dawley": "rat",
+    "rattus": "rat", "rattus norvegicus": "rat",
+    "mus musculus": "mouse", "balb/c": "mouse", "c57bl/6": "mouse",
+    "oryctolagus": "rabbit", "new zealand white": "rabbit",
+    "danio rerio": "zebrafish",
+    "cavia porcellus": "guinea_pig",
+    "gallus gallus": "chicken",
+}
+_ROUTE_ALIASES: dict[str, str] = {
+    "gavage": "oral", "intragastric": "oral", "p.o.": "oral", "per os": "oral",
+    "dietary": "oral", "intragástrico": "oral",
+    "i.p.": "intraperitoneal", "ip": "intraperitoneal",
+    "i.v.": "intravenous", "iv": "intravenous", "endovenous": "intravenous",
+    "topical": "dermal", "cutaneous": "dermal", "epicutaneous": "dermal",
+    "instillation": "ocular", "conjunctival": "ocular",
+    "aerosol": "inhalation", "inhalation chamber": "inhalation",
+}
+
+
+def _coerce_study_domain(payload: dict) -> None:
+    domain = payload.get("study_domain")
+    if not isinstance(domain, str) or domain.strip().lower() not in _VALID_STUDY_DOMAINS:
+        payload["study_domain"] = "general"
+
+
 def _coerce_application(payload: dict) -> None:
     raw = payload.get("application")
     if raw is None or (isinstance(raw, str) and not raw.strip()):
@@ -894,40 +941,39 @@ def _is_null_route_marker(value: object) -> bool:
     return False
 
 
+def _normalize_route_value(value: str) -> str | None:
+    v = value.strip().lower()
+    if v in _VALID_ROUTES:
+        return v
+    if v in _ROUTE_ALIASES:
+        return _ROUTE_ALIASES[v]
+    return "other"
+
+
 def _coerce_route(payload: dict) -> None:
     route = payload.get("route")
     if route is None:
         return
     if isinstance(route, str):
-        payload["route"] = None if _is_null_route_marker(route) else [route]
+        if _is_null_route_marker(route):
+            payload["route"] = None
+        else:
+            normalized = _normalize_route_value(route)
+            payload["route"] = [normalized] if normalized else None
         return
     if not isinstance(route, list):
+        payload["route"] = None
         return
 
-    normalized = [item for item in route if not _is_null_route_marker(item)]
-    payload["route"] = normalized or None
-
-
-_SPECIES_ALIASES = frozenset(
-    {
-        "bovine",
-        "cow",
-        "cattle",
-        "porcine",
-        "pig",
-        "swine",
-        "canine",
-        "dog",
-        "feline",
-        "cat",
-        "ovine",
-        "sheep",
-        "caprine",
-        "goat",
-        "equine",
-        "horse",
-    }
-)
+    valid = []
+    for item in route:
+        if _is_null_route_marker(item):
+            continue
+        if isinstance(item, str):
+            normalized = _normalize_route_value(item)
+            if normalized:
+                valid.append(normalized)
+    payload["route"] = valid or None
 
 
 def _coerce_species(payload: dict) -> None:
@@ -935,8 +981,13 @@ def _coerce_species(payload: dict) -> None:
     if not isinstance(species, str):
         return
     normalized = species.strip().lower()
+    if normalized in _VALID_SPECIES:
+        return
     if normalized in _SPECIES_ALIASES:
-        payload["species"] = "other"
+        payload["species"] = _SPECIES_ALIASES[normalized]
+    else:
+        # Unknown species string — drop rather than fail validation
+        payload["species"] = None
 
 
 def _raw_from_experiment_item(item: object) -> RawExtraction | None:
@@ -1054,9 +1105,9 @@ class LlmCallAdapter(LLMAdapter):
             import llmcall as _llmcall
             from llmcall import CallConstraints, LLMError as LlmCallError
         except ImportError:
-        logger.warning("llmcall package is not installed")
+            logger.warning("llmcall package is not installed")
             return None
-        kwargs: dict = {"max_tokens": max_tokens}
+        kwargs: dict = {"max_tokens": max_tokens, "temperature": 0.0}
         if json_mode:
             kwargs["response_format"] = "json"
         result = _llmcall.call(self._model, prompt, constraints=CallConstraints(**kwargs))
@@ -1103,7 +1154,8 @@ class OllamaLLMAdapter(LLMAdapter):
             "model": self._model,
             "prompt": prompt,
             "stream": False,
-            "options": {"num_predict": max_tokens},
+            "keep_alive": -1,
+            "options": {"num_predict": max_tokens, "temperature": 0.0, "num_ctx": 16384, "seed": 42},
         }
         if json_mode:
             payload["format"] = "json"
@@ -1115,7 +1167,7 @@ class OllamaLLMAdapter(LLMAdapter):
             method="POST",
         )
         try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
+            with urllib.request.urlopen(req, timeout=180) as resp:
                 body = json.loads(resp.read())
             return body.get("response")
         except Exception as exc:

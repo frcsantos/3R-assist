@@ -1,12 +1,23 @@
+import asyncio
+import logging
+import traceback
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
+from app.api.deps import require_admin_token
+
+logger = logging.getLogger(__name__)
 from app.api.errors import ErrorEnvelope, error_response
 from pubmed.api.deps import get_pubmed_analysis_service
 from pubmed.models.analysis import PubMedAnalysisResponse, PubMedAnalyzeRequest
 from pubmed.services.analysis import PubMedAnalysisService
 
-router = APIRouter(prefix="/pubmed", tags=["pubmed"])
+router = APIRouter(prefix="/pubmed", tags=["pubmed"], dependencies=[Depends(require_admin_token)])
+
+# Limit concurrent analyses to prevent RAM exhaustion under load.
+# Extra requests get an immediate 503 rather than queuing indefinitely.
+_analysis_semaphore = asyncio.Semaphore(1)
 
 
 @router.post(
@@ -27,13 +38,30 @@ async def analyze_protocol(
     service: PubMedAnalysisService = Depends(get_pubmed_analysis_service),
 ) -> PubMedAnalysisResponse | JSONResponse:
     try:
+        await asyncio.wait_for(_analysis_semaphore.acquire(), timeout=0.1)
+    except asyncio.TimeoutError:
+        return error_response(
+            status_code=503,
+            code="SERVER_BUSY",
+            message="Server is busy processing other requests. Please try again in a moment.",
+        )
+    try:
         return await service.analyze(payload)
     except Exception as exc:
+        tb = traceback.format_exc()
+        logger.error("analyze_protocol error: %s\n%s", exc, tb)
+        try:
+            with open("/tmp/pubmed_error.log", "w") as _f:
+                _f.write(tb)
+        except Exception:
+            pass
         return error_response(
             status_code=422,
             code="PUBMED_ANALYSIS_FAILED",
-            message=str(exc),
+            message="PubMed analysis failed. Please try again.",
         )
+    finally:
+        _analysis_semaphore.release()
 
 
 @router.get(

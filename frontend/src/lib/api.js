@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+const API_TOKEN = import.meta.env.VITE_API_TOKEN ?? ''
 
 function formatErrorDetail(detail) {
   if (detail == null) {
@@ -33,6 +34,9 @@ export async function apiFetch(path, options = {}) {
     typeof FormData !== 'undefined' && rest.body instanceof FormData
   if (!isFormData && headers['Content-Type'] == null) {
     headers['Content-Type'] = 'application/json'
+  }
+  if (API_TOKEN && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${API_TOKEN}`
   }
 
   let response
@@ -69,6 +73,7 @@ export async function apiFetch(path, options = {}) {
     }
     const error = new Error(message)
     if (code) error.code = code
+    error.status = response.status
     throw error
   }
   return response.json()

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from app.api.deps import get_retrieval_service
+from app.api.deps import get_retrieval_service, require_admin_token
 from app.api.errors import error_response
 from app.config import get_settings
 from app.models.jurisdiction import jurisdiction_matches
@@ -9,7 +9,7 @@ from app.models.protocol import SearchFilters, SearchRequest, SearchResponse, no
 from app.models.recommendation import Recommendation
 from app.services.retrieval import RetrievalService
 
-router = APIRouter(tags=["search"])
+router = APIRouter(tags=["search"], dependencies=[Depends(require_admin_token)])
 
 
 def _matches_three_r_filter(recommendation: Recommendation, three_r_class: str) -> bool:

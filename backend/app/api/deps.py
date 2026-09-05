@@ -1,9 +1,24 @@
 from functools import lru_cache
 
+from fastapi import Depends, HTTPException, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
 from app.adapters.embedder import EmbedderAdapter, build_embedder
 from app.adapters.llm import LLMAdapter, build_llm_adapter
 from app.config import get_settings
 from app.repositories.admin import AdminRepository
+
+_bearer = HTTPBearer(auto_error=False)
+
+
+def require_admin_token(
+    credentials: HTTPAuthorizationCredentials | None = Security(_bearer),
+) -> None:
+    secret = get_settings().auth_secret
+    if not secret:
+        raise HTTPException(status_code=503, detail="Admin auth not configured.")
+    if credentials is None or credentials.credentials != secret:
+        raise HTTPException(status_code=401, detail="Invalid or missing token.")
 from app.repositories.documents import DocumentRepository
 from app.repositories.feedback import FeedbackRepository
 from app.repositories.methods import MethodRepository

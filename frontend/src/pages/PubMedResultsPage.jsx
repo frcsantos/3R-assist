@@ -39,7 +39,9 @@ function ErrorState({ message, onRetry }) {
   return (
     <div className="rounded-lg border border-error bg-error-container p-container-padding">
       <p className="font-body-base text-body-base text-on-error-container">
-        {message ?? t('pubmed.page.error')}
+        {message === '__serverBusy__'
+          ? t('pubmed.page.serverBusy')
+          : (message ?? t('pubmed.page.error'))}
       </p>
       {onRetry && (
         <button
@@ -75,7 +77,7 @@ export default function PubMedResultsPage() {
       const data = await analyzePubMed({ protocol_text, params, lang })
       setResult(data)
     } catch (err) {
-      setError(err?.message ?? 'Unknown error')
+      setError(err?.status === 503 ? '__serverBusy__' : (err?.message ?? 'Unknown error'))
     } finally {
       setLoading(false)
     }

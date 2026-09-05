@@ -1,4 +1,8 @@
+import logging
+
 from fastapi import APIRouter, Depends, File, Query, UploadFile
+
+logger = logging.getLogger(__name__)
 from fastapi.responses import JSONResponse
 
 from app.adapters.llm import ExtractionError
@@ -11,6 +15,7 @@ from app.api.deps import (
     get_policy_extraction_service,
     get_policy_method_match_service,
     get_regulation_draft_extraction_service,
+    require_admin_token,
 )
 from app.api.errors import ErrorEnvelope, error_response
 from app.config import get_settings
@@ -65,7 +70,7 @@ from app.services.policy_extraction import PolicyExtractionService
 from app.services.policy_method_match import PolicyMethodMatchService
 from app.services.url_text import UrlTextError, resolve_extraction_source
 
-router = APIRouter(prefix="/admin", tags=["admin"])
+router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin_token)])
 
 
 @router.get("/settings", response_model=AdminSettingsResponse)
@@ -84,18 +89,11 @@ async def list_tables(
     try:
         tables = await repository.list_tables()
     except ValueError as exc:
-        return error_response(
-            status_code=503,
-            code="DATABASE_UNAVAILABLE",
-            message=str(exc),
-        )
+        logger.error("list_tables error: %s", exc)
+        return error_response(status_code=503, code="DATABASE_UNAVAILABLE", message="Could not load database tables.")
     except Exception as exc:
-        return error_response(
-            status_code=503,
-            code="DATABASE_UNAVAILABLE",
-            message="Could not load database tables.",
-            detail={"type": type(exc).__name__, "reason": str(exc)},
-        )
+        logger.error("list_tables error: %s", exc)
+        return error_response(status_code=503, code="DATABASE_UNAVAILABLE", message="Could not load database tables.")
     return AdminTablesResponse(tables=tables)
 
 
@@ -127,18 +125,11 @@ async def get_table_data(
             message=f"Table '{table_name}' was not found.",
         )
     except ValueError as exc:
-        return error_response(
-            status_code=400,
-            code="INVALID_TABLE",
-            message=str(exc),
-        )
+        logger.error("get_table_data error: %s", exc)
+        return error_response(status_code=400, code="INVALID_TABLE", message="Invalid table request.")
     except Exception as exc:
-        return error_response(
-            status_code=503,
-            code="DATABASE_UNAVAILABLE",
-            message="Could not load table data.",
-            detail={"type": type(exc).__name__, "reason": str(exc)},
-        )
+        logger.error("get_table_data error: %s", exc)
+        return error_response(status_code=503, code="DATABASE_UNAVAILABLE", message="Could not load table data.")
     return AdminTableDataResponse(**payload)
 
 
@@ -168,20 +159,11 @@ async def insert_table_row(
             message=f"Table '{table_name}' was not found.",
         )
     except ValueError as exc:
-        return error_response(
-            status_code=400,
-            code="INVALID_INSERT",
-            message=str(exc),
-        )
+        logger.error("insert_table_row error: %s", exc)
+        return error_response(status_code=400, code="INVALID_INSERT", message="Could not insert row.")
     except Exception as exc:
-        return error_response(
-            status_code=503,
-            code="DATABASE_UNAVAILABLE",
-            message=(
-                f"Could not insert table row: {type(exc).__name__}: {exc}"
-            ),
-            detail={"type": type(exc).__name__, "reason": str(exc)},
-        )
+        logger.error("insert_table_row error: %s", exc)
+        return error_response(status_code=503, code="DATABASE_UNAVAILABLE", message="Could not insert row.")
     return AdminRowInsertResponse(**payload)
 
 
@@ -219,20 +201,11 @@ async def update_table_cell(
             message=f"Table '{table_name}' was not found.",
         )
     except ValueError as exc:
-        return error_response(
-            status_code=400,
-            code="INVALID_UPDATE",
-            message=str(exc),
-        )
+        logger.error("update_table_cell error: %s", exc)
+        return error_response(status_code=400, code="INVALID_UPDATE", message="Could not update cell.")
     except Exception as exc:
-        return error_response(
-            status_code=503,
-            code="DATABASE_UNAVAILABLE",
-            message=(
-                f"Could not update table data: {type(exc).__name__}: {exc}"
-            ),
-            detail={"type": type(exc).__name__, "reason": str(exc)},
-        )
+        logger.error("update_table_cell error: %s", exc)
+        return error_response(status_code=503, code="DATABASE_UNAVAILABLE", message="Could not update cell.")
     return AdminCellUpdateResponse(**payload)
 
 
@@ -262,20 +235,11 @@ async def delete_table_rows(
             message=f"Table '{table_name}' was not found.",
         )
     except ValueError as exc:
-        return error_response(
-            status_code=400,
-            code="INVALID_DELETE",
-            message=str(exc),
-        )
+        logger.error("delete_table_rows error: %s", exc)
+        return error_response(status_code=400, code="INVALID_DELETE", message="Could not delete rows.")
     except Exception as exc:
-        return error_response(
-            status_code=503,
-            code="DATABASE_UNAVAILABLE",
-            message=(
-                f"Could not delete table rows: {type(exc).__name__}: {exc}"
-            ),
-            detail={"type": type(exc).__name__, "reason": str(exc)},
-        )
+        logger.error("delete_table_rows error: %s", exc)
+        return error_response(status_code=503, code="DATABASE_UNAVAILABLE", message="Could not delete rows.")
     return AdminRowsDeleteResponse(**payload)
 
 
@@ -307,20 +271,11 @@ async def update_column_comment(
             message=f"Table '{table_name}' was not found.",
         )
     except ValueError as exc:
-        return error_response(
-            status_code=400,
-            code="INVALID_COMMENT",
-            message=str(exc),
-        )
+        logger.error("update_column_comment error: %s", exc)
+        return error_response(status_code=400, code="INVALID_COMMENT", message="Could not update column comment.")
     except Exception as exc:
-        return error_response(
-            status_code=503,
-            code="DATABASE_UNAVAILABLE",
-            message=(
-                f"Could not update column comment: {type(exc).__name__}: {exc}"
-            ),
-            detail={"type": type(exc).__name__, "reason": str(exc)},
-        )
+        logger.error("update_column_comment error: %s", exc)
+        return error_response(status_code=503, code="DATABASE_UNAVAILABLE", message="Could not update column comment.")
     return AdminColumnCommentUpdateResponse(**payload)
 
 
@@ -535,14 +490,11 @@ async def match_policy_method(
     try:
         return await matching.match(payload)
     except Exception as exc:
+        logger.error("match_policy_method error: %s", exc)
         return error_response(
             status_code=503,
             code="METHOD_MATCH_FAILED",
-            message=(
-                "Could not search for matching methods in the database. "
-                "Try again, or check that curated methods have valid metadata."
-            ),
-            detail={"type": type(exc).__name__, "reason": str(exc)},
+            message="Could not search for matching methods in the database.",
         )
 
 
@@ -560,12 +512,9 @@ async def match_policy_document(
     try:
         return await matching.match(payload)
     except Exception as exc:
+        logger.error("match_policy_document error: %s", exc)
         return error_response(
             status_code=503,
             code="DOCUMENT_MATCH_FAILED",
-            message=(
-                "Could not search for matching documents in the database. "
-                "Try again, or check that curated documents have valid metadata."
-            ),
-            detail={"type": type(exc).__name__, "reason": str(exc)},
+            message="Could not search for matching documents in the database.",
         )

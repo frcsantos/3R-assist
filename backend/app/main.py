@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.errors import unhandled_exception_handler
 from pubmed.api.routes import router as pubmed_router
+from app.api.deps import get_embedder
 from app.api.routes import admin, analysis, documents, feedback, health, methods, search
 from app.config import get_settings
 from app.db.connection import close_pool, create_pool
@@ -24,6 +25,19 @@ async def lifespan(_app: FastAPI):
             _app.state.db_pool = pool
         except Exception as e:
             print(f"Database pool unavailable: {e}")
+
+    # Eagerly load the embedding model so the first request isn't slow
+    import asyncio
+    await asyncio.get_event_loop().run_in_executor(None, lambda: get_embedder().embed("warmup"))
+
+    # Warm up Ollama so the model is loaded before the first real request
+    if get_settings().ollama_model:
+        from app.adapters.llm import OllamaLLMAdapter
+        _ollama = OllamaLLMAdapter(model=get_settings().ollama_model)
+        await asyncio.get_event_loop().run_in_executor(
+            None, lambda: _ollama.call("warmup", max_tokens=1)
+        )
+
     yield
     if pool is not None:
         await close_pool()
@@ -33,14 +47,16 @@ def create_app() -> FastAPI:
     settings = get_settings()
     
     # Adiciona fallback para evitar que configurações ausentes quebrem o app
+    is_production = settings.app_env == "production"
     app = FastAPI(
         title="3R Assist API",
         version="0.1.0",
         lifespan=lifespan,
+        docs_url=None if is_production else "/docs",
+        redoc_url=None if is_production else "/redoc",
     )
 
-    # Configuração do CORS dinâmica baseada nas configurações
-    cors_origins = settings.cors_origin_list if hasattr(settings, 'cors_origin_list') else ["*"]
+    cors_origins = settings.cors_origin_list
 
     app.add_middleware(
         CORSMiddleware,

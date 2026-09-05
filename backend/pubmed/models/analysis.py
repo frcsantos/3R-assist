@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.protocol import (
     ConfidenceLevel,
@@ -34,6 +34,14 @@ class LLMProposedAlternative(BaseModel):
     method_description: str
 
 
+class SupportingPaper(BaseModel):
+    """A paper grouped under a primary recommendation as a related method reference."""
+    pmid: str
+    doi: str | None = None
+    title: str
+    pub_year: int | None = None
+
+
 class PubMedRecommendation(BaseModel):
     """A literature-backed recommendation retrieved from the PubMed knowledge base."""
     record: PubMedRecord
@@ -41,7 +49,17 @@ class PubMedRecommendation(BaseModel):
     relevance_explanation: str
     three_r_class: ThreeRClass
     endpoint_category: EndpointCategory | None = None
+
+    @field_validator("three_r_class", mode="before")
+    @classmethod
+    def coerce_three_r_class(cls, v: object) -> str:
+        if v not in ("replacement", "reduction", "refinement"):
+            return "refinement"
+        return v
     rank: int
+    search_path: Literal["endpoint_search", "alternative_search"] = "endpoint_search"
+    method_group: str | None = None
+    supporting_papers: list[SupportingPaper] = Field(default_factory=list)
 
 
 class Citation(BaseModel):
