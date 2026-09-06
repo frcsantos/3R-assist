@@ -506,6 +506,7 @@
       "showSimilar": "{{count}} artigo(s) relacionado(s) sobre o mesmo método",
       "hideSimilar": "Ocultar artigos relacionados"
     }
+  },
   "feedback": {
     "title": "Enviar feedback",
     "objectLabel": "Sobre",
