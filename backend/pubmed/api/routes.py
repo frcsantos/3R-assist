@@ -5,15 +5,13 @@ import traceback
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from app.api.deps import require_admin_token
-
 logger = logging.getLogger(__name__)
 from app.api.errors import ErrorEnvelope, error_response
 from pubmed.api.deps import get_pubmed_analysis_service
 from pubmed.models.analysis import PubMedAnalysisResponse, PubMedAnalyzeRequest
 from pubmed.services.analysis import PubMedAnalysisService
 
-router = APIRouter(prefix="/pubmed", tags=["pubmed"], dependencies=[Depends(require_admin_token)])
+router = APIRouter(prefix="/pubmed", tags=["pubmed"])
 
 # Limit concurrent analyses to prevent RAM exhaustion under load.
 # Extra requests get an immediate 503 rather than queuing indefinitely.
