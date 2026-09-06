@@ -6,3 +6,5 @@ Examples of endpoints: eye irritation, skin corrosion, skin sensitization (aller
 **Methodology:** An experimental design or broader strategy that answers a research question, potentially combining or sequencing multiple methods—e.g., an IATA (Integrated Approach to Testing and Assessment) that combines in silico + in vitro + in vivo confirmation, or a comprehensive behavioral study design.
 
 **Route:** Describes how the test substance comes into contact with the biological system—not the type of biological system. In surrogate methods, it refers to which routes in the original protocol this method is compatible with to replace—use “null” when it is compatible with any route.
+
+**Application:** The intended use or purpose of a study or method (e.g. basic research, regulatory use, education). Formerly called “study domain”.

@@ -1,6 +1,6 @@
 # spec.md — 3R Assist
 
-> Status: 🟢 Phases A–D complete. M2.5 Spec Sync applied. M3 Database sync applied. Phase 1 core pipeline implemented. Explore + general feedback (ADR-024) documented.
+> Status: 🟢 Phases A–D complete. M2.5 Spec Sync applied. M3 Database sync applied. Phase 1 core pipeline implemented. Explore + general feedback (ADR-024) documented. PubMed literature module + admin toolchain shipped (ADR-025).
 > Input: `project-proposal.md` + `assumption-log.md`
 
 ---
@@ -19,13 +19,15 @@
 
 | # | Feature | Notes |
 |---|---|---|
-| F01 | Free-text protocol input (PT/EN) | Single textarea; no required fields |
+| F01 | Free-text protocol input (PT/EN) | Single textarea (20–40 000 chars); or upload PDF/HTML/TXT (extracted server-side) |
 | F02 | LLM-based parameter extraction | Returns `AnalyzeResponse { experiments: ExtractionResult[] }` per `docs/parameter_model.md`. LLM produces `RawExtraction` (strict extraction only, no inference; every non-null field has a paired evidence string and `{field}_confidence`; `study_type` as free text). Application code maps `study_type` → `endpoint_category` via §4.1 lookup. See ADR-014–018 |
 | F03 | Parameter display and inline correction | S2 displays: `study_type` (what the LLM found) + `endpoint_category` (what the database covers, or "Not covered" if null); editable fields for route, application, procedure_text, species, animal_counts, regulatory; per-field `{field}_confidence` badge (High/Medium/Low) with "show evidence" toggle (right-aligned) per field; original protocol text in a side panel with evidence spans highlighted; `notes` displayed below parameters when non-null. When `len(experiments) > 1`, S2 shows tabs — one per experiment — each with its own editable params and evidence (ADR-014, ADR-019). |
 | F04 | Ranked recommendations | S3 calls `POST /search` after S2 confirmation. Results sorted by relevance score; each card shows 3Rs badges + rationales, **Match** score (%), detail rows (`animal_use`, `test_system`, endpoint, routes, application), jurisdiction chips, validation status, primary source citation/link, and regulatory citation modals; cards with score ≤ 65% at reduced opacity (ADR-011). When `len(experiments) > 1`, S3 shows tabs with per-experiment summary and results (ADR-019). |
 | F05 | 3Rs classification per result | Replacement / Reduction / Refinement badge(s) from non-empty `*_rationale` columns (ADR-023) |
 | F06 | Jurisdictional validity indicator | Per-regulation jurisdiction chips with citation modal (from `regulations`) |
 | F07 | Explore catalogue | S4 `/explore` — browse Methods / Regulations / Documents; `/buscar` redirects here. Card-level general feedback (F11b) via ! icon |
+| F07b | Literature search | PubMed-backed alternatives analysis per experiment: endpoint hypothesis, animal-use necessity verdict, ranked supporting literature with citations (`POST /pubmed/analyze`; `/literature` from Results, `/literature-search` standalone). Local batch ingestion of PubMed baseline shipped early (ADR-025); real-time ingestion stays Phase 4 (F19) |
+| F07c | Admin / curation tooling | `/admin`: generic PostgreSQL table editor (browse/edit/add/delete/CSV export/column comments) + LLM doc-extraction pipeline (URL/file → estimate → extract → match) + project docs viewer + settings. Internal use; currently open (no auth) |
 | F08 | User accounts — email magic link | Simple auth; visible anonymous bypass |
 | F09 | Query history | Registered users only; list of past queries with results |
 | F10 | PDF/CSV export | Registered users only; export button visible to anonymous users but locked on click — prompts registration. Prevents hiding the feature while maintaining the auth incentive. See ADR-009 |
@@ -33,7 +35,7 @@
 | F11b | General product feedback | Explore (and reusable modal): `POST /feedback` with `url`, `object` (card title), `feedback_text`; anonymous OK (ADR-024) |
 | F12 | Method suggestion form | Submissions queued for manual review by Karynn |
 | F13 | Bilingual interface | All UI copy in Portuguese and English |
-| F14 | Initial curated database | 25 methods across 9 endpoint categories, sourced from CONCEA RN 18/2014 and corresponding OECD guidelines. All entries `active = FALSE` pending Karynn review (`docs/karynn_review_checklist.md`) |
+| F14 | Initial curated database | 25 methods across 9 endpoint categories, sourced from CONCEA RN 18/2014 and corresponding OECD guidelines. Endpoints reference a 54-row hierarchical OECD endpoint catalogue (`endpoints`). All method entries `active = FALSE` pending Karynn review (`docs/karynn_review_checklist.md`) |
 
 #### Full — Phase 3 (months 6–9)
 
@@ -48,7 +50,7 @@
 
 | # | Feature |
 |---|---|
-| F19 | Real-time PubMed literature ingestion |
+| F19 | Real-time PubMed literature ingestion | Streaming ingestion already partially shipped as **local batch ingestion** (ADR-025); real-time/continuous updates remain Phase 4 |
 | F20 | Collaborative curation platform |
 | F21 | Integration with funding databases and regulatory reporting |
 | F22 | Public API for protocol management systems |
@@ -57,7 +59,7 @@
 
 ### 2.3 UI Overview
 
-Primary product screens plus supporting pages. Detailed mockups in `/design/`. Primary nav: **Analisar** (S1), **Explore** (S4), **Glossary**, **Info**. S5 accessed via auth state when enabled. S6 not in nav — accessed via link at bottom of S3 and app footer (see ADR-008; Explore rename ADR-024).
+Primary product screens plus supporting pages. Detailed mockups in `/design/`. Primary nav: **Analisar** (S1), **Explore** (S4), **Literature**, **Glossary**, **Info**, **Admin** (curation). S5 accessed via auth state when enabled. S6 not in nav — accessed via link at bottom of S3 and app footer (see ADR-008; Explore rename ADR-024).
 
 | Screen | Purpose | Key interactions |
 |---|---|---|
@@ -65,6 +67,8 @@ Primary product screens plus supporting pages. Detailed mockups in `/design/`. P
 | **S2 — Parameters** | Extracted parameter review | Per-field confidence indicator alongside "show evidence" toggle (ADR-018); `study_type` + `endpoint_category` at top (ADR-015); editable fields; protocol text side panel with evidence highlighting; when `len(experiments) > 1`, experiment tabs switch the active parameter set (ADR-019); "Search alternatives" triggers `POST /search` for **all** experiments in parallel; incomplete `application` blocks search |
 | **S3 — Results** | Ranked recommendations | Back link to S2; when `len(experiments) > 1`, experiment tabs switch per-experiment protocol summary and result list (ADR-019); horizontal filter bar (3Rs class, jurisdiction); cards ordered by relevance with **Match** % label; score ≤ 65% at reduced opacity (ADR-011); each card: method name, description, detail rows (`animal_use`, `test_system`, endpoint, routes, application), 3Rs badges + rationales, validation status, jurisdiction chips + citation modal, primary source citation/link; filter relaxation notice when Minimum Results Rule fires; export / F11 ratings / suggest-method deferred |
 | **S4 — Explore** | Catalogue browse | Tabs: Methods / Regulations / Documents (`/explore/:section`; default methods). Unranked catalogue cards (no embedding). Each card has an ! control opening general feedback modal (`object` = card title, `url` = current page). Legacy `/buscar` → `/explore` |
+| **Literature** | PubMed-backed evidence | Standalone `/literature-search` (paste a study description) or `/literature` launched from S3 with the protocol + confirmed params. Shows endpoint hypothesis, animal-use necessity banner, evidence synthesis with PMID citations, and ranked candidate cards with relevance scores |
+| **Admin** | Curation tooling | `/admin` sections: database (table browser/editor), extract (LLM doc-extraction pipeline with cost estimate), docs (renders `docs/*.md`), settings |
 | **S5 — Account / History** | Query log and exports | Registered users only — anonymous users redirected to S1 with registration invite; query list with date, protocol snippet, result count; inline accordion expansion; PDF/CSV export per query |
 | **S6 — Method Suggestion** | Crowdsourced additions | Not in primary nav — accessed from S3 "Suggest method" link and footer; form: method name (required), source URL, 3Rs class, notes; auth optional (email pre-filled if logged in); expectation notice: manual review queue, no publication timeline |
 
@@ -115,15 +119,15 @@ Key bottleneck under load: the Service layer (embedding generation + cosine simi
 |---|---|---|
 | Backend language | Python 3.11+ | Native ecosystem for ML/embedding libs; team familiarity |
 | Backend framework | FastAPI | Async by default; OpenAPI spec auto-generated; minimal boilerplate |
-| Frontend | React 18 + Vite | SPA; static deploy on Vercel; team familiarity |
-| LLM | Anthropic API (`claude-sonnet-4-20250514`) | Parameter extraction; cost per query is a fraction of a cent |
+| Frontend | React 19 + Vite | SPA; static deploy on Vercel; team familiarity |
+| LLM | Provider-agnostic via `llmcall` (Anthropic `claude-sonnet-4-20250514` default; OpenRouter / OpenAI / Gemini / xAI supported; local Ollama optional) | Parameter extraction; cost per query is a fraction of a cent |
 | Embeddings | `sentence-transformers` (`all-MiniLM-L6-v2`) | Local; zero API cost; 384-dim vectors; sufficient for small corpus |
 | Database | **PostgreSQL only** (Neon/Vercel Postgres) | Not SQLite. Zero fixed cost; free tier covers MVP scale; JSONB for embeddings; pgvector path for Phase 3. See ADR-013 (supersedes ADR-004 SQLite/Turso) |
 | DB driver | `asyncpg` | Async PostgreSQL driver; consistent with FastAPI async model |
 | Auth | Custom magic link — `itsdangerous` tokens + Resend email | No auth service dependency; Resend free tier: 3,000 emails/month |
 | Export | `reportlab` (PDF) + Python `csv` stdlib | Lightweight; no external service |
 | Frontend state | React local state + `fetch` | No global state manager needed at MVP per `patterns.md` |
-| Styling | Tailwind CSS | Utility-first; no design system overhead at MVP |
+| Styling | Tailwind CSS v4 (Ethos token theme via `design/ethos-theme.css`) | Utility-first; token-driven design system |
 | i18n | `react-i18next` | Bilingual requirement (PT/EN) from day one |
 
 **ADR references:** ADR-002 (Python/FastAPI), ADR-003 (React/Vite), ADR-013 (PostgreSQL — supersedes ADR-004), ADR-005 (sentence-transformers).
@@ -310,15 +314,13 @@ applied_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 
 #### Retrieval approach (MVP)
 
-At 25 methods, full corpus embedding comparison is trivially fast. No vector index or approximate nearest-neighbor library needed. Algorithm (see `docs/parameter_model.md` §6 for full specification):
+At 25 methods, full corpus comparison is trivially fast. No vector index or approximate nearest-neighbor library needed. Algorithm (see `docs/parameter_model.md` §6 for full specification):
 
-1. Embed the confirmed protocol parameters (`endpoint_category` + `procedure_text` + `application` + routes) using `sentence-transformers`.
-2. **Hard filter:** retain only methods whose `endpoints` include the protocol endpoint (if not null).
-3. **Soft filter:** retain methods where `routes_applicable IS NULL` OR the method's route ids (`route_codes`) include any protocol route (if route is not null). Application matching uses `application_ids` / `application_codes` against protocol `application`.
-4. Load filtered method embeddings from the database (in-memory, negligible at this scale).
-5. Compute cosine similarity between the query vector and each method embedding.
-6. Return all results sorted by score descending.
-7. **Minimum results rule:** if fewer than 3 methods pass filters, relax route filter then endpoint filter until ≥ 3 results or all methods are returned. Log each relaxation for H3 analysis.
+1. **Hard filter:** retain only methods whose `endpoints` include the protocol endpoint id (if endpoint is not null). Endpoint slugs are normalized through aliases (`acute-toxicity` → `acute-systemic-toxicity`, etc. — see `app/models/protocol.py`).
+2. **Soft filter:** retain methods where `routes_applicable IS NULL` (route-agnostic) OR the method's route ids include any protocol route id (if route is not null). Catch-all slugs (`other`, `multiple`, `not-applicable`, `unspecified`) do not participate in filtering.
+3. **Soft filter:** application matching uses `application_ids` against protocol `application`.
+4. **Ranking (MVP default, `SEMANTIC_RANKING=false`):** heuristic filter-only score — base 0.5 + matched-param bonus + procedure-text token overlap against the method's `text_for_embedding`/name/description/keywords. With `SEMANTIC_RANKING=true`, query text is embedded with `sentence-transformers` and ranked by cosine similarity against `methods.embedding_json`.
+5. **Minimum results rule:** if fewer than 3 methods pass filters, relax route filter then endpoint+route filters until ≥ 3 results or all methods are returned (`filter_relaxation` returned in the response). Log each relaxation for H3 analysis.
 
 Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension available on Neon).
 
@@ -353,120 +355,77 @@ Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension avai
 3r-assist/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py                  # FastAPI app, CORS, router registration
+│   │   ├── main.py                  # FastAPI app, CORS, router registration, lifespan
 │   │   ├── config.py                # Settings loaded from env vars (12-Factor)
 │   │   ├── api/
+│   │   │   ├── deps.py              # cached DI providers (LLM, embedder, repos, services)
+│   │   │   ├── errors.py            # ErrorEnvelope + global handlers
 │   │   │   └── routes/
+│   │   │       ├── health.py        # GET  /health
 │   │   │       ├── analysis.py      # POST /analyze
 │   │   │       ├── search.py        # POST /search
 │   │   │       ├── methods.py       # GET  /methods
-│   │   │       ├── auth.py          # POST /auth/magic-link, GET /auth/verify
-│   │   │       ├── queries.py       # GET  /queries  (auth required)
+│   │   │       ├── documents.py     # GET  /documents
 │   │   │       ├── feedback.py      # POST /feedback (general; F11b)
-│   │   │       └── suggestions.py   # POST /suggestions
+│   │   │       └── admin.py         # /admin/* — DB browser + extraction toolchain
 │   │   ├── services/
-│   │   │   ├── extraction.py        # Protocol text → ExtractionResult
-│   │   │   ├── retrieval.py         # ExtractionResult + filters → ranked Methods
-│   │   │   └── export.py            # Query results → PDF / CSV
+│   │   │   ├── extraction.py        # Protocol text → AnalyzeResponse
+│   │   │   ├── retrieval.py         # Params + filters → ranked Recommendations
+│   │   │   ├── language.py          # pt/en detection
+│   │   │   ├── study_type_lookup.py # study_type → endpoint_category map
+│   │   │   ├── oecd_citation.py     # OECD TG citation builder
+│   │   │   ├── policy_extraction.py / policy_method_match.py / policy_document_match.py
+│   │   │   ├── document_draft_extraction.py / method_draft_extraction.py / regulation_draft_extraction.py
+│   │   │   ├── extract_estimate.py  # token/cost estimation
+│   │   │   ├── file_text.py         # PDF/HTML/TXT upload extraction
+│   │   │   ├── url_text.py          # URL → text (SSRF-safe)
+│   │   │   └── export.py            # stub (deferred)
 │   │   ├── repositories/
-│   │   │   ├── methods.py           # MethodRepository
-│   │   │   ├── users.py             # UserRepository
-│   │   │   ├── queries.py           # QueryRepository
-│   │   │   └── feedback.py          # FeedbackRepository (general feedback table)
+│   │   │   ├── methods.py           # MethodRepository (raw SQL, asyncpg)
+│   │   │   ├── documents.py
+│   │   │   ├── feedback.py
+│   │   │   ├── admin.py             # generic information_schema-based table editor
+│   │   │   └── users.py             # stub (auth not wired)
 │   │   ├── adapters/
-│   │   │   ├── llm.py               # Anthropic API → ExtractionResult (ACL)
-│   │   │   └── embedder.py          # sentence-transformers → float[] (ACL)
-│   │   ├── models/                  # Pydantic domain models
-│   │   │   ├── method.py
-│   │   │   ├── protocol.py          # ExtractionResult (see docs/parameter_model.md)
-│   │   │   ├── recommendation.py
-│   │   │   └── user.py
+│   │   │   ├── llm.py               # LLMAdapter (llmcall / Ollama / stub)
+│   │   │   └── embedder.py          # sentence-transformers (or stub)
+│   │   ├── models/                  # Pydantic API schemas (protocol, method, i18n, admin, …)
+│   │   ├── prompts/                 # extraction prompts (extraction, policy, drafts)
 │   │   └── db/
-│   │       ├── connection.py        # asyncpg connection pool (DATABASE_URL)
-│   │       └── migrations/
-│   │           ├── 001_initial.sql                    # methods, method_regulatory_contexts (+ legacy method_keywords)
-│   │           ├── 002_app_tables.sql                 # users, magic_link_tokens, queries, feedback→query_feedback (043), suggestions
-│   │           ├── 003_vocabulary_tables.sql          # endpoints, routes, study_domains, route_endpoints
-│   │           ├── 004_rename_study_domain.sql        # application_area → study_domain (legacy upgrade)
-│   │           ├── 005_method_regulatory_contexts.sql # ADR-021/022 legacy upgrade
-│   │           ├── 006_route_other.sql                # seeds routes.other
-│   │           ├── 007_add_3r_rationale_columns.sql   # ADR-023 step 1 (add rationale columns)
-│   │           ├── 017_methods_keywords_columns.sql   # keywords_en/pt on methods; drop method_keywords
-│   │           ├── 018_methods_embed_keywords_reorder.sql  # embed/keyword cols after source_db
-│   │           ├── 019_methods_text_for_embedding_reorder.sql  # text_for_embedding left of embedding_json
-│   │           ├── 020_methods_3r_columns_reorder.sql     # category_3r / *_rationale after source_db
-│   │           ├── 023_localized_json_fields.sql      # fold *_en/*_pt into localized JSONB
-│   │           ├── 024_vocab_timestamps_after_description.sql  # vocab: timestamps after description
-│   │           ├── 025_drop_mrc_study_domain.sql               # drop study_domain from method_regulatory_contexts
-│   │           ├── 026_methods_drop_category_3r_reorder.sql    # drop category_3r; embedding cols after keywords
-│   │           ├── 027_documents.sql                           # documents catalogue
-│   │           ├── 028_doc_fks_and_citations.sql               # source_doc_id / regulatory_doc_id + citation
-│   │           ├── 029_mrc_validation_status_values.sql        # normalize validation_status vocabulary
-│   │           ├── 030_documents_doc_citation.sql              # doc_ref → doc_citation (localized JSONB)
-│   │           ├── 031_mrc_jurisdiction_localized.sql          # MRC jurisdiction → localized JSONB
-│   │           ├── 032_rename_regulations.sql                  # method_regulatory_contexts → regulations
-│   │           ├── 037_methods_animal_use.sql                  # methods.animal_use
-│   │           ├── 038_methods_test_system.sql                 # methods.test_system JSONB
-│   │           ├── 040_methods_rationales_localized.sql        # *_rationale → localized JSONB
-│   │           ├── 042_methods_validation_status.sql           # validation_status on methods
-│   │           ├── 043_rename_query_feedback.sql               # feedback → query_feedback (F11)
-│   │           ├── 044_feedback.sql                            # general feedback table (F11b)
-│   │           ├── 045_regulations_body_citation_localized.sql # regulatory_body / citation JSONB
-│   │           ├── 046_regulations_purpose_localized.sql       # regulation_purpose JSONB
-│   │           ├── 047_regulations_regulatory_prefix.sql       # status/date/purpose rename + backfill
-│   │           ├── 048_regulations_regulatory_endpoints.sql    # purpose → INTEGER[] endpoint ids
-│   │           ├── 049_endpoint_ids.sql                        # methods/route_endpoints → endpoints.id
-│   │           ├── 050_methods_endpoint_index.sql              # recreate idx_methods_endpoint
-│   │           ├── 051_methods_endpoints_array.sql             # endpoint_category → endpoints INTEGER[]
-│   │           ├── 052_endpoints_code_to_slug.sql              # endpoints.code → slug (hyphenated)
-│   │           ├── 053_endpoints_parent_code.sql               # endpoints.parent_id + code
-│   │           ├── 054_replace_endpoints_catalogue.sql         # hierarchical endpoints + OHT codes
-│   │           ├── 055_regulations_endpoint_quote.sql          # regulations.endpoint_quote TEXT
-│   │           ├── 056_regulations_endpoint_quote_backfill.sql # backfill endpoints + quotes
-│   │           ├── 057_methods_endpoints_backfill.sql          # backfill methods.endpoints
-│   │           ├── 058_routes_compatible_endpoints.sql         # routes.compatible_endpoints INTEGER[]
-│   │           ├── 059_replace_routes_catalogue.sql            # replace routes; code → slug
-│   │           ├── 060_drop_route_endpoints.sql                # drop route_endpoints
-│   │           ├── 061_applications_replace_study_domain.sql   # applications; drop study_domains
-│   │           ├── 062_routes_applications_id.sql              # routes.id + applications.id
-│   │           ├── 063_methods_application_route_ids.sql       # methods application/route id arrays
-│   │           └── manual/
-│   │               └── 008_drop_category_3r.sql       # legacy gated DROP (superseded by 026)
+│   │       ├── connection.py        # asyncpg pool + apply_migrations()
+│   │       └── migrations/          # 65 numbered SQL files + manual/
+│   ├── pubmed/                      # literature search module (ADR-025)
+│   │   ├── api/                     # POST /pubmed/analyze, GET /pubmed/status
+│   │   ├── db/repository.py         # pgvector searches + upserts
+│   │   ├── ingestion/               # FTP, parser, cluster filters, pipeline
+│   │   ├── models/                  # record.py, analysis.py
+│   │   ├── prompts/                 # ranking, necessity, summary, search-plan
+│   │   └── services/                # analysis, retrieval, necessity
 │   ├── scripts/
-│   │   ├── embed_methods.py         # generate embeddings for active methods (asyncpg)
-│   │   ├── backfill_3r_rationales.py # ADR-023 steps 2–4 (backfill, gate, optional DROP)
-│   │   └── smoke_test.py            # manual smoke test (CI optional per ADR-001)
+│   │   ├── migrate.py               # apply SQL migrations
+│   │   ├── embed_methods.py         # generate method embeddings
+│   │   ├── run_pubmed_ingestion.py  # PubMed baseline ingestion
+│   │   ├── backfill_3r_rationales.py
+│   │   ├── activate_dev_methods.py
+│   │   └── smoke_test.py
 │   ├── tests/
-│   ├── docs/
-│   │   ├── parameter_model.md       # extraction schema, vocabularies, matching rules
-│   │   └── karynn_review_checklist.md  # per-method review before active = TRUE
 │   ├── requirements.txt
 │   └── .env.example
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/                   # S1–S6 page components
-│   │   ├── components/              # Shared UI components
-│   │   ├── hooks/                   # Custom React hooks
-│   │   ├── lib/
-│   │   │   ├── api.js               # All fetch calls; typed request/response
-│   │   │   └── i18n.js              # react-i18next setup
-│   │   └── locales/
-│   │       ├── pt.json
-│   │       └── en.json
+│   │   ├── pages/                   # Analyze, Parameters, Results, Explore, Literature*, Admin, Glossary, Info
+│   │   ├── components/              # ResultCard, ProtocolTextPanel, FeedbackModal, …
+│   │   ├── lib/                     # api, analyze, search, explore, pubmed, admin, feedback, i18n, …
+│   │   └── locales/                 # pt.json, en.json
 │   ├── package.json
 │   └── vite.config.js
-├── spec.md
-├── decisions.md
-├── patterns.md
-├── assumption-log.md
-├── dev-plan.md
-├── execution-log.md
+├── design/                          # tokens.css, ethos-theme.css, components.md
+├── docs/
 ├── README.md
-├── .env.example
-├── design/
-├── prompts/
-└── validation/
+└── .env.example
 ```
+
+Auth (`auth.py`, magic-link routes) and `queries.py`/`suggestions.py` routes from the original structure are **not implemented yet** — the corresponding tables exist but no API surface is wired.
 
 ---
 
@@ -494,7 +453,7 @@ Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension avai
 ```
 User (S1) → POST /analyze {protocol_text}
   → ExtractionService.extract(text)
-    → LLMAdapter.extract_parameters(text) → ExtractionResult
+    → LLMAdapter.extract_raw_experiments(text) → ExtractionResult
   → return ExtractionResult to frontend (S2)
 User edits/confirms parameters (S2) — one tab per experiment when `len(experiments) > 1`
   → POST /search {params} for each experiment (parallel)
@@ -513,6 +472,19 @@ User (S4 /explore) → GET catalogue endpoints (methods / regulations / document
 ```
 
 Legacy filter-only direct search may still use `POST /search` with filters; primary S4 UX is catalogue browse.
+
+**W2b — Literature search (F07b)**
+```
+User → /literature-search (free-form study description, params=null)
+     or /literature (from S3 CTA with {protocol_text, params, lang})
+  → POST /pubmed/analyze
+    → params extracted (or accepted) → search-plan prompt (endpoint hypothesis + 3 alternative queries)
+    → Path A: embed endpoint description → pgvector search endpoint_embedding
+    → Path B: embed per-class alternative queries → pgvector search method_embedding
+    → merge by PMID → LLM re-rank top 10 → summary with [PMID:…] citations
+  → PubMedAnalysisResponse { necessity, endpoint_hypothesis, recommendations, summary, citations, … }
+```
+*(Necessity verdict service exists; currently returned as `null` until wired.)*
 
 **W3 — Magic link auth**
 ```
@@ -572,7 +544,7 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
 **Key endpoint contracts:**
 
 `POST /analyze`
-- Request: `{ "protocol_text": string }` (min 20 chars, max 5000 chars)
+- Request: `{ "protocol_text": string, "lang": "pt"|"en"|null }` (protocol_text min 20 chars, max 40000 chars)
 - Response 200:
 ```json
 {
@@ -703,9 +675,14 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
 
 `LLMAdapter` interface (domain-facing):
 ```python
-def extract_parameters(self, text: str) -> Result[ExtractionResult, ExtractionError]
+def call(self, prompt: str, max_tokens: int, json_mode: bool = False) -> str
+async def extract_raw_experiments(self, text: str) -> dict
+async def extract_policy(self, text: str) -> dict
+async def extract_method_draft(self, text: str) -> dict
+async def extract_document_draft(self, text: str) -> dict
+async def extract_regulation_draft(self, text: str) -> dict
 ```
-The adapter owns all Anthropic API shapes, retry logic, and response parsing. The `ExtractionService` never sees `anthropic.types.*`. The prompt template lives in `docs/parameter_model.md` §9 and is versioned with the code.
+Implementations: `LlmCallAdapter` (providers via `llmcall`), `OllamaLLMAdapter` (local), `StubLLMAdapter` (no key configured). The adapter owns all provider API shapes, retry logic, and response parsing (including JSON repair). The prompt templates live in `backend/app/prompts/` and `docs/parameter_model.md` §9 and are versioned with the code.
 
 `EmbedderAdapter` interface:
 ```python
@@ -743,7 +720,7 @@ Before writing any code, the following must be in place (M3.0 checklist):
 The minimum subset required to run the pilot (W1 + feedback + bilingual UI):
 
 **In scope for pilot gate:**
-F01, F02, F03, F04, F05, F06, F11b, F13, F14
+F01, F02, F03, F04, F05, F06, F07b (literature), F11b, F13, F14
 
 **In MVP but not required for pilot gate:**
 F07 (Explore), F08 (accounts), F09 (query history), F10 (export), F11 (query ratings), F12 (method suggestion)
@@ -782,19 +759,20 @@ F07 (Explore), F08 (accounts), F09 (query history), F10 (export), F11 (query rat
 
 | Phase | Goal | Depends on | Entry criteria |
 |---|---|---|---|
-| **0 — Bootstrap & Spec** | Repository, scaffold, spec.md complete | — | This document finalized; H2 + H5 validated by Karynn |
-| **1 — Core pipeline (months 0–3)** | Working extraction → retrieval loop locally; 25 seeded methods activated after Karynn review | Phase 0 complete; H2 + H5 validated | `spec.md` finalized; environments accessible; Karynn review complete |
-| **2 — Production web app (months 3–6)** | Full MVP feature set deployed; internal testing complete | Phase 1 pipeline validated locally | Phase 1 DoD met; all environments confirmed operational |
+| **0 — Bootstrap & Spec** ✅ | Repository, scaffold, spec.md complete | — | This document finalized; H2 + H5 validated by Karynn |
+| **1 — Core pipeline (months 0–3)** ✅ implemented | Working extraction → retrieval loop locally; 25 seeded methods activated after Karynn review | Phase 0 complete; H2 + H5 validated | `spec.md` finalized; environments accessible; Karynn review complete |
+| **1.5 — Literature search** ✅ implemented | PubMed ingestion + `/pubmed/analyze` + literature screens (ADR-025) | Phase 1 pipeline live | pgvector extension available on the DB |
+| **2 — Production web app (months 3–6)** in progress | Full MVP feature set deployed; internal testing complete | Phase 1 pipeline validated locally | Phase 1 DoD met; all environments confirmed operational |
 | **3 — Pilot (months 6–9)** | 5–10 users complete pilot protocol; ≥3/5 rate recommendations relevant | Phase 2 deployed and stable | M4 review passed; M5 protocol drafted |
 | **4 — Iteration & expansion (months 9–12)** | Expanded database; Full-scope features (F15–F18); publication prep | Pilot findings incorporated | Pilot go/no-go decision logged; blocker findings resolved |
 
 ---
 
-> **Status:** 🟢 Phases A–D complete. M2.5 Spec Sync applied. M3 Database sync applied.
-> Next: Phase 1 — core pipeline implementation.
+> **Status:** 🟢 Phases A–D complete. Phase 1 core pipeline, Explore + feedback, PubMed literature module, and admin toolchain implemented.
+> Next: Karynn method review (`active = TRUE`) and production deploy.
 > H2 + H5 partially addressed; formal checks required before declaring Tested.
 > `db/connection.py` uses asyncpg pool; migrations in `backend/app/db/migrations/`.
 
 ---
 
-*Populated at end of Module 2. Updated after Module 2.5 Spec Sync. Updated after M3 Database work.*
+*Populated at end of Module 2. Updated after Module 2.5 Spec Sync. Updated after M3 Database work. Updated after PubMed module + schema evolution.*

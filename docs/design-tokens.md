@@ -1,7 +1,7 @@
 # Design Tokens — 3R Assist
 
 > **Canonical visual source:** Ethos Research System (`UI design templates/Ethos Theme/ethos_research_system/DESIGN.md`)
-> **Implementation artifacts:** `design/tokens.css`, `design/tailwind.preset.js`
+> **Implementation artifacts:** `design/tokens.css` (CSS custom properties), `design/ethos-theme.css` (Tailwind v4 `@theme` bridge — used by the frontend), `design/tailwind.preset.js` (Tailwind v3 reference / non-v4 consumers)
 > Desvios no M3 requerem entrada no `execution-log.md`.
 
 ---

@@ -18,6 +18,7 @@ A user describes an experimental protocol in free text (Portuguese or English). 
 |---|---|---|
 | Animal ethics & welfare, data curation | Karynn | 4h/week |
 | Software development & AI integration | Leo | 4h/week |
+| RAG production, PubMed data ingestion | Felipe | 4h/week |
 
 Institutional backing: **Fórum Animal**.
 
@@ -27,11 +28,13 @@ Institutional backing: **Fórum Animal**.
 
 | Area | Status |
 |---|---|
-| Spec (Phases A–D) | Complete; synced with Explore + feedback split (ADR-024) |
-| UI design (Ethos theme) | Adopted; S1–S4 implemented |
-| Backend (FastAPI + PostgreSQL) | Core pipeline live; migrations through `044_feedback` |
+| Spec (Phases A–D) | Complete; synced with Explore + feedback split (ADR-024) and PubMed module (ADR-025) |
+| UI design (Ethos theme) | Adopted; S1–S4 + Literature + Admin implemented |
+| Backend (FastAPI + PostgreSQL) | Core pipeline + PubMed module live; 65 SQL migrations applied via `scripts/migrate.py` |
 | Phase 1 pipeline | Extraction → parameter review → search → results |
 | Explore (S4) | Methods / Regulations / Documents catalogue; card feedback |
+| Literature search | PubMed-backed alternatives search (`/pubmed/analyze`); pgvector ingestion pipeline |
+| Admin panel | Generic PostgreSQL table editor + LLM extraction toolchain for curation |
 | Methods database | Curated corpus; seed entries `active = FALSE` pending Karynn review |
 | General feedback (F11b) | Live on Explore (`POST /feedback`) |
 | Auth, history, export, F11 ratings | Specced; not yet wired for pilot |
@@ -46,13 +49,14 @@ Framework: AI-Assisted Project Development v1.5.
 
 ### Product flow (end user)
 
-1. **Analisar (S1)** — Paste a free-text protocol; submit.
+1. **Analisar (S1)** — Paste a free-text protocol (or upload PDF/HTML/TXT); submit.
 2. **Parameters (S2)** — Review extracted fields, confidence badges, and evidence highlights; edit if needed; confirm.
 3. **Results (S3)** — Browse ranked alternatives (3Rs, Match %, detail rows, jurisdictions, sources). Filter by 3Rs / jurisdiction when needed.
-4. **Explore (S4)** — Browse Methods / Regulations / Documents. Use **!** on a card to send feedback about that item.
-5. **Glossary / Info** — Domain terms and project background (nav).
+4. **Literature** — For each experiment, open the PubMed-backed literature analysis: endpoint hypothesis, animal-use necessity verdict, ranked supporting literature with citations.
+5. **Explore (S4)** — Browse Methods / Regulations / Documents. Use **!** on a card to send feedback about that item.
+6. **Glossary / Info** — Domain terms and project background (nav).
 
-Anonymous use is allowed. Accounts (magic link), query history, and export are for registered users when enabled.
+Anonymous use is allowed. Accounts (magic link), query history, and export are specced for registered users but not yet wired.
 
 ### Local development
 
@@ -72,6 +76,10 @@ Anonymous use is allowed. Accounts (magic link), query history, and export are f
 3. **Smoke / tests**
    - Backend smoke: `backend/scripts/smoke_test.py`.
    - Unit tests: `pytest` under `backend/tests/` (live LLM tests marked `@pytest.mark.live`).
+
+4. **Literature search (optional)**
+   - Requires pgvector (`CREATE EXTENSION vector` on the database) and ML deps (`pip install -r backend/requirements-ml.txt`).
+   - Ingest a PubMed baseline subset: `python scripts/run_pubmed_ingestion.py --max-files N` (from `backend/`).
 
 ### Key docs map
 
@@ -97,21 +105,23 @@ Anonymous use is allowed. Accounts (magic link), query history, and export are f
 
 - **Layered stack:** Presentation (routes / React) → Service → Repository / Adapter → Data.
 - **Backend:** Python + FastAPI; domain logic does not import infrastructure directly — inject LLM and DB clients.
-- **Data:** PostgreSQL only (`DATABASE_URL`, `asyncpg`). Repository pattern for methods; Active Record acceptable for simple user CRUD.
+- **Data:** PostgreSQL only (`DATABASE_URL`, `asyncpg`); raw SQL in repository modules; schema managed by numbered SQL migrations (no ORM).
+- **LLM:** provider-agnostic adapter (`llmcall`): Anthropic, OpenRouter, OpenAI, Gemini, xAI; local Ollama supported (`OLLAMA_MODEL`). Stub adapter when no key is set.
 - **API:** REST + OpenAPI; typed/expected failures in services (e.g. extraction miss), not bare 500s.
-- **Frontend:** React + Vite + Tailwind (Ethos tokens). Prefer local component state; escalate only when needed.
+- **Frontend:** React + Vite + Tailwind v4 (Ethos tokens via `design/ethos-theme.css`). Local component state + router state; no global store.
 - **Embeddings:** `sentence-transformers` / `all-MiniLM-L6-v2`; `SEMANTIC_RANKING=false` uses filter/keyword ranking (MVP default).
+- **Literature search:** PubMed abstracts indexed into `pubmed_abstracts` (pgvector); two-path retrieval (endpoint + method embeddings).
 
 ### Product & UX
 
-- Nav: **Analisar**, **Explore**, **Glossary**, **Info**. Method suggestion (S6) is via results/footer, not primary nav (ADR-008 / ADR-024).
+- Nav: **Analisar**, **Explore**, **Literature**, **Glossary**, **Info**, plus **Admin** (curation). Method suggestion (S6) is via results/footer, not primary nav (ADR-008 / ADR-024).
 - S2 is a **gate** — search runs only after the user confirms/edits parameters.
 - Multi-experiment protocols use tabs on S2/S3 (`experiments[]`).
 - Extraction: LLM returns `study_type` + evidence; app maps to `endpoint_category` via lookup (no LLM inference for DB category).
-- Result / method cards show detail rows when present: animal use, test system, endpoint, routes, study domain.
+- Result / method cards show detail rows when present: animal use, test system, endpoint, routes, application.
 - Result cards with Match ≤ 65% render at reduced opacity.
 - Two feedback channels: general (`feedback` / F11b on Explore) vs query ratings (`query_feedback` / F11, deferred).
-- UI copy is bilingual (PT/EN).
+- UI copy is bilingual (PT/EN). Localized DB values use JSONB `{"en-us", "pt-br"}`.
 
 ### Domain language
 

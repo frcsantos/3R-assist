@@ -6,3 +6,5 @@ Exemplos de endpoint: irritação ocular, corrosão cutânea, sensibilização c
 **Metodologia:** Um desenho experimental ou estratégia mais ampla que responde a uma pergunta de pesquisa, potencialmente combinando ou sequenciando múltiplos métodos — ex.: uma IATA (Integrated Approach to Testing and Assessment) que combina in silico + in vitro + confirmação in vivo, ou um desenho de estudo comportamental completo.
 
 **Rota:** Descreve como a substância de teste entra em contato com o sistema biológico — não o tipo de sistema biológico - nos métodos de substituição ele refere a quais rotas do protocolo original este método é compatível para substituir — use null quando for compatível com qualquer rota.
+
+**Aplicação (application):** Finalidade ou uso pretendido de um estudo ou método (ex.: pesquisa básica, uso regulatório, ensino). Antigo “domínio do estudo” (study_domain).

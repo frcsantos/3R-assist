@@ -18,6 +18,8 @@ Engine: PostgreSQL via Neon (Vercel Postgres) or a local PostgreSQL instance. Dr
 | [feedback](#feedback) | General user feedback (page URL, subject, message) |
 | [suggestions](#suggestions) | User-submitted method suggestions for curation |
 | [documents](#documents) | Catalogue of source documents (protocols, guidelines, regulations) |
+| [pubmed_abstracts](#pubmed_abstracts) | Indexed PubMed abstracts for literature search (pgvector) |
+| [pubmed_ingested_files](#pubmed_ingested_files) | Bookkeeping of ingested PubMed baseline files |
 | [schema_migrations](#schema_migrations) | Applied migration filenames |
 
 ---
@@ -283,6 +285,43 @@ Internal bookkeeping for applied SQL migration files. Created by `backend/app/db
 
 ---
 
+## pubmed_abstracts
+
+Indexed PubMed abstracts backing the literature search (`POST /pubmed/analyze`). Created by migration `009_pubmed_abstracts.sql`; requires the `vector` extension (pgvector). Filled by `scripts/run_pubmed_ingestion.py`.
+
+| Column | Type | Nullable | Default | Description |
+| --- | --- | --- | --- | --- |
+| `pmid` | `TEXT` | NO | — | Primary key. PubMed article ID. |
+| `title` | `TEXT` | NO | — | Article title. |
+| `authors` | `JSONB` | NO | `'[]'` | Array of author objects (last name, fore name, affiliation, display name). |
+| `institutions` | `JSONB` | NO | `'[]'` | Array of affiliation strings. |
+| `pub_year` | `SMALLINT` | YES | — | Publication year. |
+| `pub_month` | `SMALLINT` | YES | — | Publication month. |
+| `journal` | `TEXT` | YES | — | Journal name. |
+| `abstract_text` | `TEXT` | NO | — | Full abstract text. |
+| `endpoint_text` | `TEXT` | NO | — | Background / objective / conclusions sections (search Path A). |
+| `method_text` | `TEXT` | NO | — | Methods / results sections (search Path B). |
+| `mesh_terms` | `JSONB` | NO | `'[]'` | MeSH term strings (GIN-indexed). |
+| `cluster` | `TEXT` | NO | — | Ingestion filter cluster that matched (`3rs`, `in_vitro`, `in_silico`, `validated_tests`, `botulinum`). |
+| `endpoint_embedding` | `VECTOR(384)` | YES | — | Embedding of title + `endpoint_text`; searched by Path A. |
+| `method_embedding` | `VECTOR(384)` | YES | — | Embedding of `method_text`; searched by Path B. |
+| `indexed_at` | `TIMESTAMPTZ` | NO | `NOW()` | Ingestion time. |
+
+**Indexes:** btree on `pub_year DESC NULLS LAST`; GIN on `mesh_terms` and `cluster`. IVFFlat vector indexes (`pubmed_endpoint_embedding_idx`, `pubmed_method_embedding_idx`, cosine operator, lists=1000) are created manually once the table exceeds ~10k rows — not by a migration.
+
+---
+
+## pubmed_ingested_files
+
+Ingestion bookkeeping. Created at runtime by `PubMedRepository.ensure_ingestion_table()` (not a numbered migration) so `run_pubmed_ingestion.py` can skip files it has already ingested.
+
+| Column | Type | Nullable | Default | Description |
+| --- | --- | --- | --- | --- |
+| `filename` | `TEXT` | NO | — | Primary key. Baseline/update file name. |
+| `ingested_at` | `TIMESTAMPTZ` | NO | `NOW()` | When the file finished ingesting. |
+
+---
+
 ## Entity relationship overview
 
 ```mermaid
@@ -306,6 +345,7 @@ Migrations that define or alter these tables:
 | Migration | Tables |
 | --- | --- |
 | `001_initial.sql` | `methods`, `method_regulatory_contexts`, `method_keywords` (keywords later folded into `methods`) |
+| `002b_shared_functions.sql` | shared trigger function (`set_updated_at`) |
 | `002_app_tables.sql` | `users`, `magic_link_tokens`, `queries`, `feedback`, `suggestions` |
 | `003_vocabulary_tables.sql` | `endpoints`, `routes`, `study_domains`, `route_endpoints` |
 | `004_rename_study_domain.sql` | renames legacy `application_area` / `application_areas` |
@@ -313,6 +353,7 @@ Migrations that define or alter these tables:
 | `006_route_other.sql` | seeds `routes.other` |
 | `007_add_3r_rationale_columns.sql` | adds `replacement_rationale`, `reduction_rationale`, `refinement_rationale` (ADR-023 step 1) |
 | `009_add_mvc_purpose.sql` | adds `purpose` to `method_regulatory_contexts` (before `regulatory_body`) |
+| `009_pubmed_abstracts.sql` | creates `pubmed_abstracts` (requires pgvector `vector` extension) |
 | `010_add_mvc_regulatory_status.sql` | adds `regulatory_status` to `method_regulatory_contexts` (`not_approved` \| `approved` \| `recommended` \| `mandatory`) |
 | `011_mvc_purpose_status_comments.sql` | column comments for `purpose` and `regulatory_status` |
 | `012_mvc_regulation_date.sql` | replaces `regulatory_ref` with `regulation_date` on `method_regulatory_contexts` |
@@ -367,4 +408,6 @@ Migrations that define or alter these tables:
 | `061_applications_replace_study_domain.sql` | adds `applications`; `methods.study_domain` → `application`; drops `study_domains` |
 | `062_routes_applications_id.sql` | adds unique integer `id` on `routes` and `applications` |
 | `063_methods_application_route_ids.sql` | `methods.application` → `application_ids`; `routes_applicable` → `INTEGER[]` |
+| `064_fix_regulatory_endpoints.sql` | fixes `regulations.regulatory_endpoints` values |
+| `065_fix_tg442b_doc_tg456_endpoint.sql` | fixes TG 442B source document and TG 456 endpoint reference |
 | `manual/008_drop_category_3r.sql` | legacy gated DROP of `category_3r` (superseded by `026`) |

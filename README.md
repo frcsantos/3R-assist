@@ -36,13 +36,12 @@ Institutional backing: **Fórum Animal**
 | `docs/execution-log.md` | Narrative deviation log (updated during development) |
 | `docs/tables.md` | Database schema reference |
 | `docs/info.md` | Living product + how-to-run summary |
-| `/design/` | Mockups, prototypes, component inventory |
-| `/prompts/` | AI prompt library |
-| `/validation/` | User validation session notes and reports |
+| `/design/` | Tokens, Ethos theme, component inventory |
+| `/notebooks/` | LLM experiment notebooks |
 
 ## Status
 
-🟢 Phase 1 core pipeline live (analyze → parameters → search → results). Explore catalogue + general feedback shipped. Methods remain inactive pending Karynn review before pilot.
+🟢 Phase 1 core pipeline live (analyze → parameters → search → results). Explore catalogue + general feedback shipped. PubMed literature search module + admin curation tooling shipped. Methods remain inactive pending Karynn review before pilot.
 
 ---
 

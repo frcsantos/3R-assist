@@ -29,7 +29,7 @@ Escalate to **Microservices** only if independent deployment of components is a 
 - Domain logic does not import infrastructure (databases, HTTP clients, file system) directly. These are injected.
 - **Heuristic:** If a module is hard to unit test without a real database or network call, the boundary is wrong.
 
-> **3R Assist context:** The LLM client (Anthropic API) and the embedding model are infrastructure — they must be injected into the extraction and retrieval services, not imported directly. This keeps both testable with mocks.
+> **3R Assist context:** The LLM client (provider-agnostic `LLMAdapter`: llmcall / Ollama / stub) and the embedding model are infrastructure — they must be injected into the extraction and retrieval services, not imported directly. This keeps both testable with mocks.
 
 ---
 
@@ -40,8 +40,8 @@ Escalate to **Microservices** only if independent deployment of components is a 
 **Acceptable shortcut:** Active Record for simple CRUD apps with no meaningful domain logic. Must be declared explicitly if chosen.
 
 > **3R Assist context:** Two data domains:
-> 1. **Methods database** (curated alternatives) — Repository pattern. Query logic (semantic search + structured filters) must be encapsulated here, not in the service layer.
-> 2. **User data** (accounts, query history, feedback) — Active Record acceptable given simple CRUD nature. Decision deferred to M2 Phase B; log as ADR if Active Record is chosen.
+> 1. **Methods database** (curated alternatives) — Repository pattern with **raw SQL over asyncpg** (no ORM; see ADR-006). Query logic (semantic search + structured filters) is encapsulated in `app/repositories/methods.py`.
+> 2. **User data** (accounts, query history, feedback) — simple repositories (`users.py` is currently a stub; auth not wired). Active Record acceptable given simple CRUD nature.
 
 ---
 
@@ -55,7 +55,7 @@ Escalate to **gRPC** if schema enforcement and binary performance are critical.
 
 In all cases: define the contract before writing any handler code.
 
-> **3R Assist context:** REST is appropriate. GraphQL: N/A. gRPC: N/A. OpenAPI spec must be written in M2 Phase C before any handler is implemented.
+> **3R Assist context:** REST is appropriate. GraphQL: N/A. gRPC: N/A. API contracts are defined in `spec.md` §2.11; OpenAPI is auto-generated from FastAPI route type annotations. Error envelope: `{error: {code, message, detail}}`.
 
 ---
 
@@ -69,7 +69,7 @@ Local component state → Context API / Zustand → Redux / Jotai
 
 Start at local state. Move up only when complexity justifies it.
 
-> **3R Assist context:** Frontend framework TBD in M2 Phase B. Apply this pattern regardless of framework. Expected state complexity is low at MVP — local state should suffice for most surfaces.
+> **3R Assist context:** Frontend is React 19 + Vite (ADR-003). State stays at local component level and flows through router `location.state`; no global store is used. Escalate only when a real pain point appears.
 
 ---
 
@@ -109,7 +109,7 @@ Event emitters only for genuinely event-driven flows. Callbacks only when wrappi
 
 Within tests: AAA (Arrange-Act-Assert) structure, one assertion concept per test. Test observable behavior, not implementation details.
 
-> **3R Assist context (Minimal tier):** CI is optional per ADR-001. Manual smoke-test script is the baseline. Testing framework selection deferred to M3.0 prerequisites and logged as an ADR. Priority test surfaces: parameter extraction (H3), retrieval ranking, feedback submission.
+> **3R Assist context (Minimal tier):** CI is optional per ADR-001. Manual smoke-test script is the baseline (`backend/scripts/smoke_test.py`). Testing framework: **pytest**; live LLM tests behind the `@pytest.mark.live` marker; frontend uses Node's built-in test runner (`npm test`). Priority test surfaces: parameter extraction (H3), retrieval ranking, feedback submission.
 
 ---
 

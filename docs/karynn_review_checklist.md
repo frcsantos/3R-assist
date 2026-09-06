@@ -89,12 +89,16 @@ Métodos mapeados de `study_domain = 'general'` receberam `application_ids` → 
 Os contextos `eu` não foram seeded por falta de referência específica confirmada. Após verificar contra EU Cosmetics Regulation 1223/2009 (para métodos relevantes para cosméticos) e REACH Annex (para químicos industriais), inserir:
 
 ```sql
-INSERT INTO method_regulatory_contexts
+INSERT INTO regulations
     (method_id, jurisdiction, validation_status, regulatory_body, regulation_date, regulatory_citation)
 VALUES
     ((SELECT id FROM methods WHERE slug='<slug>'),
-     'general', 'eu', 'validated', 'ECHA', 'YYYY-MM-DD', '<URL>');
+     '{"en-us": "EU", "pt-br": "UE"}'::jsonb, 'validated', 'ECHA', 'YYYY-MM-DD', '<URL>');
 ```
+
+> A tabela de contextos chama-se `regulations` (antiga `method_regulatory_contexts`).
+> `jurisdiction`, `regulatory_body` e `regulatory_citation` são JSONB localizados `{"en-us", "pt-br"}`.
+> `validation_status` nesta tabela usa: `validated` \| `in_process_of_validation` \| `not_validated`.
 
 Métodos com maior probabilidade de contexto EU validado:
 - TG 432 (3T3 NRU): EU Cosmetics Reg 1223/2009 Annex — fototoxicidade obrigatória para cosméticos
@@ -152,13 +156,14 @@ As colunas `keywords` em `methods` (`{"en-us": [...], "pt-br": [...]}`) são um 
 ### Template de contexto para INSERT
 
 ```sql
-INSERT INTO method_regulatory_contexts
+INSERT INTO regulations
     (method_id, jurisdiction, validation_status,
      regulatory_body, regulation_date, regulatory_citation, notes)
 VALUES
     ((SELECT id FROM methods WHERE slug='<slug>'),
-     '<jurisdiction>', '<validation_status>',
-     '<regulatory_body>', 'YYYY-MM-DD', '<citation>', '<notes>');
+     '{"en-us": "<jurisdiction>", "pt-br": "<jurisdição>"}'::jsonb, '<validation_status>',
+     '{"en-us": "<regulatory_body>", "pt-br": "<órgão>"}'::jsonb, 'YYYY-MM-DD',
+     '{"en-us": "<citation>", "pt-br": "<citação>"}'::jsonb, '<notes>');
 ```
 
 ---
@@ -486,4 +491,5 @@ VALUES
 
 ---
 
-*Criado em M3. Atualizado com study_domain (ADR-020), method_regulatory_contexts (ADR-022), colunas `*_rationale` por R (ADR-023; supersede ADR-021).*
+*Criado em M3. Atualizado com study_domain (ADR-020), method_regulatory_contexts (ADR-022), colunas `*_rationale` por R (ADR-023; supersede ADR-021).
+Atualização M3+: tabela de contextos renomeada para `regulations` (migração 032); `jurisdiction`/`regulatory_body`/`regulatory_citation` são JSONB localizados; `regulatory_endpoints` é `INTEGER[]` de `endpoints.id`; `methods.endpoints` é `INTEGER[]` (não mais `endpoint_category TEXT`). SQL do `ncit_id` deve usar `endpoints` (JOIN via `methods.endpoints`), não `endpoint_category`.*

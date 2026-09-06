@@ -72,6 +72,8 @@ All compressions applied must be documented in `execution-log.md`.
 
 **Decision:** React 18 + Vite, deployed as a static SPA on Vercel.
 
+> **Implementation note (2026):** the frontend currently runs React 19 (upgraded via routine dependency updates); the SPA-on-Vercel decision stands.
+
 **Context:** Frontend framework selection (M2.5 Stack).
 
 **Pattern baseline:** `patterns.md` → Frontend State Management.
@@ -589,3 +591,26 @@ Inicialmente TEXT (migração `007`); depois localizadas como JSONB `{"en-us","p
 - Docs: `tables.md`, `spec.md` workflows W2/W4a/W4b, OpenAPI `POST /feedback` contract.
 - Frontend: `FeedbackModal` on Explore; Result cards show `animal_use` / `test_system` / route / domain detail rows.
 - ADR-008 revised for Explore + supporting nav items.
+
+---
+
+## ADR-025 — PubMed literature search module (pgvector + two-path retrieval)
+
+**Decision:** Add a literature-search surface powered by a locally indexed PubMed corpus:
+
+1. New `pubmed` package (`pubmed/` under `backend/`) with its own models, repository, services, prompts, and ingestion pipeline — no changes to the core `app/` retrieval path.
+2. Storage: `pubmed_abstracts` table (migration `009_pubmed_abstracts.sql`) using the pgvector `vector(384)` type; embeddings produced by the same `sentence-transformers` `all-MiniLM-L6-v2` model used for methods.
+3. Ingestion: `scripts/run_pubmed_ingestion.py` — FTP download from NCBI (baseline/updatefiles, MD5-verified), keyword-cluster filtering (`3rs`, `in_vitro`, `in_silico`, `validated_tests`, `botulinum`), streaming XML parse that splits abstracts into `endpoint_text` (background/objective/conclusions) vs `method_text` (methods/results), then embed + upsert in batches.
+4. Retrieval: two paths merged by PMID — **Path A** searches `endpoint_embedding` with an LLM-generated neutral endpoint description; **Path B** searches `method_embedding` with one LLM-proposed alternative query per 3R class (top-k replacement 15 / reduction 10 / refinement 5). Top 10 merged candidates are LLM re-ranked; 3R weights replacement ×1.00 > reduction ×0.65 > refinement ×0.35; cosine-only fallback (≥ 0.5).
+5. API: `POST /pubmed/analyze` (returns necessity verdict, endpoint hypothesis, ranked recommendations, cited ≤200-word summary, `total_candidates_searched`) and `GET /pubmed/status`. Frontend: `/literature` (CTA from Results) and `/literature-search` (standalone).
+
+**Context:** Pilot users need evidence beyond the curated methods corpus: does literature support replacing/reducing this animal use, and how confident is the necessity verdict? PubMed is the natural public source; embedding the corpus locally avoids per-query API costs.
+
+**Rationale:** Two separate embedding columns (endpoint vs method) support two qualitatively different questions (what endpoint is being studied vs what alternative method could replace it). Storing only cluster-filtered records keeps the vector index tractable (full baseline ≈ 37M records; filtered corpus is a small fraction). IVFFlat indexes are created manually once >10k rows are ingested.
+
+**Reversibility:** High — isolated module; dropping the table + router removes the feature without touching the core pipeline.
+
+**Consequences:**
+- `backend/requirements.txt` unchanged for the API; pgvector extension required on the database (`CREATE EXTENSION vector`).
+- `NecessityService.assess` verdict exists in models but is **not yet wired** into `PubMedAnalysisResponse` (`necessity` currently `null` in API output) — wire before pilot claims necessity support.
+- Docs: `tables.md` (pubmed tables), `spec.md` (F19 split — real-time ingestion remains Phase 4; local batch ingestion shipped earlier), `info.md`, `execution-log.md`.

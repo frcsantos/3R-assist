@@ -132,3 +132,36 @@ H2 and H5 remain formally Untested in `assumption-log.md` until the structured c
 | Result cards | Detail rows: animal use, test system, endpoint, routes, study domain |
 
 **Still open for pilot:** methods `active = TRUE`; S3 export / F11 ratings / suggest; `QueryRepository`; H1/H2/H5 formal checks.
+
+## M3+ — Vocabularies as tables, schema stabilization (2026-08)
+
+| Area | Change |
+|---|---|
+| Documents catalogue | `documents` table (027–035): localized `doc_citation`, `categories` JSONB, `institution` |
+| Endpoints | `endpoints` rebuilt as a 54-row hierarchical OECD catalogue with `parent_id`, `code`, `external_oht_codes` (036, 052–054) |
+| Methods endpoints | `endpoint_category TEXT` → `endpoints INTEGER[]` (048–051, 057) |
+| Routes | `routes.code` → `slug`; catalogue replaced; `dermal` remapped to `cutaneous` (059); `route_endpoints` dropped in favor of `routes.compatible_endpoints` (058, 060) |
+| Applications | `study_domains` replaced by `applications` (061); unique integer `id` added to `routes`/`applications` (062); `methods.application` → `application_ids`, `routes_applicable` → `INTEGER[]` (063) |
+| Fix-ups | `regulations.regulatory_endpoints` fixes (064); TG 442B doc + TG 456 endpoint fixes (065) |
+
+## M3+ — PubMed literature search module (2026)
+
+| Area | Change |
+|---|---|
+| Module | `pubmed/` package: models, pgvector repository, retrieval + necessity services, ingestion pipeline |
+| Storage | `pubmed_abstracts` table (migration 009_pubmed_abstracts; pgvector `vector(384)` columns) |
+| Ingestion | `scripts/run_pubmed_ingestion.py`: FTP download (baseline/updatefiles, MD5-verified) → cluster-filtered parse → embed (all-MiniLM-L6-v2) → upsert |
+| Retrieval | Two-path: Path A endpoint-description search (`endpoint_embedding`); Path B per-3R-class method search (`method_embedding`); LLM re-ranking of top 10 |
+| API | `POST /pubmed/analyze` (necessity verdict + endpoint hypothesis + ranked literature + cited summary); `GET /pubmed/status` |
+| Frontend | `/literature` (from Results CTA) + standalone `/literature-search`; `LiteratureSummary`, `PubMedResultCard`, `NecessityBanner` |
+
+## M3+ — Admin toolchain (2026)
+
+| Area | Change |
+|---|---|
+| Database browser | Generic PostgreSQL table editor on `/admin` (browse/sort/page/inline edit/add/delete/CSV export/column comments) via `AdminRepository` |
+| Doc extraction | LLM extraction pipeline for curation: resolve URL / upload file → cost estimate → policy, document, method, regulation draft extraction → match against DB |
+| Project docs | `/admin` docs section renders `docs/*.md` |
+| Settings | `/admin` settings shows `app_env` + resolved LLM model |
+
+**Note:** admin endpoints are currently open (no auth). Flagged for review before public deploy.

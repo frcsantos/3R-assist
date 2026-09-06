@@ -2,6 +2,7 @@
 > Version: MVP (Phase 1–2)
 > Owner: Leo (implementation) · Karynn (vocabulary validation)
 > Reference: spec.md §2.3 S2, §2.11 POST /analyze; decisions.md ADR-007
+> Code reference: `backend/app/models/protocol.py` (`RawExtraction`, `ExtractionResult`, `AnalyzeResponse`)
 
 ---
 
@@ -38,8 +39,8 @@ Campos **display** são extraídos em linguagem natural e exibidos sem normaliza
 
 ### 3.1 `endpoint_category`
 
-Vocabulário compartilhado entre o modelo de extração e a tabela `methods`.
-O LLM deve mapear a descrição do protocolo para um desses valores.
+Vocabulário compartilhado entre o modelo de extração e a tabela `endpoints` (hierarquia OECD de 54 endpoints; `methods.endpoints` referencia `endpoints.id`).
+O LLM **não** escreve este campo — ele sai do lookup table §4.1 sobre `study_type`. O vocabulário legado abaixo (16 slugs) continua sendo a interface do protocolo; slugs são normalizados para a hierarquia nova via aliases (`acute-toxicity` → `acute-systemic-toxicity`, `ocular-irritation` → `eye-irritation`, `skin-absorption` → `dermal-absorption`, `bacterial-endotoxin` → `bacterial-endotoxins`, `toxicokinetics` → `toxicokinetic-properties`).
 Se o protocolo não se encaixar em nenhum: `null` (o usuário corrige no S2).
 
 | Valor | Engloba | Métodos no banco (TG) |
@@ -168,22 +169,17 @@ Normalizar para identificação no S2. Não usado em filtros.
 > Mudança de contrato — qualquer alteração adicional requer novo ADR.
 
 ```python
-# app/domain/extraction.py
-
-from dataclasses import dataclass
-from typing import Optional
+# backend/app/models/protocol.py — resumo (implementação real em Pydantic v2)
 
 # ── Stage 1: LLM output ──────────────────────────────────────────────────────
 
-@dataclass
-class AnimalCounts:
-    female:    Optional[int]   # explicitly stated female count
-    male:      Optional[int]   # explicitly stated male count
-    total:     Optional[int]   # explicitly stated total (not derived)
-    per_group: Optional[int]   # explicitly stated per-group n
+class AnimalCounts(BaseModel):
+    female:    int | None    # explicitly stated female count
+    male:      int | None    # explicitly stated male count
+    total:     int | None    # explicitly stated total (not derived)
+    per_group: int | None    # explicitly stated per-group n
 
-@dataclass
-class RawExtraction:
+class RawExtraction(BaseModel):
     """Direct LLM output. Strict extraction only — no inference.
     Every field that is not explicitly stated in the text must be null.
     Evidence strings are mandatory when the field is non-null.
@@ -192,53 +188,51 @@ class RawExtraction:
     study_type:                  str            # free text, e.g. "prenatal developmental toxicity"
                                                 # no controlled vocabulary — describe what you see
 
-    route:                       Optional[list[str]]
-    route_evidence:              Optional[str]
-    route_confidence:            Optional[Literal["high","medium","low"]]  # null if route is null
+    route:                       list[str] | None
+    route_evidence:              str | None
+    route_confidence:            ConfidenceLevel | None   # null if route is null
 
     application:                 str            # §3.3 slug; 'basic-research' if not determinable
-    application_evidence:        Optional[str]
-    application_confidence:      Optional[Literal["high","medium","low"]]
+    application_evidence:        str | None
+    application_confidence:      ConfidenceLevel | None
 
-    procedure_text:              Optional[str]  # max 30 words; English
-    procedure_text_evidence:     Optional[str]
-    procedure_text_confidence:   Optional[Literal["high","medium","low"]]
+    procedure_text:              str | None     # max 30 words; English
+    procedure_text_evidence:     str | None
+    procedure_text_confidence:   ConfidenceLevel | None
 
-    species:                     Optional[str]  # §3.4 controlled vocab
-    species_evidence:            Optional[str]
-    species_confidence:          Optional[Literal["high","medium","low"]]  # null if species is null
+    species:                     str | None     # §3.4 controlled vocab
+    species_evidence:            str | None
+    species_confidence:          ConfidenceLevel | None   # null if species is null
 
-    animal_counts:               Optional[AnimalCounts]
-    animal_counts_evidence:      Optional[str]  # single string covering all subfields
-    animal_counts_confidence:    Optional[Literal["high","medium","low"]]  # null if animal_counts is null
+    animal_counts:               AnimalCounts | None
+    animal_counts_evidence:      str | None     # single string covering all subfields
+    animal_counts_confidence:    ConfidenceLevel | None   # null if animal_counts is null
 
-    regulatory:                  Optional[bool]
-    regulatory_evidence:         Optional[str]
-    regulatory_confidence:       Optional[Literal["high","medium","low"]]  # null if regulatory is null
+    regulatory:                  bool | None
+    regulatory_evidence:         str | None
+    regulatory_confidence:       ConfidenceLevel | None   # null if regulatory is null
 
-    notes:                       Optional[str]  # free-text; anything the structured
+    notes:                       str | None     # free-text; anything the structured
                                                 # fields cannot represent; null if
                                                 # nothing needs flagging
 
 # ── Stage 2: application code output ─────────────────────────────────────────
 
-@dataclass
-class ExtractionResult:
+class ExtractionResult(BaseModel):
     """Produced by ExtractionService after LLM call.
     endpoint_category is never written by the LLM."""
 
     raw:               RawExtraction
-    endpoint_category: Optional[str]   # mapped from raw.study_type via §4.1 lookup;
-                                        # null if study_type not in table
+    endpoint_category: str | None   # mapped from raw.study_type via §4.1 lookup;
+                                    # null if study_type not in table
 
-@dataclass
-class AnalyzeResponse:
+class AnalyzeResponse(BaseModel):
     experiments: list[ExtractionResult]  # min length 1; ordered by centrality to
-                                          # stated objective / per-field confidence.
-                                          # Phase 1: S2/S3 tabs for all experiments;
-                                          # POST /search runs per experiment (ADR-019).
-                                          # QueryRepository stores experiments[0]
-                                          # only until Phase 2.
+                                         # stated objective / per-field confidence.
+                                         # Phase 1: S2/S3 tabs for all experiments;
+                                         # POST /search runs per experiment (ADR-019).
+                                         # QueryRepository stores experiments[0]
+                                         # only until Phase 2.
 ```
 
 ---
@@ -347,15 +341,19 @@ Regras:
 2. SOFT FILTER: route
    → Se protocol.route is not None:
        incluir methods WHERE (routes_applicable IS NULL
-                              OR route_codes contém qualquer rota de protocol.route)
+                              OU route_codes contém qualquer rota de protocol.route)
    → Matching usa slugs (`route_codes`); no banco `routes_applicable` é INTEGER[] de `routes.id`
+   → Slugs catch-all (`other`, `multiple`, `not-applicable`, `unspecified`) NÃO participam do filtro
    → Se None: sem filtro de via
 
 3. SOFT FILTER: application
    → Protocolo envia slug `application`; métodos têm `application_ids` (INTEGER[]) e `application_codes`
 
-4. RANKING: cosine_similarity(protocol_embedding, method.embedding_json)
-   → Calcular sobre os métodos que passaram nos filtros 1–3
+4. RANKING (default do MVP: `SEMANTIC_RANKING=false`):
+   → Score heurístico filter-only: base 0.5 + bônus por parâmetro casado + overlap de tokens
+     de `procedure_text` contra `text_for_embedding`/name/description/keywords do método
+   → Com `SEMANTIC_RANKING=true`: cosine_similarity(protocol_embedding, method.embedding_json)
+     sobre os métodos que passaram nos filtros 1–3
    → Retornar todos, ordenados por score DESC
    → Frontend aplica opacidade para scores ≤ 65% (ADR-011)
 
