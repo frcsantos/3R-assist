@@ -39,7 +39,7 @@ class NecessityService:
         prompt = build_necessity_prompt(
             protocol_text=protocol_text,
             endpoint_category=params.endpoint_category,
-            study_domain=params.study_domain,
+            study_domain=params.application,
             species=params.species,
             route=params.route,
             procedure_text=params.procedure_text,

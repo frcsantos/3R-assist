@@ -38,19 +38,9 @@ tell application \"Terminal\"
     do script \"echo '=== BACKEND ===' && cd '$PROJECT/backend' && PYTHONDONTWRITEBYTECODE=1 $UVICORN app.main:app --reload --host 127.0.0.1 --port 8000\"
 end tell"
 
-echo "==> Opening frontend (port 5173)..."
-osascript -e "
-tell application \"Terminal\"
-    activate
-    do script \"echo '=== FRONTEND ===' && cd '$PROJECT/frontend' && $NPM run dev\"
-end tell"
-
-echo "==> Waiting for servers to start..."
-sleep 4
-
-echo "==> Opening browser..."
-open http://localhost:5173
+echo "==> Waiting for backend to start..."
+sleep 3
 
 echo ""
-echo "Done. App is at http://localhost:5173"
+echo "Done. App is at https://assist3r.com"
 echo "To restart: run ./start.sh again (kills old processes first)."

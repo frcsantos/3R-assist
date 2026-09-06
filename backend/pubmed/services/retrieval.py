@@ -320,7 +320,7 @@ class PubMedRetrievalService:
     ) -> list[dict] | None:
         prompt = build_ranking_prompt(
             endpoint_category=params.endpoint_category,
-            study_domain=params.study_domain,
+            study_domain=params.application,
             procedure_text=params.procedure_text,
             endpoint_hypothesis=endpoint_hypothesis,
             candidates=candidates,
@@ -467,7 +467,7 @@ class PubMedRetrievalService:
 
         prompt = build_summary_prompt(
             endpoint_category=params.endpoint_category,
-            study_domain=params.study_domain,
+            study_domain=params.application,
             procedure_text=params.procedure_text,
             recommendations=llm_input,
         )
@@ -555,7 +555,7 @@ class PubMedRetrievalService:
         prompt = build_alternative_query_prompt(
             protocol_text=enriched_text,
             endpoint_category=params.endpoint_category,
-            study_domain=params.study_domain,
+            study_domain=params.application,
             species=params.species,
             route=params.route,
             procedure_text=params.procedure_text,
@@ -653,6 +653,6 @@ class PubMedRetrievalService:
             parts.append(params.endpoint_category.replace("_", " "))
         if params.procedure_text:
             parts.append(params.procedure_text)
-        if params.study_domain and params.study_domain != "general":
-            parts.append(params.study_domain.replace("_", " "))
+        if params.application and params.application != "general":
+            parts.append(params.application.replace("_", " "))
         return " ".join(parts) if parts else "toxicology endpoint assessment"

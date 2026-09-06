@@ -26,18 +26,25 @@ async def lifespan(_app: FastAPI):
         except Exception as e:
             print(f"Database pool unavailable: {e}")
 
-    # Eagerly load the embedding model so the first request isn't slow
     import asyncio
-    await asyncio.get_event_loop().run_in_executor(None, lambda: get_embedder().embed("warmup"))
 
-    # Warm up Ollama so the model is loaded before the first real request
-    if get_settings().ollama_model:
-        from app.adapters.llm import OllamaLLMAdapter
-        _ollama = OllamaLLMAdapter(model=get_settings().ollama_model)
-        await asyncio.get_event_loop().run_in_executor(
-            None, lambda: _ollama.call("warmup", max_tokens=1)
-        )
+    async def _warmup():
+        loop = asyncio.get_event_loop()
+        try:
+            await loop.run_in_executor(None, lambda: get_embedder().embed("warmup"))
+            print("Embedder warmed up.")
+        except Exception as e:
+            print(f"Embedder warmup failed: {e}")
+        if get_settings().ollama_model:
+            from app.adapters.llm import OllamaLLMAdapter
+            _ollama = OllamaLLMAdapter(model=get_settings().ollama_model)
+            try:
+                await loop.run_in_executor(None, lambda: _ollama.call("warmup", max_tokens=1))
+                print("Ollama warmed up.")
+            except Exception as e:
+                print(f"Ollama warmup failed: {e}")
 
+    asyncio.create_task(_warmup())
     yield
     if pool is not None:
         await close_pool()
