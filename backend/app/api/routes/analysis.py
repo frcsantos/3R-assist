@@ -7,7 +7,7 @@ from app.api.errors import ErrorEnvelope, error_response
 from app.models.protocol import AnalyzeRequest, AnalyzeResponse
 from app.services.extraction import ExtractionService
 
-router = APIRouter(tags=["analysis"], dependencies=[Depends(require_admin_token)])
+router = APIRouter(tags=["analysis"])
 
 
 @router.post(
