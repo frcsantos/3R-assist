@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 from app.adapters.llm import ExtractionError
-from app.api.deps import get_extraction_service, require_admin_token
+from app.api.deps import get_extraction_service
 from app.api.errors import ErrorEnvelope, error_response
 from app.models.protocol import AnalyzeRequest, AnalyzeResponse
 from app.services.extraction import ExtractionService
