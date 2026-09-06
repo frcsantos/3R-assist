@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 from app.models.recommendation import Recommendation
 
@@ -18,20 +18,129 @@ EndpointCategory = Literal[
     "genotoxicity",
     "pyrogenicity",
     "skin_absorption",
+    "reproductive_toxicity",
+    "endocrine_activity",
+    "photoreactivity",
+    "aquatic_toxicity",
+    "toxicokinetics",
+    "bacterial_endotoxin",
+    "rabies_diagnosis",
 ]
 
+
+def normalize_endpoint_slug(value: str | None) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    slug = text.replace("_", "-")
+    return _ENDPOINT_SLUG_ALIASES.get(slug, slug)
+
+
+_ENDPOINT_SLUG_ALIASES = {
+    "acute-toxicity": "acute-systemic-toxicity",
+    "ocular-irritation": "eye-irritation",
+    "skin-absorption": "dermal-absorption",
+    "bacterial-endotoxin": "bacterial-endotoxins",
+    "toxicokinetics": "toxicokinetic-properties",
+}
+
 Route = Literal[
-    "oral",
-    "intraperitoneal",
-    "intravenous",
-    "dermal",
-    "ocular",
+    "cutaneous",
     "inhalation",
-    "in_vitro",
+    "oral",
+    "ocular",
+    "intranasal",
+    "intratracheal",
+    "intravenous",
+    "intra-arterial",
+    "intramuscular",
+    "subcutaneous",
+    "intradermal",
+    "intraperitoneal",
+    "rectal",
+    "vaginal",
+    "topical-mucosal",
+    "implantation",
+    "multiple",
+    "not-applicable",
+    "unspecified",
     "other",
 ]
 
-StudyDomain = Literal["pharma", "cosmetics", "chemical_safety", "general"]
+_ROUTE_SLUGS: frozenset[str] = frozenset(Route.__args__)
+_ROUTE_ALIASES = {
+    "dermal": "cutaneous",
+}
+
+
+def normalize_route_slug(value: str | None) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    slug = text.replace("_", "-")
+    slug = _ROUTE_ALIASES.get(slug, slug)
+    return slug
+
+
+def coerce_route_list(value) -> list[str] | None:
+    if value is None:
+        return None
+    if isinstance(value, str) and not value.strip():
+        return None
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, (tuple, list)):
+        return None
+    routes: list[str] = []
+    for item in value:
+        slug = normalize_route_slug(str(item))
+        if slug in _ROUTE_SLUGS and slug not in routes:
+            routes.append(slug)
+    return routes or None
+
+Application = Literal[
+    "basic-research",
+    "translational-applied-research",
+    "regulatory-use",
+    "routine-production",
+    "education-training",
+    "environmental-protection",
+    "species-preservation",
+    "forensic-inquiry",
+    "other",
+]
+
+_APPLICATION_SLUGS: frozenset[str] = frozenset(Application.__args__)
+_APPLICATION_ALIASES = {
+    "general": "basic-research",
+    "pharma": "regulatory-use",
+    "cosmetics": "regulatory-use",
+    "chemical-safety": "regulatory-use",
+    "basic-research": "basic-research",
+    "education": "education-training",
+}
+DEFAULT_APPLICATION: Application = "basic-research"
+
+
+def normalize_application_slug(value: str | None) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    slug = text.replace("_", "-")
+    return _APPLICATION_ALIASES.get(slug, slug)
+
+
+def coerce_application(value) -> Application:
+    slug = normalize_application_slug(value if value is not None else None)
+    if slug in _APPLICATION_SLUGS:
+        return slug  # type: ignore[return-value]
+    return DEFAULT_APPLICATION
 
 Species = Literal[
     "rat",
@@ -53,13 +162,28 @@ class AnimalCounts(BaseModel):
 
 
 class RawExtraction(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     study_type: str
     route: list[Route] | None = None
     route_evidence: str | None = None
     route_confidence: ConfidenceLevel | None = None
-    study_domain: StudyDomain = "general"
-    study_domain_evidence: str | None = None
-    study_domain_confidence: ConfidenceLevel | None = None
+    application: Application = Field(
+        default=DEFAULT_APPLICATION,
+        validation_alias=AliasChoices("application", "study_domain"),
+    )
+    application_evidence: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "application_evidence", "study_domain_evidence"
+        ),
+    )
+    application_confidence: ConfidenceLevel | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "application_confidence", "study_domain_confidence"
+        ),
+    )
     procedure_text: str | None = None
     procedure_text_evidence: str | None = None
     procedure_text_confidence: ConfidenceLevel | None = None
@@ -74,6 +198,16 @@ class RawExtraction(BaseModel):
     regulatory_confidence: ConfidenceLevel | None = None
     notes: str | None = None
 
+    @field_validator("route", mode="before")
+    @classmethod
+    def _coerce_route(cls, value):
+        return coerce_route_list(value)
+
+    @field_validator("application", mode="before")
+    @classmethod
+    def _coerce_application(cls, value):
+        return coerce_application(value)
+
 
 class ExtractionResult(BaseModel):
     raw: RawExtraction
@@ -83,13 +217,28 @@ class ExtractionResult(BaseModel):
 class ProtocolParameters(BaseModel):
     """Flattened view used by retrieval and legacy API fields."""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     endpoint_category: EndpointCategory | None = None
     route: list[Route] | None = None
-    study_domain: StudyDomain = "general"
+    application: Application = Field(
+        default=DEFAULT_APPLICATION,
+        validation_alias=AliasChoices("application", "study_domain"),
+    )
     procedure_text: str | None = None
     species: Species | None = None
     n_animals: int | None = None
     regulatory: bool | None = None
+
+    @field_validator("route", mode="before")
+    @classmethod
+    def _coerce_route(cls, value):
+        return coerce_route_list(value)
+
+    @field_validator("application", mode="before")
+    @classmethod
+    def _coerce_application(cls, value):
+        return coerce_application(value)
 
     def has_extractable_content(self) -> bool:
         return self.endpoint_category is not None or bool(self.procedure_text)
@@ -109,7 +258,7 @@ def to_protocol_parameters(result: ExtractionResult) -> ProtocolParameters:
     return ProtocolParameters(
         endpoint_category=result.endpoint_category,
         route=result.raw.route,
-        study_domain=result.raw.study_domain,
+        application=result.raw.application,
         procedure_text=result.raw.procedure_text,
         species=result.raw.species,
         n_animals=primary_animal_count(result.raw.animal_counts),
@@ -118,7 +267,7 @@ def to_protocol_parameters(result: ExtractionResult) -> ProtocolParameters:
 
 
 class AnalyzeRequest(BaseModel):
-    protocol_text: str = Field(..., min_length=20, max_length=10000)
+    protocol_text: str = Field(..., min_length=20, max_length=40000)
     lang: Literal["pt", "en"] | None = None
 
 
@@ -141,6 +290,7 @@ class ExperimentResult(BaseModel):
 class AnalyzeResponse(BaseModel):
     experiments: list[ExperimentResult] = Field(..., min_length=1)
     params: ProtocolParameters
+    lang: Literal["pt", "en"] | None = None
 
 
 ThreeRClass = Literal["replacement", "reduction", "refinement"]

@@ -110,6 +110,29 @@ def localized_str_list(
     )
 
 
+def _unwrap_nested_locale_value(value: Any) -> Any:
+    """If a locale slot holds a JSON localized object string, return that object."""
+    if not isinstance(value, str):
+        return value
+    text = value.strip()
+    if not text.startswith("{"):
+        return value
+    if "en-us" not in text and "pt-br" not in text:
+        return value
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        return value
+    if isinstance(parsed, dict) and (
+        "en-us" in parsed
+        or "en_us" in parsed
+        or "pt-br" in parsed
+        or "pt_br" in parsed
+    ):
+        return parsed
+    return value
+
+
 def parse_localized_str(value: Any, *, required: bool = True) -> LocalizedStr | None:
     if value is None:
         if required:
@@ -126,6 +149,16 @@ def parse_localized_str(value: Any, *, required: bool = True) -> LocalizedStr | 
     if isinstance(value, dict):
         en = value.get("en-us", value.get("en_us", value.get("en")))
         pt = value.get("pt-br", value.get("pt_br", value.get("pt", en)))
+        # Migration / paste artifacts sometimes stored the whole localized JSON
+        # string inside each locale key.
+        unwrapped = _unwrap_nested_locale_value(en)
+        if isinstance(unwrapped, dict):
+            return parse_localized_str(unwrapped, required=required)
+        unwrapped_pt = _unwrap_nested_locale_value(pt)
+        if isinstance(unwrapped_pt, dict) and not isinstance(
+            _unwrap_nested_locale_value(en), dict
+        ):
+            return parse_localized_str(unwrapped_pt, required=required)
         if en is None and pt is None:
             if required:
                 raise ValueError("Localized string requires en-us / pt-br")

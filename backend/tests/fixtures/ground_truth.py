@@ -30,7 +30,7 @@ class ExpectedEvidence:
     """
 
     route: str | tuple[str, ...] | None = None
-    study_domain: str | tuple[str, ...] | None = None
+    application: str | tuple[str, ...] | None = None
     procedure_text: str | tuple[str, ...] | None = None
     species: str | tuple[str, ...] | None = None
     animal_counts: str | tuple[str, ...] | None = None
@@ -42,7 +42,7 @@ class ExpectedExtraction:
     study_type_keywords: tuple[str, ...]
     endpoint_category: str | None
     route: list[str] | None
-    study_domain: set[str]  # any listed value is acceptable
+    application: set[str]  # any listed value is acceptable
     procedure_keywords: tuple[str, ...]
     species: str | None
     animal_counts: ExpectedAnimalCounts | None

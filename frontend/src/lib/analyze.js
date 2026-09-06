@@ -18,6 +18,15 @@ export async function analyzeProtocol({ protocolText, lang }) {
   })
 }
 
+export function uploadProtocolSource(file) {
+  const body = new FormData()
+  body.append('file', file)
+  return apiFetch('/admin/extract/upload', {
+    method: 'POST',
+    body,
+  })
+}
+
 export function buildAnalysisState(
   apiResponse,
   { protocolText, lang, isMock = false },

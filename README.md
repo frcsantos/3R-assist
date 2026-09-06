@@ -28,19 +28,21 @@ Institutional backing: **Fórum Animal**
 
 | File | Purpose |
 |---|---|
-| `spec.md` | Full product specification |
-| `decisions.md` | Architecture Decision Records (ADR log) |
-| `patterns.md` | Design pattern preference register |
-| `assumption-log.md` | Critical assumptions and test status |
-| `dev-plan.md` | Phase-by-phase development plan |
-| `execution-log.md` | Narrative deviation log (updated during development) |
+| `docs/spec.md` | Full product specification |
+| `docs/decisions.md` | Architecture Decision Records (ADR log) |
+| `docs/patterns.md` | Design pattern preference register |
+| `docs/assumption-log.md` | Critical assumptions and test status |
+| `docs/dev-plan.md` | Phase-by-phase development plan |
+| `docs/execution-log.md` | Narrative deviation log (updated during development) |
+| `docs/tables.md` | Database schema reference |
+| `docs/info.md` | Living product + how-to-run summary |
 | `/design/` | Mockups, prototypes, component inventory |
 | `/prompts/` | AI prompt library |
 | `/validation/` | User validation session notes and reports |
 
 ## Status
 
-🟡 Pre-development — Bootstrap complete, Specification in progress.
+🟢 Phase 1 core pipeline live (analyze → parameters → search → results). Explore catalogue + general feedback shipped. Methods remain inactive pending Karynn review before pilot.
 
 ---
 

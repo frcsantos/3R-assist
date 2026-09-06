@@ -27,16 +27,38 @@ function formatErrorDetail(detail) {
 }
 
 export async function apiFetch(path, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  })
+  const { signal, ...rest } = options
+  const headers = { ...rest.headers }
+  const isFormData =
+    typeof FormData !== 'undefined' && rest.body instanceof FormData
+  if (!isFormData && headers['Content-Type'] == null) {
+    headers['Content-Type'] = 'application/json'
+  }
+
+  let response
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...rest,
+      headers,
+      signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') {
+      const abortError = new Error('Request cancelled')
+      abortError.code = 'ABORTED'
+      abortError.name = 'AbortError'
+      throw abortError
+    }
+    throw err
+  }
   if (!response.ok) {
     let message = `API ${response.status}: ${response.statusText}`
+    let code = null
     try {
       const body = await response.json()
       if (body?.error?.message) {
         message = body.error.message
+        code = body.error.code ?? null
         const detailText = formatErrorDetail(body.error.detail)
         if (detailText && !message.includes(detailText)) {
           message = `${message} (${detailText})`
@@ -45,7 +67,9 @@ export async function apiFetch(path, options = {}) {
     } catch {
       // keep default message
     }
-    throw new Error(message)
+    const error = new Error(message)
+    if (code) error.code = code
+    throw error
   }
   return response.json()
 }

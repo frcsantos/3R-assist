@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
-import ProtocolTextarea, { MIN_LENGTH } from '../components/ProtocolTextarea'
-import { buildAnalysisState } from '../lib/analyze'
+import ProtocolTextarea, {
+  MAX_LENGTH,
+  MIN_LENGTH,
+} from '../components/ProtocolTextarea'
+import { buildAnalysisState, uploadProtocolSource } from '../lib/analyze'
 import { currentLanguage, setLanguage } from '../lib/i18n'
 import {
   MOCK_ANALYZE_RESPONSE,
@@ -15,9 +18,13 @@ export default function AnalyzePage({ onSubmit }) {
   const navigate = useNavigate()
   const location = useLocation()
   const restored = location.state
+  const uploadInputId = useId()
+  const fileInputRef = useRef(null)
 
   const [protocolText, setProtocolText] = useState(restored?.protocolText ?? '')
   const [submitting, setSubmitting] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadedFileName, setUploadedFileName] = useState(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [error, setError] = useState(null)
 
@@ -42,15 +49,57 @@ export default function AnalyzePage({ onSubmit }) {
     return () => window.clearInterval(timer)
   }, [submitting])
 
+  const busy = submitting || uploading
   const trimmedLength = protocolText.trim().length
-  const canSubmit = trimmedLength >= MIN_LENGTH && !submitting
+  const canSubmit = trimmedLength >= MIN_LENGTH && !busy
 
-  function handleMock() {
-    if (submitting) return
+  function clearUploadedFile() {
+    setUploadedFileName(null)
+    setProtocolText('')
+    setError(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  function uploadErrorMessage(err) {
+    const code = err?.code
+    if (code === 'FILE_TYPE_UNSUPPORTED') return t('s1.uploadTypeError')
+    if (code === 'FILE_TOO_LARGE') return t('s1.uploadTooLarge')
+    if (code === 'FILE_NO_TEXT') return t('s1.uploadNoText')
+    if (code === 'FILE_READ_FAILED') return t('s1.uploadReadError')
+    return err.message ?? t('s1.uploadError')
+  }
+
+  async function handleUploadChange(event) {
+    const file = event.target.files?.[0]
+    if (!file || busy) return
 
     setError(null)
+    setUploading(true)
+    try {
+      const uploaded = await uploadProtocolSource(file)
+      const uploadedText = (uploaded.text ?? '').slice(0, MAX_LENGTH)
+      setProtocolText(uploadedText)
+      setUploadedFileName(uploaded.filename || file.name)
+    } catch (err) {
+      clearUploadedFile()
+      setError(uploadErrorMessage(err))
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  function handleMock() {
+    if (busy) return
+
+    setError(null)
+    setUploadedFileName(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
     setProtocolText(MOCK_PROTOCOL_TEXT)
-      navigate('/parameters', {
+    navigate('/parameters', {
       state: buildAnalysisState(MOCK_ANALYZE_RESPONSE, {
         protocolText: MOCK_PROTOCOL_TEXT,
         lang: currentLanguage(),
@@ -71,10 +120,11 @@ export default function AnalyzePage({ onSubmit }) {
         protocolText: protocolText.trim(),
         lang,
       })
+      const detectedLang = result.lang || lang
       navigate('/parameters', {
         state: buildAnalysisState(result, {
           protocolText: protocolText.trim(),
-          lang,
+          lang: detectedLang,
         }),
       })
     } catch (err) {
@@ -83,6 +133,45 @@ export default function AnalyzePage({ onSubmit }) {
       setSubmitting(false)
     }
   }
+
+  const uploadControls = (
+    <div className="flex flex-wrap items-center gap-2">
+      {uploadedFileName ? (
+        <span className="inline-flex max-w-[16rem] items-center gap-2 rounded-md border border-border-subtle bg-surface-container-low px-2 py-1 font-metadata text-metadata text-on-surface">
+          <span className="truncate" title={uploadedFileName}>
+            {uploadedFileName}
+          </span>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={clearUploadedFile}
+            className="shrink-0 text-on-secondary-container transition-colors hover:text-error disabled:opacity-50"
+            title={t('s1.clearUpload')}
+            aria-label={t('s1.clearUpload')}
+          >
+            ×
+          </button>
+        </span>
+      ) : null}
+      <input
+        ref={fileInputRef}
+        id={uploadInputId}
+        type="file"
+        accept=".pdf,.html,.htm,.txt,application/pdf,text/html,text/plain"
+        className="sr-only"
+        disabled={busy}
+        onChange={handleUploadChange}
+      />
+      <label
+        htmlFor={uploadInputId}
+        className={`inline-flex cursor-pointer items-center justify-center rounded-md border border-border-emphasis bg-surface-container-lowest px-3 py-1.5 font-nav-link text-nav-link text-on-surface transition-all duration-ethos hover:bg-surface-container ${
+          busy ? 'pointer-events-none opacity-50' : ''
+        }`}
+      >
+        {uploading ? t('s1.uploading') : t('s1.upload')}
+      </label>
+    </div>
+  )
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-container-padding py-section-gap">
@@ -98,7 +187,14 @@ export default function AnalyzePage({ onSubmit }) {
       <form onSubmit={handleSubmit} className="space-y-card-gap">
         <ProtocolTextarea
           value={protocolText}
-          onChange={setProtocolText}
+          onChange={(next) => {
+            setProtocolText(next)
+            if (uploadedFileName) {
+              setUploadedFileName(null)
+            }
+          }}
+          headerAction={uploadControls}
+          disabled={busy}
         />
 
         {trimmedLength > 0 && trimmedLength < MIN_LENGTH && (
@@ -118,7 +214,7 @@ export default function AnalyzePage({ onSubmit }) {
             type="button"
             variant="secondary"
             onClick={handleMock}
-            disabled={submitting}
+            disabled={busy}
           >
             {t('s1.mock')}
           </Button>

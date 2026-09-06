@@ -1,9 +1,22 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models.i18n import LocalizedStr
-from app.models.method import MethodRegulatoryContext, RegulatoryStatus
+from app.models.method import Method, MethodRegulatoryContext, RegulatoryStatus
+
+
+def _looks_like_single_url(text: str) -> bool:
+    candidate = text.strip()
+    if not candidate or any(ch.isspace() for ch in candidate):
+        return False
+    lower = candidate.lower()
+    return lower.startswith(("http://", "https://", "www."))
+
+
+def looks_like_single_url(text: str) -> bool:
+    """True when `text` is a single URL-like token (http(s) or www.)."""
+    return _looks_like_single_url(text)
 
 
 class PolicyMethod(BaseModel):
@@ -14,8 +27,30 @@ class PolicyMethod(BaseModel):
 
 
 class PolicyExtractRequest(BaseModel):
-    text: str = Field(..., min_length=20, max_length=50000)
+    text: str = Field(..., min_length=1, max_length=50000)
     lang: Literal["pt", "en"] | None = None
+    source_url: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("text")
+    @classmethod
+    def strip_text(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("source_url")
+    @classmethod
+    def strip_source_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        cleaned = value.strip()
+        return cleaned or None
+
+    @model_validator(mode="after")
+    def require_length_unless_url(self) -> "PolicyExtractRequest":
+        if _looks_like_single_url(self.text):
+            return self
+        if len(self.text) < 20:
+            raise ValueError("text must be at least 20 characters unless it is a URL")
+        return self
 
 
 class PolicyExtractResponse(BaseModel):
@@ -23,26 +58,20 @@ class PolicyExtractResponse(BaseModel):
     document_name: str | None = None
     document_date: str | None = None
     responsible_institution: str | None = None
+    url: str | None = None
+    description: str | None = None
+    lang: Literal["pt", "en"] | None = None
 
 
 class PolicyMethodMatchRequest(BaseModel):
     code: str = Field(..., min_length=1, max_length=200)
     name: str = Field(..., min_length=1, max_length=500)
     purpose: str | None = Field(default=None, max_length=1000)
+    lang: Literal["pt", "en"] | None = None
     limit: int = Field(default=5, ge=1, le=20)
 
 
-class MatchedMethodSummary(BaseModel):
-    id: int
-    slug: str
-    name: LocalizedStr
-    description: LocalizedStr
-    text_for_embedding: str
-    endpoint_category: str
-    study_domain: str
-    oecd_ref: str | None = None
-    source_db: str
-    active: bool
+class MatchedMethodSummary(Method):
     regulatory_contexts: list[MethodRegulatoryContext] = Field(default_factory=list)
 
 
@@ -62,6 +91,7 @@ class PolicyDocumentMatchRequest(BaseModel):
     document_date: str | None = Field(default=None, max_length=40)
     responsible_institution: str | None = Field(default=None, max_length=500)
     url: str | None = Field(default=None, max_length=2000)
+    lang: Literal["pt", "en"] | None = None
     limit: int = Field(default=5, ge=1, le=20)
 
 
@@ -70,7 +100,8 @@ class MatchedDocumentSummary(BaseModel):
     slug: str
     doc_citation: LocalizedStr
     date: str | None = None
-    category: str
+    categories: list[str] = Field(default_factory=list)
+    institution: LocalizedStr | None = None
     url: str | None = None
 
 

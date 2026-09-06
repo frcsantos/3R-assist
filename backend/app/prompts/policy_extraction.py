@@ -35,12 +35,29 @@ If a field is not explicitly stated, return null (or an empty methods array).
    accepted/validated (or equivalent). Skip purely illustrative or rejected
    methods unless the document still lists them as recognized alternatives.
 
-2. document_name — official title or designation of the document.
+2. document_name — bibliographic citation of the document when possible.
+   Prefer a formal citation over a short page title.
+   For OECD Test Guidelines, use this form when the text supports it:
+   "OECD (YYYY), Test No. NNN: Title: Subtitle, OECD Guidelines for the
+   Testing of Chemicals, Section N, OECD Publishing, Paris,"
+   Example: "OECD (2026), Test No. 429: Skin Sensitisation: Local Lymph
+   Node Assay, OECD Guidelines for the Testing of Chemicals, Section 4,
+   OECD Publishing, Paris,"
+   Repair missing spaces in scraped titles (e.g. SkinSensitisation →
+   Skin Sensitisation). Include a letter-spaced subtitle when present
+   (e.g. "L o c a l  L y m p h  N o d e  A s s a y" → Local Lymph Node Assay).
+   For other sources, use the official title/designation as written
+   (e.g. "Resolução Normativa CONCEA nº 18/2014").
 3. document_date — publication, adoption, or effective date.
    Prefer ISO date YYYY-MM-DD when day/month/year are clear; otherwise keep
    the date form as written (e.g. "September 2014", "2014").
 4. responsible_institution — issuing / responsible body (agency, ministry,
    council, organization).
+5. url — canonical document URL only if explicitly present in the text.
+   If a source URL hint is provided below and the text has no other URL, use
+   the hint. Otherwise null.
+6. description — short summary of what the document is (purpose/scope), at most
+   300 characters. Do not paste long excerpts. Null if unsupported.
 
 ── OUTPUT FORMAT ────────────────────────────────────────────────────────────
 Return ONLY valid JSON. No preamble. No markdown. No explanation outside JSON.
@@ -60,8 +77,15 @@ Schema:
   ],
   "document_name": "string or null",
   "document_date": "string or null",
-  "responsible_institution": "string or null"
+  "responsible_institution": "string or null",
+  "url": "string or null",
+  "description": "string or null"
 }
+
+── HINTS ────────────────────────────────────────────────────────────────────
+Detected source language: {source_language}. Keep document_name, method names,
+purpose, institution, and description in that language.
+Source URL (optional): {source_url}
 
 ── SOURCE TEXT ──────────────────────────────────────────────────────────────
 Policy text:
@@ -69,8 +93,20 @@ Policy text:
 """
 
 
-def build_policy_extraction_prompt(policy_text: str) -> str:
-    return POLICY_EXTRACTION_PROMPT_TEMPLATE.replace(
-        "{policy_text}",
-        policy_text.strip(),
+def build_policy_extraction_prompt(
+    policy_text: str,
+    *,
+    source_url: str | None = None,
+    source_language: str = "English",
+) -> str:
+    return (
+        POLICY_EXTRACTION_PROMPT_TEMPLATE.replace(
+            "{policy_text}",
+            policy_text.strip(),
+        )
+        .replace(
+            "{source_url}",
+            (source_url or "none").strip() or "none",
+        )
+        .replace("{source_language}", source_language)
     )

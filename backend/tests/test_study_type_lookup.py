@@ -19,8 +19,26 @@ def test_subacute_study_type_does_not_map_to_acute_toxicity():
     assert map_study_type_to_endpoint("subacute toxicity study") is None
 
 
+def test_reproductive_and_developmental_map_to_reproductive_toxicity():
+    assert (
+        map_study_type_to_endpoint("prenatal developmental toxicity study")
+        == "reproductive_toxicity"
+    )
+    assert (
+        map_study_type_to_endpoint("two-generation reproductive toxicity")
+        == "reproductive_toxicity"
+    )
+
+
+def test_lal_maps_to_bacterial_endotoxin_not_pyrogenicity():
+    assert map_study_type_to_endpoint("LAL endotoxin test") == "bacterial_endotoxin"
+    assert map_study_type_to_endpoint("bacterial endotoxin assay") == "bacterial_endotoxin"
+    assert map_study_type_to_endpoint("monocyte activation test (MAT)") == "pyrogenicity"
+
+
 def test_known_miss_returns_null():
-    assert map_study_type_to_endpoint("prenatal developmental toxicity study") is None
+    assert map_study_type_to_endpoint("photocarcinogenesis study") is None
+    assert map_study_type_to_endpoint("subchronic inhalation toxicity") is None
 
 
 def test_eveit_study_type_maps_to_ocular_irritation():

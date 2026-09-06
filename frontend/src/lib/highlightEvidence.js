@@ -72,6 +72,32 @@ export function buildHighlightSpans(text, evidence = {}) {
   return mergeHighlightSpans(spans)
 }
 
+/** Case-insensitive spans for each whitespace-separated filter term (all occurrences). */
+export function buildQueryHighlightSpans(text, query) {
+  if (!text || !query?.trim()) return []
+
+  const terms = query
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+  if (!terms.length) return []
+
+  const lower = text.toLowerCase()
+  const spans = []
+  for (const term of terms) {
+    const needle = term.toLowerCase()
+    let from = 0
+    while (from < text.length) {
+      const start = lower.indexOf(needle, from)
+      if (start === -1) break
+      spans.push({ start, end: start + term.length })
+      from = start + Math.max(term.length, 1)
+    }
+  }
+
+  return mergeHighlightSpans(spans)
+}
+
 export function splitTextWithHighlights(text, spans) {
   if (!text) return []
   if (!spans.length) return [{ highlighted: false, text }]

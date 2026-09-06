@@ -2,6 +2,7 @@
   "nav": {
     "analyze": "Analisar",
     "explore": "Explorar",
+    "literature": "Literatura",
     "glossary": "Glossário",
     "info": "Info",
     "admin": "Admin",
@@ -26,7 +27,11 @@
     "rowCount": "Registros {{from}}–{{to}} de {{total}}",
     "prevPage": "Anterior",
     "nextPage": "Próxima",
+    "firstPage": "Primeira",
+    "lastPage": "Última",
+    "goToPage": "Página",
     "pageOf": "Página {{current}} de {{total}}",
+    "pageOfTotal": "de {{total}}",
     "editHint": "Clique duas vezes para editar",
     "save": "Salvar",
     "cancel": "Cancelar",
@@ -51,6 +56,9 @@
     "exportCsv": "Exportar CSV",
     "exporting": "Exportando…",
     "exportError": "Não foi possível exportar a tabela.",
+    "sortByColumn": "Ordenar por {{column}}",
+    "sortAscending": "Ordenado crescente. Clique para ordenar decrescente.",
+    "sortDescending": "Ordenado decrescente. Clique para ordenar crescente.",
     "editRow": "Editar registro",
     "ok": "OK",
     "addRowError": "Não foi possível adicionar o registro.",
@@ -58,6 +66,10 @@
     "requiredFieldsMissing": "Campos obrigatórios em falta: {{fields}}",
     "selectRequired": "Selecione…",
     "selectOptional": "— Nenhum —",
+    "booleanTrue": "true",
+    "booleanFalse": "false",
+    "originalValue": "Original: {{value}}",
+    "restoreOriginal": "Restaurar valor original",
 
 
 
@@ -66,17 +78,41 @@
       "subtitle": "Navegue e edite as tabelas públicas do PostgreSQL. Clique duas vezes em uma célula para editar."
     },
     "extract": {
-      "label": "Extrair",
+      "label": "Extração de docs",
       "subtitle": "Extraia métodos aprovados e metadados documentais a partir de textos de política.",
-      "policyLabel": "Extração de política",
-      "policyPlaceholder": "Cole o texto de uma política, diretriz ou regulamento…",
+      "policyLabel": "Extração de documento",
+      "policyPlaceholder": "Cole o texto do documento, ou a URL de uma página…",
+      "upload": "Enviar arquivo",
+      "uploading": "Enviando…",
+      "clearUpload": "Remover arquivo",
+      "uploadPlaceholder": "Texto carregado do arquivo enviado.",
+      "uploadTypeError": "Tipos suportados: PDF, HTML, TXT.",
+      "uploadTooLarge": "O arquivo enviado é grande demais.",
+      "uploadNoText": "Não foi possível extrair texto suficiente do arquivo.",
+      "uploadReadError": "Não foi possível ler o arquivo enviado.",
+      "documentTypeLabel": "Tipo de documento (opcional)",
+      "documentType": {
+        "regulation": "Regulamento / Política",
+        "protocol": "Protocolo",
+        "guideline": "Diretriz",
+        "other": "Outro"
+      },
       "charCount": "{{count}} / {{max}}",
       "tooShort": "Mínimo de {{min}} caracteres",
       "submit": "Extrair",
-      "submittingSeconds": "Extraindo… {{seconds}}s",
+      "fetchingSeconds": "Buscando... ({{seconds}}s) — Clique para cancelar",
+      "estimatingSeconds": "Estimando... ({{seconds}}s) — Clique para cancelar",
+      "proceed": "Prosseguir?",
+      "costEstimate": "Custo estimado: {{cost}} ({{inputTokens}} entrada + ~{{outputTokens}} saída)",
+      "submittingSeconds": "Extraindo... ({{seconds}}s) — Clique para cancelar",
+      "cancelled": "Cancelado.",
       "error": "Não foi possível extrair os dados da política.",
+      "urlInvalid": "URL inválida. Cole o conteúdo da página.",
+      "urlFetchFailed": "Não foi possível buscar a URL. Cole o conteúdo da página.",
+      "urlNoText": "Não foi possível extrair texto da página. Cole o conteúdo da página.",
       "resultsTitle": "Resultados da extração",
-      "documentName": "Nome do documento",
+      "documentName": "Citação",
+      "documentDescription": "Descrição",
       "documentDate": "Data do documento",
       "institution": "Instituição responsável",
       "url": "URL",
@@ -103,13 +139,24 @@
       "addDocument": "Adicionar documento",
       "addNewDocument": "Adicionar novo documento",
       "addDocumentError": "Não foi possível abrir o formulário de novo documento.",
+      "editDocumentError": "Não foi possível abrir o formulário de edição do documento.",
       "addMethod": "Adicionar método",
       "addMethodError": "Não foi possível abrir o formulário de novo método.",
+      "editMethodError": "Não foi possível abrir o formulário de edição do método.",
       "addRegulation": "Adicionar regulamentação",
       "addRegulationError": "Não foi possível abrir o formulário de nova regulamentação.",
+      "editRegulationError": "Não foi possível abrir o formulário de edição da regulamentação.",
       "methodProtocolLabel": "Protocolo do método",
       "methodProtocolPlaceholder": "Cole o texto do protocolo, diretriz ou documento TG do método…",
       "methodProtocolHint": "Envie para o modelo preencher os campos do formulário a partir do documento.",
+      "documentSourceLabel": "Fonte do documento",
+      "documentSourcePlaceholder": "Cole o texto do documento, ou a URL de uma página…",
+      "documentSourceHint": "Extraia para atualizar os campos diferentes. Os valores anteriores ficam visíveis abaixo de cada campo alterado.",
+      "documentDraftError": "Não foi possível extrair os campos do documento a partir da fonte.",
+      "regulationSourceLabel": "Fonte da regulamentação",
+      "regulationSourcePlaceholder": "Cole o texto da regulamentação / reconhecimento, ou a URL de uma página…",
+      "regulationSourceHint": "Extraia para atualizar os campos diferentes. Os valores anteriores ficam visíveis abaixo de cada campo alterado.",
+      "regulationDraftError": "Não foi possível extrair os campos da regulamentação a partir da fonte.",
       "methodDraftExtract": "Extrair campos",
       "methodDraftExtracting": "Extraindo…",
       "methodDraftError": "Não foi possível extrair os campos do método a partir do protocolo.",
@@ -117,19 +164,27 @@
       "matchByText": "Similaridade textual",
       "regulatoryStatus": "Status regulatório",
       "inactive": "inativo",
-      "savedTitle": "Extrações salvas",
+      "active": "ativo",
+      "slugLabel": "Slug",
+      "savedTitle": "Extrações anteriores",
       "savedMeta": "{{date}} · {{count}} métodos",
+      "savedMetaDocument": "{{date}} · campos do documento",
       "removeSaved": "Remover"
     },
     "docs": {
-      "label": "Docs",
+      "label": "Docs do projeto",
       "subtitle": "Documentação interna e materiais de revisão.",
-      "placeholder": "Docs — em breve."
+      "empty": "Nenhuma documentação encontrada.",
+      "close": "Fechar"
     },
     "settings": {
       "label": "Configurações",
       "subtitle": "Configuração de administração.",
-      "placeholder": "Configurações — em breve."
+      "placeholder": "Configurações — em breve.",
+      "loading": "Carregando configurações…",
+      "error": "Não foi possível carregar as configurações.",
+      "environment": "Ambiente",
+      "modelName": "Nome do modelo"
     }
   },
   "s1": {
@@ -137,6 +192,15 @@
     "subtitle": "Em português ou inglês.",
     "pasteLabel": "Cole o texto do protocolo",
     "placeholder": "Utilizamos camundongos Wistar para avaliar a toxicidade aguda por via oral…",
+    "upload": "Enviar arquivo",
+    "uploading": "Enviando…",
+    "clearUpload": "Remover arquivo",
+    "uploadPlaceholder": "Texto carregado do arquivo enviado.",
+    "uploadTypeError": "Tipos suportados: PDF, HTML, TXT.",
+    "uploadTooLarge": "O arquivo enviado é muito grande.",
+    "uploadNoText": "Não foi possível extrair texto suficiente do arquivo.",
+    "uploadReadError": "Não foi possível ler o arquivo enviado.",
+    "uploadError": "Não foi possível enviar o arquivo.",
     "submit": "Analisar protocolo",
     "submitting": "Analisando…",
     "submittingSeconds": "Analisando… {{seconds}}s",
@@ -192,12 +256,11 @@
     },
     "fields": {
       "studyType": "Tipo de estudo (extraído)",
-      "endpointCategory": "Categoria de endpoint",
+      "endpointCategory": "Categoria de desfecho (endpoint)",
       "route": "Via de administração",
-      "studyDomain": "Domínio do estudo",
+      "application": "Aplicação",
       "procedureText": "Texto do procedimento",
       "species": "Espécie",
-      "regulatory": "Contexto regulatório",
       "animalCounts": {
         "label": "Contagem de animais",
         "female": "Fêmeas",
@@ -216,23 +279,47 @@
         "phototoxicity": "Fototoxicidade",
         "genotoxicity": "Genotoxicidade",
         "pyrogenicity": "Pirogenicidade",
-        "skin_absorption": "Absorção cutânea"
+        "skin_absorption": "Absorção cutânea",
+        "reproductive_toxicity": "Toxicidade reprodutiva e do desenvolvimento",
+        "endocrine_activity": "Atividade endócrina",
+        "photoreactivity": "Fotorreatividade",
+        "aquatic_toxicity": "Toxicidade aquática",
+        "toxicokinetics": "Toxicocinética",
+        "bacterial_endotoxin": "Endotoxinas bacterianas",
+        "rabies_diagnosis": "Diagnóstico da raiva"
       },
       "route": {
-        "oral": "Oral",
-        "intraperitoneal": "Intraperitoneal",
-        "intravenous": "Intravenosa",
-        "dermal": "Dérmica",
-        "ocular": "Ocular",
+        "cutaneous": "Cutânea",
         "inhalation": "Inalação",
-        "in_vitro": "In vitro",
+        "oral": "Oral",
+        "ocular": "Ocular",
+        "intranasal": "Intranasal",
+        "intratracheal": "Intratraqueal",
+        "intravenous": "Intravenosa",
+        "intra-arterial": "Intra-arterial",
+        "intramuscular": "Intramuscular",
+        "subcutaneous": "Subcutânea",
+        "intradermal": "Intradérmica",
+        "intraperitoneal": "Intraperitoneal",
+        "rectal": "Retal",
+        "vaginal": "Vaginal",
+        "topical-mucosal": "Tópica em mucosa",
+        "implantation": "Implantação",
+        "multiple": "Múltiplas vias",
+        "not-applicable": "Não aplicável",
+        "unspecified": "Não especificada",
         "other": "Outra"
       },
-      "studyDomain": {
-        "pharma": "Farmacêutica",
-        "cosmetics": "Cosméticos",
-        "chemical_safety": "Segurança química",
-        "general": "Pesquisa geral"
+      "application": {
+        "basic-research": "Pesquisa básica",
+        "translational-applied-research": "Pesquisa translacional e aplicada",
+        "regulatory-use": "Uso regulatório",
+        "routine-production": "Produção de rotina",
+        "education-training": "Ensino e treinamento",
+        "environmental-protection": "Proteção do meio ambiente natural",
+        "species-preservation": "Preservação de espécies",
+        "forensic-inquiry": "Investigação forense",
+        "other": "Outro"
       },
       "species": {
         "rat": "Rato",
@@ -254,8 +341,15 @@
     "protocolSummary": "Resumo do protocolo",
     "recommendedAlternatives": "Alternativas recomendadas",
     "matchedParams": "Parâmetros correspondentes",
-    "matchLabel": "Match",
+    "matchLabel": "Relevância",
     "sourceLink": "Fonte primária",
+    "referenceLabel": "Referência",
+    "showMore": "Mostrar mais",
+    "showLess": "Mostrar menos",
+    "showCitation": "Citação completa",
+    "hideCitation": "Ocultar citação",
+    "rationaleHint": "Selecione um selo 3R para ler a justificativa.",
+    "toggleRationale": "Mostrar justificativa de {{label}}",
     "noProtocolCitation": "Nenhuma citação de protocolo disponível.",
     "noRegulatoryCitation": "Nenhuma citação regulatória disponível.",
     "regulatoryLink": "Abrir fonte regulatória",
@@ -277,9 +371,12 @@
       "oecd": "OCDE"
     },
     "validationStatus": {
+      "not_evaluated": "Não avaliado",
+      "under_validation": "Em validação",
       "validated": "Validado",
-      "in_process_of_validation": "Em processo de validação",
-      "not_validated": "Não validado"
+      "partially_validated": "Parcialmente validado",
+      "not_validated": "Não validado",
+      "unclear": "Incerto"
     },
     "regulatoryStatus": {
       "not_approved": "Não aprovado",
@@ -287,7 +384,35 @@
       "recommended": "Recomendado",
       "mandatory": "Obrigatório"
     },
-    "purposeLabel": "Finalidade",
+    "purposeLabel": "Desfecho",
+    "regulationStatusLabel": "Status regulatório",
+    "validationStatusLabel": "Status de validação",
+    "approvedJurisdictionsLabel": "Jurisdições aprovadas",
+    "routeAgnostic": "Independente de via",
+    "fields": {
+      "animalUse": "Uso de animais",
+      "testSystem": "Sistema de teste",
+      "routesApplicable": "Vias aplicáveis"
+    },
+    "enums": {
+      "animalUse": {
+        "none": "Nenhum",
+        "animal_derived_material": "Material derivado de animal",
+        "slaughterhouse_byproduct": "Subproduto de abatedouro",
+        "animals_killed_for_tissue": "Animais sacrificados para tecido",
+        "live_animals": "Animais vivos",
+        "mixed_or_variable": "Misto ou variável"
+      },
+      "testSystem": {
+        "in_silico": "In silico",
+        "in_chemico": "In chemico",
+        "in_vitro": "In vitro",
+        "ex_vivo": "Ex vivo",
+        "in_vivo": "In vivo",
+        "hybrid": "Híbrido",
+        "unclear": "Incerto"
+      }
+    },
     "threeR": {
       "replacement": "Substituição",
       "reduction": "Redução",
@@ -299,31 +424,97 @@
     "tabsLabel": "Seções de exploração",
     "loading": "Carregando…",
     "loadError": "Não foi possível carregar o catálogo.",
-    "filterPlaceholder": "Filtrar por nome…",
+    "filterPlaceholder": "Filtrar…",
     "noMatches": "Nenhum item corresponde a este filtro.",
     "expand": "Expandir detalhes",
     "collapse": "Recolher detalhes",
+    "reportFeedback": "Enviar feedback sobre este item",
     "fields": {
-      "category": "Categoria",
+      "categories": "Categorias",
+      "institution": "Instituição",
       "date": "Data",
       "url": "URL"
     },
     "documentCategory": {
       "method_protocol": "Protocolo de método",
       "guideline": "Diretriz",
-      "regulation": "Regulamento"
+      "regulation": "Regulamento",
+      "other": "Outro"
     },
     "methods": {
       "label": "Métodos",
       "empty": "Ainda não há métodos no catálogo."
     },
+    "associatedRegulations": "Regulamentos associados",
+    "noAssociatedRegulations": "Nenhum método está vinculado a este documento ainda.",
     "regulations": {
       "label": "Regulamentos",
       "empty": "Ainda não há regulamentos ou diretrizes no catálogo."
     },
     "documents": {
       "label": "Documentos",
-      "empty": "Ainda não há protocolos de método no catálogo."
+      "empty": "Ainda não há documentos no catálogo."
     }
+  },
+  "litSearch": {
+    "title": "Busca na literatura",
+    "subtitle": "Cole uma descrição do estudo incluindo hipótese, objetivos e métodos. O sistema buscará no PubMed alternativas ao uso de animais.",
+    "inputLabel": "Descrição do estudo",
+    "placeholder": "Inclua:\n• Hipótese científica — qual pergunta este estudo responde?\n• Objetivos — quais desfechos são medidos?\n• Métodos detalhados — espécie, procedimento, duração, diretriz seguida\n\nExemplo: Hipotetizamos que o composto X causa irritação dérmica aguda. O objetivo é determinar seu potencial de irritação para registro no REACH. Ratos Wistar (n=10) receberão aplicação oclusiva de 0,5 mL/kg por 4 horas conforme OECD TG 404...",
+    "tooShort": "Mínimo {{min}} caracteres",
+    "submit": "Buscar literatura",
+    "analyzing": "Buscando na literatura PubMed…",
+    "error": "Não foi possível concluir a busca. Tente novamente.",
+    "retry": "Tentar novamente"
+  },
+  "pubmed": {
+    "cta": {
+      "label": "Buscar literatura emergente →",
+      "description": "Pesquise o banco completo do PubMed em busca de alternativas ainda não reconhecidas por órgãos regulatórios."
+    },
+    "page": {
+      "title": "Alternativas na literatura emergente",
+      "subtitle": "Busca ampla no PubMed por métodos que podem reduzir, substituir ou refinar o uso animal — ainda não validados por órgãos regulatórios.",
+      "backToResults": "Voltar às alternativas validadas",
+      "analyzing": "Buscando na literatura do PubMed…",
+      "error": "Não foi possível concluir a busca na literatura. Tente novamente.",
+      "retry": "Tentar novamente",
+      "endpointHypothesis": "Endpoint / hipótese:",
+      "literatureAlternatives": "Candidatos na literatura",
+      "totalSearched": "{{count}} registros candidatos pesquisados",
+      "noLiterature": "Nenhuma literatura relevante encontrada para este protocolo. O índice do PubMed pode ainda não conter alternativas emergentes para este endpoint."
+    },
+    "necessity": {
+      "title": "Necessidade do uso animal",
+      "not_necessary": "Desnecessário",
+      "possibly_avoidable": "Possivelmente evitável",
+      "necessary": "Necessário",
+      "keyConcerns": "Preocupações principais",
+      "confidence": {
+        "high": "Alta confiança",
+        "medium": "Média confiança",
+        "low": "Baixa confiança"
+      }
+    },
+    "summary": {
+      "title": "Síntese de evidências",
+      "citedArticles": "Artigos citados"
+    },
+    "results": {
+      "scoreLabel": "Relevância:",
+      "pubmedLink": "Ver no PubMed"
+    }
+  },
+  "feedback": {
+    "title": "Enviar feedback",
+    "objectLabel": "Sobre",
+    "textLabel": "Seu feedback",
+    "textPlaceholder": "Descreva o problema ou sugestão…",
+    "submit": "Enviar",
+    "submitting": "Enviando…",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "success": "Obrigado — seu feedback foi enviado.",
+    "submitError": "Não foi possível enviar o feedback. Tente novamente."
   }
 }

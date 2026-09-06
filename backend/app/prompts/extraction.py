@@ -35,22 +35,25 @@ describes substance-to-tissue contact, not the culture setup.
                   (USE THIS for EVEIT, BCOP, ICE — even though they are
                   ex vivo systems, the substance contacts the corneal surface)
 
-  dermal      ← topical, cutaneous, epicutaneous, skin application,
+  cutaneous   ← topical, dermal, epicutaneous, skin application,
                   ex vivo skin disc, membrane model (Strat-M, Skin+)
-
-  in_vitro    ← substance added to culture medium in a well or plate,
-                  cell suspension assay, monolayer culture
-                  (USE THIS only when there is no oriented tissue surface —
-                  cells floating or adhered in medium, not an ex vivo disc)
 
   oral              ← p.o., gavage, gavagem, intragastric, intragástrico,
                        gastric tube, gastric intubation, dietary (mixed in feed)
   intraperitoneal   ← i.p.
   intravenous       ← i.v., endovenous
+  intramuscular     ← i.m.
+  subcutaneous      ← s.c., sub-cut
+  intradermal       ← i.d.
   inhalation        ← aerosol, nose-only chamber, inhalation chamber,
                        whole-body exposure
-  other             ← any chemical administration route not listed above
-  null              ← UV irradiation, radiation, physical exposure
+  other             ← a known chemical administration route not listed above
+  unspecified       ← a route may exist but is not reported
+  not-applicable    ← no organism-level administration route applies
+  multiple          ← more than one route, not recorded separately
+  null              ← UV irradiation, radiation, physical exposure,
+                       or cell-culture medium exposure without an oriented tissue
+                       surface (assay modality belongs in test_system, not route)
                        (radiation is not a chemical administration route)
 
 ── SPECIES SYNONYMS ─────────────────────────────────────────────────────────
@@ -90,14 +93,16 @@ Per-field confidence scale:
       "route_evidence": "exact quote from text, MAX 15 WORDS" or null,
       "route_confidence": "high"|"medium"|"low" or null if route is null,
 
-      "study_domain": one of [pharma, cosmetics, chemical_safety, general],
-      "study_domain_evidence": "exact quote from text, MAX 15 WORDS" or null,
-      "study_domain_confidence": "high"|"medium"|"low",
-      // Use "general" when: (a) the study is validating a method rather than
-      // testing a specific product class; (b) test substances span multiple
-      // product categories; (c) no single application context is declared.
-      // The identity of the test substance alone does not determine this field —
-      // BAC is used in pharma, cosmetics, and industrial contexts equally.
+      "application": one of [basic-research, translational-applied-research,
+        regulatory-use, routine-production, education-training,
+        environmental-protection, species-preservation, forensic-inquiry, other],
+      "application_evidence": "exact quote from text, MAX 15 WORDS" or null,
+      "application_confidence": "high"|"medium"|"low",
+      // Use "basic-research" when: (a) the study is validating a method rather
+      // than testing a specific product class; (b) no practical or regulatory
+      // purpose is declared. Use "regulatory-use" when the work is intended to
+      // satisfy legislation or a regulatory authority. The identity of the test
+      // substance alone does not determine this field.
 
       "procedure_text": "brief English description, max 30 words" or null,
       "procedure_text_evidence": "exact quote from text, MAX 20 WORDS" or null,
@@ -139,9 +144,15 @@ Do not quote entire paragraphs.
 CRITICAL: Your response must be syntactically complete JSON. Close all strings,
 objects, and arrays before ending output.
 
+Detected source language: {source_language}. Keep extracted free-text
+(study_type, procedure_text, notes, evidence quotes) in that language.
+
 Protocol description:
 {protocol_text}"""
 
 
-def build_extraction_prompt(protocol_text: str) -> str:
-    return EXTRACTION_PROMPT_TEMPLATE.replace("{protocol_text}", protocol_text.strip())
+def build_extraction_prompt(protocol_text: str, *, source_language: str = "English") -> str:
+    return EXTRACTION_PROMPT_TEMPLATE.replace(
+        "{protocol_text}",
+        protocol_text.strip(),
+    ).replace("{source_language}", source_language)

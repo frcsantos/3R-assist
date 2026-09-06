@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
+from app.models.i18n import LocalizedStr
 from app.models.method import Method, MethodRegulatoryContext
 from app.models.policy import (
     MatchedMethodSummary,
@@ -14,7 +15,7 @@ from app.models.policy import (
 )
 from app.repositories.methods import MethodRepository
 
-_OECD_REF_RE = re.compile(r"\b(TG|GD)\s*(\d{3,4})\b", re.IGNORECASE)
+_OECD_REF_RE = re.compile(r"\b(TG|GD)\s*(\d{3,4}[A-Z]?)\b", re.IGNORECASE)
 _MIN_TEXT_SCORE = 0.15
 _PLURAL_2 = frozenset({"as", "es", "os", "is"})
 
@@ -27,7 +28,7 @@ def normalize_oecd_ref(code: str | None) -> str | None:
     match = _OECD_REF_RE.search(text)
     if not match:
         return None
-    return f"{match.group(1).upper()} {match.group(2)}"
+    return f"{match.group(1).upper()} {match.group(2).upper()}"
 
 
 def _strip_accents(text: str) -> str:
@@ -76,7 +77,21 @@ def _overlap_ratio(query_tokens: set[str], candidate_keys: set[str]) -> float:
     return matched / len(query_tokens)
 
 
-def text_for_embedding_score(query: str, method: Method) -> float:
+def _localized_joined(value: LocalizedStr | None, lang: str | None) -> str:
+    if value is None:
+        return ""
+    if lang:
+        picked = value.pick(lang).strip()
+        if picked:
+            return picked
+    return value.joined()
+
+
+def text_for_embedding_score(
+    query: str,
+    method: Method,
+    lang: str | None = None,
+) -> float:
     query_tokens = _raw_tokens(query)
     if not query_tokens:
         return 0.0
@@ -86,9 +101,11 @@ def text_for_embedding_score(query: str, method: Method) -> float:
     )
     name_score = _overlap_ratio(
         query_tokens,
-        _token_keys(method.name.joined()),
+        _token_keys(_localized_joined(method.name, lang)),
     )
-    keyword_text = " ".join(method.keywords.all_values())
+    keyword_text = " ".join(
+        method.keywords.pick(lang) if lang else method.keywords.all_values()
+    )
     keyword_score = (
         _overlap_ratio(query_tokens, _token_keys(keyword_text))
         if keyword_text.strip()
@@ -107,19 +124,10 @@ def _to_summary(
     method: Method,
     contexts: list[MethodRegulatoryContext] | None = None,
 ) -> MatchedMethodSummary:
-    return MatchedMethodSummary(
-        id=method.id,
-        slug=method.slug,
-        name=method.name,
-        description=method.description,
-        text_for_embedding=method.text_for_embedding,
-        endpoint_category=method.endpoint_category,
-        study_domain=method.study_domain,
-        oecd_ref=method.oecd_ref,
-        source_db=method.source_db,
-        active=method.active,
-        regulatory_contexts=contexts or [],
-    )
+    payload = method.model_dump(exclude={"embedding_json"})
+    payload.pop("category_3r", None)
+    payload["regulatory_contexts"] = contexts or []
+    return MatchedMethodSummary.model_validate(payload)
 
 
 class PolicyMethodMatchService:
@@ -155,7 +163,7 @@ class PolicyMethodMatchService:
         candidates = await self._repository.list_for_text_match(include_inactive=True)
         scored: list[tuple[Method, str, float]] = []
         for method in candidates:
-            score = text_for_embedding_score(query, method)
+            score = text_for_embedding_score(query, method, lang=request.lang)
             if score < _MIN_TEXT_SCORE:
                 continue
             scored.append((method, "text_for_embedding", score))

@@ -6,6 +6,7 @@ import { currentLanguage, setLanguage } from '../lib/i18n'
 const routes = [
   { key: 'analyze', to: '/' },
   { key: 'explore', to: '/explore' },
+  { key: 'literature', to: '/literature-search' },
   { key: 'glossary', to: '/glossary' },
   { key: 'info', to: '/info' },
 ]
@@ -31,7 +32,7 @@ export default function TopNav() {
                 end={route.to === '/'}
                 className={({ isActive }) =>
                   isActive
-                    ? 'border-b-2 border-primary pb-1 font-nav-link text-nav-link font-medium text-primary'
+                    ? 'relative font-nav-link text-nav-link font-medium text-primary after:absolute after:inset-x-0 after:-bottom-1 after:h-0.5 after:bg-primary'
                     : 'font-nav-link text-nav-link text-on-secondary-container transition-colors hover:text-primary'
                 }
               >

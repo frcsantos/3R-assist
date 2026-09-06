@@ -3,6 +3,7 @@ import { describe, it } from 'node:test'
 
 import {
   buildHighlightSpans,
+  buildQueryHighlightSpans,
   findEvidenceRange,
   mergeHighlightSpans,
   splitTextWithHighlights,
@@ -53,5 +54,17 @@ describe('buildHighlightSpans', () => {
     const highlighted = parts.filter((part) => part.highlighted).map((part) => part.text)
     assert.ok(highlighted.some((value) => value.includes('inhalation chamber')))
     assert.ok(highlighted.some((value) => value.includes('Sprague–Dawley rats')))
+  })
+})
+
+describe('buildQueryHighlightSpans', () => {
+  it('highlights each filter word case-insensitively', () => {
+    const text = 'OECD skin irritation guideline'
+    const spans = buildQueryHighlightSpans(text, 'Skin OECD')
+    const parts = splitTextWithHighlights(text, spans)
+    const highlighted = parts
+      .filter((part) => part.highlighted)
+      .map((part) => part.text.toLowerCase())
+    assert.deepEqual(highlighted, ['oecd', 'skin'])
   })
 })

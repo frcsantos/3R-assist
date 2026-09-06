@@ -6,8 +6,8 @@ const MOCK_RAW = {
   route_evidence:
     'administered a single dose of T. parthenium by two routes of administration—p.o. and i.p.',
   route_confidence: 'high',
-  study_domain: 'general',
-  study_domain_confidence: 'high',
+  application: 'basic-research',
+  application_confidence: 'high',
   procedure_text: 'Single-dose acute toxicity; Litchfield–Wilcoxon LD50',
   procedure_text_evidence:
     'LD50-values were evaluated according to the Litchfield and Wilcoxon method',
@@ -33,7 +33,7 @@ const MOCK_RAW = {
 const MOCK_PARAMS = {
   endpoint_category: 'acute_toxicity',
   route: ['oral', 'intraperitoneal'],
-  study_domain: 'general',
+  application: 'basic-research',
   procedure_text: 'Single-dose acute toxicity; Litchfield–Wilcoxon LD50',
   species: 'rat',
   n_animals: 60,
@@ -54,8 +54,8 @@ export const MOCK_ANALYZE_RESPONSE = {
         route: ['oral'],
         route_evidence: 'treated once a day orally by gastric tube for 28 days',
         route_confidence: 'high',
-        study_domain: 'general',
-        study_domain_confidence: 'medium',
+        application: 'basic-research',
+        application_confidence: 'medium',
         procedure_text:
           '28-day subacute oral toxicity; hematological and biochemical evaluation',
         procedure_text_evidence:
@@ -82,7 +82,7 @@ export const MOCK_ANALYZE_RESPONSE = {
       params: {
         endpoint_category: null,
         route: ['oral'],
-        study_domain: 'general',
+        application: 'basic-research',
         procedure_text:
           '28-day subacute oral toxicity; hematological and biochemical evaluation',
         species: 'rat',

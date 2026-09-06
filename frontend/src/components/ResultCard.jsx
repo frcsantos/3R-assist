@@ -1,4 +1,8 @@
-import { useEffect, useId, useState } from 'react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import HighlightedText from './HighlightedText'
+
+const THREE_R_ORDER = ['replacement', 'reduction', 'refinement']
 
 const threeRStyles = {
   replacement: {
@@ -25,6 +29,20 @@ function isHttpUrl(value) {
   }
 }
 
+function urlsEquivalent(a, b) {
+  if (!a || !b) return false
+  try {
+    const left = new URL(a.trim())
+    const right = new URL(b.trim())
+    return (
+      left.href.replace(/\/$/, '') === right.href.replace(/\/$/, '') ||
+      a.trim() === b.trim()
+    )
+  } catch {
+    return a.trim() === b.trim()
+  }
+}
+
 function ExternalLink({ href, children, className }) {
   return (
     <a
@@ -41,75 +59,94 @@ function ExternalLink({ href, children, className }) {
   )
 }
 
-function RegulationModal({ item, onClose, closeLabel, noCitationLabel, linkLabel }) {
-  const titleId = useId()
+function formatRegulationDate(value) {
+  if (!value) return null
+  const text = String(value).trim()
+  if (!text) return null
+  const day = text.match(/^(\d{4}-\d{2}-\d{2})/)
+  if (day) return day[1]
+  return text
+}
 
-  useEffect(() => {
-    function onKeyDown(event) {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
-
-  if (!item) return null
-
+export function RegulationDetail({
+  item,
+  statusLabel,
+  purposeLabel,
+  highlightQuery,
+  onEdit,
+  editLabel,
+}) {
   const citation = item.citation?.trim() || null
-  const citationIsUrl = isHttpUrl(citation)
-  const linkHref = item.url || (citationIsUrl ? citation : null)
+  const linkHref = item.url || (isHttpUrl(citation) ? citation : null)
+  const date = formatRegulationDate(item.date)
+  const statusHeading = date
+    ? `${statusLabel} (${date})`
+    : statusLabel
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      role="presentation"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className="w-full max-w-sm rounded-lg border border-border-subtle bg-surface-container-lowest p-4 shadow-lg"
-      >
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <h4
-            id={titleId}
-            className="font-card-title text-card-title text-primary"
+    <div className={`relative space-y-1.5 rounded-md bg-surface-container px-3 py-2 font-metadata text-metadata text-on-secondary-container ${onEdit ? 'pr-10' : ''}`}>
+      {onEdit ? (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onEdit(item)
+          }}
+          aria-label={editLabel}
+          title={editLabel}
+          className="absolute right-1 top-1 inline-flex h-7 w-7 items-center justify-center rounded-md text-primary transition-colors hover:bg-surface-container-lowest"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            {item.label}
-          </h4>
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 -mr-1 -mt-1 flex h-9 w-9 items-center justify-center rounded text-2xl leading-none text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
-            aria-label={closeLabel}
-          >
-            ×
-          </button>
-        </div>
-        {citation ? (
-          <p className="break-words font-body-base text-body-base text-on-secondary-container">
-            {citationIsUrl ? (
-              <ExternalLink href={citation}>{citation}</ExternalLink>
-            ) : (
-              citation
-            )}
-          </p>
-        ) : (
-          <p className="font-metadata text-metadata text-on-surface-variant" role="status">
-            {noCitationLabel}
-          </p>
-        )}
-        {linkHref && !citationIsUrl ? (
-          <ExternalLink
-            href={linkHref}
-            className="mt-3 inline-block break-all font-metadata text-metadata text-primary underline underline-offset-2 hover:opacity-90"
-          >
-            {item.url || linkLabel}
-          </ExternalLink>
-        ) : null}
-      </div>
+            <path d="M11.5 2.5l2 2L5 13H3v-2l8.5-8.5z" />
+          </svg>
+        </button>
+      ) : null}
+      {item.status ? (
+        <p>
+          <span className="text-on-surface-variant">{statusHeading}: </span>
+          <HighlightedText text={item.status} query={highlightQuery} />
+        </p>
+      ) : date ? (
+        <p>
+          <span className="text-on-surface-variant">{statusLabel}: </span>
+          {date}
+        </p>
+      ) : null}
+      {item.purpose ? (
+        <p>
+          <span className="text-on-surface-variant">{purposeLabel}: </span>
+          <HighlightedText text={item.purpose} query={highlightQuery} />
+        </p>
+      ) : null}
+      {item.body ? (
+        <p>
+          <HighlightedText text={item.body} query={highlightQuery} />
+        </p>
+      ) : null}
+      {citation ? (
+        <p className="break-words">
+          {linkHref ? (
+            <ExternalLink href={linkHref}>
+              <HighlightedText text={citation} query={highlightQuery} />
+            </ExternalLink>
+          ) : (
+            <HighlightedText text={citation} query={highlightQuery} />
+          )}
+        </p>
+      ) : linkHref ? (
+        <ExternalLink href={linkHref}>
+          <HighlightedText text={linkHref} query={highlightQuery} />
+        </ExternalLink>
+      ) : null}
     </div>
   )
 }
@@ -122,144 +159,293 @@ export default function ResultCard({
   dimmed = false,
   validationStatus,
   regulatoryStatuses = [],
-  purpose,
   purposeLabel,
+  regulationStatusLabel = 'Regulation status',
+  validationStatusLabel = 'Validation status',
+  approvedJurisdictionsLabel = 'Approved jurisdictions',
   matchedParams = [],
   description,
   primaryUrl,
   matchedParamsLabel,
   sourcesLabel,
   protocolCitation,
+  referenceLabel = 'Reference',
   noCitationLabel,
   noRegulatoryCitationLabel,
   regulatoryLinkLabel = 'OECD / regulatory',
   closeLabel = 'Close',
-  matchLabel = 'Match',
+  matchLabel = 'Relevance',
+  highlightQuery,
+  hideTitle = false,
+  className = '',
+  detailRows = [],
+  endAction = null,
+  titleExtra = null,
+  headerMeta = null,
+  onEditRegulation = null,
+  editRegulationLabel = 'Edit',
 }) {
+  const { t } = useTranslation()
   const styles = threeRStyles[type] ?? threeRStyles.replacement
-  // undefined badges → legacy single-type fallback; [] → no 3R qualification yet
-  const displayBadges = badges ?? [{ type, label: type, rationale: null }]
+  const displayBadges = [...(badges ?? [{ type, label: type, rationale: null }])].sort(
+    (a, b) =>
+      THREE_R_ORDER.indexOf(a.type) - THREE_R_ORDER.indexOf(b.type),
+  )
   const citationText = protocolCitation?.trim() || null
   const [selectedRegulation, setSelectedRegulation] = useState(null)
+  const [activeRationale, setActiveRationale] = useState(null)
+  const showHeader = !hideTitle || score != null
+  const activeBadge =
+    displayBadges.find((badge) => badge.type === activeRationale) ?? null
+
+  const sourceHref =
+    primaryUrl || (isHttpUrl(citationText) ? citationText : null)
+  const citationIsOnlyUrl =
+    citationText && isHttpUrl(citationText) && urlsEquivalent(citationText, sourceHref)
 
   return (
     <article
-      className={`rounded-lg border border-border-subtle bg-surface-container-lowest p-container-padding transition-colors duration-ethos hover:border-border-emphasis ${dimmed ? 'opacity-65' : ''}`}
+      className={`relative rounded-lg border border-border-subtle bg-surface-container-lowest transition-colors duration-ethos hover:border-border-emphasis ${hideTitle ? 'px-container-padding pb-container-padding pt-2' : 'p-container-padding'} ${dimmed ? 'opacity-65' : ''} ${className}`}
     >
-      <div className="mb-2 flex items-start justify-between gap-card-gap">
-        <h3 className="font-card-title text-card-title text-primary">{title}</h3>
-        {score != null ? (
-          <span
-            className="group relative shrink-0 text-right font-metadata text-metadata text-text-tertiary"
-            tabIndex={matchedParams.length > 0 ? 0 : undefined}
-            aria-label={
-              matchedParams.length > 0
-                ? `${matchLabel} ${score}%. ${matchedParamsLabel}: ${matchedParams.join(', ')}`
-                : undefined
-            }
-          >
-            {matchLabel}{' '}
-            <span className="font-monospace-data text-monospace-data">{score}%</span>
-            {matchedParams.length > 0 ? (
+      <div className="space-y-3">
+        {showHeader ? (
+          <div className="flex items-start justify-between gap-card-gap">
+            {!hideTitle ? (
+              <div className="min-w-0">
+                <h3 className="font-card-title text-card-title text-primary">
+                  <HighlightedText text={title} query={highlightQuery} />
+                  {titleExtra}
+                </h3>
+                {headerMeta}
+              </div>
+            ) : (
+              <span className="min-w-0 flex-1" />
+            )}
+            {score != null ? (
               <span
-                role="tooltip"
-                className="pointer-events-none absolute right-0 top-full z-10 mt-1 w-max max-w-[16rem] rounded border border-border-subtle bg-surface-container-lowest px-2 py-1.5 text-left font-metadata text-metadata text-on-secondary-container opacity-0 shadow-md transition-opacity duration-ethos group-hover:opacity-100 group-focus-within:opacity-100"
+                className="group relative shrink-0 text-right font-metadata text-metadata text-text-tertiary"
+                tabIndex={matchedParams.length > 0 ? 0 : undefined}
+                aria-label={
+                  matchedParams.length > 0
+                    ? `${matchLabel} ${score}%. ${matchedParamsLabel}: ${matchedParams.join(', ')}`
+                    : undefined
+                }
               >
-                {matchedParamsLabel}: {matchedParams.join(', ')}
+                {matchLabel}{' '}
+                <span className="font-monospace-data text-monospace-data">
+                  {score}%
+                </span>
+                {matchedParams.length > 0 ? (
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute right-0 top-full z-10 mt-1 w-max max-w-[16rem] rounded border border-border-subtle bg-surface-container-lowest px-2 py-1.5 text-left font-metadata text-metadata text-on-secondary-container opacity-0 shadow-md transition-opacity duration-ethos group-hover:opacity-100 group-focus-within:opacity-100"
+                  >
+                    {matchedParamsLabel}: {matchedParams.join(', ')}
+                  </span>
+                ) : null}
               </span>
             ) : null}
-          </span>
-        ) : null}
-      </div>
-      {description && (
-        <p className="mb-3 font-body-base text-body-base text-on-secondary-container">
-          {description}
-        </p>
-      )}
-      {citationText ? (
-        <p className="mb-3 break-words font-metadata text-metadata text-on-secondary-container">
-          {isHttpUrl(citationText) ? (
-            <ExternalLink href={citationText}>{citationText}</ExternalLink>
-          ) : (
-            citationText
-          )}
-          {primaryUrl ? (
-            <>
-              {' '}
-              <ExternalLink href={primaryUrl}>
-                {isHttpUrl(primaryUrl) ? primaryUrl : sourcesLabel}
-              </ExternalLink>
-            </>
-          ) : null}
-        </p>
-      ) : (
-        <p
-          className="mb-3 font-metadata text-metadata text-on-surface-variant"
-          role="status"
-        >
-          {noCitationLabel}
-        </p>
-      )}
-      {displayBadges.length > 0 && (
-        <ul className="mb-3 flex flex-col gap-2">
-          {displayBadges.map((badge) => {
-            const badgeStyles = threeRStyles[badge.type] ?? threeRStyles.replacement
-            return (
-              <li
-                key={badge.type}
-                className="flex flex-col gap-1 sm:flex-row sm:items-start sm:gap-card-gap"
-              >
-                <span
-                  className={`w-fit shrink-0 rounded border px-2 py-0.5 font-badge-button text-badge-button uppercase tracking-tight ${badgeStyles.badge}`}
-                >
-                  {badge.label ?? badge.type}
-                </span>
-                {badge.rationale ? (
-                  <p className="font-metadata text-metadata text-on-secondary-container">
-                    {badge.rationale}
-                  </p>
-                ) : null}
-              </li>
-            )
-          })}
-        </ul>
-      )}
-      {validationStatus && (
-        <p className={`font-metadata text-metadata font-medium ${styles.accent}`}>
-          Validation Status: {validationStatus}
-        </p>
-      )}
-      {regulatoryStatuses.length > 0 && (
-        <div className="mt-2">
-          <p className="mb-1 font-metadata text-metadata text-on-surface-variant">
-            Approved jurisdictions:
-          </p>
-          <div className="flex flex-wrap items-center gap-fine-gap">
-            {regulatoryStatuses.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => setSelectedRegulation(item)}
-                className="rounded border border-border-subtle bg-surface-container px-2 py-0.5 font-badge-button text-badge-button text-on-surface transition-colors hover:border-border-emphasis hover:bg-surface-container-low"
-              >
-                {item.label}
-              </button>
-            ))}
           </div>
-        </div>
-      )}
-      {purpose ? (
-        <p className="mt-2 font-metadata text-metadata text-on-secondary-container">
-          {purposeLabel ? `${purposeLabel}: ${purpose}` : purpose}
-        </p>
+        ) : null}
+
+        {description ? (
+          <p className="pt-1 font-body-base text-body-base text-on-secondary-container">
+            <HighlightedText text={description} query={highlightQuery} />
+          </p>
+        ) : null}
+
+        {detailRows.length > 0 ? (
+          <dl className="space-y-2 font-metadata text-metadata text-on-secondary-container">
+            {detailRows.map((row) => (
+              <div key={row.key} className="flex flex-wrap gap-x-2">
+                <dt className="text-on-surface-variant">{row.label}</dt>
+                <dd>
+                  <HighlightedText text={row.value} query={highlightQuery} />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+
+        {citationText || sourceHref ? (
+          <div className="space-y-1.5 border-t border-border-subtle pt-3">
+            {citationText && !citationIsOnlyUrl ? (
+              <p className="break-words font-metadata text-metadata text-on-secondary-container">
+                <span className="text-on-surface-variant">
+                  {referenceLabel}:{' '}
+                </span>
+                {sourceHref ? (
+                  <ExternalLink href={sourceHref}>
+                    <HighlightedText
+                      text={citationText}
+                      query={highlightQuery}
+                    />
+                  </ExternalLink>
+                ) : isHttpUrl(citationText) ? (
+                  <ExternalLink href={citationText}>
+                    <HighlightedText
+                      text={citationText}
+                      query={highlightQuery}
+                    />
+                  </ExternalLink>
+                ) : (
+                  <HighlightedText text={citationText} query={highlightQuery} />
+                )}
+              </p>
+            ) : sourceHref ? (
+              <p className="break-words font-metadata text-metadata">
+                <span className="text-on-surface-variant">
+                  {referenceLabel}:{' '}
+                </span>
+                <ExternalLink href={sourceHref}>
+                  <HighlightedText
+                    text={citationText && citationIsOnlyUrl ? citationText : sourceHref}
+                    query={highlightQuery}
+                  />
+                </ExternalLink>
+              </p>
+            ) : (
+              <p
+                className="font-metadata text-metadata text-on-surface-variant"
+                role="status"
+              >
+                {noCitationLabel}
+              </p>
+            )}
+          </div>
+        ) : noCitationLabel ? (
+          <p
+            className="font-metadata text-metadata text-on-surface-variant"
+            role="status"
+          >
+            {noCitationLabel}
+          </p>
+        ) : null}
+
+        {displayBadges.length > 0 ? (
+          <div className="space-y-2 border-t border-border-subtle pt-3">
+            <ul className="flex flex-wrap gap-1.5">
+              {displayBadges.map((badge) => {
+                const hasRationale = Boolean(badge.rationale)
+                const isActive = activeRationale === badge.type
+                const className = `w-fit rounded border px-2 py-0.5 font-badge-button text-badge-button uppercase tracking-tight bg-reduction-bg text-reduction-text border-reduction-border ${
+                  hasRationale
+                    ? 'cursor-pointer transition-opacity hover:opacity-90'
+                    : ''
+                } ${isActive ? 'ring-1 ring-primary/30' : ''}`
+
+                if (!hasRationale) {
+                  return (
+                    <li key={badge.type}>
+                      <span className={className}>
+                        <HighlightedText
+                          text={badge.label ?? badge.type}
+                          query={highlightQuery}
+                        />
+                      </span>
+                    </li>
+                  )
+                }
+
+                return (
+                  <li key={badge.type}>
+                    <button
+                      type="button"
+                      aria-expanded={isActive}
+                      aria-label={t('s3.toggleRationale', {
+                        label: badge.label ?? badge.type,
+                      })}
+                      onClick={() =>
+                        setActiveRationale(isActive ? null : badge.type)
+                      }
+                      className={className}
+                    >
+                      <HighlightedText
+                        text={badge.label ?? badge.type}
+                        query={highlightQuery}
+                      />
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+            {activeBadge?.rationale ? (
+              <p className="rounded-md bg-surface-container px-3 py-2 font-metadata text-metadata text-on-secondary-container">
+                <HighlightedText
+                  text={activeBadge.rationale}
+                  query={highlightQuery}
+                />
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {(validationStatus ||
+          regulatoryStatuses.length > 0) && (
+          <div className="space-y-2">
+            {validationStatus ? (
+              <p
+                className={`font-metadata text-metadata font-medium ${styles.accent}`}
+              >
+                <span className="font-normal text-on-surface-variant">
+                  {validationStatusLabel}:{' '}
+                </span>
+                <HighlightedText
+                  text={validationStatus}
+                  query={highlightQuery}
+                />
+              </p>
+            ) : null}
+            {regulatoryStatuses.length > 0 ? (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="font-metadata text-metadata text-on-surface-variant">
+                    {approvedJurisdictionsLabel}:
+                  </span>
+                  {regulatoryStatuses.map((item) => {
+                    const isActive = selectedRegulation?.key === item.key
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        aria-expanded={isActive}
+                        onClick={() =>
+                          setSelectedRegulation(isActive ? null : item)
+                        }
+                        className={`rounded border border-border-subtle bg-surface-container px-2 py-0.5 font-badge-button text-badge-button text-on-surface transition-colors hover:border-border-emphasis hover:bg-surface-container-low ${
+                          isActive ? 'ring-1 ring-primary/30' : ''
+                        }`}
+                      >
+                        <HighlightedText
+                          text={item.label}
+                          query={highlightQuery}
+                        />
+                      </button>
+                    )
+                  })}
+                </div>
+                {selectedRegulation ? (
+                  <RegulationDetail
+                    item={selectedRegulation}
+                    statusLabel={regulationStatusLabel}
+                    purposeLabel={purposeLabel}
+                    highlightQuery={highlightQuery}
+                    onEdit={
+                      onEditRegulation && selectedRegulation.id != null
+                        ? onEditRegulation
+                        : null
+                    }
+                    editLabel={editRegulationLabel}
+                  />
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        )}
+      </div>
+      {endAction ? (
+        <div className="absolute bottom-0 right-0 z-10">{endAction}</div>
       ) : null}
-      <RegulationModal
-        item={selectedRegulation}
-        onClose={() => setSelectedRegulation(null)}
-        closeLabel={closeLabel}
-        noCitationLabel={noRegulatoryCitationLabel}
-        linkLabel={regulatoryLinkLabel}
-      />
     </article>
   )
 }

@@ -162,6 +162,8 @@ All compressions applied must be documented in `execution-log.md`.
 
 **Consequences:** S6 is harder to find on first use. Acceptable — method suggestion is a power-user action, not a primary job-to-be-done.
 
+**Revision (ADR-024):** Primary discovery nav item renamed **Buscar → Explore**; Glossary and Info added as supporting nav. S6 placement unchanged.
+
 ---
 
 ## ADR-009 — Export visible-but-locked for anonymous users
@@ -436,6 +438,8 @@ Adicionalmente, o vocabulário original de 4 valores (`pharma`, `cosmetics`, `ch
 - `embed_methods.py`: coluna `application_area` → `study_domain` na query de leitura.
 - Frontend S2: label PT "Área de aplicação" → "Domínio do estudo" / EN "Study domain".
 
+Later replaced: `study_domain` / `study_domains` → `applications` (migrations 061–063). Protocol API uses slug `application`; `methods` stores `application_ids INTEGER[]`.
+
 ---
 
 ## ADR-021 — `category_3r` de TEXT para JSONB (múltiplos Rs por método)
@@ -533,17 +537,17 @@ WHERE EXISTS (
 
 ---
 
-## ADR-023 — Colunas TEXT de rationale por R (substitui `category_3r` JSONB)
+## ADR-023 — Colunas de rationale por R (substitui `category_3r` JSONB)
 
-**Decision:** `category_3r JSONB` substituído por três colunas TEXT nullable em `methods`:
+**Decision:** `category_3r JSONB` substituído por três colunas nullable em `methods`:
 
 - `replacement_rationale`
 - `reduction_rationale`
 - `refinement_rationale`
 
-Presença de valor não-nulo/não-vazio = o método qualifica para aquele R. O texto *é* a justificativa auditável — não há coluna companion separada de flag.
+Inicialmente TEXT (migração `007`); depois localizadas como JSONB `{"en-us","pt-br"}` (`040`). Presença de valor não-nulo com texto não-vazio em qualquer locale = o método qualifica para aquele R. O texto *é* a justificativa auditável — não há coluna companion separada de flag.
 
-**Context:** ADR-021 permitia múltiplos Rs, mas só como flags. CEUAs e curadoria precisam de rationale explícita (por que este método conta como replacement vs reduction). Colunas TEXT por R unificam qualificação e auditoria.
+**Context:** ADR-021 permitia múltiplos Rs, mas só como flags. CEUAs e curadoria precisam de rationale explícita (por que este método conta como replacement vs reduction). Colunas de rationale por R unificam qualificação e auditoria.
 
 **Filtro:** `replacement_rationale IS NOT NULL` (idem reduction/refinement), semântica OR no filtro S3 — métodos com *qualquer* R selecionado. API ainda expõe `category_3r` derivado das colunas preenchidas para compatibilidade.
 
@@ -562,3 +566,26 @@ Presença de valor não-nulo/não-vazio = o método qualifica para aquele R. O t
 - `karynn_review_checklist.md`: preencher `*_rationale` nos 25 seeded (casos ambíguos 13, 14–15, 23–25 incluídos).
 - `spec.md` §2.6, `tables.md`: schema Method atualizado.
 - ADR-021 marcado superseded.
+
+---
+
+## ADR-024 — Feedback table split + Explore nav
+
+**Decision:**
+1. Rename recommendation-rating table `feedback` → `query_feedback` (F11).
+2. Create a separate `feedback` table for general product feedback: `user_id`, `url`, `object`, `feedback_text`, `created_at` (F11b).
+3. `POST /feedback` serves F11b only. F11 ratings will use a distinct route (reserved as `POST /query-feedback`) when wired.
+4. S4 product surface is **Explore** (`/explore` with Methods / Regulations / Documents tabs); legacy `/buscar` redirects. Primary nav includes Analisar, Explore, Glossary, Info.
+
+**Context:** Need free-text feedback on catalogue cards without colliding with per-query relevance ratings. Buscar evolved into a browse catalogue rather than filter-only search.
+
+**Pattern baseline:** Repository for feedback writes; Active Record acceptable later for simple CRUD.
+
+**Rationale:** One table cannot cleanly hold both `(query_id, method_id, rating)` and `(url, object, feedback_text)`. Renaming preserves F11 schema history via migration `043`; `044` adds the general table. Explore cards pre-fill `object` with the card title so curators know which entry the comment targets.
+
+**Reversibility:** Medium (data migration if recombined).
+
+**Consequences:**
+- Docs: `tables.md`, `spec.md` workflows W2/W4a/W4b, OpenAPI `POST /feedback` contract.
+- Frontend: `FeedbackModal` on Explore; Result cards show `animal_use` / `test_system` / route / domain detail rows.
+- ADR-008 revised for Explore + supporting nav items.

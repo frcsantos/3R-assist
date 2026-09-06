@@ -15,7 +15,7 @@ def _document(**overrides) -> Document:
         slug="concea-rn-18-2014",
         doc_citation=localized_str("RN 18/2014"),
         date=date(2014, 9, 24),
-        category="regulation",
+        categories=["regulation"],
         url="https://example.org/rn-18-2014",
     )
     base.update(overrides)
@@ -119,6 +119,27 @@ def test_exact_date_scores_higher_than_year_only():
     year_score, _ = document_match_score(request, same_year)
     assert kind == "text"
     assert exact_score > year_score
+
+
+def test_text_overlap_prefers_matching_locale():
+    request = PolicyDocumentMatchRequest(
+        document_name="Irritação cutânea guia in vitro",
+        lang="pt",
+    )
+    document = _document(
+        slug="guia-irritacao",
+        doc_citation=localized_str(
+            "OECD Test Guideline Skin Irritation",
+            "Guia Brasileiro de Irritação Cutânea in vitro",
+        ),
+        url=None,
+    )
+    pt_score, _ = document_match_score(request, document)
+    en_score, _ = document_match_score(
+        request.model_copy(update={"lang": "en"}),
+        document,
+    )
+    assert pt_score > en_score
 
 
 def test_unrelated_document_stays_low():

@@ -2,6 +2,7 @@
   "nav": {
     "analyze": "Analyze",
     "explore": "Explore",
+    "literature": "Literature",
     "glossary": "Glossary",
     "info": "Info",
     "admin": "Admin",
@@ -26,7 +27,11 @@
     "rowCount": "Rows {{from}}–{{to}} of {{total}}",
     "prevPage": "Previous",
     "nextPage": "Next",
+    "firstPage": "First",
+    "lastPage": "Last",
+    "goToPage": "Page",
     "pageOf": "Page {{current}} of {{total}}",
+    "pageOfTotal": "of {{total}}",
     "editHint": "Double-click to edit",
     "save": "Save",
     "cancel": "Cancel",
@@ -51,6 +56,9 @@
     "exportCsv": "Export CSV",
     "exporting": "Exporting…",
     "exportError": "Could not export table.",
+    "sortByColumn": "Sort by {{column}}",
+    "sortAscending": "Sorted ascending. Click to sort descending.",
+    "sortDescending": "Sorted descending. Click to sort ascending.",
     "editRow": "Edit row",
     "ok": "OK",
     "addRowError": "Could not add row.",
@@ -58,6 +66,10 @@
     "requiredFieldsMissing": "Required fields missing: {{fields}}",
     "selectRequired": "Select…",
     "selectOptional": "— None —",
+    "booleanTrue": "true",
+    "booleanFalse": "false",
+    "originalValue": "Original: {{value}}",
+    "restoreOriginal": "Restore original value",
 
 
 
@@ -66,17 +78,41 @@
       "subtitle": "Browse and edit public PostgreSQL tables. Double-click a cell to edit."
     },
     "extract": {
-      "label": "Extract",
+      "label": "Doc Extraction",
       "subtitle": "Extract approved methods and document metadata from policy text.",
-      "policyLabel": "Policy extraction",
-      "policyPlaceholder": "Paste a policy, guideline, or regulation text…",
+      "policyLabel": "Document extraction",
+      "policyPlaceholder": "Paste document text, or a page URL…",
+      "upload": "Upload",
+      "uploading": "Uploading…",
+      "clearUpload": "Remove file",
+      "uploadPlaceholder": "Text loaded from uploaded file.",
+      "uploadTypeError": "Supported file types: PDF, HTML, TXT.",
+      "uploadTooLarge": "The uploaded file is too large.",
+      "uploadNoText": "Could not extract enough text from the file.",
+      "uploadReadError": "Could not read the uploaded file.",
+      "documentTypeLabel": "Type of document (optional)",
+      "documentType": {
+        "regulation": "Regulation / Policy",
+        "protocol": "Protocol",
+        "guideline": "Guideline",
+        "other": "Other"
+      },
       "charCount": "{{count}} / {{max}}",
       "tooShort": "Minimum {{min}} characters",
       "submit": "Extract",
-      "submittingSeconds": "Extracting… {{seconds}}s",
+      "fetchingSeconds": "Fetching... ({{seconds}}s) — Click to Cancel",
+      "estimatingSeconds": "Estimating... ({{seconds}}s) — Click to Cancel",
+      "proceed": "Proceed?",
+      "costEstimate": "Estimated cost: {{cost}} ({{inputTokens}} input + ~{{outputTokens}} output tokens)",
+      "submittingSeconds": "Extracting... ({{seconds}}s) — Click to Cancel",
+      "cancelled": "Cancelled.",
       "error": "Could not extract policy data.",
+      "urlInvalid": "Invalid URL. Paste the page content instead.",
+      "urlFetchFailed": "Could not fetch the URL. Paste the page content instead.",
+      "urlNoText": "Could not extract text from the page. Paste the page content instead.",
       "resultsTitle": "Extraction results",
-      "documentName": "Document name",
+      "documentName": "Citation",
+      "documentDescription": "Description",
       "documentDate": "Document date",
       "institution": "Responsible institution",
       "url": "URL",
@@ -103,13 +139,24 @@
       "addDocument": "Add document",
       "addNewDocument": "Add new document",
       "addDocumentError": "Could not open the add-document form.",
+      "editDocumentError": "Could not open the edit-document form.",
       "addMethod": "Add method",
       "addMethodError": "Could not open the add-method form.",
+      "editMethodError": "Could not open the edit-method form.",
       "addRegulation": "Add regulation",
       "addRegulationError": "Could not open the add-regulation form.",
+      "editRegulationError": "Could not open the edit-regulation form.",
       "methodProtocolLabel": "Method protocol",
       "methodProtocolPlaceholder": "Paste the method protocol, guideline, or TG document text…",
       "methodProtocolHint": "Submit to ask the model to fill the form fields from the document.",
+      "documentSourceLabel": "Document source",
+      "documentSourcePlaceholder": "Paste document text, or a page URL…",
+      "documentSourceHint": "Extract to update differing fields. Previous values stay visible under each changed field.",
+      "documentDraftError": "Could not extract document fields from the source.",
+      "regulationSourceLabel": "Regulation source",
+      "regulationSourcePlaceholder": "Paste regulation / recognition text, or a page URL…",
+      "regulationSourceHint": "Extract to update differing fields. Previous values stay visible under each changed field.",
+      "regulationDraftError": "Could not extract regulation fields from the source.",
       "methodDraftExtract": "Extract fields",
       "methodDraftExtracting": "Extracting…",
       "methodDraftError": "Could not extract method fields from the protocol.",
@@ -117,19 +164,27 @@
       "matchByText": "Text similarity",
       "regulatoryStatus": "Regulatory status",
       "inactive": "inactive",
-      "savedTitle": "Saved extractions",
+      "active": "active",
+      "slugLabel": "Slug",
+      "savedTitle": "Previous Extractions",
       "savedMeta": "{{date}} · {{count}} methods",
+      "savedMetaDocument": "{{date}} · document fields",
       "removeSaved": "Remove"
     },
     "docs": {
-      "label": "Docs",
+      "label": "Project Docs",
       "subtitle": "Internal documentation and review materials.",
-      "placeholder": "Docs — coming soon."
+      "empty": "No project docs found.",
+      "close": "Close"
     },
     "settings": {
       "label": "Settings",
       "subtitle": "Admin configuration.",
-      "placeholder": "Settings — coming soon."
+      "placeholder": "Settings — coming soon.",
+      "loading": "Loading settings…",
+      "error": "Could not load settings.",
+      "environment": "Environment",
+      "modelName": "Model name"
     }
   },
   "s1": {
@@ -137,6 +192,15 @@
     "subtitle": "In Portuguese or English.",
     "pasteLabel": "Paste protocol text",
     "placeholder": "We used Wistar rats to assess acute oral toxicity…",
+    "upload": "Upload",
+    "uploading": "Uploading…",
+    "clearUpload": "Remove file",
+    "uploadPlaceholder": "Text loaded from uploaded file.",
+    "uploadTypeError": "Supported file types: PDF, HTML, TXT.",
+    "uploadTooLarge": "The uploaded file is too large.",
+    "uploadNoText": "Could not extract enough text from the file.",
+    "uploadReadError": "Could not read the uploaded file.",
+    "uploadError": "Could not upload the file.",
     "submit": "Analyze protocol",
     "submitting": "Analyzing…",
     "submittingSeconds": "Analyzing… {{seconds}}s",
@@ -194,10 +258,9 @@
       "studyType": "Study type (extracted)",
       "endpointCategory": "Endpoint category",
       "route": "Route",
-      "studyDomain": "Study domain",
+      "application": "Application",
       "procedureText": "Procedure text",
       "species": "Species",
-      "regulatory": "Regulatory context",
       "animalCounts": {
         "label": "Animal counts",
         "female": "Females",
@@ -216,23 +279,47 @@
         "phototoxicity": "Phototoxicity",
         "genotoxicity": "Genotoxicity",
         "pyrogenicity": "Pyrogenicity",
-        "skin_absorption": "Skin absorption"
+        "skin_absorption": "Skin absorption",
+        "reproductive_toxicity": "Reproductive and developmental toxicity",
+        "endocrine_activity": "Endocrine activity",
+        "photoreactivity": "Photoreactivity",
+        "aquatic_toxicity": "Aquatic toxicity",
+        "toxicokinetics": "Toxicokinetics",
+        "bacterial_endotoxin": "Bacterial endotoxin",
+        "rabies_diagnosis": "Rabies diagnosis"
       },
       "route": {
-        "oral": "Oral",
-        "intraperitoneal": "Intraperitoneal",
-        "intravenous": "Intravenous",
-        "dermal": "Dermal",
-        "ocular": "Ocular",
+        "cutaneous": "Cutaneous",
         "inhalation": "Inhalation",
-        "in_vitro": "In vitro",
+        "oral": "Oral",
+        "ocular": "Ocular",
+        "intranasal": "Intranasal",
+        "intratracheal": "Intratracheal",
+        "intravenous": "Intravenous",
+        "intra-arterial": "Intra-arterial",
+        "intramuscular": "Intramuscular",
+        "subcutaneous": "Subcutaneous",
+        "intradermal": "Intradermal",
+        "intraperitoneal": "Intraperitoneal",
+        "rectal": "Rectal",
+        "vaginal": "Vaginal",
+        "topical-mucosal": "Topical mucosal",
+        "implantation": "Implantation",
+        "multiple": "Multiple routes",
+        "not-applicable": "Not applicable",
+        "unspecified": "Unspecified",
         "other": "Other"
       },
-      "studyDomain": {
-        "pharma": "Pharmaceutical",
-        "cosmetics": "Cosmetics",
-        "chemical_safety": "Chemical safety",
-        "general": "General research"
+      "application": {
+        "basic-research": "Basic research",
+        "translational-applied-research": "Translational and applied research",
+        "regulatory-use": "Regulatory use",
+        "routine-production": "Routine production",
+        "education-training": "Education and training",
+        "environmental-protection": "Protection of the natural environment",
+        "species-preservation": "Preservation of species",
+        "forensic-inquiry": "Forensic inquiry",
+        "other": "Other"
       },
       "species": {
         "rat": "Rat",
@@ -254,8 +341,15 @@
     "protocolSummary": "Protocol summary",
     "recommendedAlternatives": "Recommended alternatives",
     "matchedParams": "Matched parameters",
-    "matchLabel": "Match",
+    "matchLabel": "Relevance",
     "sourceLink": "Primary source",
+    "referenceLabel": "Reference",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "showCitation": "Full citation",
+    "hideCitation": "Hide citation",
+    "rationaleHint": "Select a 3Rs badge to read the rationale.",
+    "toggleRationale": "Show rationale for {{label}}",
     "noProtocolCitation": "No protocol citation available.",
     "noRegulatoryCitation": "No regulatory citation available.",
     "regulatoryLink": "Open regulatory source",
@@ -277,9 +371,12 @@
       "oecd": "OECD"
     },
     "validationStatus": {
+      "not_evaluated": "Not evaluated",
+      "under_validation": "Under validation",
       "validated": "Validated",
-      "in_process_of_validation": "In process of validation",
-      "not_validated": "Not validated"
+      "partially_validated": "Partially validated",
+      "not_validated": "Not validated",
+      "unclear": "Unclear"
     },
     "regulatoryStatus": {
       "not_approved": "Not approved",
@@ -287,7 +384,35 @@
       "recommended": "Recommended",
       "mandatory": "Mandatory"
     },
-    "purposeLabel": "Purpose",
+    "purposeLabel": "Endpoint",
+    "regulationStatusLabel": "Regulation status",
+    "validationStatusLabel": "Validation status",
+    "approvedJurisdictionsLabel": "Approved jurisdictions",
+    "routeAgnostic": "Route-agnostic",
+    "fields": {
+      "animalUse": "Animal use",
+      "testSystem": "Test system",
+      "routesApplicable": "Routes applicable"
+    },
+    "enums": {
+      "animalUse": {
+        "none": "None",
+        "animal_derived_material": "Animal-derived material",
+        "slaughterhouse_byproduct": "Slaughterhouse byproduct",
+        "animals_killed_for_tissue": "Animals killed for tissue",
+        "live_animals": "Live animals",
+        "mixed_or_variable": "Mixed or variable"
+      },
+      "testSystem": {
+        "in_silico": "In silico",
+        "in_chemico": "In chemico",
+        "in_vitro": "In vitro",
+        "ex_vivo": "Ex vivo",
+        "in_vivo": "In vivo",
+        "hybrid": "Hybrid",
+        "unclear": "Unclear"
+      }
+    },
     "threeR": {
       "replacement": "Replacement",
       "reduction": "Reduction",
@@ -299,31 +424,97 @@
     "tabsLabel": "Explore sections",
     "loading": "Loading…",
     "loadError": "Could not load catalogue data.",
-    "filterPlaceholder": "Filter by name…",
+    "filterPlaceholder": "Filter…",
     "noMatches": "No items match this filter.",
     "expand": "Expand details",
     "collapse": "Collapse details",
+    "reportFeedback": "Report feedback about this item",
     "fields": {
-      "category": "Category",
+      "categories": "Categories",
+      "institution": "Institution",
       "date": "Date",
       "url": "URL"
     },
     "documentCategory": {
       "method_protocol": "Method protocol",
       "guideline": "Guideline",
-      "regulation": "Regulation"
+      "regulation": "Regulation",
+      "other": "Other"
     },
     "methods": {
       "label": "Methods",
       "empty": "No methods in the catalogue yet."
     },
+    "associatedRegulations": "Associated regulations",
+    "noAssociatedRegulations": "No methods are linked to this document yet.",
     "regulations": {
       "label": "Regulations",
       "empty": "No regulations or guidelines in the catalogue yet."
     },
     "documents": {
       "label": "Documents",
-      "empty": "No method protocol documents in the catalogue yet."
+      "empty": "No documents in the catalogue yet."
     }
+  },
+  "litSearch": {
+    "title": "Literature search",
+    "subtitle": "Paste a study description including hypothesis, objectives, and methods. The system will search PubMed for alternatives.",
+    "inputLabel": "Study description",
+    "placeholder": "Include:\n• Scientific hypothesis — what question is this study answering?\n• Objectives — what outcomes are measured?\n• Detailed methods — species, procedure, duration, guideline followed\n\nExample: We hypothesize that compound X causes acute dermal irritation. The objective is to determine its irritation potential for REACH registration. Wistar rats (n=10) will receive occlusive patch application of 0.5 mL/kg for 4 hours under OECD TG 404...",
+    "tooShort": "Minimum {{min}} characters",
+    "submit": "Search literature",
+    "analyzing": "Searching PubMed literature…",
+    "error": "Could not complete the literature search. Please try again.",
+    "retry": "Retry"
+  },
+  "pubmed": {
+    "cta": {
+      "label": "Search emerging literature →",
+      "description": "Search the full PubMed database for non-validated alternatives not yet recognized by regulatory bodies."
+    },
+    "page": {
+      "title": "Emerging literature alternatives",
+      "subtitle": "PubMed-wide search for methods that may reduce, replace, or refine animal use — not yet validated by regulatory bodies.",
+      "backToResults": "Back to validated alternatives",
+      "analyzing": "Searching PubMed literature…",
+      "error": "Could not complete the literature search. Please try again.",
+      "retry": "Retry",
+      "endpointHypothesis": "Endpoint / hypothesis:",
+      "literatureAlternatives": "Literature candidates",
+      "totalSearched": "Searched {{count}} candidate records",
+      "noLiterature": "No relevant literature was found for this protocol. The PubMed index may not yet contain emerging alternatives for this endpoint."
+    },
+    "necessity": {
+      "title": "Animal use necessity",
+      "not_necessary": "Not necessary",
+      "possibly_avoidable": "Possibly avoidable",
+      "necessary": "Necessary",
+      "keyConcerns": "Key concerns",
+      "confidence": {
+        "high": "High confidence",
+        "medium": "Medium confidence",
+        "low": "Low confidence"
+      }
+    },
+    "summary": {
+      "title": "Evidence synthesis",
+      "citedArticles": "Cited articles"
+    },
+    "results": {
+      "scoreLabel": "Relevance:",
+      "pubmedLink": "View on PubMed"
+    }
+  },
+  "feedback": {
+    "title": "Send feedback",
+    "objectLabel": "About",
+    "textLabel": "Your feedback",
+    "textPlaceholder": "Describe the issue or suggestion…",
+    "submit": "Submit",
+    "submitting": "Submitting…",
+    "cancel": "Cancel",
+    "close": "Close",
+    "success": "Thanks — your feedback was sent.",
+    "submitError": "Could not send feedback. Please try again."
   }
 }
