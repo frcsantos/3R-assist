@@ -614,3 +614,37 @@ Inicialmente TEXT (migração `007`); depois localizadas como JSONB `{"en-us","p
 - `backend/requirements.txt` unchanged for the API; pgvector extension required on the database (`CREATE EXTENSION vector`).
 - `NecessityService.assess` verdict exists in models but is **not yet wired** into `PubMedAnalysisResponse` (`necessity` currently `null` in API output) — wire before pilot claims necessity support.
 - Docs: `tables.md` (pubmed tables), `spec.md` (F19 split — real-time ingestion remains Phase 4; local batch ingestion shipped earlier), `info.md`, `execution-log.md`.
+
+---
+
+## ADR-026 — Vocabulário `animal_use`: definições canônicas e regras de curadoria
+
+**Decision:** `methods.animal_use` mantém exatamente os seis valores existentes (migrações `037`/`041`, CHECK constraint) e ganha definições canônicas + regras de curadoria documentadas (glossário e este ADR):
+
+| Valor | Definição |
+|---|---|
+| `none` | Nenhum animal e nenhum material de origem animal é utilizado. |
+| `animal_derived_material` | Produtos obtidos de animais (soros, anticorpos, enzimas, …) sem que animais sejam mortos para a coleta de tecido deste método. |
+| `slaughterhouse_byproduct` | Tecidos/órgãos de animais já abatidos para alimentação ou outros fins primários (ex.: EVEIT). |
+| `animals_killed_for_tissue` | Animais mortos especificamente para obter tecido para o método. |
+| `live_animals` | Animais vivos usados no procedimento. |
+| `mixed_or_variable` | Mais de uma classe claramente se aplica, ou o uso varia. |
+
+Regras de curadoria:
+1. Um único valor por método (não multi-select).
+2. Classifica-se o uso que o método faz de animais **como método** — não o que o protocolo original substituído fazia.
+3. `none` exige ausência de animais *e* de materiais derivados (ex.: in silico puro, in chemico, culturas sem soro animal).
+4. `animal_derived_material` vs `animals_killed_for_tissue`: a distinção é se animais são mortos **especificamente para o tecido deste método**. Soro/FBS comercial = `animal_derived_material`; extração de tecido de animal morto para o ensaio = `animals_killed_for_tissue`.
+5. `slaughterhouse_byproduct`: tecido de animais já abatidos para outros fins primários — não conta como `live_animals` nem `animals_killed_for_tissue`.
+6. `mixed_or_variable`: mais de uma classe claramente presente no mesmo método, ou o uso varia entre versões/protocolos.
+7. `NULL` é permitido e significa “não classificado” — nunca assumir `none`.
+8. Mudanças de classificação passam pela checklist Karynn.
+
+**Context:** O vocabulário foi introduzido nas migrações `037`/`041` com CHECK constraint e comentário de coluna, mas nenhum doc definia os valores nem as regras de curadoria: `tables.md` listava apenas os slugs; o glossário cobria endpoint/método/metodologia/rota/aplicação sem `animal_use`; o prompt de curadoria (`method_draft_extraction.py`) trazia orientação curta sem fonte canônica consultável. Risco: classificações inconsistentes na curadoria e filtros S3 ambíguos.
+
+**Reversibility:** Alta — texto apenas; os valores e a constraint não mudam.
+
+**Consequences:**
+- `docs/glossary_en.md` / `docs/glossary_pt.md`: entradas “Animal use” / “Uso de animais” (e “Animal counts” / “Contagem de animais”).
+- `docs/tables.md`: linha `animal_use` referencia glossário + ADR-026.
+- `app/prompts/method_draft_extraction.py`: orientações do prompt permanecem alinhadas; fonte canônica passa a ser este ADR (mudanças devem ser sincronizadas nos dois lugares).
