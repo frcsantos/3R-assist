@@ -39,7 +39,7 @@ class NecessityService:
         prompt = build_necessity_prompt(
             protocol_text=protocol_text,
             endpoint_category=params.endpoint_category,
-            study_domain=params.study_domain,
+            study_domain=params.application,
             species=params.species,
             route=params.route,
             procedure_text=params.procedure_text,
@@ -54,6 +54,10 @@ class NecessityService:
             payload = json.loads(raw)
         except json.JSONDecodeError as exc:
             return _fallback(f"JSON parse error: {exc}")
+        if not isinstance(payload, dict):
+            return _fallback(
+                f"Expected JSON object, got {type(payload).__name__}"
+            )
 
         verdict = payload.get("verdict", "necessary")
         if verdict not in _VALID_VERDICTS:
@@ -63,10 +67,21 @@ class NecessityService:
         if confidence not in _VALID_CONFIDENCE:
             confidence = "low"
 
+        key_concerns = payload.get("key_concerns", [])
+        if not isinstance(key_concerns, list):
+            key_concerns = []
+        key_concerns = [str(item) for item in key_concerns]
+        rationale = payload.get("rationale", "")
+        if not isinstance(rationale, str):
+            rationale = ""
+        suggested = payload.get("suggested_approach")
+        if not isinstance(suggested, str):
+            suggested = None
+
         return NecessityAssessment(
             verdict=verdict,
             confidence=confidence,
-            rationale=payload.get("rationale", ""),
-            key_concerns=payload.get("key_concerns", []),
-            suggested_approach=payload.get("suggested_approach"),
+            rationale=rationale,
+            key_concerns=key_concerns,
+            suggested_approach=suggested,
         )

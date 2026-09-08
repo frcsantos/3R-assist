@@ -1054,7 +1054,7 @@ class LlmCallAdapter(LLMAdapter):
             import llmcall as _llmcall
             from llmcall import CallConstraints, LLMError as LlmCallError
         except ImportError:
-        logger.warning("llmcall package is not installed")
+            logger.warning("llmcall package is not installed")
             return None
         kwargs: dict = {"max_tokens": max_tokens}
         if json_mode:
@@ -1077,7 +1077,7 @@ class LlmCallAdapter(LLMAdapter):
         except ImportError:
             return ExtractionError(message="llmcall package is not installed.")
 
-        result = llmcall.call(
+        result = _llmcall.call(
             self._model,
             build_extraction_prompt(text, source_language=source_language),
             constraints=CallConstraints(
@@ -1087,8 +1087,214 @@ class LlmCallAdapter(LLMAdapter):
         )
         if isinstance(result, LlmCallError):
             logger.warning("LLM API error: %s", result.message)
-            return None
-        return result.content
+            return ExtractionError(message=f"LLM API error: {result.message}")
+        return _extract_from_raw(result.content)
+
+    def extract_policy(
+        self,
+        text: str,
+        *,
+        source_url: str | None = None,
+        source_language: str = "English",
+    ) -> PolicyExtractResponse | ExtractionError:
+        try:
+            import llmcall
+            from llmcall import CallConstraints, LLMError as LlmCallError
+        except ImportError:
+            return ExtractionError(message="llmcall package is not installed.")
+
+        result = llmcall.call(
+            self._model,
+            build_policy_extraction_prompt(
+                text,
+                source_url=source_url,
+                source_language=source_language,
+            ),
+            constraints=CallConstraints(
+                max_tokens=POLICY_EXTRACTION_MAX_TOKENS,
+                response_format="json",
+            ),
+        )
+        if isinstance(result, LlmCallError):
+            error = ExtractionError(
+                message=result.message,
+                reason="llm_api_error",
+            )
+            log_extraction_error(error)
+            return error
+
+        raw_content = result.content
+        try:
+            payload = _parse_json_payload(raw_content)
+        except json.JSONDecodeError as exc:
+            error = ExtractionError(
+                message=f"LLM response is not valid JSON: {exc}",
+                reason="json_decode_error",
+                raw_response=truncate_raw_response(raw_content),
+            )
+            log_extraction_error(error)
+            return error
+
+        parsed = _policy_from_payload(
+            payload,
+            raw_response=raw_content,
+            source_url=source_url,
+            source_text=text,
+        )
+        if isinstance(parsed, ExtractionError):
+            log_extraction_error(parsed)
+        return parsed
+
+    def extract_method_draft(
+        self, text: str
+    ) -> MethodDraftExtractResponse | ExtractionError:
+        try:
+            import llmcall
+            from llmcall import CallConstraints, LLMError as LlmCallError
+        except ImportError:
+            return ExtractionError(message="llmcall package is not installed.")
+
+        result = llmcall.call(
+            self._model,
+            build_method_draft_extraction_prompt(text),
+            constraints=CallConstraints(
+                max_tokens=METHOD_DRAFT_EXTRACTION_MAX_TOKENS,
+                response_format="json",
+            ),
+        )
+        if isinstance(result, LlmCallError):
+            error = ExtractionError(
+                message=result.message,
+                reason="llm_api_error",
+            )
+            log_extraction_error(error)
+            return error
+
+        raw_content = result.content
+        try:
+            payload = _parse_json_payload(raw_content)
+        except json.JSONDecodeError as exc:
+            error = ExtractionError(
+                message=f"LLM response is not valid JSON: {exc}",
+                reason="json_decode_error",
+                raw_response=truncate_raw_response(raw_content),
+            )
+            log_extraction_error(error)
+            return error
+
+        parsed = _method_draft_from_payload(
+            payload,
+            raw_response=raw_content,
+        )
+        if isinstance(parsed, ExtractionError):
+            log_extraction_error(parsed)
+        return parsed
+
+    def extract_document_draft(
+        self,
+        text: str,
+        *,
+        category_hint: str | None = None,
+        source_url: str | None = None,
+        source_language: str = "English",
+    ) -> DocumentDraftExtractResponse | ExtractionError:
+        try:
+            import llmcall
+            from llmcall import CallConstraints, LLMError as LlmCallError
+        except ImportError:
+            return ExtractionError(message="llmcall package is not installed.")
+
+        result = llmcall.call(
+            self._model,
+            build_document_draft_extraction_prompt(
+                text,
+                category_hint=category_hint,
+                source_url=source_url,
+                source_language=source_language,
+            ),
+            constraints=CallConstraints(
+                max_tokens=DOCUMENT_DRAFT_EXTRACTION_MAX_TOKENS,
+                response_format="json",
+            ),
+        )
+        if isinstance(result, LlmCallError):
+            error = ExtractionError(
+                message=result.message,
+                reason="llm_api_error",
+            )
+            log_extraction_error(error)
+            return error
+
+        raw_content = result.content
+        try:
+            payload = _parse_json_payload(raw_content)
+        except json.JSONDecodeError as exc:
+            error = ExtractionError(
+                message=f"LLM response is not valid JSON: {exc}",
+                reason="json_decode_error",
+                raw_response=truncate_raw_response(raw_content),
+            )
+            log_extraction_error(error)
+            return error
+
+        parsed = _document_draft_from_payload(
+            payload,
+            category_hint=category_hint,
+            source_url=source_url,
+            source_text=text,
+            raw_response=raw_content,
+        )
+        if isinstance(parsed, ExtractionError):
+            log_extraction_error(parsed)
+        return parsed
+
+    def extract_regulation_draft(
+        self,
+        text: str,
+        *,
+        source_url: str | None = None,
+    ) -> RegulationDraftExtractResponse | ExtractionError:
+        try:
+            import llmcall
+            from llmcall import CallConstraints, LLMError as LlmCallError
+        except ImportError:
+            return ExtractionError(message="llmcall package is not installed.")
+
+        result = llmcall.call(
+            self._model,
+            build_regulation_draft_extraction_prompt(text, source_url=source_url),
+            constraints=CallConstraints(
+                max_tokens=REGULATION_DRAFT_EXTRACTION_MAX_TOKENS,
+                response_format="json",
+            ),
+        )
+        if isinstance(result, LlmCallError):
+            error = ExtractionError(
+                message=result.message,
+                reason="llm_api_error",
+            )
+            log_extraction_error(error)
+            return error
+
+        raw_content = result.content
+        try:
+            payload = _parse_json_payload(raw_content)
+        except json.JSONDecodeError as exc:
+            error = ExtractionError(
+                message=f"LLM response is not valid JSON: {exc}",
+                reason="json_decode_error",
+                raw_response=truncate_raw_response(raw_content),
+            )
+            log_extraction_error(error)
+            return error
+
+        parsed = _regulation_draft_from_payload(
+            payload,
+            raw_response=raw_content,
+        )
+        if isinstance(parsed, ExtractionError):
+            log_extraction_error(parsed)
+        return parsed
 
 
 class OllamaLLMAdapter(LLMAdapter):
@@ -1846,3 +2052,6 @@ def build_llm_adapter(
 ) -> LLMAdapter:
     if ollama_model:
         return OllamaLLMAdapter(model=ollama_model)
+    if use_stub:
+        return StubLLMAdapter()
+    return LlmCallAdapter(model=model)

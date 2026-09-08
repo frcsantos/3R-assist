@@ -213,7 +213,7 @@ class PubMedRetrievalService:
     ) -> list[dict] | None:
         prompt = build_ranking_prompt(
             endpoint_category=params.endpoint_category,
-            study_domain=params.study_domain,
+            study_domain=params.application,
             procedure_text=params.procedure_text,
             candidates=candidates,
         )
@@ -222,10 +222,14 @@ class PubMedRetrievalService:
             logger.warning("LLM ranking unavailable — no model configured or call failed")
             return None
         try:
-            return json.loads(raw).get("ranked", [])
+            ranked = json.loads(raw).get("ranked", [])
         except (json.JSONDecodeError, AttributeError) as exc:
             logger.warning("LLM ranking parse error: %s", exc)
             return None
+        if not isinstance(ranked, list):
+            logger.warning("LLM ranking parse error: 'ranked' is not a list")
+            return None
+        return ranked
 
     # ──────────────────────────────────────────────────────────────────────────
     # Build final recommendations applying 3R weights
@@ -239,6 +243,8 @@ class PubMedRetrievalService:
     ) -> list[PubMedRecommendation]:
         scored: list[tuple[PubMedRecord, float, dict]] = []
         for item in ranked_meta:
+            if not isinstance(item, dict):
+                continue
             if not item.get("include", False):
                 continue
             pmid = item.get("pmid", "")
@@ -320,7 +326,7 @@ class PubMedRetrievalService:
 
         prompt = build_summary_prompt(
             endpoint_category=params.endpoint_category,
-            study_domain=params.study_domain,
+            study_domain=params.application,
             procedure_text=params.procedure_text,
             recommendations=llm_input,
         )
@@ -335,9 +341,14 @@ class PubMedRetrievalService:
         except (json.JSONDecodeError, AttributeError) as exc:
             logger.warning("Summary parse error: %s", exc)
             return None, []
+        if not isinstance(payload, dict):
+            logger.warning("Summary parse error: expected object, got %s", type(payload).__name__)
+            return None, []
 
         summary = payload.get("summary") or None
         cited_pmids: list[str] = payload.get("cited_pmids") or []
+        if not isinstance(cited_pmids, list):
+            cited_pmids = []
 
         record_by_pmid = {r.record.pmid: r.record for r in recommendations}
         citations = [
@@ -405,7 +416,7 @@ class PubMedRetrievalService:
         prompt = build_alternative_query_prompt(
             protocol_text=enriched_text,
             endpoint_category=params.endpoint_category,
-            study_domain=params.study_domain,
+            study_domain=params.application,
             species=params.species,
             route=params.route,
             procedure_text=params.procedure_text,
@@ -419,14 +430,20 @@ class PubMedRetrievalService:
         except (json.JSONDecodeError, AttributeError) as exc:
             logger.warning("Search plan parse error: %s", exc)
             return fallback
+        if not isinstance(payload, dict):
+            logger.warning("Search plan parse error: expected object, got %s", type(payload).__name__)
+            return fallback
 
+        raw_alternatives = payload.get("alternatives", [])
+        if not isinstance(raw_alternatives, list):
+            raw_alternatives = []
         alternatives = [
             LLMProposedAlternative(
                 three_r_class=alt.get("three_r_class", "refinement"),
                 method_description=alt.get("method_description", ""),
             )
-            for alt in payload.get("alternatives", [])
-            if alt.get("method_description")
+            for alt in raw_alternatives
+            if isinstance(alt, dict) and alt.get("method_description")
         ]
         # Enforce Replace > Reduce > Refine order so Path B searches are dispatched
         # in priority order (asyncio.gather preserves task order in results).
@@ -456,6 +473,9 @@ class PubMedRetrievalService:
         except (json.JSONDecodeError, AttributeError) as exc:
             logger.warning("Study summary parse error: %s", exc)
             return None
+        if not isinstance(payload, dict):
+            logger.warning("Study summary parse error: expected object, got %s", type(payload).__name__)
+            return None
         q = payload.get("scientific_question", "").strip()
         e = payload.get("endpoint_description", "").strip()
         m = payload.get("current_method", "").strip()
@@ -474,6 +494,6 @@ class PubMedRetrievalService:
             parts.append(params.endpoint_category.replace("_", " "))
         if params.procedure_text:
             parts.append(params.procedure_text)
-        if params.study_domain and params.study_domain != "general":
-            parts.append(params.study_domain.replace("_", " "))
+        if params.application and params.application != "basic-research":
+            parts.append(params.application.replace("-", " "))
         return " ".join(parts) if parts else "toxicology endpoint assessment"
