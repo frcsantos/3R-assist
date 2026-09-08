@@ -1,5 +1,5 @@
 -- =============================================================================
--- 3R Assist — Migration 004: application_area → study_domain (ADR-020)
+-- Assist3R — Migration 004: application_area → study_domain (ADR-020)
 -- Assumes: 001_initial.sql applied; 003 may or may not be applied
 -- =============================================================================
 

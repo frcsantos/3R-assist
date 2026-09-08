@@ -1,4 +1,4 @@
-# Architecture Decision Records — 3R Assist
+# Architecture Decision Records — Assist3R
 
 > ADR log. Every significant architectural, infrastructure, or pattern choice is recorded here.
 > Format: `ADR-[NNN]`. Near-impossible decisions are flagged explicitly.

@@ -1,10 +1,10 @@
-# 3R Assist — Info
+# Assist3R — Info
 
 ## General info
 
 ### Concept
 
-**3R Assist** is an AI-powered decision-support tool for researchers and Animal Research Ethics Committees (CEUAs) to discover validated alternatives to animal use.
+**Assist3R** is an AI-powered decision-support tool for researchers and Animal Research Ethics Committees (CEUAs) to discover validated alternatives to animal use.
 
 A user describes an experimental protocol in free text (Portuguese or English). The system extracts core parameters, matches them against a curated methods database, and returns ranked recommendations classified under the **3Rs** (Replacement / Reduction / Refinement), with jurisdictional validity and links to primary sources.
 

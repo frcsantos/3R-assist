@@ -1,5 +1,5 @@
 -- =============================================================================
--- 3R Assist — Migration 010: add regulatory_status to method_validation_contexts
+-- Assist3R — Migration 010: add regulatory_status to method_validation_contexts
 -- Options: not_approved | approved | recommended | mandatory
 -- Column sits immediately before regulatory_body (after purpose).
 -- =============================================================================

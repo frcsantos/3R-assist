@@ -1,4 +1,4 @@
-# Pattern Preference Register — 3R Assist
+# Pattern Preference Register — Assist3R
 
 > Copied from Framework v1.5 Appendix A at Bootstrap (M0.4).
 > Reviewed against the expected stack: Python backend, RAG pipeline, **PostgreSQL**
@@ -18,7 +18,7 @@ Escalate to **Event-driven** only if async decoupling is the core value proposit
 
 Escalate to **Microservices** only if independent deployment of components is a present, real requirement — not anticipated future scale.
 
-> **3R Assist context:** The RAG pipeline (extraction → embedding → retrieval → ranking) maps naturally to a Service layer. No async decoupling requirement at MVP. Microservices: N/A.
+> **Assist3R context:** The RAG pipeline (extraction → embedding → retrieval → ranking) maps naturally to a Service layer. No async decoupling requirement at MVP. Microservices: N/A.
 
 ---
 
@@ -29,7 +29,7 @@ Escalate to **Microservices** only if independent deployment of components is a 
 - Domain logic does not import infrastructure (databases, HTTP clients, file system) directly. These are injected.
 - **Heuristic:** If a module is hard to unit test without a real database or network call, the boundary is wrong.
 
-> **3R Assist context:** The LLM client (provider-agnostic `LLMAdapter`: llmcall / Ollama / stub) and the embedding model are infrastructure — they must be injected into the extraction and retrieval services, not imported directly. This keeps both testable with mocks.
+> **Assist3R context:** The LLM client (provider-agnostic `LLMAdapter`: llmcall / Ollama / stub) and the embedding model are infrastructure — they must be injected into the extraction and retrieval services, not imported directly. This keeps both testable with mocks.
 
 ---
 
@@ -39,7 +39,7 @@ Escalate to **Microservices** only if independent deployment of components is a 
 
 **Acceptable shortcut:** Active Record for simple CRUD apps with no meaningful domain logic. Must be declared explicitly if chosen.
 
-> **3R Assist context:** Two data domains:
+> **Assist3R context:** Two data domains:
 > 1. **Methods database** (curated alternatives) — Repository pattern with **raw SQL over asyncpg** (no ORM; see ADR-006). Query logic (semantic search + structured filters) is encapsulated in `app/repositories/methods.py`.
 > 2. **User data** (accounts, query history, feedback) — simple repositories (`users.py` is currently a stub; auth not wired). Active Record acceptable given simple CRUD nature.
 
@@ -55,7 +55,7 @@ Escalate to **gRPC** if schema enforcement and binary performance are critical.
 
 In all cases: define the contract before writing any handler code.
 
-> **3R Assist context:** REST is appropriate. GraphQL: N/A. gRPC: N/A. API contracts are defined in `spec.md` §2.11; OpenAPI is auto-generated from FastAPI route type annotations. Error envelope: `{error: {code, message, detail}}`.
+> **Assist3R context:** REST is appropriate. GraphQL: N/A. gRPC: N/A. API contracts are defined in `spec.md` §2.11; OpenAPI is auto-generated from FastAPI route type annotations. Error envelope: `{error: {code, message, detail}}`.
 
 ---
 
@@ -69,7 +69,7 @@ Local component state → Context API / Zustand → Redux / Jotai
 
 Start at local state. Move up only when complexity justifies it.
 
-> **3R Assist context:** Frontend is React 19 + Vite (ADR-003). State stays at local component level and flows through router `location.state`; no global store is used. Escalate only when a real pain point appears.
+> **Assist3R context:** Frontend is React 19 + Vite (ADR-003). State stays at local component level and flows through router `location.state`; no global store is used. Escalate only when a real pain point appears.
 
 ---
 
@@ -77,7 +77,7 @@ Start at local state. Move up only when complexity justifies it.
 
 **Default:** Typed error returns (Result / Either pattern, or typed union returns) inside domain and service layers. Exceptions permitted only at I/O boundaries.
 
-> **3R Assist context:** LLM extraction failures and retrieval misses are expected, not exceptional — they must be typed return values, not exceptions, so the service layer can handle them gracefully (e.g., return "no results found" rather than a 500).
+> **Assist3R context:** LLM extraction failures and retrieval misses are expected, not exceptional — they must be typed return values, not exceptions, so the service layer can handle them gracefully (e.g., return "no results found" rather than a 500).
 
 ---
 
@@ -89,7 +89,7 @@ Start at local state. Move up only when complexity justifies it.
 - No hardcoded config values anywhere in source.
 - Secrets managed via GitHub Secrets / Doppler / Infisical — never committed.
 
-> **3R Assist context:** `.env.example` initialized at M0 with known keys. See `.env.example`.
+> **Assist3R context:** `.env.example` initialized at M0 with known keys. See `.env.example`.
 
 ---
 
@@ -99,7 +99,7 @@ Start at local state. Move up only when complexity justifies it.
 
 Event emitters only for genuinely event-driven flows. Callbacks only when wrapping legacy APIs.
 
-> **3R Assist context:** LLM and embedding calls are I/O-bound — async/await is correct. No event emitter use anticipated at MVP.
+> **Assist3R context:** LLM and embedding calls are I/O-bound — async/await is correct. No event emitter use anticipated at MVP.
 
 ---
 
@@ -109,7 +109,7 @@ Event emitters only for genuinely event-driven flows. Callbacks only when wrappi
 
 Within tests: AAA (Arrange-Act-Assert) structure, one assertion concept per test. Test observable behavior, not implementation details.
 
-> **3R Assist context (Minimal tier):** CI is optional per ADR-001. Manual smoke-test script is the baseline (`backend/scripts/smoke_test.py`). Testing framework: **pytest**; live LLM tests behind the `@pytest.mark.live` marker; frontend uses Node's built-in test runner (`npm test`). Priority test surfaces: parameter extraction (H3), retrieval ranking, feedback submission.
+> **Assist3R context (Minimal tier):** CI is optional per ADR-001. Manual smoke-test script is the baseline (`backend/scripts/smoke_test.py`). Testing framework: **pytest**; live LLM tests behind the `@pytest.mark.live` marker; frontend uses Node's built-in test runner (`npm test`). Priority test surfaces: parameter extraction (H3), retrieval ranking, feedback submission.
 
 ---
 
@@ -117,7 +117,7 @@ Within tests: AAA (Arrange-Act-Assert) structure, one assertion concept per test
 
 **Default:** Composition over inheritance. Co-locate state with the component that owns it.
 
-> **3R Assist context:** No dedicated designer (noted in proposal). AI-assisted mockups in M2.5. Component inventory in `/design/components.md` before M3 implementation.
+> **Assist3R context:** No dedicated designer (noted in proposal). AI-assisted mockups in M2.5. Component inventory in `/design/components.md` before M3 implementation.
 
 ---
 
@@ -125,7 +125,7 @@ Within tests: AAA (Arrange-Act-Assert) structure, one assertion concept per test
 
 **Default:** Define an interface in your domain that represents what you need from the external service — not what the service provides. Implement an adapter that translates between the two.
 
-> **3R Assist context:** Two external integrations requiring ACL:
+> **Assist3R context:** Two external integrations requiring ACL:
 > 1. **Anthropic API** — the domain needs "extracted protocol parameters," not raw LLM message objects. The adapter translates.
 > 2. **Data sources (ALT Web, ECVAM, OECD)** — the domain needs a normalized `Method` entity. The ingestion pipeline is the adapter; external data shapes must not leak into the domain model.
 
@@ -133,7 +133,7 @@ Within tests: AAA (Arrange-Act-Assert) structure, one assertion concept per test
 
 ## GoF Patterns — Use When the Problem Fits
 
-| Pattern | Use when | 3R Assist applicability |
+| Pattern | Use when | Assist3R applicability |
 |---|---|---|
 | **Strategy** | Multiple interchangeable implementations | LLM provider (Anthropic / fallback); embedding model (local / API) — **applicable** |
 | **Observer / Event** | Components react to state changes without tight coupling | N/A at MVP |
@@ -149,7 +149,7 @@ Within tests: AAA (Arrange-Act-Assert) structure, one assertion concept per test
 
 Do not build for requirements that do not exist yet.
 
-> **3R Assist context:** High-risk YAGNI temptations for this project:
+> **Assist3R context:** High-risk YAGNI temptations for this project:
 > - Building a real-time PubMed ingestion pipeline (Phase 4 feature)
 > - Multi-tenant / organization-level accounts (not in MVP)
 > - Configurable LLM provider switching (over-engineering for MVP with a single provider)
@@ -163,7 +163,7 @@ Do not build for requirements that do not exist yet.
 
 **Default:** Measure before optimizing. No caching, denormalization, or query restructuring without a profiling result or observed regression.
 
-> **3R Assist context:** Embedding generation is the most likely performance hotspot. Do not pre-optimize. If the 60-second success threshold is missed during pilot, profile first.
+> **Assist3R context:** Embedding generation is the most likely performance hotspot. Do not pre-optimize. If the 60-second success threshold is missed during pilot, profile first.
 
 ---
 

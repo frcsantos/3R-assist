@@ -2356,7 +2356,7 @@ function DocsPanel() {
 
 const POLICY_TEXT_MIN = 20
 const POLICY_TEXT_MAX = 50000
-const EXTRACT_HISTORY_KEY = '3r_assist.extract.history'
+const EXTRACT_HISTORY_KEY = 'assist3r.extract.history'
 const EXTRACT_HISTORY_MAX = 20
 
 function looksLikeDocumentUrl(value) {

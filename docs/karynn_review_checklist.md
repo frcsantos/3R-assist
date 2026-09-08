@@ -1,4 +1,4 @@
-# Karynn Review Checklist — 3R Assist Methods Database
+# Karynn Review Checklist — Assist3R Methods Database
 
 > **Propósito:** Confirmar todos os campos `[VERIFY]` e preencher contextos de validação antes de `active = TRUE`.
 > Nenhum método é retornado ao usuário até que `active = TRUE` seja definido.

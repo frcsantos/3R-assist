@@ -1,4 +1,4 @@
-# Component Inventory — 3R Assist (Ethos Theme)
+# Component Inventory — Assist3R (Ethos Theme)
 
 > Extracted from Ethos HTML templates. Maps to spec screens S1–S6.
 > Implementation target: `frontend/src/components/`
@@ -10,10 +10,10 @@
 
 | Ethos template | Primary screens | Notes |
 |---|---|---|
-| `landing_page_3r_assist` | Marketing / pre-auth | Hero, features, pricing — not in MVP nav |
-| `entrada_de_protocolo_3r_assist_light` | **S1** Input, partial S2 flow | Protocol textarea, lang toggle, 3R explainer |
-| `dashboard_principal_3r_assist_light` | **S5** History, hub | Summary cards, protocol table, resources |
-| `relat_rio_de_an_lise_3r_assist_light` | **S2** Params, **S3** Results | Extracted params table, recommendation cards, export |
+| `landing_page_assist3r` | Marketing / pre-auth | Hero, features, pricing — not in MVP nav |
+| `entrada_de_protocolo_assist3r_light` | **S1** Input, partial S2 flow | Protocol textarea, lang toggle, 3R explainer |
+| `dashboard_principal_assist3r_light` | **S5** History, hub | Summary cards, protocol table, resources |
+| `relat_rio_de_an_lise_assist3r_light` | **S2** Params, **S3** Results | Extracted params table, recommendation cards, export |
 
 S4 (Search) has no dedicated Ethos template — reuse filter patterns from Pass A + result cards from S3.
 
@@ -233,7 +233,7 @@ S4 (Search) has no dedicated Ethos template — reuse filter patterns from Pass 
 ## Marketing (pre-MVP / landing)
 
 ### `HeroSection`, `FeatureGrid`, `PricingTable`, `Footer`
-- **Source:** `landing_page_3r_assist`
+- **Source:** `landing_page_assist3r`
 - **Note:** defer until post-pilot if not needed for auth funnel
 - **Priority:** P4
 

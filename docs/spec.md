@@ -1,4 +1,4 @@
-# spec.md — 3R Assist
+# spec.md — Assist3R
 
 > Status: 🟢 Phases A–D complete. M2.5 Spec Sync applied. M3 Database sync applied. Phase 1 core pipeline implemented. Explore + general feedback (ADR-024) documented. PubMed literature module + admin toolchain shipped (ADR-025).
 > Input: `project-proposal.md` + `assumption-log.md`
@@ -9,7 +9,7 @@
 
 ### 2.1 Project Definition
 
-3R Assist is an AI-powered decision-support web application for scientific researchers and ethics committee members who need to identify validated alternatives to animal use. A user submits a free-text description of an experimental protocol in Portuguese or English; the system extracts the core parameters (biological model, objective, procedure, endpoint, application area), matches them against a curated database of alternative methods using semantic similarity and structured filters, and returns ranked recommendations classified under the 3Rs framework (Replacement / Reduction / Refinement) with jurisdictional validity indicators and links to primary sources. The core differentiator is that the tool analyzes the protocol before searching — existing resources require the researcher to already know the relevant vocabulary.
+Assist3R is an AI-powered decision-support web application for scientific researchers and ethics committee members who need to identify validated alternatives to animal use. A user submits a free-text description of an experimental protocol in Portuguese or English; the system extracts the core parameters (biological model, objective, procedure, endpoint, application area), matches them against a curated database of alternative methods using semantic similarity and structured filters, and returns ranked recommendations classified under the 3Rs framework (Replacement / Reduction / Refinement) with jurisdictional validity indicators and links to primary sources. The core differentiator is that the tool analyzes the protocol before searching — existing resources require the researcher to already know the relevant vocabulary.
 
 ---
 
@@ -352,7 +352,7 @@ Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension avai
 ### 2.8 Project Structure
 
 ```
-3r-assist/
+assist3r/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                  # FastAPI app, CORS, router registration, lifespan

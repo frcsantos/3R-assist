@@ -1,4 +1,4 @@
-# 3R Assist
+# Assist3R
 
 AI-powered decision-support tool for researchers and ethics committees to discover validated alternatives to animal use in scientific research.
 

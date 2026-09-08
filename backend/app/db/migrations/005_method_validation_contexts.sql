@@ -1,5 +1,5 @@
 -- =============================================================================
--- 3R Assist — Migration 005: ADR-021/022 schema upgrade
+-- Assist3R — Migration 005: ADR-021/022 schema upgrade
 -- Upgrades databases created from pre-rewrite 001_initial.sql:
 --   category_3r TEXT → JSONB
 --   method_validation_contexts table

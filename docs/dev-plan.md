@@ -1,4 +1,4 @@
-# dev-plan.md — 3R Assist
+# dev-plan.md — Assist3R
 
 > Status: � Phase 1 core pipeline + Explore + PubMed module implemented.
 > Input: `spec.md` + `decisions.md` + `patterns.md` + `/design/`

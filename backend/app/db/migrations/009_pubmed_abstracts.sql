@@ -1,5 +1,5 @@
 -- =============================================================================
--- 3R Assist — Migration 009: PubMed abstracts knowledge base (pgvector)
+-- Assist3R — Migration 009: PubMed abstracts knowledge base (pgvector)
 --
 -- Two separate embedding columns support two parallel search paths:
 --   endpoint_embedding  — title + background/objective/conclusions text

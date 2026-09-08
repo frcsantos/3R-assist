@@ -4,10 +4,10 @@
 
 | Tela | Preview local |
 |---|---|
-| Landing | `Ethos Theme/landing_page_3r_assist/code.html` |
-| Dashboard | `Ethos Theme/dashboard_principal_3r_assist_light/code.html` |
-| Entrada de protocolo (S1) | `Ethos Theme/entrada_de_protocolo_3r_assist_light/code.html` |
-| Relatório / resultados (S3) | `Ethos Theme/relat_rio_de_an_lise_3r_assist_light/code.html` |
+| Landing | `Ethos Theme/landing_page_assist3r/code.html` |
+| Dashboard | `Ethos Theme/dashboard_principal_assist3r_light/code.html` |
+| Entrada de protocolo (S1) | `Ethos Theme/entrada_de_protocolo_assist3r_light/code.html` |
+| Relatório / resultados (S3) | `Ethos Theme/relat_rio_de_an_lise_assist3r_light/code.html` |
 
 Tokens: `design/tokens.css` · Componentes: `design/components.md`
 

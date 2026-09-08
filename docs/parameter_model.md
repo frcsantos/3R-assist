@@ -1,4 +1,4 @@
-# Parameter Model — 3R Assist
+# Parameter Model — Assist3R
 > Version: MVP (Phase 1–2)
 > Owner: Leo (implementation) · Karynn (vocabulary validation)
 > Reference: spec.md §2.3 S2, §2.11 POST /analyze; decisions.md ADR-007

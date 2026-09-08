@@ -22,7 +22,7 @@ export default function TopNav() {
             to="/"
             className="font-nav-logo text-nav-logo font-medium text-primary"
           >
-            3R Assist
+            Assist3R
           </NavLink>
           <nav className="hidden items-center gap-6 md:flex" aria-label="Main">
             {routes.map((route) => (

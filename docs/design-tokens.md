@@ -1,4 +1,4 @@
-# Design Tokens — 3R Assist
+# Design Tokens — Assist3R
 
 > **Canonical visual source:** Ethos Research System (`UI design templates/Ethos Theme/ethos_research_system/DESIGN.md`)
 > **Implementation artifacts:** `design/tokens.css` (CSS custom properties), `design/ethos-theme.css` (Tailwind v4 `@theme` bridge — used by the frontend), `design/tailwind.preset.js` (Tailwind v3 reference / non-v4 consumers)

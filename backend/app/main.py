@@ -34,7 +34,7 @@ def create_app() -> FastAPI:
     
     # Adiciona fallback para evitar que configurações ausentes quebrem o app
     app = FastAPI(
-        title="3R Assist API",
+        title="Assist3R API",
         version="0.1.0",
         lifespan=lifespan,
     )

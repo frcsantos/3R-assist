@@ -1,5 +1,5 @@
 -- =============================================================================
--- 3R Assist — Migration 002: Application tables (PostgreSQL)
+-- Assist3R — Migration 002: Application tables (PostgreSQL)
 -- Tables: users, magic_link_tokens, queries, feedback, suggestions
 -- Assumes: 001_initial.sql already applied (methods exist)
 -- =============================================================================

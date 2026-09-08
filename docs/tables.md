@@ -1,6 +1,6 @@
 # Database tables
 
-**PostgreSQL only** (not SQLite). Schema for 3R Assist; source of truth: `backend/app/db/migrations/`.
+**PostgreSQL only** (not SQLite). Schema for Assist3R; source of truth: `backend/app/db/migrations/`.
 
 Engine: PostgreSQL via Neon (Vercel Postgres) or a local PostgreSQL instance. Driver: `asyncpg`. Connection: `DATABASE_URL` (`postgresql://` / `postgres://`). See ADR-013 in `docs/decisions.md`.
 

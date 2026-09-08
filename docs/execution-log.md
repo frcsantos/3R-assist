@@ -1,4 +1,4 @@
-# Execution Log — 3R Assist
+# Execution Log — Assist3R
 
 > **Scope:** Narrative deviation rationale only — what changed from the plan, why, and what it cost.
 > Status tracking belongs in your task tool (Linear, GitHub Projects, etc.).

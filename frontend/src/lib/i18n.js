@@ -3,7 +3,7 @@ import { initReactI18next } from 'react-i18next'
 import pt from '../locales/pt.json'
 import en from '../locales/en.json'
 
-const STORAGE_KEY = '3r-assist.language'
+const STORAGE_KEY = 'assist3r.language'
 
 function normalizeLang(lang) {
   const value = String(lang ?? '').trim().toLowerCase()
