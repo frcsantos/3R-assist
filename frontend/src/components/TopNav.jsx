@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
 import LangToggle from './LangToggle'
 import { currentLanguage, setLanguage } from '../lib/i18n'
+import { isAuthEnabled } from '../lib/auth'
 
 const routes = [
   { key: 'analyze', to: '/' },
@@ -13,6 +15,17 @@ const routes = [
 
 export default function TopNav() {
   const { t } = useTranslation()
+  const [authEnabled, setAuthEnabled] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    void isAuthEnabled().then((value) => {
+      if (!cancelled) setAuthEnabled(value)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 border-b border-border-subtle bg-background">
@@ -58,12 +71,18 @@ export default function TopNav() {
           >
             {t('nav.admin')}
           </NavLink>
-          <button
-            type="button"
-            className="rounded-md bg-primary px-4 py-2 font-nav-link text-nav-link text-on-primary transition-opacity hover:opacity-90"
-          >
-            {t('nav.signIn')}
-          </button>
+          {authEnabled && (
+            <NavLink
+              to="/auth"
+              className={({ isActive }) =>
+                isActive
+                  ? 'rounded-md border border-primary bg-surface-container-low px-4 py-2 font-nav-link text-nav-link font-medium text-primary'
+                  : 'rounded-md bg-primary px-4 py-2 font-nav-link text-nav-link text-on-primary transition-opacity hover:opacity-90'
+              }
+            >
+              {t('nav.signIn')}
+            </NavLink>
+          )}
         </div>
       </div>
     </header>

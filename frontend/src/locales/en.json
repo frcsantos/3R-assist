@@ -11,10 +11,17 @@
   "glossary": {
     "title": "Glossary"
   },
+  "auth": {
+    "title": "Sign in",
+    "subtitle": "Enter your email and we will send you a magic sign-in link.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@institution.org",
+    "sendLink": "Send sign-in link",
+    "openDevLink": "Open sign-in link (development)"
+  },
 
   "info": {
-    "title": "Info",
-    "placeholder": "About Assist3R, methodology, and documentation — coming soon."
+    "title": "Info"
   },
   "admin": {
     "title": "Admin",

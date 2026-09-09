@@ -60,7 +60,7 @@
 **Goal:** Full MVP feature set deployed; internal testing complete.
 
 - [ ] Deploy frontend (Vercel) + backend (Render) + Neon production branch
-- [ ] Auth (magic link, F08) — routes not yet implemented
+- [~] Auth (magic link, F08) — scaffolded behind `USER_SYSTEM_ENABLED=false`; `/auth/*` returns 404 and sign-in UI is hidden until the flag is on. Email delivery (Phase B) still TBD.
 - [ ] Query history (F09) — `QueryRepository` deferred; `queries` table exists
 - [ ] Export PDF/CSV (F10) — `export.py` stub; admin CSV export only
 - [ ] Query ratings UI (F11) — table + contract reserved

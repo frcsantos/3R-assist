@@ -1,12 +1,17 @@
 from functools import lru_cache
 
+from fastapi import Depends, HTTPException, Request
+
 from app.adapters.embedder import EmbedderAdapter, build_embedder
 from app.adapters.llm import LLMAdapter, build_llm_adapter
 from app.config import get_settings
+from app.models.user import User
 from app.repositories.admin import AdminRepository
 from app.repositories.documents import DocumentRepository
 from app.repositories.feedback import FeedbackRepository
 from app.repositories.methods import MethodRepository
+from app.repositories.users import UserRepository
+from app.services.auth import AuthError, AuthService
 from app.services.extraction import ExtractionService
 from app.services.document_draft_extraction import DocumentDraftExtractionService
 from app.services.extract_estimate import ExtractEstimateService
@@ -49,6 +54,46 @@ def get_admin_repository() -> AdminRepository:
 
 def get_feedback_repository() -> FeedbackRepository:
     return FeedbackRepository()
+
+
+def get_user_repository() -> UserRepository:
+    return UserRepository()
+
+
+def get_auth_service() -> AuthService:
+    return AuthService()
+
+
+async def get_current_user(
+    request: Request,
+    repository: UserRepository = Depends(get_user_repository),
+    auth: AuthService = Depends(get_auth_service),
+) -> User:
+    """Resolve the signed-in user from the Authorization bearer token.
+
+    Returns 404 while the user system is disabled, and 401 for missing or
+    invalid credentials once it is enabled.
+    """
+    if not get_settings().user_system_enabled:
+        raise HTTPException(status_code=404, detail="Not Found")
+    header = request.headers.get("Authorization", "")
+    token = header.removeprefix("Bearer").strip()
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        user_id = auth.verify_session_token(token)
+    except AuthError:
+        raise HTTPException(status_code=401, detail="Not authenticated") from None
+    try:
+        session_user_id = await repository.find_session(auth.hash_token(token))
+    except ValueError:
+        raise HTTPException(status_code=503, detail="Database unavailable") from None
+    if session_user_id != user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    user = await repository.get_user(user_id)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
 
 
 def get_extraction_service() -> ExtractionService:
