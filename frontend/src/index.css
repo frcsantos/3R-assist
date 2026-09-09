@@ -15,3 +15,10 @@
     @apply min-h-screen;
   }
 }
+
+/* Un-layered on purpose: un-layered author styles take precedence over any
+   cascade layer, including the utilities that set `text-card-title` on the
+   markdown h2. Scoped to the glossary page only. */
+.glossary-markdown h2 {
+  @apply text-headline-lg;
+}

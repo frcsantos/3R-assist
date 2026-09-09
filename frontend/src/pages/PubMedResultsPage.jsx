@@ -100,7 +100,7 @@ export default function PubMedResultsPage() {
       </div>
 
       <header className="mb-section-gap">
-        <h1 className="font-headline-lg text-headline-lg text-primary">
+        <h1 className="font-headline-lg text-headline-xl text-primary">
           {t('pubmed.page.title')}
         </h1>
         <p className="mt-fine-gap font-body-base text-body-base text-on-secondary-container">

@@ -176,7 +176,7 @@ export default function AnalyzePage({ onSubmit }) {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-container-padding py-section-gap">
       <header className="mb-section-gap">
-        <h1 className="font-headline-lg text-headline-lg text-primary">
+        <h1 className="font-headline-lg text-headline-xl text-primary">
           {t('s1.title')}
         </h1>
         <p className="mt-fine-gap font-body-base text-body-base text-on-secondary-container opacity-65">

@@ -82,6 +82,7 @@ export default {
         'monospace-data': ['DM Mono', 'ui-monospace', 'monospace'],
       },
       fontSize: {
+        'headline-xl': ['24px', { lineHeight: '32px', fontWeight: '500' }],
         'headline-lg': ['17px', { lineHeight: '24px', fontWeight: '500' }],
         'body-base': ['14px', { lineHeight: '1.6', fontWeight: '400' }],
         'nav-logo': ['14px', { letterSpacing: '-0.01em', fontWeight: '500' }],
