@@ -14,7 +14,8 @@ A user describes an experimental protocol in free text (Portuguese or English). 
 * Felipe Rodolfo Camargo dos Santos: RAG production, PubMed data ingestion
 * Leo Heikiti Maeda Arruda: Software development & AI integration
 
-Institutional backing: **Fórum Animal**.
+### Institutional backing: 
+* Fórum Animal
 
 ## How to use
 

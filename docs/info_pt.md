@@ -14,7 +14,8 @@ O usuário descreve um protocolo experimental em texto livre (português ou ingl
 * Felipe Rodolfo Camargo dos Santos: produção de RAG, ingestão de dados do PubMed
 * Leo Heikiti Maeda Arruda: desenvolvimento de software e integração de IA
 
-Apoio institucional: **Fórum Animal**.
+### Apoio institucional
+* Fórum Animal
 
 ## Como usar
 
