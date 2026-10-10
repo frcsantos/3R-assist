@@ -1,4 +1,4 @@
-# Project Proposal — 3R Assist
+# Project Proposal — Assist3R
 
 **Team:** Karynn (animal ethics & welfare, 4h/week) · Leo (software development & AI, 4h/week)   
 **Institutional backing:** Fórum Animal

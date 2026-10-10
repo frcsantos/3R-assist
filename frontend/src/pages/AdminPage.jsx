@@ -2356,7 +2356,7 @@ function DocsPanel() {
 
 const POLICY_TEXT_MIN = 20
 const POLICY_TEXT_MAX = 50000
-const EXTRACT_HISTORY_KEY = '3r_assist.extract.history'
+const EXTRACT_HISTORY_KEY = 'assist3r.extract.history'
 const EXTRACT_HISTORY_MAX = 20
 
 function looksLikeDocumentUrl(value) {
@@ -4095,7 +4095,7 @@ export default function AdminPage() {
   return (
     <main className="mx-auto w-full max-w-content flex-1 px-container-padding py-section-gap">
       <header className="mb-section-gap">
-        <h1 className="font-headline-lg text-headline-lg text-primary">
+        <h1 className="font-headline-lg text-headline-xl text-primary">
           {t('admin.title')}
         </h1>
 

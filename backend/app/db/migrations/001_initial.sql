@@ -1,5 +1,5 @@
 -- db/migrations/001_initial.sql
--- 3R Assist — methods + method_keywords + method_validation_contexts
+-- Assist3R — methods + method_keywords + method_validation_contexts
 -- ADR-013: PostgreSQL
 -- ADR-020: study_domain (renamed from application_area)
 -- ADR-021: category_3r JSONB (multiple 3R values per method)

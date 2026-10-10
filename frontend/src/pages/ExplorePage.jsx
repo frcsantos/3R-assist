@@ -585,7 +585,7 @@ export default function ExplorePage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-container-padding py-section-gap">
       <header className="mb-section-gap">
-        <h1 className="font-headline-lg text-headline-lg text-primary">
+        <h1 className="font-headline-lg text-headline-xl text-primary">
           {t('s4.title')}
         </h1>
 

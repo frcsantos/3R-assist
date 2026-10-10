@@ -3,7 +3,7 @@ import remarkGfm from 'remark-gfm'
 
 const components = {
   h1: ({ children }) => (
-    <h1 className="mb-card-gap font-headline-lg text-headline-lg text-on-surface">
+    <h1 className="mb-card-gap font-headline-lg text-headline-xl text-on-surface">
       {children}
     </h1>
   ),

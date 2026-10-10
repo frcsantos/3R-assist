@@ -213,7 +213,7 @@ async def fetch_url_text(url: str) -> str:
             follow_redirects=False,
             timeout=FETCH_TIMEOUT_SECONDS,
             headers={
-                "User-Agent": "3R-Assist/1.0 (document extraction)",
+                "User-Agent": "Assist3R/1.0 (document extraction)",
                 "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
             },
         ) as client:

@@ -1,5 +1,5 @@
 -- =============================================================================
--- 3R Assist — Migration 021: FK method_regulatory_contexts.study_domain
+-- Assist3R — Migration 021: FK method_regulatory_contexts.study_domain
 -- Align regulatory contexts with the study_domains vocabulary (same as methods).
 -- =============================================================================
 

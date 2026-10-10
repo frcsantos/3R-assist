@@ -9,10 +9,10 @@ export default function GlossaryPage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-container-padding py-section-gap">
-      <h1 className="font-headline-lg text-headline-lg text-primary">
+      <h1 className="font-headline-lg text-headline-xl text-primary">
         {t('glossary.title')}
       </h1>
-      <MarkdownRenderer className="mt-card-gap">{markdown}</MarkdownRenderer>
+      <MarkdownRenderer className="glossary-markdown mt-card-gap">{markdown}</MarkdownRenderer>
     </main>
   )
 }

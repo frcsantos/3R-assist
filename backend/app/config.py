@@ -51,7 +51,22 @@ class Settings(BaseSettings):
         alias="SEMANTIC_RANKING",
     )
 
+    # User system (F08 magic-link auth). Disabled by default: auth endpoints
+    # return 404 until this flag is turned on.
+    user_system_enabled: bool = Field(
+        default=False,
+        alias="USER_SYSTEM_ENABLED",
+    )
+
     auth_secret: str | None = Field(default=None, alias="AUTH_SECRET")
+    email_provider_api_key: str | None = Field(
+        default=None,
+        alias="EMAIL_PROVIDER_API_KEY",
+    )
+    email_from_address: str | None = Field(
+        default=None,
+        alias="EMAIL_FROM_ADDRESS",
+    )
 
     @property
     def cors_origin_list(self) -> list[str]:

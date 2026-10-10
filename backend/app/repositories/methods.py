@@ -99,12 +99,12 @@ class MethodRepository:
             mrc.endpoint_quote,
             mrc.regulatory_body, mrc.regulatory_doc_id,
             CASE
-              WHEN mrc.regulatory_citation IS NOT NULL
+              WHEN mrc.regulatory_quote IS NOT NULL
                AND (
-                 NULLIF(BTRIM(mrc.regulatory_citation->>'en-us'), '') IS NOT NULL
-                 OR NULLIF(BTRIM(mrc.regulatory_citation->>'pt-br'), '') IS NOT NULL
+                 NULLIF(BTRIM(mrc.regulatory_quote->>'en-us'), '') IS NOT NULL
+                 OR NULLIF(BTRIM(mrc.regulatory_quote->>'pt-br'), '') IS NOT NULL
                )
-              THEN mrc.regulatory_citation
+              THEN mrc.regulatory_quote
               ELSE rd.doc_citation
             END AS regulatory_citation,
             rd.url AS regulatory_url,

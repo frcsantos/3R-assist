@@ -14,7 +14,7 @@
 **Padrão:** Top navigation bar, sempre visível.
 
 ```
-[Logo: 3R Assist]  [Analisar]  [Buscar]          [Entrar / email]
+[Logo: Assist3R]  [Analisar]  [Buscar]          [Entrar / email]
 ```
 
 - **Analisar** (S1) — rota padrão, ativa no estado vazio

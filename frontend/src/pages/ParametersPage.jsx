@@ -175,7 +175,7 @@ export default function ParametersPage() {
       </div>
 
       <header className="mb-card-gap">
-        <h1 className="font-headline-lg text-headline-lg text-primary">
+        <h1 className="font-headline-lg text-headline-xl text-primary">
           {t('s2.title')}
         </h1>
         <p className="mt-fine-gap font-body-base text-body-base text-on-secondary-container opacity-65">

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Start (or restart) the full 3R-assist stack.
+# Start (or restart) the full Assist3R stack.
 # Usage: ./start.sh
 
 PROJECT="$HOME/projects/3R_assist_basket2"

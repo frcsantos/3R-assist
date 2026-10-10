@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.api.errors import unhandled_exception_handler
 from pubmed.api.routes import router as pubmed_router
 from pubmed.startup import warmup as pubmed_warmup
-from app.api.routes import admin, analysis, documents, feedback, health, methods, search
+from app.api.routes import admin, analysis, auth, documents, feedback, health, methods, search
 from app.config import get_settings
 from app.db.connection import close_pool, create_pool
 
@@ -45,7 +45,7 @@ def create_app() -> FastAPI:
     # Adiciona fallback para evitar que configurações ausentes quebrem o app
     is_production = settings.app_env == "production"
     app = FastAPI(
-        title="3R Assist API",
+        title="Assist3R API",
         version="0.1.0",
         lifespan=lifespan,
         docs_url=None if is_production else "/docs",
@@ -71,6 +71,7 @@ def create_app() -> FastAPI:
     app.include_router(documents.router)
     app.include_router(feedback.router)
     app.include_router(admin.router)
+    app.include_router(auth.router)
     app.include_router(pubmed_router)
 
     return app

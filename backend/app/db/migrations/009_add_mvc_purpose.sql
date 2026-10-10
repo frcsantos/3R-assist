@@ -1,5 +1,5 @@
 -- =============================================================================
--- 3R Assist — Migration 009: add purpose to method_validation_contexts
+-- Assist3R — Migration 009: add purpose to method_validation_contexts
 -- Column sits immediately before regulatory_body.
 -- =============================================================================
 

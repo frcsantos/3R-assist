@@ -60,6 +60,9 @@
   --font-small-label: "DM Sans", system-ui, sans-serif;
   --font-monospace-data: "DM Mono", ui-monospace, monospace;
 
+  --text-headline-xl: 24px;
+  --text-headline-xl--line-height: 32px;
+  --text-headline-xl--font-weight: 500;
   --text-headline-lg: 17px;
   --text-headline-lg--line-height: 24px;
   --text-headline-lg--font-weight: 500;
