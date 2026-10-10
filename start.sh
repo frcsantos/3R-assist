@@ -19,12 +19,20 @@ else
     launchctl load ~/Library/LaunchAgents/com.3rassist.cloudflared.plist 2>/dev/null
 fi
 
+echo "==> Keeping GPU awake on lid close..."
+pkill -f "caffeinate -di" 2>/dev/null
+caffeinate -di &
+
 echo "==> Restarting Ollama (num_ctx=16384)..."
 pkill -x ollama 2>/dev/null
 pkill -f llama-server 2>/dev/null
 sleep 2
 OLLAMA_NUM_CTX=16384 OLLAMA_KEEP_ALIVE=-1 ollama serve > /tmp/ollama.log 2>&1 &
 sleep 3
+
+echo "==> Building frontend..."
+cd "$PROJECT/frontend" && $NPM run build
+echo "    Frontend built."
 
 echo "==> Clearing Python bytecode cache..."
 find "$PROJECT/backend" -name "*.pyc" -delete 2>/dev/null
@@ -35,7 +43,7 @@ echo "==> Opening backend (port 8000)..."
 osascript -e "
 tell application \"Terminal\"
     activate
-    do script \"echo '=== BACKEND ===' && cd '$PROJECT/backend' && PYTHONDONTWRITEBYTECODE=1 $UVICORN app.main:app --reload --host 127.0.0.1 --port 8000\"
+    do script \"echo '=== BACKEND ===' && cd '$PROJECT/backend' && PYTHONDONTWRITEBYTECODE=1 $UVICORN app.main:app --reload --host 127.0.0.1 --port 8000 --timeout-keep-alive 700\"
 end tell"
 
 echo "==> Waiting for backend to start..."

@@ -23,7 +23,6 @@ disease mutations do not phenocopy in rodents, making animal models poor surroga
 while patient iPSC-derived cells and organoids capture the exact genetic background.
 """
 
-from pubmed.models.analysis import LLMProposedAlternative
 from pubmed.skills.base import DomainProfile
 
 # ── Vocabulary ────────────────────────────────────────────────────────────────
@@ -131,9 +130,7 @@ therapeutic target in an animal model."""
 
 # ── Always-on Path B injections ───────────────────────────────────────────────
 
-_IPSC_GENE_EDIT_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_IPSC_GENE_EDIT_INJECTION =(
         "Patient-derived iPSC and gene-edited cell models replacing animal rare disease models: "
         "disease-specific iPSC carrying patient mutation differentiated to relevant cell type "
         "— neurons (Rett Fragile X Dravet spinocerebellar ataxia Friedreich's ataxia "
@@ -146,12 +143,9 @@ _IPSC_GENE_EDIT_INJECTION = LLMProposedAlternative(
         "antisense oligonucleotide ASO correction in patient cells; "
         "exon skipping assay DMD dystrophin restoration; "
         "readthrough assay PTC124 ataluren nonsense mutation correction."
-    ),
 )
 
-_ORGANOID_ENZYME_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_ORGANOID_ENZYME_INJECTION =(
         "Organoid and biochemical assays replacing animal organ endpoints in rare disease: "
         "CFTR intestinal organoid forskolin swelling assay for cystic fibrosis "
         "drug and gene therapy validation; "
@@ -165,12 +159,9 @@ _ORGANOID_ENZYME_INJECTION = LLMProposedAlternative(
         "Pompe GAA Niemann-Pick sphingomyelinase MPS iduronate sulfatase arylsulfatase; "
         "substrate reduction assay cell model lysosomal; "
         "fatty acid oxidation assay glycogen accumulation assay metabolic rare disease."
-    ),
 )
 
-_COMPUTATIONAL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_COMPUTATIONAL_INJECTION =(
         "Computational and in silico tools replacing animal studies in rare disease research: "
         "AlphaFold protein structure prediction for rare missense variants; "
         "AlphaMissense CADD REVEL SpliceAI in silico pathogenicity scoring for rare variants; "
@@ -183,12 +174,9 @@ _COMPUTATIONAL_INJECTION = LLMProposedAlternative(
         "pharmacogenomics model orphan drug candidate prioritisation; "
         "systems biology pathway model rare metabolic disease; "
         "natural history computational model patient registry data."
-    ),
 )
 
-_REDUCTION_INJECTION = LLMProposedAlternative(
-    three_r_class="reduction",
-    method_description=(
+_REDUCTION_INJECTION =(
         "Lower-organism and reduction strategies for rare disease research: "
         "zebrafish larvae CRISPR morpholino knockdown model of rare gene for "
         "phenotype characterisation and drug screening before mammalian studies; "
@@ -199,7 +187,6 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
         "epigenetic assays on patient blood or fibroblasts as non-invasive endpoint "
         "replacing animal tissue — ChIP-seq ATAC-seq DNA methylation bisulfite sequencing "
         "histone modification Hi-C chromatin conformation for imprinting and epigenetic disorders."
-    ),
 )
 
 # ── Profile ───────────────────────────────────────────────────────────────────
@@ -207,12 +194,7 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
 RARE_DISEASE_PROFILE = DomainProfile(
     name="rare_disease",
     vocabulary=RARE_DISEASE_VOCABULARY,
-    base_path_b=[
-        _IPSC_GENE_EDIT_INJECTION,
-        _ORGANOID_ENZYME_INJECTION,
-        _COMPUTATIONAL_INJECTION,
-        _REDUCTION_INJECTION,
-    ],
-    base_path_a=[],
+    base_path_b=[],
+    base_path_a=[_IPSC_GENE_EDIT_INJECTION, _ORGANOID_ENZYME_INJECTION, _COMPUTATIONAL_INJECTION, _REDUCTION_INJECTION],
     rank_guidance=RARE_DISEASE_RANK_GUIDANCE,
 )

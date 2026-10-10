@@ -12,7 +12,6 @@ reconstructed human skin and intestine, and computational read-across for chemic
 migration from materials.
 """
 
-from pubmed.models.analysis import LLMProposedAlternative
 from pubmed.skills.base import DomainProfile
 
 # ── Vocabulary ────────────────────────────────────────────────────────────────
@@ -84,9 +83,7 @@ animal use — not merely study the same food chemical or material in animals.""
 
 # ── Always-on Path B injections ───────────────────────────────────────────────
 
-_ORAL_ABSORPTION_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_ORAL_ABSORPTION_INJECTION =(
         "In vitro oral exposure, digestion and absorption models replacing animal gavage "
         "and dietary studies for food and ingredient safety: INFOGEST simulated "
         "gastrointestinal digestion protocol; TIM gastrointestinal model; "
@@ -95,12 +92,9 @@ _ORAL_ABSORPTION_INJECTION = LLMProposedAlternative(
         "in vitro bioaccessibility assay food contaminant; "
         "mycotoxin aflatoxin ochratoxin fumonisin cytotoxicity in vitro assay; "
         "food allergen IgE binding basophil activation test in vitro."
-    ),
 )
 
-_SKIN_TISSUE_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_SKIN_TISSUE_INJECTION =(
         "Reconstructed human tissue and cell-based assays replacing animal dermal studies "
         "for consumer product safety: EpiDerm SkinEthic Episkin reconstructed human "
         "epidermis for skin irritation; EpiOcular reconstituted corneal epithelium "
@@ -109,12 +103,9 @@ _SKIN_TISSUE_INJECTION = LLMProposedAlternative(
         "ISO 10993 in vitro biocompatibility assay for toys and household objects; "
         "eluate cytotoxicity assay for material extracts; "
         "chemical migration Caco-2 packaging textile in vitro."
-    ),
 )
 
-_COMPUTATIONAL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_COMPUTATIONAL_INJECTION =(
         "Computational and in silico tools replacing animal safety studies for consumer "
         "products: QSAR read-across for food additive contaminant toxicity prediction; "
         "threshold of toxicological concern TTC approach for food chemicals; "
@@ -124,12 +115,9 @@ _COMPUTATIONAL_INJECTION = LLMProposedAlternative(
         "adverse outcome pathway AOP for food allergy or skin sensitisation; "
         "computational food allergen cross-reactivity prediction; "
         "structure-activity relationship SAR food chemical safety."
-    ),
 )
 
-_REDUCTION_INJECTION = LLMProposedAlternative(
-    three_r_class="reduction",
-    method_description=(
+_REDUCTION_INJECTION =(
         "Strategies to reduce mammalian animal use in consumer product safety testing: "
         "zebrafish larvae for food contaminant or packaging chemical toxicity screening; "
         "C. elegans for food toxicant or dietary ingredient screening; "
@@ -137,7 +125,6 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
         "high-throughput in vitro cell assay for ranking candidates before in vivo; "
         "tiered testing strategy with in vitro and in silico as first tier to reduce animal use; "
         "adaptive or sequential statistical design for animal dose studies."
-    ),
 )
 
 # ── Profile ───────────────────────────────────────────────────────────────────
@@ -145,12 +132,7 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
 CONSUMER_SAFETY_PROFILE = DomainProfile(
     name="consumer_product_safety",
     vocabulary=CONSUMER_SAFETY_VOCABULARY,
-    base_path_b=[
-        _ORAL_ABSORPTION_INJECTION,
-        _SKIN_TISSUE_INJECTION,
-        _COMPUTATIONAL_INJECTION,
-        _REDUCTION_INJECTION,
-    ],
-    base_path_a=[],
+    base_path_b=[],
+    base_path_a=[_ORAL_ABSORPTION_INJECTION, _SKIN_TISSUE_INJECTION, _COMPUTATIONAL_INJECTION, _REDUCTION_INJECTION],
     rank_guidance=CONSUMER_SAFETY_RANK_GUIDANCE,
 )

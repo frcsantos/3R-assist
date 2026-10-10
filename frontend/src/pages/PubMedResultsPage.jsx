@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import LiteratureSummary from '../components/LiteratureSummary'
 import PubMedResultCard from '../components/PubMedResultCard'
-import { analyzePubMed } from '../lib/pubmed'
+import { analyzePubMedStream } from '../lib/pubmed'
 
 function LoadingState() {
   const { t } = useTranslation()
@@ -74,10 +74,18 @@ export default function PubMedResultsPage() {
     setError(null)
     setResult(null)
     try {
-      const data = await analyzePubMed({ protocol_text, params, lang })
+      const data = await analyzePubMedStream(
+        { protocol_text, params, lang },
+        { onPing: () => {} },
+      )
       setResult(data)
     } catch (err) {
-      setError(err?.status === 503 ? '__serverBusy__' : (err?.message ?? 'Unknown error'))
+      const code = err?.code ?? ''
+      if (code === 'SERVER_BUSY' || err?.status === 503) {
+        setError('__serverBusy__')
+      } else {
+        setError(err?.message ?? 'Unknown error')
+      }
     } finally {
       setLoading(false)
     }

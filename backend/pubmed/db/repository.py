@@ -63,6 +63,23 @@ _INSERT_RECORD = """
         indexed_at          = NOW()
 """
 
+_PAIRWISE_COSINE = """
+    SELECT
+        a.pmid AS pmid_a,
+        b.pmid AS pmid_b,
+        1 - (
+            COALESCE(a.method_embedding, a.endpoint_embedding)
+            <=>
+            COALESCE(b.method_embedding, b.endpoint_embedding)
+        ) AS cosine
+    FROM pubmed_abstracts a
+    JOIN pubmed_abstracts b ON a.pmid < b.pmid
+    WHERE a.pmid = ANY($1::text[])
+      AND b.pmid = ANY($1::text[])
+      AND COALESCE(a.method_embedding, a.endpoint_embedding) IS NOT NULL
+      AND COALESCE(b.method_embedding, b.endpoint_embedding) IS NOT NULL
+"""
+
 _DOI_EXISTS = "SELECT 1 FROM pubmed_abstracts WHERE doi = $1 LIMIT 1"
 _BATCH_DOI_EXISTS = "SELECT doi FROM pubmed_abstracts WHERE doi = ANY($1::text[])"
 
@@ -146,6 +163,14 @@ class PubMedRepository:
                     )
                     count += 1
         return count
+
+    async def fetch_pairwise_cosines(self, pmids: list[str]) -> list[tuple[str, str, float]]:
+        if len(pmids) < 2:
+            return []
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(_PAIRWISE_COSINE, pmids)
+        return [(row["pmid_a"], row["pmid_b"], float(row["cosine"])) for row in rows]
 
     async def doi_exists(self, doi: str) -> bool:
         pool = await get_pool()

@@ -5,7 +5,6 @@ autism spectrum disorder (ASD), ADHD, addiction and substance use disorders,
 eating disorders, and other mental health conditions studied in animal models.
 """
 
-from pubmed.models.analysis import LLMProposedAlternative
 from pubmed.skills.base import DomainProfile
 
 # ── Vocabulary ────────────────────────────────────────────────────────────────
@@ -86,9 +85,7 @@ animal use — not merely study the same psychiatric condition or pathway in ani
 
 # ── Always-on Path B injections ───────────────────────────────────────────────
 
-_IPSC_ORGANOID_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_IPSC_ORGANOID_INJECTION =(
         "Patient-derived iPSC neurons and brain organoids as replacements for animal "
         "behavioural models of psychiatric disease: schizophrenia patient iPSC cortical "
         "neurons and forebrain organoids; autism ASD iPSC-derived neurons and brain organoids; "
@@ -96,12 +93,9 @@ _IPSC_ORGANOID_INJECTION = LLMProposedAlternative(
         "iPSC-derived GABAergic glutamatergic dopaminergic neurons; "
         "cortical organoid forebrain organoid for developmental psychiatric disorder modelling; "
         "organotypic hippocampal slice culture; ex vivo brain slice electrophysiology."
-    ),
 )
 
-_RECEPTOR_ASSAY_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_RECEPTOR_ASSAY_INJECTION =(
         "In vitro receptor and neurotransmitter assays replacing animal pharmacological models: "
         "radioligand receptor binding assay serotonin dopamine GABA glutamate noradrenaline; "
         "GPCR functional assay beta-arrestin recruitment HTRF FRET; "
@@ -113,12 +107,9 @@ _RECEPTOR_ASSAY_INJECTION = LLMProposedAlternative(
         "patch clamp electrophysiology iPSC neurons; "
         "multielectrode array MEA spontaneous neural activity; "
         "calcium imaging synaptic activity; LTP LTD in vitro synaptic plasticity."
-    ),
 )
 
-_COMPUTATIONAL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_COMPUTATIONAL_INJECTION =(
         "Computational and in silico models of psychiatric and psychological conditions "
         "replacing animal behavioural studies: neural circuit computational model of "
         "depression anxiety reward; machine learning deep learning psychiatric biomarker "
@@ -128,12 +119,9 @@ _COMPUTATIONAL_INJECTION = LLMProposedAlternative(
         "network analysis brain connectivity connectome psychiatric disorder; "
         "systems biology signalling pathway monoamine stress response; "
         "in silico drug-receptor interaction antidepressant antipsychotic discovery."
-    ),
 )
 
-_REDUCTION_INJECTION = LLMProposedAlternative(
-    three_r_class="reduction",
-    method_description=(
+_REDUCTION_INJECTION =(
         "Strategies to reduce mammalian animal use in psychiatric and psychological research: "
         "C. elegans serotonin dopamine pathway genetic and drug screening; "
         "zebrafish larvae anxiety depression addiction behavioural assay as lower-organism model; "
@@ -141,7 +129,6 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
         "high-throughput in vitro receptor or cell-based drug screening before in vivo; "
         "adaptive statistical design and power calculation for behavioural animal experiments; "
         "in silico pharmacokinetic modelling to reduce dose-ranging animal studies."
-    ),
 )
 
 # ── Profile ───────────────────────────────────────────────────────────────────
@@ -149,12 +136,7 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
 PSYCHIATRY_PROFILE = DomainProfile(
     name="psychiatry_psychology",
     vocabulary=PSYCHIATRY_VOCABULARY,
-    base_path_b=[
-        _IPSC_ORGANOID_INJECTION,
-        _RECEPTOR_ASSAY_INJECTION,
-        _COMPUTATIONAL_INJECTION,
-        _REDUCTION_INJECTION,
-    ],
-    base_path_a=[],
+    base_path_b=[],
+    base_path_a=[_IPSC_ORGANOID_INJECTION, _RECEPTOR_ASSAY_INJECTION, _COMPUTATIONAL_INJECTION, _REDUCTION_INJECTION],
     rank_guidance=PSYCHIATRY_RANK_GUIDANCE,
 )
