@@ -105,13 +105,26 @@ export default function AnalyzePage({ onSubmit }) {
     e.preventDefault()
     if (!canSubmit) return
 
-    navigate('/literature', {
-      state: {
-        protocol_text: protocolText.trim(),
-        params: null,
-        lang: currentLanguage(),
-      },
-    })
+    setError(null)
+    setSubmitting(true)
+    try {
+      const lang = currentLanguage()
+      const result = await onSubmit({
+        protocolText: protocolText.trim(),
+        lang,
+      })
+      const detectedLang = result.lang || lang
+      navigate('/parameters', {
+        state: buildAnalysisState(result, {
+          protocolText: protocolText.trim(),
+          lang: detectedLang,
+        }),
+      })
+    } catch (err) {
+      setError(err.message ?? 'Request failed')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const uploadControls = (
