@@ -4,7 +4,6 @@ Covers: acute lethality (LD50, FDP, UDP), subacute / repeated-dose organ toxicit
 skin / eye / sensitisation / genotoxicity / phototoxicity / pyrogenicity / absorption.
 """
 
-from pubmed.models.analysis import LLMProposedAlternative
 from pubmed.skills.base import DomainProfile
 
 # ── Vocabulary ────────────────────────────────────────────────────────────────
@@ -83,27 +82,21 @@ Be generous — aim to include 10-15 papers. When in doubt, include."""
 
 # ── Always-on Path B injections ───────────────────────────────────────────────
 
-_IN_SILICO_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_IN_SILICO_INJECTION =(
         "In silico computational toxicology methods replacing animal testing: "
         "QSAR quantitative structure-activity relationship models for toxicity prediction; "
         "PBPK physiologically-based pharmacokinetic modelling for dose-response; "
         "machine learning deep learning toxicity classifiers; molecular docking and "
         "molecular dynamics simulation; read-across and chemical category approaches; "
         "adverse outcome pathway (AOP) network analysis; systems biology toxicity models."
-    ),
 )
 
-_FET_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_FET_INJECTION =(
         "Zebrafish embryo fish embryo toxicity test (FET) OECD TG 236 as replacement "
         "for acute mammalian lethality: Danio rerio embryos exposed to test substance "
         "for 96 hours, mortality and developmental endpoints assessed; validated "
         "non-protected vertebrate alternative to rodent LD50 and acute oral toxicity; "
         "zebrafish embryo acute toxicity whole-embryo assay."
-    ),
 )
 
 # ── Subacute / organ-toxicity extension ──────────────────────────────────────
@@ -117,9 +110,7 @@ _SUBACUTE_SIGNALS = (
     "organ weight", "organ histol",
 )
 
-_ORGAN_MODEL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_ORGAN_MODEL_INJECTION =(
         "In vitro organ-specific toxicity models as alternatives to subacute "
         "repeated-dose animal study with histological and biochemical evaluation: "
         "HepaRG cells or 3D primary hepatocyte spheroids for hepatotoxicity "
@@ -128,7 +119,6 @@ _ORGAN_MODEL_INJECTION = LLMProposedAlternative(
         "or hERG channel assay for cardiotoxicity; neurosphere or cortical neuron "
         "assay for neurotoxicity; multi-organ microphysiological system body-on-chip "
         "for systemic repeated-dose toxicity profiling."
-    ),
 )
 
 _ORGAN_ENDPOINT_INJECTION = (
@@ -138,15 +128,23 @@ _ORGAN_ENDPOINT_INJECTION = (
     "organ-specific cytotoxicity drug-induced organ injury in vitro."
 )
 
+_PRE_LETHALITY_ENDPOINT_INJECTION = (
+    "Reduced-animal acute oral toxicity methods: Fixed Dose Procedure OECD TG 420 "
+    "evident toxicity endpoint not lethality; Acute Toxic Class method OECD TG 423 "
+    "GHS classification stepwise 6 animals; Up-and-Down Procedure OECD TG 425 "
+    "sequential dosing LD50 confidence interval 6 animals; basal cytotoxicity "
+    "NICEATM GD 129 starting dose estimation in vitro LD50 prediction."
+)
+
 # ── Profile ───────────────────────────────────────────────────────────────────
 
 TOXICOLOGY_PROFILE = DomainProfile(
     name="toxicology_safety",
     vocabulary=TOXICOLOGY_VOCABULARY,
-    base_path_b=[_FET_INJECTION, _IN_SILICO_INJECTION],
-    base_path_a=[],
+    base_path_b=[],
+    base_path_a=[_FET_INJECTION, _IN_SILICO_INJECTION, _PRE_LETHALITY_ENDPOINT_INJECTION],
     rank_guidance=TOXICOLOGY_RANK_GUIDANCE,
     subacute_signals=_SUBACUTE_SIGNALS,
-    subacute_path_b=[_ORGAN_MODEL_INJECTION],
-    subacute_path_a=[_ORGAN_ENDPOINT_INJECTION],
+    subacute_path_b=[],
+    subacute_path_a=[_ORGAN_MODEL_INJECTION,_ORGAN_ENDPOINT_INJECTION],
 )

@@ -9,7 +9,6 @@ ecosystem of validated non-animal alternatives exists specifically for cosmetics
 This skill surfaces those methods for protocols in this domain.
 """
 
-from pubmed.models.analysis import LLMProposedAlternative
 from pubmed.skills.base import DomainProfile
 
 # ── Vocabulary ────────────────────────────────────────────────────────────────
@@ -92,9 +91,7 @@ in animals."""
 
 # ── Always-on Path B injections ───────────────────────────────────────────────
 
-_SKIN_EYE_TISSUE_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_SKIN_EYE_TISSUE_INJECTION =(
         "Reconstructed human tissue models replacing animal Draize and skin tests for "
         "cosmetics safety: EpiDerm SkinEthic RHE Episkin reconstructed human epidermis "
         "for skin irritation and corrosion; EpiDermFT full-thickness skin model; "
@@ -104,12 +101,9 @@ _SKIN_EYE_TISSUE_INJECTION = LLMProposedAlternative(
         "HET-CAM hen's egg chorioallantoic membrane; short time exposure STE assay; "
         "EpiOral TR146 oral mucosa model for oral care product safety; "
         "bovine hoof nail permeability model for nail product safety."
-    ),
 )
 
-_SENSITISATION_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_SENSITISATION_INJECTION =(
         "In vitro and in chemico skin sensitisation assays replacing animal guinea pig "
         "or LLNA tests for cosmetics: h-CLAT human cell line activation test; "
         "KeratinoSens ARE-Nrf2 luciferase assay; direct peptide reactivity assay DPRA; "
@@ -119,12 +113,9 @@ _SENSITISATION_INJECTION = LLMProposedAlternative(
         "HaCaT phototoxicity assay; in vitro ROS reactive oxygen species phototoxicity; "
         "adverse outcome pathway AOP skin sensitisation; "
         "hair dye colourant keratinocyte assay; hair follicle organ culture."
-    ),
 )
 
-_COMPUTATIONAL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_COMPUTATIONAL_INJECTION =(
         "Computational and in silico tools replacing animal safety studies for cosmetics: "
         "QSAR skin sensitisation prediction DEREK Nexus OECD QSAR toolbox; "
         "read-across cosmetics ingredient safety; "
@@ -135,12 +126,9 @@ _COMPUTATIONAL_INJECTION = LLMProposedAlternative(
         "in silico phototoxicity prediction UV filter; "
         "structure-activity relationship SAR cosmetics ingredient; "
         "computational oral mucosa absorption model."
-    ),
 )
 
-_REDUCTION_INJECTION = LLMProposedAlternative(
-    three_r_class="reduction",
-    method_description=(
+_REDUCTION_INJECTION =(
         "Strategies to reduce animal use in cosmetics safety testing: "
         "tiered testing strategy with in vitro and in silico as first tier; "
         "integrated approaches to testing and assessment IATA for cosmetics; "
@@ -148,7 +136,6 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
         "weight-of-evidence approach cosmetics ingredient using human data and in vitro; "
         "ex vivo human skin from surgery or skin bank for absorption penetration studies; "
         "in vitro genotoxicity battery Ames test in vitro micronucleus as tier before in vivo."
-    ),
 )
 
 # ── Profile ───────────────────────────────────────────────────────────────────
@@ -156,12 +143,7 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
 COSMETICS_PROFILE = DomainProfile(
     name="cosmetics",
     vocabulary=COSMETICS_VOCABULARY,
-    base_path_b=[
-        _SKIN_EYE_TISSUE_INJECTION,
-        _SENSITISATION_INJECTION,
-        _COMPUTATIONAL_INJECTION,
-        _REDUCTION_INJECTION,
-    ],
-    base_path_a=[],
+    base_path_b=[],
+    base_path_a=[_SKIN_EYE_TISSUE_INJECTION, _SENSITISATION_INJECTION, _COMPUTATIONAL_INJECTION, _REDUCTION_INJECTION],
     rank_guidance=COSMETICS_RANK_GUIDANCE,
 )

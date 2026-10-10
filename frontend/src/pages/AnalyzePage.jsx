@@ -99,39 +99,19 @@ export default function AnalyzePage({ onSubmit }) {
       fileInputRef.current.value = ''
     }
     setProtocolText(MOCK_PROTOCOL_TEXT)
-    navigate('/parameters', {
-      state: buildAnalysisState(MOCK_ANALYZE_RESPONSE, {
-        protocolText: MOCK_PROTOCOL_TEXT,
-        lang: currentLanguage(),
-        isMock: true,
-      }),
-    })
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
 
-    setError(null)
-    setSubmitting(true)
-    try {
-      const lang = currentLanguage()
-      const result = await onSubmit({
-        protocolText: protocolText.trim(),
-        lang,
-      })
-      const detectedLang = result.lang || lang
-      navigate('/parameters', {
-        state: buildAnalysisState(result, {
-          protocolText: protocolText.trim(),
-          lang: detectedLang,
-        }),
-      })
-    } catch (err) {
-      setError(err.message ?? 'Request failed')
-    } finally {
-      setSubmitting(false)
-    }
+    navigate('/literature', {
+      state: {
+        protocol_text: protocolText.trim(),
+        params: null,
+        lang: currentLanguage(),
+      },
+    })
   }
 
   const uploadControls = (
@@ -219,10 +199,8 @@ export default function AnalyzePage({ onSubmit }) {
             {t('s1.mock')}
           </Button>
           <Button type="submit" disabled={!canSubmit}>
-            {submitting
-              ? t('s1.submittingSeconds', { seconds: elapsedSeconds })
-              : t('s1.submit')}
-            {!submitting && <span aria-hidden="true">→</span>}
+            {t('litSearch.submit')}
+            <span aria-hidden="true">→</span>
           </Button>
         </div>
       </form>
@@ -245,3 +223,4 @@ export default function AnalyzePage({ onSubmit }) {
     </main>
   )
 }
+// Tue Sep 15 09:07:34 EDT 2026

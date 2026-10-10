@@ -6,7 +6,6 @@ spinal muscular atrophy, and other conditions characterised by progressive neuro
 protein aggregation, or neuroinflammation.
 """
 
-from pubmed.models.analysis import LLMProposedAlternative
 from pubmed.skills.base import DomainProfile
 
 # ── Vocabulary ────────────────────────────────────────────────────────────────
@@ -82,9 +81,7 @@ use — not merely study the same disease pathway or protein in animals."""
 
 # ── Always-on Path B injections ───────────────────────────────────────────────
 
-_IPSC_ORGANOID_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_IPSC_ORGANOID_INJECTION =(
         "iPSC-derived neural cells and brain organoids as replacements for animal models "
         "of neurodegenerative disease: patient-derived iPSC differentiated into dopaminergic "
         "neurons for Parkinson's disease; iPSC cortical neurons for Alzheimer's disease; "
@@ -94,12 +91,9 @@ _IPSC_ORGANOID_INJECTION = LLMProposedAlternative(
         "blood-brain barrier BBB model in vitro; "
         "primary hippocampal cortical dopaminergic neuronal culture; "
         "SH-SY5Y differentiated neuronal model; neurosphere neural progenitor 3D culture."
-    ),
 )
 
-_AGGREGATION_ASSAY_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_AGGREGATION_ASSAY_INJECTION =(
         "In vitro protein aggregation and cell-based models of neurodegeneration replacing "
         "animal pathology models: alpha-synuclein aggregation assay thioflavin T fluorescence "
         "for Parkinson's disease; amyloid-beta Abeta42 aggregation tau hyperphosphorylation "
@@ -109,12 +103,9 @@ _AGGREGATION_ASSAY_INJECTION = LLMProposedAlternative(
         "CRISPR gene-edited neuronal cell line; lentiviral overexpression neurotoxicity assay; "
         "mitochondrial dysfunction oxidative stress neuronal assay; "
         "microfluidic compartmentalised neuron axon model."
-    ),
 )
 
-_COMPUTATIONAL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_COMPUTATIONAL_INJECTION =(
         "Computational and in silico models of neurodegeneration replacing animal studies: "
         "molecular dynamics simulation of protein aggregation amyloid tau alpha-synuclein; "
         "machine learning deep learning biomarker prediction for neurodegeneration progression; "
@@ -124,12 +115,9 @@ _COMPUTATIONAL_INJECTION = LLMProposedAlternative(
         "bioinformatics analysis of human brain transcriptomics GTEx Allen Brain Atlas; "
         "PBPK physiologically-based pharmacokinetic model CNS drug distribution; "
         "structural bioinformatics protein misfolding aggregation inhibitor screening."
-    ),
 )
 
-_REDUCTION_INJECTION = LLMProposedAlternative(
-    three_r_class="reduction",
-    method_description=(
+_REDUCTION_INJECTION =(
         "Strategies to reduce mammalian animal use in neurodegeneration research: "
         "C. elegans invertebrate model for genetic screening of neurodegeneration-related genes; "
         "Drosophila melanogaster neurodegeneration model for pathway and drug screening; "
@@ -137,7 +125,6 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
         "high-throughput in vitro compound screening to prioritise candidates before rodent studies; "
         "ex vivo brain slice electrophysiology to replace in vivo electrophysiological endpoints; "
         "adaptive statistical design and power calculation for transgenic animal experiments."
-    ),
 )
 
 # ── Profile ───────────────────────────────────────────────────────────────────
@@ -145,12 +132,7 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
 NEURODEGENERATION_PROFILE = DomainProfile(
     name="neurodegeneration",
     vocabulary=NEURODEGENERATION_VOCABULARY,
-    base_path_b=[
-        _IPSC_ORGANOID_INJECTION,
-        _AGGREGATION_ASSAY_INJECTION,
-        _COMPUTATIONAL_INJECTION,
-        _REDUCTION_INJECTION,
-    ],
-    base_path_a=[],
+    base_path_b=[],
+    base_path_a=[_IPSC_ORGANOID_INJECTION, _AGGREGATION_ASSAY_INJECTION, _COMPUTATIONAL_INJECTION, _REDUCTION_INJECTION],
     rank_guidance=NEURODEGENERATION_RANK_GUIDANCE,
 )

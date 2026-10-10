@@ -6,7 +6,6 @@ diseases (type 1/2 diabetes, obesity, metabolic syndrome, NAFLD/NASH, insulin re
 dyslipidemia) and their intersection.
 """
 
-from pubmed.models.analysis import LLMProposedAlternative
 from pubmed.skills.base import DomainProfile
 
 # ── Vocabulary ────────────────────────────────────────────────────────────────
@@ -79,9 +78,7 @@ animal use — not merely study the same cardiac or metabolic pathway in animals
 
 # ── Always-on Path B injections ───────────────────────────────────────────────
 
-_CARDIAC_MODEL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_CARDIAC_MODEL_INJECTION =(
         "iPSC-derived cardiomyocytes and cardiac organoids as replacements for animal "
         "cardiac disease models: patient-derived iPSC-cardiomyocytes for cardiomyopathy "
         "arrhythmia heart failure modelling; cardiac organoid engineered heart tissue; "
@@ -90,12 +87,9 @@ _CARDIAC_MODEL_INJECTION = LLMProposedAlternative(
         "hERG channel assay for drug cardiotoxicity; "
         "iPSC endothelial cells vascular smooth muscle cells for cardiovascular models; "
         "ex vivo aortic ring assay; Langendorff isolated perfused heart preparation."
-    ),
 )
 
-_METABOLIC_ASSAY_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_METABOLIC_ASSAY_INJECTION =(
         "In vitro metabolic and pancreatic assays replacing animal models of diabetes, "
         "obesity and metabolic disease: pancreatic beta cell assay glucose-stimulated "
         "insulin secretion GSIS MIN6 INS-1 cells; human islet in vitro culture; "
@@ -104,12 +98,9 @@ _METABOLIC_ASSAY_INJECTION = LLMProposedAlternative(
         "HepaRG hepatocyte steatosis assay NAFLD NASH in vitro model; "
         "liver organoid fatty liver model; mitochondrial fatty acid oxidation assay; "
         "lipotoxicity glucotoxicity cell assay."
-    ),
 )
 
-_COMPUTATIONAL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_COMPUTATIONAL_INJECTION =(
         "Computational and in silico models of cardiometabolic disease replacing animal studies: "
         "cardiac action potential computational model QT prolongation simulation; "
         "hERG channel in silico model for drug cardiotoxicity prediction; "
@@ -120,12 +111,9 @@ _COMPUTATIONAL_INJECTION = LLMProposedAlternative(
         "agent-based model of atherogenesis foam cell; "
         "genome-scale metabolic model GSMM metabolic syndrome; "
         "in silico metabolic flux analysis."
-    ),
 )
 
-_REDUCTION_INJECTION = LLMProposedAlternative(
-    three_r_class="reduction",
-    method_description=(
+_REDUCTION_INJECTION =(
         "Strategies to reduce mammalian animal use in cardiometabolic research: "
         "zebrafish larvae cardiac assay for drug screening as lower-organism model; "
         "zebrafish metabolic obesity diabetes model for genetic or drug screening; "
@@ -134,7 +122,6 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
         "high-throughput in vitro beta cell or cardiomyocyte screening before in vivo; "
         "adaptive statistical design for metabolic animal experiments; "
         "in silico cardiovascular risk model to reduce dose-ranging animal studies."
-    ),
 )
 
 # ── Profile ───────────────────────────────────────────────────────────────────
@@ -142,12 +129,7 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
 CARDIOMETABOLIC_PROFILE = DomainProfile(
     name="cardiometabolic",
     vocabulary=CARDIOMETABOLIC_VOCABULARY,
-    base_path_b=[
-        _CARDIAC_MODEL_INJECTION,
-        _METABOLIC_ASSAY_INJECTION,
-        _COMPUTATIONAL_INJECTION,
-        _REDUCTION_INJECTION,
-    ],
-    base_path_a=[],
+    base_path_b=[],
+    base_path_a=[_CARDIAC_MODEL_INJECTION, _METABOLIC_ASSAY_INJECTION, _COMPUTATIONAL_INJECTION, _REDUCTION_INJECTION],
     rank_guidance=CARDIOMETABOLIC_RANK_GUIDANCE,
 )

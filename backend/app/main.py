@@ -1,6 +1,12 @@
+import logging
 import os
 import sys
 from contextlib import asynccontextmanager
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)-8s %(name)s — %(message)s",
+)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.errors import unhandled_exception_handler
 from pubmed.api.routes import router as pubmed_router
-from app.api.deps import get_embedder
+from pubmed.startup import warmup as pubmed_warmup
 from app.api.routes import admin, analysis, documents, feedback, health, methods, search
 from app.config import get_settings
 from app.db.connection import close_pool, create_pool
@@ -27,24 +33,7 @@ async def lifespan(_app: FastAPI):
             print(f"Database pool unavailable: {e}")
 
     import asyncio
-
-    async def _warmup():
-        loop = asyncio.get_event_loop()
-        try:
-            await loop.run_in_executor(None, lambda: get_embedder().embed("warmup"))
-            print("Embedder warmed up.")
-        except Exception as e:
-            print(f"Embedder warmup failed: {e}")
-        if get_settings().ollama_model:
-            from app.adapters.llm import OllamaLLMAdapter
-            _ollama = OllamaLLMAdapter(model=get_settings().ollama_model)
-            try:
-                await loop.run_in_executor(None, lambda: _ollama.call("warmup", max_tokens=1))
-                print("Ollama warmed up.")
-            except Exception as e:
-                print(f"Ollama warmup failed: {e}")
-
-    asyncio.create_task(_warmup())
+    asyncio.create_task(pubmed_warmup())
     yield
     if pool is not None:
         await close_pool()

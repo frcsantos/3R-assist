@@ -13,7 +13,6 @@ validated human immune cell assays, patient-derived cells, organoids, and joint/
 systems increasingly replace or reduce these.
 """
 
-from pubmed.models.analysis import LLMProposedAlternative
 from pubmed.skills.base import DomainProfile
 
 # ── Vocabulary ────────────────────────────────────────────────────────────────
@@ -106,9 +105,7 @@ biology in animals."""
 
 # ── Always-on Path B injections ───────────────────────────────────────────────
 
-_IMMUNE_CELL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_IMMUNE_CELL_INJECTION =(
         "Human immune cell and patient-derived models replacing animal autoimmune models: "
         "PBMC stimulation cytokine release assay as replacement for in vivo immune challenge; "
         "T cell activation proliferation Th17 Treg polarisation in vitro assay; "
@@ -119,12 +116,9 @@ _IMMUNE_CELL_INJECTION = LLMProposedAlternative(
         "iPSC-derived T cell macrophage dendritic cell for autoimmune disease modelling; "
         "neutrophil NETosis complement activation assay for lupus vasculitis; "
         "autoantibody ACPA anti-CCP ANA anti-dsDNA ELISA assay as in vitro endpoint."
-    ),
 )
 
-_ORGANOID_TISSUE_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_ORGANOID_TISSUE_INJECTION =(
         "Organoid, 3D tissue, and organ-on-chip models replacing animal autoimmune disease models: "
         "intestinal organoid colonic organoid patient-derived IBD Crohn's disease "
         "ulcerative colitis as replacement for DSS TNBS colitis rodent models; "
@@ -136,12 +130,9 @@ _ORGANOID_TISSUE_INJECTION = LLMProposedAlternative(
         "thyroid organoid for Hashimoto's Graves' autoimmune thyroiditis; "
         "liver organoid precision-cut liver slice autoimmune hepatitis; "
         "co-culture immune cell epithelial barrier model intestinal permeability assay."
-    ),
 )
 
-_COMPUTATIONAL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_COMPUTATIONAL_INJECTION =(
         "Computational and in silico models replacing animal studies in autoimmune research: "
         "systems biology network analysis of autoimmune signalling TNF IL-6 IL-17 JAK STAT; "
         "machine learning deep learning autoimmune biomarker prediction from omics or imaging; "
@@ -151,12 +142,9 @@ _COMPUTATIONAL_INJECTION = LLMProposedAlternative(
         "adverse outcome pathway AOP framework for drug-induced autoimmunity; "
         "computational T cell receptor TCR epitope autoantigen prediction; "
         "in silico drug-target interaction DMARDs biologics autoimmune."
-    ),
 )
 
-_REDUCTION_INJECTION = LLMProposedAlternative(
-    three_r_class="reduction",
-    method_description=(
+_REDUCTION_INJECTION =(
         "Strategies to reduce mammalian animal use in autoimmune research: "
         "zebrafish larvae colitis or inflammatory bowel model for drug screening "
         "as lower-organism alternative to rodent colitis; "
@@ -167,7 +155,6 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
         "before in vivo autoimmune model; "
         "ex vivo human biopsy culture to replace chronic rodent model readouts; "
         "adaptive statistical design for CIA DSS or EAE animal experiments."
-    ),
 )
 
 # ── Profile ───────────────────────────────────────────────────────────────────
@@ -175,12 +162,7 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
 AUTOIMMUNE_PROFILE = DomainProfile(
     name="autoimmune",
     vocabulary=AUTOIMMUNE_VOCABULARY,
-    base_path_b=[
-        _IMMUNE_CELL_INJECTION,
-        _ORGANOID_TISSUE_INJECTION,
-        _COMPUTATIONAL_INJECTION,
-        _REDUCTION_INJECTION,
-    ],
-    base_path_a=[],
+    base_path_b=[],
+    base_path_a=[_IMMUNE_CELL_INJECTION, _ORGANOID_TISSUE_INJECTION, _COMPUTATIONAL_INJECTION, _REDUCTION_INJECTION],
     rank_guidance=AUTOIMMUNE_RANK_GUIDANCE,
 )

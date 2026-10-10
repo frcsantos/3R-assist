@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 
 from app.adapters.embedder import EmbedderAdapter
 from app.adapters.llm import LLMAdapter
+from pubmed.adapters.llm import async_call
 from app.models.protocol import ProtocolParameters
 from pubmed.db.repository import PubMedRepository
 from pubmed.models.analysis import Citation, LLMProposedAlternative, PubMedRecommendation, SupportingPaper
@@ -63,6 +64,104 @@ _CANDIDATES_FOR_LLM = 15       # used by cosine fallback
 _MAX_PATH_A_FOR_LLM = 5        # Path A candidates sent to ranker
 _ABSTRACT_CHAR_LIMIT = 1000  # truncate abstracts sent to LLM — enough to reach Methods section
 _MIN_COSINE_FALLBACK = 0.5  # if LLM includes nothing, return candidates above this score
+_CLUSTER_FLOOR = 0.40  # hard floor: never cluster papers with cosine below this
+
+
+def _hac_average_linkage(
+    pmids: list[str],
+    cosine_lookup: dict[tuple[str, str], float],
+    floor: float,
+) -> dict[str, int]:
+    """Hierarchical Agglomerative Clustering with UPGMA (average linkage).
+
+    Builds clusters bottom-up: at each step the two closest clusters merge and
+    inter-cluster distances are recomputed as the size-weighted average (UPGMA).
+    Merging stops early when the best remaining pair falls below `floor` cosine.
+
+    The dendrogram is then cut at the largest gap between consecutive merge
+    heights — papers separated by this gap are left in distinct clusters.
+    All papers get a cluster ID ≥ 0 (no noise label; isolated papers form
+    singleton clusters).
+
+    Complexity: O(N³), fast enough for N ≤ 200 papers.
+    """
+    n = len(pmids)
+    if n < 2:
+        return {p: 0 for p in pmids}
+
+    def get_cosine(a: str, b: str) -> float:
+        return cosine_lookup.get((min(a, b), max(a, b)), 0.0)
+
+    # Distance matrix (d = 1 − cosine)
+    D: list[list[float]] = [
+        [0.0 if i == j else 1.0 - get_cosine(pmids[i], pmids[j]) for j in range(n)]
+        for i in range(n)
+    ]
+    sizes = [1] * n
+    active = list(range(n))
+    # members[i] = original paper indices currently in cluster representative i
+    members: list[list[int]] = [[i] for i in range(n)]
+    max_dist = 1.0 - floor
+
+    # Record every merge as (distance, snapshot_of_a_indices, snapshot_of_b_indices)
+    merges: list[tuple[float, list[int], list[int]]] = []
+
+    while len(active) > 1:
+        best_d = float("inf")
+        bi = bj = -1
+        for ai in range(len(active)):
+            for aj in range(ai + 1, len(active)):
+                d = D[active[ai]][active[aj]]
+                if d < best_d:
+                    best_d = d
+                    bi, bj = ai, aj
+
+        ci, cj = active[bi], active[bj]
+        if best_d > max_dist:
+            break
+
+        merges.append((best_d, list(members[ci]), list(members[cj])))
+
+        # UPGMA: update distances to all remaining clusters
+        ni, nj = sizes[ci], sizes[cj]
+        for k in active:
+            if k == ci or k == cj:
+                continue
+            new_d = (D[ci][k] * ni + D[cj][k] * nj) / (ni + nj)
+            D[ci][k] = D[k][ci] = new_d
+
+        sizes[ci] += nj
+        members[ci].extend(members[cj])
+        active.pop(bj)  # bj > bi, so bi's position is stable
+
+    # Largest-gap cut on merge heights
+    if len(merges) >= 2:
+        heights = [d for d, _, _ in merges]
+        gaps = [heights[i + 1] - heights[i] for i in range(len(heights) - 1)]
+        cut_after = gaps.index(max(gaps))
+    else:
+        cut_after = len(merges) - 1  # keep all 0 or 1 merges
+
+    # Replay kept merges with union-find
+    parent = list(range(n))
+
+    def find(x: int) -> int:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    for step, (_, a_idx, b_idx) in enumerate(merges):
+        if step > cut_after:
+            break
+        ra = find(a_idx[0])
+        for m in b_idx:
+            parent[find(m)] = ra
+
+    roots = [find(i) for i in range(n)]
+    unique_roots = sorted(set(roots))
+    root_to_id = {r: idx for idx, r in enumerate(unique_roots)}
+    return {pmids[i]: root_to_id[roots[i]] for i in range(n)}
 
 
 # Words stripped before building the grouping key so that minor label variants
@@ -101,6 +200,7 @@ class SearchPlan:
     endpoint_hypothesis: str
     endpoint_search_queries: list[str]
     alternatives: list[LLMProposedAlternative] = field(default_factory=list)
+    injection_queries: list[str] = field(default_factory=list)
 
 
 class PubMedRetrievalService:
@@ -132,13 +232,16 @@ class PubMedRetrievalService:
         plan, rank_guidance = await self._generate_search_plan(protocol_text, params)
 
         logger.info(
-            "Search plan — endpoint_queries: %d, alternatives: %d, hypothesis: %s",
+            "Search plan — endpoint_queries: %d, injection_queries: %d, alternatives: %d, hypothesis: %s",
             len(plan.endpoint_search_queries),
+            len(plan.injection_queries),
             len(plan.alternatives),
             (plan.endpoint_hypothesis or "")[:120],
         )
         for i, q in enumerate(plan.endpoint_search_queries):
             logger.info("  Path A[%d]: %s", i, q[:100])
+        for i, q in enumerate(plan.injection_queries):
+            logger.info("  Injection[%d]: %s", i, q[:100])
         for a in plan.alternatives:
             logger.info("  Path B [%s]: %s", a.three_r_class, a.method_description[:80])
 
@@ -146,26 +249,52 @@ class PubMedRetrievalService:
             asyncio.create_task(self._path_a_endpoint(q))
             for q in plan.endpoint_search_queries
         ]
+        injection_tasks = [
+            asyncio.create_task(self._path_a_injection(q))
+            for q in plan.injection_queries
+        ]
         path_b_task = asyncio.create_task(
             self._path_b_reconstruction(plan.alternatives)
         )
 
-        gathered = await asyncio.gather(*path_a_tasks + [path_b_task])
+        n_a = len(path_a_tasks)
+        n_inj = len(injection_tasks)
+        gathered = await asyncio.gather(*path_a_tasks + injection_tasks + [path_b_task])
         path_b_results = gathered[-1]
-        path_a_batches = gathered[:-1]
+        path_a_batches = gathered[:n_a]
+        injection_batches = gathered[n_a:n_a + n_inj]
         path_a_results = [c for batch in path_a_batches for c in batch]
+        injection_results = [c for batch in injection_batches for c in batch]
 
         logger.info(
-            "Candidates — Path A: %d, Path B: %d",
-            len(path_a_results), len(path_b_results),
+            "Candidates — Path A: %d, Injections: %d, Path B: %d",
+            len(path_a_results), len(injection_results), len(path_b_results),
         )
 
         # Merge: keep the highest cosine per PMID.
         merged: dict[str, _Candidate] = {}
-        for candidate in path_a_results + path_b_results:
+        for candidate in path_a_results + injection_results + path_b_results:
             existing = merged.get(candidate.record.pmid)
             if existing is None or candidate.cosine > existing.cosine:
                 merged[candidate.record.pmid] = candidate
+
+        # Cosine-based clustering: if a Path A paper was also retrieved by an injection
+        # query, assign it to that injection cluster so it groups with the injection siblings
+        # rather than appearing as a standalone endpoint result.
+        _inj_source: dict[str, str] = {}
+        _inj_cos: dict[str, float] = {}
+        for c in injection_results:
+            if c.cosine > _inj_cos.get(c.record.pmid, -1.0):
+                _inj_source[c.record.pmid] = c.source_query
+                _inj_cos[c.record.pmid] = c.cosine
+        for pmid, candidate in list(merged.items()):
+            if not candidate.source_query and pmid in _inj_source:
+                merged[pmid] = _Candidate(
+                    record=candidate.record,
+                    cosine=candidate.cosine,
+                    source_class=candidate.source_class,
+                    source_query=_inj_source[pmid],
+                )
 
         total_candidates = len(merged)
         logger.info("Merged unique candidates: %d → sending to ranker", total_candidates)
@@ -214,49 +343,43 @@ class PubMedRetrievalService:
         record_by_pmid = {c.record.pmid: c.record for c in sorted_candidates}
         cosine_by_pmid = {c.record.pmid: c.cosine for c in sorted_candidates}
         path_by_pmid = {
-            c.record.pmid: ("alternative_search" if c.source_class else "endpoint_search")
+            c.record.pmid: ("alternative_search" if (c.source_class or c.source_query) else "endpoint_search")
             for c in sorted_candidates
         }
         ranked_meta = await self._rank_with_llm(params, llm_input, endpoint_hypothesis=plan.endpoint_hypothesis, rank_guidance=rank_guidance)
         if ranked_meta:
-            # Inject siblings of included Path B reps — they share the same method group.
-            already_included = {r["pmid"] for r in ranked_meta if r.get("include")}
-            extra: list[dict] = []
-            for entry in ranked_meta:
-                if not entry.get("include"):
-                    continue
-                siblings = path_b_siblings.get(entry.get("pmid", ""), [])
-                if not siblings:
-                    continue
-                # If the primary has no method_group, assign a synthetic key so it
-                # and all its siblings share the same group in _build_recommendations.
-                if not entry.get("method_group"):
-                    entry["method_group"] = f"_group_{entry['pmid']}"
-                for sibling in siblings:
-                    if sibling.record.pmid not in already_included:
-                        extra.append({
-                            "pmid": sibling.record.pmid,
-                            "include": True,
-                            "three_r_class": entry.get("three_r_class"),
-                            "method_group": entry.get("method_group"),
-                            "relevance_explanation": "Supporting paper from the same method group.",
-                            "endpoint_category": entry.get("endpoint_category"),
-                        })
-                        already_included.add(sibling.record.pmid)
-            if extra:
-                ranked_meta = ranked_meta + extra
-
             included = [r for r in ranked_meta if r.get("include")]
             excluded = [r for r in ranked_meta if not r.get("include")]
-            logger.info("Ranker: %d included (%d siblings), %d excluded", len(included), len(extra), len(excluded))
+            logger.info("Ranker: %d included, %d excluded", len(included), len(excluded))
             for r in included:
                 logger.info("  INCLUDE [%s] %s | group: %s", r.get("three_r_class"), r.get("pmid"), r.get("method_group"))
             for r in excluded[:5]:
                 logger.info("  EXCLUDE %s — %s", r.get("pmid"), r.get("relevance_explanation", "")[:60])
-            recommendations = self._build_recommendations(
+            flat_recs = self._build_recommendations(
                 ranked_meta, record_by_pmid, cosine_by_pmid, path_by_pmid
             )
-            if recommendations:
+            if flat_recs:
+                # Attach Path B siblings directly as supporting papers on their parent.
+                # This keeps siblings out of the HAC pool (they can never become primary
+                # cards) while still surfacing them in the results.
+                flat_pmids = {r.record.pmid for r in flat_recs}
+                flat_recs = [
+                    r.model_copy(update={"supporting_papers": list(r.supporting_papers) + [
+                        SupportingPaper(
+                            pmid=sib.record.pmid,
+                            doi=sib.record.doi,
+                            title=sib.record.title,
+                            pub_year=sib.record.pub_year,
+                        )
+                        for sib in path_b_siblings.get(r.record.pmid, [])
+                        if sib.record.pmid not in flat_pmids
+                    ]})
+                    for r in flat_recs
+                ]
+                pmids = [r.record.pmid for r in flat_recs]
+                pairwise = await self._repository.fetch_pairwise_cosines(pmids)
+                logger.info("Pairwise cosines: %d pairs for %d recs", len(pairwise), len(flat_recs))
+                recommendations = self._cluster_recommendations(flat_recs, pairwise)
                 return recommendations, plan.endpoint_hypothesis, total_candidates
 
         # LLM unavailable or filtered everything out — return top candidates by cosine
@@ -279,6 +402,20 @@ class PubMedRetrievalService:
             embedding, top_k=TOP_K_ENDPOINT
         )
         return [_Candidate(record=rec, cosine=score, source_class=None) for rec, score in rows]
+
+    async def _path_a_injection(self, query: str) -> list[_Candidate]:
+        """Search endpoint_embedding for a skill injection query.
+
+        Sets source_query so results are labelled 'alternative_search' and bypass
+        the _MAX_PATH_A_FOR_LLM cap — they always reach the ranker as representatives.
+        """
+        embedding = await asyncio.get_event_loop().run_in_executor(
+            None, self._embedder.embed, query
+        )
+        rows = await self._repository.search_by_endpoint_embedding(
+            embedding, top_k=TOP_K_ENDPOINT
+        )
+        return [_Candidate(record=rec, cosine=score, source_query=query) for rec, score in rows]
 
     # ──────────────────────────────────────────────────────────────────────────
     # Path B — reconstruction search (one query per 3R class)
@@ -326,7 +463,7 @@ class PubMedRetrievalService:
             candidates=candidates,
             rank_guidance=rank_guidance,
         )
-        raw = await self._llm.async_call(prompt, max_tokens=_RANK_MAX_TOKENS, json_mode=True)
+        raw = await async_call(self._llm, prompt, max_tokens=_RANK_MAX_TOKENS, json_mode=True)
         try:
             with open("/tmp/rank_debug.json", "w") as _f:
                 import json as _json
@@ -370,15 +507,12 @@ class PubMedRetrievalService:
 
         scored.sort(key=lambda x: -x[1])
 
-        # Group by method_group label. Papers without a label each stand alone.
-        # Normalize the key so minor wording differences ("HepaRG model" vs
-        # "HepaRG assay") still group together.
+        # Every paper starts as a standalone card — cosine clustering in
+        # _cluster_recommendations handles grouping after embeddings are fetched.
         groups: dict[str, list[tuple[PubMedRecord, float, dict]]] = defaultdict(list)
         for entry in scored:
-            record, _, meta = entry
-            label = (meta.get("method_group") or "").strip()
-            key = _normalize_group_key(label) if label else f"__solo_{record.pmid}"
-            groups[key].append(entry)
+            record, _, _ = entry
+            groups[f"__solo_{record.pmid}"].append(entry)
 
         # Best-scored paper in each group is primary; others become supporting_papers.
         primaries: list[tuple[PubMedRecord, float, dict, list[SupportingPaper]]] = []
@@ -411,6 +545,68 @@ class PubMedRetrievalService:
             )
             for rank, (record, weighted, meta, supporting) in enumerate(primaries, start=1)
         ]
+
+    @staticmethod
+    def _cluster_recommendations(
+        recs: list[PubMedRecommendation],
+        pairwise: list[tuple[str, str, float]],
+    ) -> list[PubMedRecommendation]:
+        """HAC (average linkage) clustering on precomputed pairwise cosines.
+
+        Merges from the bottom up and cuts at the largest dendrogram gap, so the
+        number of clusters emerges from the data rather than a fixed threshold.
+        Within each cluster the paper with the highest relevance_score is primary.
+        """
+        if not pairwise:
+            return recs
+
+        cosine_lookup: dict[tuple[str, str], float] = {
+            (min(a, b), max(a, b)): c for a, b, c in pairwise
+        }
+
+        sorted_cosines = sorted((c for _, _, c in pairwise), reverse=True)
+        for sim in sorted_cosines[:15]:
+            logger.info("  pairwise cosine %.3f", sim)
+
+        # Partition by 3R class first — papers from different classes must never merge.
+        by_class: dict[str, list[PubMedRecommendation]] = defaultdict(list)
+        for rec in recs:
+            by_class[rec.three_r_class].append(rec)
+
+        global_label = 0
+        all_labels: dict[str, int] = {}
+        for cls, cls_recs in by_class.items():
+            pmid_list = [r.record.pmid for r in cls_recs]
+            cls_labels = _hac_average_linkage(pmid_list, cosine_lookup, floor=_CLUSTER_FLOOR)
+            for pmid, local_label in cls_labels.items():
+                all_labels[pmid] = global_label + local_label
+            global_label += len(set(cls_labels.values()))
+            logger.info(
+                "HAC [%s]: %d clusters from %d papers",
+                cls, len(set(cls_labels.values())), len(pmid_list),
+            )
+
+        by_label: dict[int, list[PubMedRecommendation]] = defaultdict(list)
+        for rec in recs:
+            by_label[all_labels[rec.record.pmid]].append(rec)
+
+        result: list[PubMedRecommendation] = []
+        for group in by_label.values():
+            group.sort(key=lambda r: -r.relevance_score)
+            primary = group[0]
+            new_supporting = list(primary.supporting_papers)
+            for s in group[1:]:
+                new_supporting.append(SupportingPaper(
+                    pmid=s.record.pmid,
+                    doi=s.record.doi,
+                    title=s.record.title,
+                    pub_year=s.record.pub_year,
+                ))
+                new_supporting.extend(s.supporting_papers)
+            result.append(primary.model_copy(update={"supporting_papers": new_supporting}))
+
+        result.sort(key=lambda r: -r.relevance_score)
+        return [r.model_copy(update={"rank": i}) for i, r in enumerate(result, start=1)]
 
     @staticmethod
     def _build_cosine_fallback(
@@ -472,7 +668,7 @@ class PubMedRetrievalService:
             recommendations=llm_input,
         )
 
-        raw = await self._llm.async_call(prompt, max_tokens=_SUMMARY_MAX_TOKENS, json_mode=True)
+        raw = await async_call(self._llm, prompt, max_tokens=_SUMMARY_MAX_TOKENS, json_mode=True)
         if raw is None:
             logger.warning("Summary LLM unavailable — no model configured or call failed")
             return None, []
@@ -561,7 +757,7 @@ class PubMedRetrievalService:
             procedure_text=params.procedure_text,
             vocabulary=profile.vocabulary,
         )
-        raw = await self._llm.async_call(prompt, max_tokens=_PLAN_MAX_TOKENS, json_mode=True)
+        raw = await async_call(self._llm, prompt, max_tokens=_PLAN_MAX_TOKENS, json_mode=True)
         if raw is None:
             logger.warning("Search plan LLM unavailable — using keyword fallback")
             return fallback, profile.rank_guidance
@@ -598,15 +794,18 @@ class PubMedRetrievalService:
         _ORDER = {"replacement": 0, "reduction": 1, "refinement": 2}
         alternatives.sort(key=lambda a: _ORDER.get(a.three_r_class, 3))
 
-        # Endpoint queries: LLM-generated + profile injections
+        # Endpoint queries: LLM-generated only (injection queries handled separately)
         endpoint_queries = list(
             summary.endpoint_descriptions if summary
             else [payload.get("endpoint_search_query") or self._fallback_endpoint_query(params)]
         )
-        endpoint_queries.extend(profile.base_path_a)
+
+        # Injection queries: profile-defined, run as alternative_search so results
+        # are labelled "alternative method" and bypass the _MAX_PATH_A_FOR_LLM cap
+        injection_queries = list(profile.base_path_a)
         if has_subacute:
-            endpoint_queries.extend(profile.subacute_path_a)
-            logger.info("Subacute Path A endpoint queries injected")
+            injection_queries.extend(profile.subacute_path_a)
+            logger.info("Subacute injection queries added: %d", len(profile.subacute_path_a))
 
         return SearchPlan(
             endpoint_hypothesis=(
@@ -614,13 +813,14 @@ class PubMedRetrievalService:
                 else payload.get("endpoint_hypothesis")
             ),
             endpoint_search_queries=endpoint_queries,
+            injection_queries=injection_queries,
             alternatives=alternatives,
         ), profile.rank_guidance
 
     async def _summarize_study(self, study_text: str) -> StudySummary | None:
         """Extract scientific_question, endpoint_descriptions, current_method from free text."""
         prompt = build_study_summary_prompt(study_text)
-        raw = await self._llm.async_call(prompt, max_tokens=600, json_mode=True)
+        raw = await async_call(self._llm, prompt, max_tokens=600, json_mode=True)
         if raw is None:
             return None
         try:

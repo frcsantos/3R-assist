@@ -10,7 +10,6 @@ infection systems, pseudovirus/replicon platforms, ex vivo human tissue, and
 lower-organism models (Galleria, zebrafish, C. elegans).
 """
 
-from pubmed.models.analysis import LLMProposedAlternative
 from pubmed.skills.base import DomainProfile
 
 # ── Vocabulary ────────────────────────────────────────────────────────────────
@@ -127,9 +126,7 @@ efficacy in animals."""
 
 # ── Always-on Path B injections ───────────────────────────────────────────────
 
-_CELL_ORGANOID_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_CELL_ORGANOID_INJECTION =(
         "Cell-based and organoid infection models replacing animal challenge studies: "
         "primary human macrophage THP-1 monocyte intracellular infection assay "
         "for Mycobacterium tuberculosis Leishmania Salmonella Listeria; "
@@ -150,12 +147,9 @@ _CELL_ORGANOID_INJECTION = LLMProposedAlternative(
         "gut-on-chip airway-on-chip organ-on-chip bacterial viral infection model; "
         "precision-cut lung slice PCLS ex vivo respiratory infection; "
         "ex vivo human intestinal explant infection."
-    ),
 )
 
-_SURROGATE_SYSTEM_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_SURROGATE_SYSTEM_INJECTION =(
         "Reduced-risk surrogate virus and in vitro antimicrobial systems replacing "
         "live-virus animal challenge and in vivo efficacy studies: "
         "pseudovirus lentiviral pseudoparticle VSV pseudotype neutralisation assay "
@@ -169,12 +163,9 @@ _SURROGATE_SYSTEM_INJECTION = LLMProposedAlternative(
         "cytokine release TLR innate immune assay PBMC; "
         "complement activation opsonophagocytosis neutrophil killing assay; "
         "ELISPOT vaccine immunogenicity assay; dendritic cell activation in vitro."
-    ),
 )
 
-_COMPUTATIONAL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_COMPUTATIONAL_INJECTION =(
         "Computational and in silico models replacing animal studies in infectious disease "
         "research: molecular docking virtual screening antiviral antibiotic drug-target "
         "interaction viral protease polymerase; "
@@ -186,12 +177,9 @@ _COMPUTATIONAL_INJECTION = LLMProposedAlternative(
         "SIR SEIR mathematical epidemiological transmission model; "
         "phylogenetic genomic epidemiology pathogen evolution; "
         "single-cell RNA-seq transcriptomics of infected human cells organoids."
-    ),
 )
 
-_REDUCTION_INJECTION = LLMProposedAlternative(
-    three_r_class="reduction",
-    method_description=(
+_REDUCTION_INJECTION =(
         "Lower-organism and reduction strategies replacing mammalian animal infection models: "
         "Galleria mellonella wax moth larva infection model for bacterial fungal antimicrobial "
         "efficacy screening (Staphylococcus aureus MRSA Pseudomonas Candida Aspergillus); "
@@ -201,7 +189,6 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
         "Drosophila innate immunity model for host-pathogen genetic screening; "
         "high-throughput in vitro screening to reduce dose-finding animal experiments; "
         "adaptive statistical design for animal infection challenge studies."
-    ),
 )
 
 # ── Profile ───────────────────────────────────────────────────────────────────
@@ -209,12 +196,7 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
 INFECTIOUS_DISEASE_PROFILE = DomainProfile(
     name="infectious_disease",
     vocabulary=INFECTIOUS_DISEASE_VOCABULARY,
-    base_path_b=[
-        _CELL_ORGANOID_INJECTION,
-        _SURROGATE_SYSTEM_INJECTION,
-        _COMPUTATIONAL_INJECTION,
-        _REDUCTION_INJECTION,
-    ],
-    base_path_a=[],
+    base_path_b=[],
+    base_path_a=[_CELL_ORGANOID_INJECTION, _SURROGATE_SYSTEM_INJECTION, _COMPUTATIONAL_INJECTION, _REDUCTION_INJECTION],
     rank_guidance=INFECTIOUS_DISEASE_RANK_GUIDANCE,
 )

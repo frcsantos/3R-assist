@@ -1,5 +1,6 @@
 .env
 backend/.env
+backend/.env.test
 frontend/.env
 backend/.venv/
 backend/venv/
@@ -10,3 +11,7 @@ backend/**/__pycache__/
 backend/.pytest_cache/
 docs/oecd_files/
 backend/*.log
+backend/**/*.log
+.DS_Store
+**/.DS_Store
+backups/

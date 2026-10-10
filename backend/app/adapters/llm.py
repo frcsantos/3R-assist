@@ -148,13 +148,6 @@ class LLMAdapter(ABC):
         """Send a single-turn prompt; return raw text or None on failure/stub."""
         return None
 
-    async def async_call(self, prompt: str, *, max_tokens: int, json_mode: bool = False) -> str | None:
-        """Non-blocking wrapper around call() for use in async contexts."""
-        import asyncio
-        return await asyncio.get_event_loop().run_in_executor(
-            None, lambda: self.call(prompt, max_tokens=max_tokens, json_mode=json_mode)
-        )
-
     @abstractmethod
     def extract_raw_experiments(
         self,
@@ -1167,15 +1160,20 @@ class OllamaLLMAdapter(LLMAdapter):
             method="POST",
         )
         try:
-            with urllib.request.urlopen(req, timeout=180) as resp:
+            with urllib.request.urlopen(req, timeout=600) as resp:
                 body = json.loads(resp.read())
             return body.get("response")
         except Exception as exc:
             logger.warning("Ollama call failed: %s", exc)
             return None
 
-    def extract_raw_experiments(self, text: str) -> list[RawExtraction] | ExtractionError:
-        raw = self.call(build_extraction_prompt(text), max_tokens=EXTRACTION_MAX_TOKENS, json_mode=True)
+    def extract_raw_experiments(
+        self,
+        text: str,
+        *,
+        source_language: str = "English",
+    ) -> list[RawExtraction] | ExtractionError:
+        raw = self.call(build_extraction_prompt(text, source_language=source_language), max_tokens=EXTRACTION_MAX_TOKENS, json_mode=True)
         if raw is None:
             return ExtractionError(message="Ollama call returned no response.")
         return _extract_from_raw(raw)

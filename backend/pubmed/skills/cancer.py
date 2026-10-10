@@ -7,7 +7,6 @@ cancer therapy (chemotherapy, radiotherapy, immunotherapy, targeted therapy),
 tumor microenvironment, angiogenesis, and cancer stem cell research.
 """
 
-from pubmed.models.analysis import LLMProposedAlternative
 from pubmed.skills.base import DomainProfile
 
 # ── Vocabulary ────────────────────────────────────────────────────────────────
@@ -83,9 +82,7 @@ use — not merely study the same cancer type or pathway in animals."""
 
 # ── Always-on Path B injections ───────────────────────────────────────────────
 
-_ORGANOID_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_ORGANOID_INJECTION =(
         "Patient-derived tumor organoids and 3D cancer models as replacements for in vivo "
         "xenograft and orthotopic animal tumor studies: patient-derived tumoroids from biopsy "
         "or resection preserving intratumoral heterogeneity; glioblastoma stem cell neurosphere "
@@ -94,12 +91,9 @@ _ORGANOID_INJECTION = LLMProposedAlternative(
         "prostate cancer organoids; multicellular tumor spheroid MCTS hanging drop "
         "ultra-low attachment; tumor-on-a-chip microphysiological system; "
         "ex vivo organotypic tumor slice culture."
-    ),
 )
 
-_COMPUTATIONAL_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_COMPUTATIONAL_INJECTION =(
         "Computational and in silico cancer models replacing animal tumor studies: "
         "mathematical tumor growth regression and kinetics models; agent-based cancer simulation; "
         "machine learning deep learning cancer drug response and sensitivity prediction; "
@@ -109,12 +103,9 @@ _COMPUTATIONAL_INJECTION = LLMProposedAlternative(
         "bioinformatics analysis of TCGA GEO human tumour datasets; "
         "in silico tumour microenvironment modelling; single-cell RNA-seq computational analysis "
         "tumour heterogeneity; virtual tumour model for therapy response prediction."
-    ),
 )
 
-_IN_VITRO_ASSAY_INJECTION = LLMProposedAlternative(
-    three_r_class="replacement",
-    method_description=(
+_IN_VITRO_ASSAY_INJECTION =(
         "In vitro functional cancer assays replacing animal endpoint measurements: "
         "clonogenic colony formation survival assay for radiation or drug response; "
         "Matrigel or Boyden chamber invasion and migration assay for metastasis; "
@@ -125,12 +116,9 @@ _IN_VITRO_ASSAY_INJECTION = LLMProposedAlternative(
         "T cell NK cell co-culture cytotoxicity assay for immunotherapy; "
         "ELISA multiplex cytokine immune response assay; "
         "FACS Western blot signalling pathway analysis cancer."
-    ),
 )
 
-_REDUCTION_INJECTION = LLMProposedAlternative(
-    three_r_class="reduction",
-    method_description=(
+_REDUCTION_INJECTION =(
         "Strategies to reduce animal numbers in cancer research: "
         "high-throughput in vitro drug screening and dose optimisation before in vivo validation; "
         "ex vivo patient-derived tumor slice assay to prioritise compounds and reduce cohort size; "
@@ -138,7 +126,6 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
         "enabling within-subject designs and smaller groups; "
         "adaptive statistical design and power calculation for tumour experiments; "
         "in silico dose selection and pharmacokinetic modelling to reduce ranging studies."
-    ),
 )
 
 # ── Profile ───────────────────────────────────────────────────────────────────
@@ -146,12 +133,7 @@ _REDUCTION_INJECTION = LLMProposedAlternative(
 CANCER_PROFILE = DomainProfile(
     name="cancer_oncology",
     vocabulary=CANCER_VOCABULARY,
-    base_path_b=[
-        _ORGANOID_INJECTION,
-        _COMPUTATIONAL_INJECTION,
-        _IN_VITRO_ASSAY_INJECTION,
-        _REDUCTION_INJECTION,
-    ],
-    base_path_a=[],
+    base_path_b=[],
+    base_path_a=[_ORGANOID_INJECTION, _COMPUTATIONAL_INJECTION, _IN_VITRO_ASSAY_INJECTION, _REDUCTION_INJECTION],
     rank_guidance=CANCER_RANK_GUIDANCE,
 )
