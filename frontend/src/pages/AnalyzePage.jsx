@@ -215,8 +215,22 @@ export default function AnalyzePage({ onSubmit }) {
             {t('s1.mock')}
           </Button>
           <Button type="submit" disabled={!canSubmit}>
-            {t('s1.submit')}
-            <span aria-hidden="true">→</span>
+            {submitting ? (
+              <>
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+                {elapsedSeconds >= 3
+                  ? t('s1.submittingSeconds', { seconds: elapsedSeconds })
+                  : t('s1.submitting')}
+              </>
+            ) : (
+              <>
+                {t('s1.submit')}
+                <span aria-hidden="true">→</span>
+              </>
+            )}
           </Button>
         </div>
       </form>
