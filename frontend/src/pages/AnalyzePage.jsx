@@ -215,7 +215,7 @@ export default function AnalyzePage({ onSubmit }) {
             {t('s1.mock')}
           </Button>
           <Button type="submit" disabled={!canSubmit}>
-            {t('litSearch.submit')}
+            {t('s1.submit')}
             <span aria-hidden="true">→</span>
           </Button>
         </div>
