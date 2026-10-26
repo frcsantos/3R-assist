@@ -14,6 +14,7 @@ from app.api.deps import (
 )
 from app.api.errors import ErrorEnvelope, error_response
 from app.config import get_settings
+from app.services.vocabulary import ensure_applications_loaded
 from app.models.admin import (
     AdminCellUpdateRequest,
     AdminCellUpdateResponse,
@@ -472,6 +473,7 @@ async def extract_document_draft(
     "/extract/method-draft",
     response_model=MethodDraftExtractResponse,
     responses={422: {"model": ErrorEnvelope}},
+    dependencies=[Depends(ensure_applications_loaded)],
 )
 async def extract_method_draft(
     payload: MethodDraftExtractRequest,

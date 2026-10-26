@@ -153,18 +153,17 @@ slug                TEXT NOT NULL UNIQUE          -- human-readable curation key
 active              BOOLEAN NOT NULL DEFAULT FALSE
 name                JSONB NOT NULL                 -- {"en-us": "...", "pt-br": "..."}
 description         JSONB NOT NULL                 -- {"en-us": "...", "pt-br": "..."}
-animal_use          TEXT                          -- none | animal_derived_material | … | mixed_or_variable
-test_system         JSONB                         -- multi-select: in_silico | in_chemico | in_vitro | …
+animal_use          TEXT                          -- none | animal_derived_material | … | mixed_or_variable | embryos_and_larvae
+test_system         JSONB                         -- multi-select: in_silico | in_chemico | in_data | in_vitro | …
 endpoints              INTEGER[] NOT NULL         -- FK ids → endpoints(id)
 routes_applicable   INTEGER[]                     -- routes.id values; NULL = route-agnostic
 application_ids     INTEGER[] NOT NULL            -- applications.id values
 oecd_ref            TEXT                          -- e.g. 'TG 439', 'GD 129'; NULL for non-OECD methods
-ncit_id             TEXT                          -- NCI Thesaurus concept ID; NULL until Karynn maps
 source_citation     TEXT                          -- bibliographic citation for the primary source
 source_doc_id       INTEGER                       -- FK → documents(id); primary source document
 source_db           TEXT NOT NULL                 -- 'OECD_TG' | 'ECVAM_DBALM' | 'NICEATM' | 'FARMACOPEIA_BR' | 'TSAR'
-validation_status   TEXT NOT NULL DEFAULT 'not_evaluated'
-                                                  -- not_evaluated | under_validation | validated |
+validation_status   TEXT NOT NULL DEFAULT 'unclear'
+                                                  -- recognized | under_validation | validated |
                                                   -- partially_validated | not_validated | unclear
 validation_doc_id   INTEGER                       -- FK → documents(id); evidence for validation_status
 replacement_rationale JSONB                      -- {"en-us":"...","pt-br":"..."}; non-empty locale text ⇒ qualifies as replacement (ADR-023)
@@ -177,14 +176,14 @@ created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 ```
 > Jurisdiction / regulatory recognition live in **MethodRegulatoryContext** / `regulations` (ADR-022). Scientific `validation_status` returned to `methods` in migration `042`.
-> Column order: `active` after `slug`; `animal_use`/`test_system` before `endpoints`; then `routes_applicable` / `application_ids` / `oecd_ref` / `ncit_id` / `source_*`; then `validation_status`/`validation_doc_id`; then `*_rationale`, `keywords`, `text_for_embedding`, `embedding_json`, timestamps.
+> Column order: `active` after `slug`; `animal_use`/`test_system` before `endpoints`; then `routes_applicable` / `application_ids` / `oecd_ref` / `source_*`; then `validation_status`/`validation_doc_id`; then `*_rationale`, `keywords`, `text_for_embedding`, `embedding_json`, timestamps.
 
 **MethodRegulatoryContext** *(regulatory recognition per method × jurisdiction)*
 ```
 id                SERIAL PRIMARY KEY
 method_id         INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE
 jurisdiction      JSONB   NOT NULL   -- {"en-us":"Brazil"|"EU"|"US"|"OECD","pt-br":"Brasil"|"UE"|"EUA"|"OCDE"}
-regulatory_status TEXT               -- 'not_approved' | 'approved' | 'recommended' | 'mandatory'
+regulatory_status TEXT               -- 'not_approved' | 'approved' | 'recognized' | 'recommended' | 'mandatory'
 regulatory_date   DATE               -- date of regulation / recognition / adoption (YYYY-MM-DD)
 regulatory_endpoints INTEGER[]       -- recognized endpoints.id values
 endpoint_quote    TEXT               -- supporting quotation for regulatory_endpoints
@@ -246,7 +245,7 @@ updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 Seeded keys (see `parameter_model.md` §3.1–3.3 and `docs/tables.md`):
 - `endpoints`: `acute-toxicity`, `skin-irritation`, `skin-corrosion`, `ocular-irritation`, `skin-sensitisation`, `phototoxicity`, `genotoxicity`, `pyrogenicity`, `skin-absorption`, `reproductive-toxicity`, `endocrine-activity`, `photoreactivity`, `aquatic-toxicity`, `toxicokinetics`, `bacterial-endotoxin`, `rabies-diagnosis`
 - `routes`: `cutaneous`, `inhalation`, `oral`, `ocular`, `intranasal`, `intratracheal`, `intravenous`, `intra-arterial`, `intramuscular`, `subcutaneous`, `intradermal`, `intraperitoneal`, `rectal`, `vaginal`, `topical-mucosal`, `implantation`, `multiple`, `not-applicable`, `unspecified`, `other`
-- `applications`: `basic-research`, `translational-applied-research`, `regulatory-use`, `routine-production`, `education-training`, `environmental-protection`, `species-preservation`, `forensic-inquiry`, `other`
+- `applications`: `basic-research`, `translational-applied-research`, `regulatory-use`, `routine-production`, `education-training`, `environmental-protection`, `species-preservation`, `forensic-inquiry`, `other`, `diagnostic-testing`. The list lives in the `applications` table and is read at runtime (`GET /vocabularies/applications`); only the default `basic-research` is fixed in code.
 
 **Route compatibility** lives on `routes.compatible_endpoints INTEGER[]` (`endpoints.id` values).
 
@@ -554,7 +553,7 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
         "study_type": string,
         "route": ["oral","intraperitoneal"]|null,
         "route_evidence": string|null,
-        "application": "basic-research"|"translational-applied-research"|"regulatory-use"|"routine-production"|"education-training"|"environmental-protection"|"species-preservation"|"forensic-inquiry"|"other",
+        "application": string,  // slug from the applications table; default "basic-research"
         "application_evidence": string|null,
         "procedure_text": string|null,
         "procedure_text_evidence": string|null,
@@ -626,14 +625,14 @@ All interfaces defined here before any handler is written. OpenAPI spec generate
         "endpoints": [1, 2],
         "endpoint_codes": ["skin-irritation", "skin-corrosion"],
         "oecd_ref": "TG 439"|null,
-        "validation_status": "not_evaluated"|"under_validation"|"validated"|"partially_validated"|"not_validated"|"unclear",
+        "validation_status": "recognized"|"under_validation"|"validated"|"partially_validated"|"not_validated"|"unclear",
         "validation_doc_id": number|null,
         "validation_url": string|null
       },
       "regulatory_contexts": [
         {
           "jurisdiction": {"en-us": string, "pt-br": string},
-          "regulatory_status": "not_approved"|"approved"|"recommended"|"mandatory"|null,
+          "regulatory_status": "not_approved"|"approved"|"recognized"|"recommended"|"mandatory"|null,
           "regulatory_date": "YYYY-MM-DD"|null,
           "regulatory_endpoints": [1, 2]|null,
           "regulatory_endpoint_names": [{"en-us": string, "pt-br": string}]|[],

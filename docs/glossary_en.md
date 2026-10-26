@@ -8,11 +8,12 @@
 - **Slaughterhouse byproduct** — tissues/organs from animals already slaughtered for food or other primary purposes (e.g. post-slaughter bovine corneas in EVEIT).
 - **Animals killed for tissue** — animals are killed specifically to obtain tissue for the method.
 - **Live animals** — living animals are used in the procedure.
+- **Embryos and larvae** — embryonic or larval stages (e.g. fish embryos and sac-fry) are used instead of juvenile or adult animals.
 - **Mixed or variable** — more than one of the above clearly applies, or use varies.
 
 May be unclassified during curation when the source document does not clearly support a classification; unclassified never means “None”.
 
-**Application:** The intended use or purpose of a study or method. Possible values: basic research, translational/applied research, regulatory use, routine production, education and training, environmental protection, species preservation, forensic inquiry, other. Formerly called “study domain”.
+**Application:** The intended use or purpose of a study or method. Possible values: basic research, translational/applied research, regulatory use, routine production, education and training, environmental protection, species preservation, forensic inquiry, diagnostic testing, other. Formerly called “study domain”.
 
 **Endpoint:** In toxicology and pharmacology, this refers to the biological effect or measurable parameter that a study aims to evaluate—the response that the test captures, not the substance being tested or the method itself. This is the accepted terminology in regulatory ecotoxicology (OECD, ECHA, and ANVISA use the term in this sense).
 Examples of endpoints: eye irritation, skin corrosion, skin sensitization (allergenicity), genotoxicity, acute toxicity, phototoxicity, pyrogenicity. Each answers a distinct regulatory question (e.g., “Does this substance corrode the skin?” → endpoint = skin corrosion).
@@ -25,7 +26,7 @@ Examples of endpoints: eye irritation, skin corrosion, skin sensitization (aller
 
 **Route:** Describes how the test substance comes into contact with the biological system—not the type of biological system. In surrogate methods, it refers to which routes in the original protocol this method is compatible with to replace—when it is compatible with any route, no specific route is recorded.
 
-**Test system:** The platform in which an assay is conducted — the assay modality — distinct from route, which describes how the substance comes into contact with the system. One or more of the following may apply: in silico, in chemico, in vitro, ex vivo, in vivo, hybrid, unclear.
+**Test system:** The platform in which an assay is conducted — the assay modality — distinct from route, which describes how the substance comes into contact with the system. One or more of the following may apply: in silico, in chemico, in data, in vitro, ex vivo, in vivo, unclear.
 
 ---
 
@@ -119,6 +120,8 @@ Examples of endpoints: eye irritation, skin corrosion, skin sensitization (aller
 
 **Organ-on-Chip:** A technology that uses microdevices containing human cells to simulate organs and predict biological responses without the need to use animals in experiments.
 
+**Partial replacement:** A method that replaces only part of a procedure that uses animals, or that is not sufficient on its own (for example, it is used in a tiered strategy, covers only some classification categories, or still depends on tissue from animals). Distinct from the absolute/relative distinction, which concerns whether animals or species of lower complexity are used.
+
 **PREPARE:** Guidelines for the appropriate planning of experiments involving animals, aimed at reducing errors and promoting animal welfare during research.
 
 **Reduction:** A strategy to decrease the number of animals used in experiments without compromising scientific quality. It includes the use of improved experimental designs and statistical methods to optimize the data obtained.
@@ -146,6 +149,8 @@ Examples of endpoints: eye irritation, skin corrosion, skin sensitization (aller
 **Social Benefit:** The positive impact that research or an intervention should provide to society in a broad and meaningful way. In the context of animal research, the social benefit must be fundamental, highly relevant and justifiable, clearly outweighing the harms and suffering caused to animals. Minor advantages or marginal contributions are not sufficient to justify animal use; the benefit should be substantial and essential to the advancement of social well-being.
 
 **Suffering:** A negative emotional and physical state experienced by an individual, characterized by pain, discomfort, stress or distress. In animals, suffering may result from adverse conditions such as disease, injury, mistreatment, deprivation of basic needs, or scientific procedures that cause pain or stress. The concept of suffering is fundamental to discussions of animal welfare, and minimizing it through refinement of experimental and husbandry practices is essential.
+
+**Total replacement:** A method that can replace, on its own, the animal procedure it targets for the endpoint it covers, with no animal procedure needed for that endpoint.
 
 **Teaching or Research Proposal Involving Animals:** A formal request submitted to a CEUA to carry out a teaching or research project involving animals, including a description of the intended protocols.
 

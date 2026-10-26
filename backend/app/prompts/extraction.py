@@ -56,6 +56,9 @@ describes substance-to-tissue contact, not the culture setup.
                        surface (assay modality belongs in test_system, not route)
                        (radiation is not a chemical administration route)
 
+── APPLICATION VALUES ──────────────────────────────────────────────────────
+{application_values}
+
 ── SPECIES SYNONYMS ─────────────────────────────────────────────────────────
   rat         ← Rattus norvegicus, Wistar, Sprague-Dawley, SD, F344, Fischer,
                   IGS, Crj:CD(SD), SKH (rat strain)
@@ -93,16 +96,14 @@ Per-field confidence scale:
       "route_evidence": "exact quote from text, MAX 15 WORDS" or null,
       "route_confidence": "high"|"medium"|"low" or null if route is null,
 
-      "application": one of [basic-research, translational-applied-research,
-        regulatory-use, routine-production, education-training,
-        environmental-protection, species-preservation, forensic-inquiry, other],
+      "application": one of the slugs listed under "Application values" below,
       "application_evidence": "exact quote from text, MAX 15 WORDS" or null,
       "application_confidence": "high"|"medium"|"low",
-      // Use "basic-research" when: (a) the study is validating a method rather
-      // than testing a specific product class; (b) no practical or regulatory
-      // purpose is declared. Use "regulatory-use" when the work is intended to
-      // satisfy legislation or a regulatory authority. The identity of the test
-      // substance alone does not determine this field.
+      // Choose the value whose description best matches the stated purpose.
+      // Use the default value when no practical or regulatory purpose is
+      // declared or the study is validating a method rather than testing a
+      // specific product class. The identity of the test substance alone does
+      // not determine this field.
 
       "procedure_text": "brief English description, max 30 words" or null,
       "procedure_text_evidence": "exact quote from text, MAX 20 WORDS" or null,
@@ -152,7 +153,14 @@ Protocol description:
 
 
 def build_extraction_prompt(protocol_text: str, *, source_language: str = "English") -> str:
-    return EXTRACTION_PROMPT_TEMPLATE.replace(
+    from app.services.vocabulary import DEFAULT_APPLICATION, application_prompt_lines
+
+    template = EXTRACTION_PROMPT_TEMPLATE.replace(
+        "{application_values}",
+        f"Application values (slug: description; default {DEFAULT_APPLICATION}):\n"
+        + application_prompt_lines(),
+    )
+    return template.replace(
         "{protocol_text}",
         protocol_text.strip(),
     ).replace("{source_language}", source_language)

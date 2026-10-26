@@ -226,20 +226,26 @@ export function formatRegulatoryStatusItems(contexts = [], lang, t) {
     const endpoints = (context.regulatory_endpoint_names ?? [])
       .map((name) => pickLocalized(name, lang))
       .filter(Boolean)
-      .join(', ')
-    const quote = String(context.endpoint_quote ?? '').trim()
-    const purpose = quote && endpoints
-      ? `${quote} (${endpoints})`
-      : quote || endpoints || null
+    const endpointQuote = String(context.endpoint_quote ?? '').trim() || null
+    const regulationQuote =
+      pickLocalized(context.regulatory_quote, lang).trim() || null
     return {
       key: `${keyBase}-${index}`,
       id: context.id ?? null,
       label: jurisdiction,
       status,
       date: context.regulatory_date || null,
-      purpose,
+      publishedDate: context.published_date || null,
+      effectiveDate: context.effective_date || null,
+      replacementTermYears: context.replacement_term_years ?? null,
+      replacementDeadline: context.replacement_deadline || null,
+      endpoints,
+      endpointQuote,
+      regulationQuote,
       body: pickLocalized(context.regulatory_body, lang) || null,
       citation: pickLocalized(context.regulatory_citation, lang).trim() || null,
+      documentCitation:
+        pickLocalized(context.document_citation, lang).trim() || null,
       url: context.regulatory_url || null,
     }
   })
@@ -270,28 +276,6 @@ export function methodDetailRows(method, t, lang) {
 
   const rows = []
 
-  if (method.animal_use) {
-    rows.push({
-      key: 'animal_use',
-      label: t('s3.fields.animalUse'),
-      value: t(`s3.enums.animalUse.${method.animal_use}`, {
-        defaultValue: method.animal_use,
-      }),
-    })
-  }
-
-  if (method.test_system?.length) {
-    rows.push({
-      key: 'test_system',
-      label: t('s3.fields.testSystem'),
-      value: method.test_system
-        .map((code) =>
-          t(`s3.enums.testSystem.${code}`, { defaultValue: code }),
-        )
-        .join(', '),
-    })
-  }
-
   if (method.endpoint_names?.length || method.endpoint_codes?.length) {
     const labels = (method.endpoint_names ?? [])
       .map((name) => pickLocalized(name, lang))
@@ -301,10 +285,12 @@ export function methodDetailRows(method, t, lang) {
         const key = String(code).replaceAll('-', '_')
         return t(`s2.enums.endpointCategory.${key}`, { defaultValue: code })
       })
+    const items = labels.length ? labels : fallback
     rows.push({
       key: 'endpoints',
       label: t('s2.fields.endpointCategory'),
-      value: (labels.length ? labels : fallback).join(', '),
+      value: items.join(', '),
+      items,
     })
   }
 
@@ -328,6 +314,52 @@ export function methodDetailRows(method, t, lang) {
     })
   }
 
+  if (method.test_system?.length) {
+    rows.push({
+      key: 'test_system',
+      label: t('s3.fields.testSystem'),
+      value: method.test_system
+        .map((code) =>
+          t(`s3.enums.testSystem.${code}`, { defaultValue: code }),
+        )
+        .join(', '),
+    })
+  }
+
+  if (method.animal_use) {
+    rows.push({
+      key: 'animal_use',
+      label: t('s3.fields.animalUse'),
+      value: t(`s3.enums.animalUse.${method.animal_use}`, {
+        defaultValue: method.animal_use,
+      }),
+    })
+  }
+
+  const materials = (method.materials ?? []).map((material, index) => {
+    const name = pickLocalized(material.name, lang)
+    if (!name) return null
+    const species = pickLocalized(material.species_name, lang)
+    const kind = t(`s3.enums.materialKind.${material.kind}`, {
+      defaultValue: material.kind,
+    })
+    const flags = []
+    if (material.animal_derived === true) flags.push(t('s3.animalDerivedYes'))
+    if (material.animal_derived === false) flags.push(t('s3.animalDerivedNo'))
+    const detail = [kind, species, ...flags].filter(Boolean).join(' · ')
+    return { key: `${material.kind}-${index}`, text: name, detail }
+  }).filter(Boolean)
+  if (materials.length) {
+    rows.push({
+      key: 'materials',
+      label: t('s3.fields.materials'),
+      value: materials.map((item) => item.text).join(', '),
+      items: materials.map((item) =>
+        item.detail ? `${item.text} (${item.detail})` : item.text,
+      ),
+    })
+  }
+
   if (method.application_names?.length || method.application_codes?.length) {
     const labels = (method.application_names ?? [])
       .map((name) => pickLocalized(name, lang))
@@ -339,6 +371,44 @@ export function methodDetailRows(method, t, lang) {
       key: 'application_ids',
       label: t('s2.fields.application'),
       value: (labels.length ? labels : fallback).join(', '),
+    })
+  }
+
+  if (method.review_status) {
+    rows.push({
+      key: 'review_status',
+      label: t('s3.fields.reviewStatus'),
+      value: t(`s3.enums.reviewStatus.${method.review_status}`, {
+        defaultValue: method.review_status,
+      }),
+    })
+  }
+
+  const procedures = (method.animal_procedures_avoided ?? []).map(
+    (procedure, index) => {
+      const name = pickLocalized(procedure.name, lang)
+      if (!name) return null
+      const rType = procedure.r_type
+        ? t(`s3.threeR.${procedure.r_type}`, { defaultValue: procedure.r_type })
+        : null
+      const extent = procedure.extent
+        ? t(`s3.enums.extent.${procedure.extent}`, {
+            defaultValue: procedure.extent,
+          })
+        : null
+      const ref = procedure.oecd_ref || null
+      const note = pickLocalized(procedure.note, lang)
+      const detail = [rType, extent, ref].filter(Boolean).join(' · ')
+      const text = detail ? `${name} (${detail})` : name
+      return { key: `${procedure.r_type}-${index}`, text: note ? `${text}. ${note}` : text }
+    },
+  ).filter(Boolean)
+  if (procedures.length) {
+    rows.push({
+      key: 'animal_procedures_avoided',
+      label: t('s3.fields.proceduresAvoided'),
+      value: procedures.map((item) => item.text).join('; '),
+      items: procedures.map((item) => item.text),
     })
   }
 

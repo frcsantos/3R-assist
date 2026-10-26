@@ -5,6 +5,8 @@ from typing import Literal
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 from app.models.recommendation import Recommendation
+from app.services import vocabulary
+from app.services.vocabulary import DEFAULT_APPLICATION
 
 ConfidenceLevel = Literal["high", "medium", "low"]
 
@@ -102,28 +104,17 @@ def coerce_route_list(value) -> list[str] | None:
             routes.append(slug)
     return routes or None
 
-Application = Literal[
-    "basic-research",
-    "translational-applied-research",
-    "regulatory-use",
-    "routine-production",
-    "education-training",
-    "environmental-protection",
-    "species-preservation",
-    "forensic-inquiry",
-    "other",
-]
+# Valid slugs come from the `applications` table (app.services.vocabulary).
+Application = str
 
-_APPLICATION_SLUGS: frozenset[str] = frozenset(Application.__args__)
+# Legacy study_domain values only; the categories themselves are not listed here.
 _APPLICATION_ALIASES = {
     "general": "basic-research",
     "pharma": "regulatory-use",
     "cosmetics": "regulatory-use",
     "chemical-safety": "regulatory-use",
-    "basic-research": "basic-research",
     "education": "education-training",
 }
-DEFAULT_APPLICATION: Application = "basic-research"
 
 
 def normalize_application_slug(value: str | None) -> str | None:
@@ -138,9 +129,13 @@ def normalize_application_slug(value: str | None) -> str | None:
 
 def coerce_application(value) -> Application:
     slug = normalize_application_slug(value if value is not None else None)
-    if slug in _APPLICATION_SLUGS:
-        return slug  # type: ignore[return-value]
-    return DEFAULT_APPLICATION
+    if not slug:
+        return DEFAULT_APPLICATION
+    # Validate against the table when it has been loaded; before that (tests,
+    # database unavailable) any well-formed slug is accepted as is.
+    if vocabulary.applications_loaded() and slug not in vocabulary.application_slugs():
+        return DEFAULT_APPLICATION
+    return slug
 
 Species = Literal[
     "rat",

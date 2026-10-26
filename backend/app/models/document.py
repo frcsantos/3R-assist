@@ -14,3 +14,4 @@ class Document(BaseModel):
     categories: list[str] = Field(default_factory=list)
     institution: LocalizedStr | None = None
     url: str | None = None
+    internal_doc_refs: list[int] = Field(default_factory=list)

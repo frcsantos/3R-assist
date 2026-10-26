@@ -1,6 +1,6 @@
 ## Glossário Assert3R
 
-**Aplicação:** Finalidade ou uso pretendido de um estudo ou método. Valores possíveis: pesquisa básica, pesquisa translacional/aplicada, uso regulatório, produção de rotina, educação e treinamento, proteção ambiental, preservação de espécies, investigação forense, outro. Antigo “domínio do estudo”.
+**Aplicação:** Finalidade ou uso pretendido de um estudo ou método. Valores possíveis: pesquisa básica, pesquisa translacional/aplicada, uso regulatório, produção de rotina, educação e treinamento, proteção ambiental, preservação de espécies, investigação forense, teste diagnóstico, outro. Antigo “domínio do estudo”.
 
 **Contagem de animais:** Número estruturado de animais extraído do protocolo submetido: **Fêmeas**, **Machos**, **Total**, **Por grupo**. Somente subcampos explicitamente declarados no texto do protocolo são preenchidos; valores derivados são proibidos. Não preenchida quando o protocolo não tem coorte experimental de animais significativa (ex.: subprodutos de abate, como as córneas bovinas pós-abate usadas no EVEIT).
 
@@ -15,7 +15,7 @@ Exemplos de endpoint: irritação ocular, corrosão cutânea, sensibilização c
 
 **Rota:** Descreve como a substância de teste entra em contato com o sistema biológico — não o tipo de sistema biológico - nos métodos de substituição ele refere a quais rotas do protocolo original este método é compatível para substituir — quando for compatível com qualquer rota, nenhuma rota específica é registrada.
 
-**Sistema de teste:** A plataforma na qual um ensaio é conduzido — a modalidade do ensaio — distinta da rota, que descreve como a substância entra em contato com o sistema. Podem se aplicar um ou mais dos seguintes: in silico, in chemico, in vitro, ex vivo, in vivo, híbrido, indefinido.
+**Sistema de teste:** A plataforma na qual um ensaio é conduzido — a modalidade do ensaio — distinta da rota, que descreve como a substância entra em contato com o sistema. Podem se aplicar um ou mais dos seguintes: in silico, in chemico, in data, in vitro, ex vivo, in vivo, indefinido.
 
 **Uso de animais:** Como um método do catálogo utiliza animais ou materiais derivados de animais — um único valor de vocabulário controlado usado para curadoria, filtragem e exibição nos cards de resultado. Valores:
 - **Nenhum** — nenhum animal e nenhum material de origem animal é utilizado.
@@ -23,6 +23,7 @@ Exemplos de endpoint: irritação ocular, corrosão cutânea, sensibilização c
 - **Subproduto de abatedouro** — tecidos/órgãos de animais já abatidos para alimentação ou outros fins primários (ex.: córneas bovinas pós-abate no EVEIT).
 - **Animais sacrificados para tecido** — animais são mortos especificamente para obter tecido para o método.
 - **Animais vivos** — animais vivos são usados no procedimento.
+- **Embriões e larvas** — são usados estágios embrionários ou larvais (ex.: embriões e alevinos com saco vitelino de peixes) no lugar de animais juvenis ou adultos.
 - **Misto ou variável** — mais de uma das opções acima claramente se aplica, ou o uso varia.
 
 Pode ficar sem classificação durante a curadoria quando o documento de origem não sustenta claramente uma classificação; sem classificação nunca significa “Nenhum”.
@@ -136,6 +137,10 @@ Pode ficar sem classificação durante a curadoria quando o documento de origem 
 **Sofrimento:** Estado emocional e físico negativo experimentado por um indivíduo, caracterizado por dor, desconforto, estresse ou angústia. Em animais, o sofrimento pode ocorrer como resultado de condições adversas, como doenças, lesões, maus-tratos, privação de necessidades básicas, ou procedimentos científicos que causam dor ou estresse. O conceito de sofrimento é fundamental nas discussões sobre bem-estar animal, sendo essencial minimizá-lo por meio do refinamento das práticas experimentais e de manejo.
 
 **Substituição:** Uso de técnicas alternativas para evitar o uso de animais em experimentos científicos ou no ensino. Pode ser absoluta (sem uso de animais) ou relativa (uso de espécies de menor complexidade).
+
+**Substituição parcial:** Método que substitui apenas parte de um procedimento que usa animais, ou que não é suficiente por si só (por exemplo, é usado em estratégia em etapas, cobre apenas algumas categorias de classificação ou ainda depende de tecido de animais). Distinta da classificação em absoluta ou relativa, que trata de usar ou não animais ou espécies de menor complexidade.
+
+**Substituição total:** Método que pode substituir, por si só, o procedimento animal a que se destina, para o desfecho que cobre, sem necessidade de procedimento animal para esse desfecho.
 
 **Toxicologia do Século XXI:** Abordagem moderna de avaliação de segurança química, que busca substituir testes com animais por métodos mais avançados, como *in vitro*, *in silico* e *in chemico*.
 

@@ -15,25 +15,28 @@ AnimalUse = Literal[
     "animals_killed_for_tissue",
     "live_animals",
     "mixed_or_variable",
+    "embryos_and_larvae",
 ]
 TestSystem = Literal[
     "in_silico",
     "in_chemico",
+    "in_data",
     "in_vitro",
     "ex_vivo",
     "in_vivo",
-    "hybrid",
     "unclear",
 ]
 ValidationStatus = Literal[
-    "not_evaluated",
+    "recognized",
     "under_validation",
     "validated",
     "partially_validated",
     "not_validated",
     "unclear",
 ]
-RegulatoryStatus = Literal["not_approved", "approved", "recommended", "mandatory"]
+RegulatoryStatus = Literal[
+    "not_approved", "approved", "recognized", "recommended", "mandatory"
+]
 # Preferred curated values: OECD_TG | ECVAM_DBALM | NICEATM | FARMACOPEIA_BR | TSAR.
 # Stored as free text so admin-curated / imported rows are not rejected at read time.
 SourceDb = str
@@ -46,6 +49,11 @@ class MethodRegulatoryContext(BaseModel):
     jurisdiction: LocalizedStr
     regulatory_status: RegulatoryStatus | None = None
     regulatory_date: date | None = None
+    published_date: date | None = None
+    effective_date: date | None = None
+    replacement_term_years: int | None = None
+    # Generated column: effective_date + replacement_term_years.
+    replacement_deadline: date | None = None
     regulatory_endpoints: list[int] | None = None
     # Resolved from endpoints.name for regulatory_endpoints (not a DB column).
     regulatory_endpoint_names: list[LocalizedStr] = Field(default_factory=list)
@@ -53,6 +61,11 @@ class MethodRegulatoryContext(BaseModel):
     regulatory_body: LocalizedStr | None = None
     regulatory_doc_id: int | None = None
     regulatory_citation: LocalizedStr | None = None
+    # Verbatim passage of the regulation (regulations.regulatory_quote); the
+    # regulatory_citation above falls back to the document citation when empty.
+    regulatory_quote: LocalizedStr | None = None
+    # Resolved from documents.doc_citation when regulatory_doc_id is set.
+    document_citation: LocalizedStr | None = None
     # Resolved from documents.url when regulatory_doc_id is set (not a DB column).
     regulatory_url: str | None = None
     notes: str | None = None
@@ -94,7 +107,13 @@ class MethodRegulatoryContext(BaseModel):
             names.append(parsed)
         return names
 
-    @field_validator("regulatory_body", "regulatory_citation", mode="before")
+    @field_validator(
+        "regulatory_body",
+        "regulatory_citation",
+        "regulatory_quote",
+        "document_citation",
+        mode="before",
+    )
     @classmethod
     def _coerce_localized(cls, value):
         if value is None:
@@ -109,6 +128,30 @@ class MethodRegulatoryContext(BaseModel):
         if not parsed.en_us.strip() and not parsed.pt_br.strip():
             return None
         return parsed
+
+
+ReviewStatus = Literal["not_reviewed", "in_review", "reviewed"]
+
+
+class MethodMaterial(BaseModel):
+    """Biological material or system used by a method (method_materials row)."""
+
+    kind: str
+    name: LocalizedStr
+    species_slug: str | None = None
+    species_name: LocalizedStr | None = None
+    origin: str | None = None
+    animal_derived: bool | None = None
+    notes: str | None = None
+
+    @field_validator("name", "species_name", mode="before")
+    @classmethod
+    def _coerce_localized(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, str) and value.strip().startswith("{"):
+            value = json.loads(value)
+        return parse_localized_str(value, required=False)
 
 
 class Method(BaseModel):
@@ -132,19 +175,22 @@ class Method(BaseModel):
     application_codes: list[str] = Field(default_factory=list)
     application_names: list[LocalizedStr] = Field(default_factory=list)
     oecd_ref: str | None = None
-    ncit_id: str | None = None
     source_citation: str | None = None
     source_doc_id: int | None = None
     # Resolved from documents.url when source_doc_id is set (not a DB column).
     source_url: str | None = None
     source_db: SourceDb
-    validation_status: ValidationStatus = "not_evaluated"
+    validation_status: ValidationStatus = "unclear"
     validation_doc_id: int | None = None
     # Resolved from documents.url when validation_doc_id is set (not a DB column).
     validation_url: str | None = None
     replacement_rationale: LocalizedStr | None = None
     reduction_rationale: LocalizedStr | None = None
     refinement_rationale: LocalizedStr | None = None
+    review_status: ReviewStatus = "not_reviewed"
+    # [{name, species, oecd_ref, r_type, extent, note}] (methods.animal_procedures_avoided).
+    animal_procedures_avoided: list[dict] = Field(default_factory=list)
+    materials: list[MethodMaterial] = Field(default_factory=list)
     keywords: LocalizedStrList = Field(default_factory=LocalizedStrList)
     text_for_embedding: str
     embedding_json: list[float] | None = None
@@ -165,6 +211,16 @@ class Method(BaseModel):
         if isinstance(value, (tuple, list)):
             return [int(item) for item in value]
         raise TypeError(f"Unsupported integer-array value: {type(value)!r}")
+
+    @field_validator("animal_procedures_avoided", "materials", mode="before")
+    @classmethod
+    def _coerce_json_lists(cls, value):
+        if value is None:
+            return []
+        if isinstance(value, str):
+            text = value.strip()
+            return json.loads(text) if text else []
+        return value
 
     @field_validator("routes_applicable", mode="before")
     @classmethod

@@ -17,28 +17,13 @@ export const ENDPOINT_CATEGORIES = [
   'rabies_diagnosis',
 ]
 
-export const ROUTES = [
-  'cutaneous',
-  'inhalation',
-  'oral',
-  'ocular',
-  'intranasal',
-  'intratracheal',
-  'intravenous',
-  'intra-arterial',
-  'intramuscular',
-  'subcutaneous',
-  'intradermal',
-  'intraperitoneal',
-  'rectal',
-  'vaginal',
-  'topical-mucosal',
-  'implantation',
-  'multiple',
-  'not-applicable',
-  'unspecified',
-  'other',
-]
+// Fallback only: the real list comes from the database (lib/vocabularies.js).
+export const DEFAULT_ROUTE = 'unspecified'
+export const ROUTES = [DEFAULT_ROUTE]
+
+export function setRoutes(slugs) {
+  ROUTES.splice(0, ROUTES.length, ...slugs)
+}
 
 const ROUTE_ALIASES = {
   dermal: 'cutaneous',
@@ -51,17 +36,13 @@ export function canonicalRoute(code) {
   return ROUTE_ALIASES[slug] ?? slug
 }
 
-export const APPLICATIONS = [
-  'basic-research',
-  'translational-applied-research',
-  'regulatory-use',
-  'routine-production',
-  'education-training',
-  'environmental-protection',
-  'species-preservation',
-  'forensic-inquiry',
-  'other',
-]
+// Fallback only: the real list comes from the database (lib/vocabularies.js).
+export const DEFAULT_APPLICATION = 'basic-research'
+export const APPLICATIONS = [DEFAULT_APPLICATION]
+
+export function setApplications(slugs) {
+  APPLICATIONS.splice(0, APPLICATIONS.length, ...slugs)
+}
 
 const APPLICATION_ALIASES = {
   general: 'basic-research',

@@ -29,6 +29,7 @@ _JSON_ARRAY_VOCAB_COLUMNS: dict[tuple[str, str], tuple[str, str]] = {
     ("methods", "routes_applicable"): ("routes", "id"),
     ("methods", "application_ids"): ("applications", "id"),
     ("methods", "endpoints"): ("endpoints", "id"),
+    ("documents", "internal_doc_refs"): ("documents", "id"),
     ("regulations", "regulatory_endpoints"): ("endpoints", "id"),
     ("routes", "compatible_endpoints"): ("endpoints", "id"),
 }
@@ -44,10 +45,10 @@ _JSON_ARRAY_ENUM_COLUMNS: dict[tuple[str, str], list[str]] = {
     ("methods", "test_system"): [
         "in_silico",
         "in_chemico",
+        "in_data",
         "in_vitro",
         "ex_vivo",
         "in_vivo",
-        "hybrid",
         "unclear",
     ],
 }
@@ -235,7 +236,8 @@ _METHODS_VALIDATION_STATUS_MAP = {
     "accepted": "under_validation",
     "emerging": "not_validated",
     "in_process_of_validation": "under_validation",
-    "not_evaluated": "not_evaluated",
+    "not_evaluated": "unclear",
+    "recognized": "recognized",
     "under_validation": "under_validation",
     "validated": "validated",
     "partially_validated": "partially_validated",

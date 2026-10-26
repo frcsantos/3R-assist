@@ -10,9 +10,20 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.api.errors import unhandled_exception_handler
 from pubmed.api.routes import router as pubmed_router
-from app.api.routes import admin, analysis, auth, documents, feedback, health, methods, search
+from app.api.routes import (
+    admin,
+    analysis,
+    auth,
+    documents,
+    feedback,
+    health,
+    methods,
+    search,
+    vocabularies,
+)
 from app.config import get_settings
 from app.db.connection import close_pool, create_pool
+from app.services.vocabulary import ensure_applications_loaded
 
 
 @asynccontextmanager
@@ -22,6 +33,7 @@ async def lifespan(_app: FastAPI):
         try:
             pool = await create_pool()
             _app.state.db_pool = pool
+            await ensure_applications_loaded()
         except Exception as e:
             print(f"Database pool unavailable: {e}")
     yield
@@ -60,6 +72,7 @@ def create_app() -> FastAPI:
     app.include_router(feedback.router)
     app.include_router(admin.router)
     app.include_router(auth.router)
+    app.include_router(vocabularies.router)
     app.include_router(pubmed_router)
 
     return app

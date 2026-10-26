@@ -14,7 +14,7 @@ supported, return null.
 ── CONTROLLED VOCABULARIES ──────────────────────────────────────────────────
 animal_use — exactly one of:
   none, animal_derived_material, slaughterhouse_byproduct,
-  animals_killed_for_tissue, live_animals, mixed_or_variable
+  animals_killed_for_tissue, live_animals, mixed_or_variable, embryos_and_larvae
   (or null if unclear)
   Guidance:
   - none: no animals and no animal-derived materials
@@ -25,15 +25,16 @@ animal_use — exactly one of:
   - animals_killed_for_tissue: animals killed specifically to obtain tissue for
     the method
   - live_animals: living animals used in the procedure
+  - embryos_and_larvae: embryonic or larval stages (e.g. fish embryos, sac-fry)
+    instead of juvenile/adult animals
   - mixed_or_variable: more than one of the above clearly applies, or use varies
 
 test_system — array of one or more of:
-  in_silico, in_chemico, in_vitro, ex_vivo, in_vivo, hybrid, unclear
+  in_silico, in_chemico, in_data, in_vitro, ex_vivo, in_vivo, unclear
   Use null (not []) when the document does not indicate a test system.
   Include every clearly supported kind (e.g. ["in_chemico","in_vitro"]).
-  Use hybrid when the document itself describes a hybrid/integrated approach;
-  otherwise list the concrete systems. Use unclear only when a system is
-  mentioned but cannot be classified.
+  List the concrete systems of an integrated approach. Use unclear only when
+  a system is mentioned but cannot be classified.
 
 endpoint_category — exactly one of:
   acute_toxicity, skin_irritation, skin_corrosion, ocular_irritation,
@@ -51,13 +52,8 @@ routes_applicable — array of zero or more of:
   Map dermal / topical / epicutaneous to cutaneous.
   Do not use in_vitro as a route; capture culture/assay modality in test_system.
 
-application — exactly one of:
-  basic-research, translational-applied-research, regulatory-use,
-  routine-production, education-training, environmental-protection,
-  species-preservation, forensic-inquiry, other
-  Use basic-research when the purpose is not clearly stated.
-  Map legacy study_domain values: general→basic-research;
-  pharma/cosmetics/chemical_safety→regulatory-use.
+{application_values}
+  Use the default value when the purpose is not clearly stated.
 
 source_db — exactly one of when provenance is clear, else null:
   OECD_TG, ECVAM_DBALM, NICEATM, FARMACOPEIA_BR, TSAR
@@ -80,7 +76,6 @@ oecd_ref — OECD Test Guideline or Guidance Document reference when present,
   per locale when none.
 - text_for_embedding: single English string combining identifier, name, and
   purpose/description suitable for semantic search.
-- ncit_id: NCI Thesaurus ID only if explicitly stated; otherwise null.
 - source_citation: bibliographic citation of the primary source when stated.
 - active: always false (new curated entries start inactive).
 
@@ -99,7 +94,6 @@ Schema:
   "routes_applicable": ["string"] or null,
   "application": "string or null",
   "oecd_ref": "string or null",
-  "ncit_id": "string or null",
   "source_citation": "string or null",
   "source_db": "string or null",
   "replacement_rationale": {"en-us": "string", "pt-br": "string"} or null,
@@ -117,7 +111,14 @@ Method protocol text:
 
 
 def build_method_draft_extraction_prompt(protocol_text: str) -> str:
-    return METHOD_DRAFT_EXTRACTION_PROMPT_TEMPLATE.replace(
+    from app.services.vocabulary import DEFAULT_APPLICATION, application_prompt_lines
+
+    template = METHOD_DRAFT_EXTRACTION_PROMPT_TEMPLATE.replace(
+        "{application_values}",
+        f"application — exactly one of (slug: description; default {DEFAULT_APPLICATION}):\n"
+        + application_prompt_lines(),
+    )
+    return template.replace(
         "{protocol_text}",
         protocol_text.strip(),
     )

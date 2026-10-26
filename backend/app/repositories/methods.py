@@ -53,7 +53,7 @@ class MethodRepository:
             WITH ORDINALITY AS u(aid, ord)
           JOIN applications ap ON ap.id = u.aid
         ) AS application_names,
-        m.oecd_ref, m.ncit_id,
+        m.oecd_ref,
         COALESCE(
             NULLIF(BTRIM(m.source_citation), ''),
             NULLIF(BTRIM(sd.doc_citation->>'en-us'), ''),
@@ -66,6 +66,21 @@ class MethodRepository:
         m.validation_doc_id,
         vd.url AS validation_url,
         m.replacement_rationale, m.reduction_rationale, m.refinement_rationale,
+        m.review_status, m.animal_procedures_avoided,
+        (
+          SELECT COALESCE(jsonb_agg(jsonb_build_object(
+            'kind', mm.kind,
+            'name', mm.name,
+            'species_slug', sp.slug,
+            'species_name', sp.name,
+            'origin', mm.origin,
+            'animal_derived', mm.animal_derived,
+            'notes', mm.notes
+          ) ORDER BY mm.id), '[]'::jsonb)
+          FROM method_materials mm
+          LEFT JOIN species sp ON sp.id = mm.species_id
+          WHERE mm.method_id = m.id
+        ) AS materials,
         m.keywords, m.text_for_embedding, m.embedding_json,
         m.created_at, m.updated_at
     """
@@ -86,7 +101,10 @@ class MethodRepository:
     _SELECT_CONTEXTS = """
         SELECT
             mrc.id, mrc.method_id, mrc.jurisdiction,
-            mrc.regulatory_status, mrc.regulatory_date, mrc.regulatory_endpoints,
+            mrc.regulatory_status, mrc.regulatory_date,
+            mrc.published_date, mrc.effective_date,
+            mrc.replacement_term_years, mrc.replacement_deadline,
+            mrc.regulatory_endpoints,
             (
               SELECT COALESCE(
                 jsonb_agg(e.name ORDER BY u.ord),
@@ -107,6 +125,8 @@ class MethodRepository:
               THEN mrc.regulatory_quote
               ELSE rd.doc_citation
             END AS regulatory_citation,
+            mrc.regulatory_quote,
+            rd.doc_citation AS document_citation,
             rd.url AS regulatory_url,
             mrc.notes
         FROM regulations mrc
@@ -235,6 +255,9 @@ class MethodRepository:
             active=row["active"],
             name=parse_localized_str(row["name"]),
             description=parse_localized_str(row["description"]),
+            review_status=row.get("review_status") or "not_reviewed",
+            animal_procedures_avoided=row.get("animal_procedures_avoided") or [],
+            materials=row.get("materials") or [],
             replacement_rationale=parse_localized_str(
                 row["replacement_rationale"], required=False
             ),
@@ -261,13 +284,12 @@ class MethodRepository:
             animal_use=row.get("animal_use"),
             test_system=test_system,
             oecd_ref=row["oecd_ref"],
-            ncit_id=row.get("ncit_id"),
             source_citation=row.get("source_citation"),
             source_doc_id=row.get("source_doc_id"),
             source_url=row.get("source_url"),
             source_db=row["source_db"],
             validation_status=MethodRepository._norm_vocab(row["validation_status"])
-            or "not_evaluated",
+            or "unclear",
             validation_doc_id=row.get("validation_doc_id"),
             validation_url=row.get("validation_url"),
         )
@@ -286,12 +308,18 @@ class MethodRepository:
             jurisdiction=row["jurisdiction"],
             regulatory_status=MethodRepository._norm_vocab(row["regulatory_status"]),
             regulatory_date=row["regulatory_date"],
+            published_date=row["published_date"],
+            effective_date=row["effective_date"],
+            replacement_term_years=row["replacement_term_years"],
+            replacement_deadline=row["replacement_deadline"],
             regulatory_endpoints=row["regulatory_endpoints"],
             regulatory_endpoint_names=row["regulatory_endpoint_names"] or [],
             endpoint_quote=row["endpoint_quote"],
             regulatory_body=row["regulatory_body"],
             regulatory_doc_id=row["regulatory_doc_id"],
             regulatory_citation=row["regulatory_citation"],
+            regulatory_quote=row["regulatory_quote"],
+            document_citation=row["document_citation"],
             regulatory_url=row.get("regulatory_url"),
             notes=row["notes"],
         )

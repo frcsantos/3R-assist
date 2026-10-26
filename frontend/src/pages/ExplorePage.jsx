@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import ResultCard, { RegulationDetail } from '../components/ResultCard'
 import FeedbackModal from '../components/FeedbackModal'
 import HighlightedText from '../components/HighlightedText'
@@ -22,7 +22,6 @@ import {
 const TABS = ['methods', 'regulations', 'documents']
 
 const DOCUMENT_CATEGORIES = {
-  regulations: ['regulation', 'guideline'],
   documents: null,
 }
 
@@ -161,6 +160,7 @@ function DocumentCard({
   className = '',
   endAction = null,
   associatedRegulations = null,
+  citedDocuments = null,
 }) {
   const categoryLabels = (doc.categories?.length ? doc.categories : [doc.category])
     .filter(Boolean)
@@ -240,6 +240,39 @@ function DocumentCard({
           </div>
         ) : null}
       </dl>
+      {citedDocuments?.length ? (
+        <div className="mt-4 space-y-2">
+          <h4 className="font-metadata text-metadata text-on-surface-variant">
+            {t('s4.citedDocuments')}
+          </h4>
+          {citedDocuments.map((cited) => (
+            <div
+              key={cited.id}
+              className="rounded-lg border border-border-subtle bg-surface-container-low p-3"
+            >
+              <p className="font-body-base text-body-base text-primary">
+                <Link
+                  to={`/explore/documents/${cited.slug}`}
+                  className="underline underline-offset-2 hover:opacity-90"
+                >
+                  <HighlightedText
+                    text={pickLocalized(cited.doc_citation, lang)}
+                    query={highlightQuery}
+                  />
+                </Link>
+              </p>
+              {pickLocalized(cited.description, lang) ? (
+                <p className="mt-1 font-metadata text-metadata text-on-secondary-container">
+                  <HighlightedText
+                    text={pickLocalized(cited.description, lang)}
+                    query={highlightQuery}
+                  />
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
       {associatedRegulations ? (
         <div className="mt-4 space-y-2">
           <h4 className="font-metadata text-metadata text-on-surface-variant">
@@ -254,7 +287,16 @@ function DocumentCard({
               <div key={item.key} className="space-y-1">
                 {item.methodName ? (
                   <p className="font-body-base text-body-base text-primary">
-                    <HighlightedText text={item.methodName} query={highlightQuery} />
+                    {item.id ? (
+                      <Link
+                        to={`/explore/regulations/${item.id}`}
+                        className="underline underline-offset-2 hover:opacity-90"
+                      >
+                        <HighlightedText text={item.methodName} query={highlightQuery} />
+                      </Link>
+                    ) : (
+                      <HighlightedText text={item.methodName} query={highlightQuery} />
+                    )}
                     {item.label ? (
                       <span className="text-on-surface-variant">
                         {' '}
@@ -281,6 +323,115 @@ function DocumentCard({
   )
 }
 
+function formatCardDate(value) {
+  const text = String(value ?? '').trim()
+  if (!text) return null
+  const day = text.match(/^(\d{4}-\d{2}-\d{2})/)
+  if (!day) return text
+  return new Date(`${day[1]}T00:00:00`).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+function RegulationCard({ regulation, t, highlightQuery, endAction = null }) {
+  const rows = [
+    ['jurisdiction', regulation.jurisdiction],
+    ['body', regulation.body],
+    ['date', formatCardDate(regulation.date)],
+    ['publishedDate', formatCardDate(regulation.publishedDate)],
+    ['effectiveDate', formatCardDate(regulation.effectiveDate)],
+  ].filter(([, value]) => value)
+  const endpoints = regulation.endpoints ?? []
+
+  return (
+    <article className="relative rounded-none border-0 bg-transparent px-container-padding pb-container-padding pt-2">
+      <dl className="space-y-2 font-metadata text-metadata text-on-secondary-container">
+        {rows.map(([field, value]) => (
+          <div key={field} className="flex flex-wrap gap-x-2">
+            <dt className="text-on-surface-variant">
+              {t(`s4.regulationCard.${field}`)}
+            </dt>
+            <dd>
+              <HighlightedText text={value} query={highlightQuery} />
+            </dd>
+          </div>
+        ))}
+        {regulation.regulationQuote ? (
+          <div>
+            <dt className="text-on-surface-variant">
+              {t('s4.regulationCard.quote')}
+            </dt>
+            <dd>
+              <blockquote className="whitespace-pre-line border-l-2 border-border-emphasis pl-3 italic">
+                <HighlightedText
+                  text={regulation.regulationQuote}
+                  query={highlightQuery}
+                />
+              </blockquote>
+            </dd>
+          </div>
+        ) : null}
+        {endpoints.length > 0 || regulation.endpointQuote ? (
+          <div>
+            <dt className="text-on-surface-variant">
+              {t('s4.regulationCard.endpoint')}
+            </dt>
+            <dd className="space-y-1">
+              {endpoints.length > 0 ? (
+                <ul className="ml-5 list-disc space-y-0.5">
+                  {endpoints.map((name, index) => (
+                    <li key={`${name}-${index}`}>
+                      <HighlightedText text={name} query={highlightQuery} />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {regulation.endpointQuote ? (
+                <blockquote className="whitespace-pre-line border-l-2 border-border-emphasis pl-3 italic">
+                  <HighlightedText
+                    text={regulation.endpointQuote}
+                    query={highlightQuery}
+                  />
+                </blockquote>
+              ) : null}
+            </dd>
+          </div>
+        ) : null}
+        {regulation.documentCitation ? (
+          <div className="flex flex-wrap gap-x-2">
+            <dt className="text-on-surface-variant">
+              {t('s4.regulationCard.document')}
+            </dt>
+            <dd className="min-w-0 break-words">
+              {regulation.documentSlug ? (
+                <Link
+                  to={`/explore/documents/${regulation.documentSlug}`}
+                  className="text-primary underline underline-offset-2 hover:opacity-90"
+                >
+                  <HighlightedText
+                    text={regulation.documentCitation}
+                    query={highlightQuery}
+                  />
+                </Link>
+              ) : (
+                <HighlightedText
+                  text={regulation.documentCitation}
+                  query={highlightQuery}
+                />
+              )}
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+      {endAction ? (
+        <div className="absolute bottom-0 right-0 z-10">{endAction}</div>
+      ) : null}
+    </article>
+  )
+}
+
 function ExpandableList({
   items,
   getKey,
@@ -292,12 +443,25 @@ function ExpandableList({
   expandLabel,
   collapseLabel,
   feedbackLabel,
+  selectedKey = null,
 }) {
-  const [openKey, setOpenKey] = useState(null)
+  const [openKey, setOpenKey] = useState(selectedKey)
   const [filter, setFilter] = useState('')
   const [feedbackObject, setFeedbackObject] = useState(null)
   const listId = useId()
   const filterId = useId()
+
+  useEffect(() => {
+    if (!selectedKey) return
+    setOpenKey(selectedKey)
+    setFilter('')
+    const frame = requestAnimationFrame(() => {
+      document
+        .getElementById(`${listId}-item-${selectedKey}`)
+        ?.scrollIntoView({ block: 'start' })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [selectedKey, listId])
 
   const query = filter.trim().toLocaleLowerCase()
   const filteredItems = query
@@ -338,7 +502,7 @@ function ExpandableList({
             const panelId = `${listId}-panel-${key}`
             const buttonId = `${listId}-button-${key}`
             return (
-              <li key={key}>
+              <li key={key} id={`${listId}-item-${key}`}>
                 <button
                   id={buttonId}
                   type="button"
@@ -385,7 +549,7 @@ function ExpandableList({
   )
 }
 
-function MethodsPanel({ lang, t }) {
+function MethodsPanel({ lang, t, selectedKey }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -435,6 +599,7 @@ function MethodsPanel({ lang, t }) {
       expandLabel={t('s4.expand')}
       collapseLabel={t('s4.collapse')}
       feedbackLabel={t('s4.reportFeedback')}
+      selectedKey={selectedKey}
       renderCard={(item, highlightQuery, endAction) => {
         const method = item.method
         const contexts = item.regulatory_contexts ?? []
@@ -478,7 +643,100 @@ function MethodsPanel({ lang, t }) {
   )
 }
 
-function DocumentsPanel({ categories, emptyKey, t, lang, includeRegulations = false }) {
+function RegulationsPanel({ t, lang, selectedKey }) {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    Promise.all([fetchDocumentsCatalogue(null), fetchMethodsCatalogue(lang)])
+      .then(([docsResult, methodsResult]) => {
+        if (cancelled) return
+        const slugById = new Map(
+          (docsResult.documents ?? []).map((d) => [d.id, d.slug]),
+        )
+        const entries = []
+        for (const { method, regulatory_contexts: contexts } of methodsResult.methods ?? []) {
+          const formatted = formatRegulatoryStatusItems(contexts ?? [], lang, t)
+          formatted.forEach((item, index) => {
+            const context = contexts[index]
+            if (context.id == null) return
+            entries.push({
+              key: String(context.id),
+              methodName: methodDisplayName(method, lang),
+              regulation: {
+                ...item,
+                jurisdiction: item.label,
+                documentSlug: slugById.get(context.regulatory_doc_id) ?? null,
+              },
+            })
+          })
+        }
+        setItems(entries)
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || t('s4.loadError'))
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [lang, t])
+
+  if (loading) {
+    return (
+      <p className="font-body-base text-body-base text-on-secondary-container opacity-65">
+        {t('s4.loading')}
+      </p>
+    )
+  }
+  if (error) {
+    return (
+      <p className="font-body-base text-body-base text-error" role="alert">
+        {error}
+      </p>
+    )
+  }
+
+  return (
+    <ExpandableList
+      items={items}
+      getKey={(item) => item.key}
+      getLabel={(item) =>
+        [item.methodName, item.regulation.jurisdiction].filter(Boolean).join(' — ')
+      }
+      emptyLabel={t('s4.regulations.empty')}
+      noMatchesLabel={t('s4.noMatches')}
+      filterPlaceholder={t('s4.filterPlaceholder')}
+      expandLabel={t('s4.expand')}
+      collapseLabel={t('s4.collapse')}
+      feedbackLabel={t('s4.reportFeedback')}
+      selectedKey={selectedKey}
+      renderCard={(item, highlightQuery, endAction) => (
+        <RegulationCard
+          regulation={item.regulation}
+          t={t}
+          highlightQuery={highlightQuery}
+          endAction={endAction}
+        />
+      )}
+    />
+  )
+}
+
+function DocumentsPanel({
+  categories,
+  emptyKey,
+  t,
+  lang,
+  includeRegulations = false,
+  selectedKey,
+}) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -497,6 +755,7 @@ function DocumentsPanel({ categories, emptyKey, t, lang, includeRegulations = fa
         if (cancelled) return
         const documents = docsResult.documents ?? []
         const methods = methodsResult.methods ?? []
+        const byId = new Map(documents.map((d) => [d.id, d]))
         setItems(
           documents.map((document) => {
             const linked = includeRegulations
@@ -504,6 +763,9 @@ function DocumentsPanel({ categories, emptyKey, t, lang, includeRegulations = fa
               : []
             return {
               document,
+              citedDocuments: (document.internal_doc_refs ?? [])
+                .map((id) => byId.get(id))
+                .filter(Boolean),
               regulations: linked.map(({ method, context }, index) => {
                 const [item] = formatRegulatoryStatusItems([context], lang, t)
                 return {
@@ -553,6 +815,7 @@ function DocumentsPanel({ categories, emptyKey, t, lang, includeRegulations = fa
       expandLabel={t('s4.expand')}
       collapseLabel={t('s4.collapse')}
       feedbackLabel={t('s4.reportFeedback')}
+      selectedKey={selectedKey}
       renderCard={(item, highlightQuery, endAction) => (
         <DocumentCard
           document={item.document}
@@ -565,6 +828,7 @@ function DocumentsPanel({ categories, emptyKey, t, lang, includeRegulations = fa
           associatedRegulations={
             includeRegulations ? item.regulations : null
           }
+          citedDocuments={item.citedDocuments}
         />
       )}
     />
@@ -574,7 +838,7 @@ function DocumentsPanel({ categories, emptyKey, t, lang, includeRegulations = fa
 export default function ExplorePage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const { section } = useParams()
+  const { section, slug } = useParams()
   const lang = (i18n.resolvedLanguage ?? i18n.language ?? 'en').split('-')[0]
   const activeTab = TABS.includes(section) ? section : 'methods'
 
@@ -620,14 +884,17 @@ export default function ExplorePage() {
         aria-labelledby={`explore-tab-${activeTab}`}
       >
         {activeTab === 'methods' ? (
-          <MethodsPanel lang={lang} t={t} />
+          <MethodsPanel lang={lang} t={t} selectedKey={slug} />
+        ) : activeTab === 'regulations' ? (
+          <RegulationsPanel t={t} lang={lang} selectedKey={slug} />
         ) : (
           <DocumentsPanel
             categories={DOCUMENT_CATEGORIES[activeTab]}
             emptyKey={`s4.${activeTab}.empty`}
             t={t}
             lang={lang}
-            includeRegulations={activeTab === 'regulations'}
+            includeRegulations
+            selectedKey={slug}
           />
         )}
       </div>

@@ -619,7 +619,7 @@ Inicialmente TEXT (migração `007`); depois localizadas como JSONB `{"en-us","p
 
 ## ADR-026 — Vocabulário `animal_use`: definições canônicas e regras de curadoria
 
-**Decision:** `methods.animal_use` mantém exatamente os seis valores existentes (migrações `037`/`041`, CHECK constraint) e ganha definições canônicas + regras de curadoria documentadas (glossário e este ADR):
+**Decision:** `methods.animal_use` mantém os seis valores originais (migrações `037`/`041`, CHECK constraint; o sétimo, `embryos_and_larvae`, entrou na migração `118`) e ganha definições canônicas + regras de curadoria documentadas (glossário e este ADR):
 
 | Valor | Definição |
 |---|---|
@@ -629,6 +629,7 @@ Inicialmente TEXT (migração `007`); depois localizadas como JSONB `{"en-us","p
 | `animals_killed_for_tissue` | Animais mortos especificamente para obter tecido para o método. |
 | `live_animals` | Animais vivos usados no procedimento. |
 | `mixed_or_variable` | Mais de uma classe claramente se aplica, ou o uso varia. |
+| `embryos_and_larvae` | Estágios embrionários ou larvais (ex.: embriões e alevinos com saco vitelino de peixes) usados no lugar de animais juvenis ou adultos. Adicionado na migração `118`; classificação dos TG 212 e 236 aguarda confirmação (curadoria, item 18). |
 
 Regras de curadoria:
 1. Um único valor por método (não multi-select).

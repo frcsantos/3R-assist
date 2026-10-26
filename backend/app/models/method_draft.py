@@ -36,7 +36,6 @@ class MethodDraftFields(BaseModel):
     routes_applicable: list[Route] | None = None
     application: Application | None = None
     oecd_ref: str | None = None
-    ncit_id: str | None = None
     source_citation: str | None = None
     source_db: SourceDbValue | None = None
     replacement_rationale: LocalizedStr | None = None

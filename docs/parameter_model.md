@@ -137,6 +137,9 @@ Intended use of the method or study. Controlled vocabulary in `applications`.
 | `species-preservation` | conservação ou sobrevivência de espécie/população |
 | `forensic-inquiry` | fins legais, judiciais ou criminalísticos |
 | `other` | finalidade conhecida fora desta lista |
+| `diagnostic-testing` | detectar, identificar ou confirmar doença ou agente infeccioso em investigação diagnóstica |
+
+A lista vem da tabela `applications` e é lida em tempo de execução; só o valor de fallback está fixo no código.
 
 **Regra de fallback:** se não for possível determinar com segurança → `basic-research`.
 
@@ -407,35 +410,57 @@ acute_toxicity Single-dose acute toxicity LD50 Litchfield-Wilcoxon oral intraper
 
 ## 8. Campos `routes_applicable` na tabela `methods` — valores por método
 
-No banco: `INTEGER[]` de `routes.id`. Abaixo, slugs (`route_codes`) para leitura.
+No banco: `INTEGER[]` de `routes.id`. Abaixo, slugs (`route_codes`) para leitura, conforme o catálogo atual (47 métodos). `NULL` significa método independente de via (ensaios in vitro, in chemico, de diagnóstico e testes de pirogênio/endotoxina, como MAT, LAL e rFC): ele passa sempre pelo filtro de vias e a interface mostra "Não aplicável (método independente de via)". Os slugs `other`, `multiple`, `not-applicable` e `unspecified` não participam do filtro, então não são usados para marcar métodos independentes de via.
 
-| slug | routes_applicable |
-|---|---|
-| oecd-tg439-epiderm | `["cutaneous"]` |
-| oecd-tg439-episkin | `["cutaneous"]` |
-| oecd-tg431-rhe-corrosion | `["cutaneous"]` |
-| oecd-tg430-ter-corrosion | `["cutaneous"]` |
-| oecd-tg435-membrane-barrier | `["cutaneous"]` |
-| oecd-tg437-bcop | `["ocular"]` |
-| oecd-tg438-ice | `["ocular"]` |
-| oecd-tg492-rce | `["ocular"]` |
-| oecd-tg460-fluorescein-leakage | `["ocular"]` |
-| oecd-tg442c-dpra | `["cutaneous"]` |
-| oecd-tg442d-keratinosens | `["cutaneous"]` |
-| oecd-tg442e-hclat | `["cutaneous"]` |
-| oecd-tg429-llna | `["cutaneous"]` |
-| oecd-tg442a-llna-da | `["cutaneous"]` |
-| oecd-tg442b-llna-brdu | `["cutaneous"]` |
-| oecd-tg432-3t3nru | `["cutaneous"]` |
-| oecd-tg428-skin-absorption-vitro | `["cutaneous"]` |
-| oecd-tg471-ames | `null` (in vitro, route-agnostic) |
-| oecd-tg476-hprt | `null` |
-| oecd-tg487-micronucleus | `null` |
-| mat-monocyte-activation | `null` (detects contamination, route-agnostic) |
-| niceatm-cytotox-basal-barranco | `["oral"]` |
-| oecd-tg420-fixed-dose | `["oral"]` |
-| oecd-tg423-atc | `["oral"]` |
-| oecd-tg425-udp | `["oral"]` |
+| id | slug | routes_applicable |
+|---|---|---|
+| 1 | oecd-tg439-reconstructed-human-epidermis-skin-irritation | `["cutaneous"]` |
+| 3 | oecd-tg431-in-vitro-skin-corrosion | `["cutaneous"]` |
+| 4 | oecd-tg430-ter-corrosion | `["cutaneous"]` |
+| 5 | oecd-tg435-membrane-barrier-test | `["cutaneous"]` |
+| 6 | oecd-tg437-bcop | `["ocular"]` |
+| 7 | oecd-tg438-isolated-chicken-eye | `["ocular"]` |
+| 8 | oecd-tg460-fluorescein-leakage | `["ocular"]` |
+| 9 | oecd-tg492-rhce-eye-irritation | `["ocular"]` |
+| 10 | oecd-tg442c-in-chemico-skin-sensitisation | `["cutaneous"]` |
+| 11 | oecd-tg442d-in-vitro-skin-sensitisation | `["cutaneous"]` |
+| 12 | oecd-tg442e-in-vitro-skin-sensitisation | `["cutaneous"]` |
+| 13 | oecd-tg429-local-lymph-node-assay | `["cutaneous"]` |
+| 14 | oecd-tg442a-llna-da | `["cutaneous"]` |
+| 15 | oecd-tg442b-llna-brdu-elisa-fcm | `["cutaneous"]` |
+| 16 | oecd-tg432-3t3-nru-phototoxicity | `["cutaneous"]` |
+| 17 | oecd-tg471-bacterial-reverse-mutation-test | `null` (route-agnostic) |
+| 18 | oecd-tg476-in-vitro-mammalian-cell-gene-mutation-tests | `null` (route-agnostic) |
+| 19 | oecd-tg487-in-vitro-mammalian-cell-micronucleus-test | `null` (route-agnostic) |
+| 20 | farmacopeia-MG5.5.2.7.1-00-teste-de-ativacao-de-monocitos-mat | `null` (route-agnostic) |
+| 21 | oecd-tg428-skin-absorption-in-vitro | `["cutaneous"]` |
+| 22 | oecd-gd129-cytotoxicity-starting-dose | `["oral"]` |
+| 23 | oecd-tg420-fixed-dose-procedure | `["oral"]` |
+| 24 | oecd-tg423-acute-oral-toxicity-acute-toxic-class-method | `["oral"]` |
+| 25 | oecd-tg425-acute-oral-toxicity-up-and-down-procedure | `["oral"]` |
+| 30 | rabies-direct-fluorescent-antibody-test | `null` (route-agnostic) |
+| 33 | rabies-direct-rapid-immunohistochemistry-test | `null` (route-agnostic) |
+| 34 | rabies-virus-isolation-tissue-culture | `null` (route-agnostic) |
+| 35 | rabies-rt-pcr-diagnostic-assay | `null` (route-agnostic) |
+| 36 | oecd-tg421-reproduction-developmental-toxicity-screening-test | `["oral"]` |
+| 37 | oecd-tg422-combined-repeated-dose-reproduction-developmental-toxicity-screening | `["oral"]` |
+| 38 | farmacopeia-MG5.5.2.7.3-02-teste-de-endotoxinas-bacterianas-lal | `null` (route-agnostic) |
+| 39 | oecd-tg492b-rhce-eye-hazard | `["ocular"]` |
+| 40 | oecd-tg491-short-time-exposure-in-vitro | `["ocular"]` |
+| 41 | oecd-tg455-stably-transfected-transactivation-in-vitro-assays | `null` (route-agnostic) |
+| 42 | oecd-tg493-hrer-binding-assay | `null` (route-agnostic) |
+| 43 | oecd-tg456-h295r-steroidogenesis-assay | `null` (route-agnostic) |
+| 44 | oecd-tg458-androgen-receptor-transactivational-assay | `null` (route-agnostic) |
+| 45 | oecd-tg473-in-vitro-mammalian-chromosomal-aberration-test | `null` (route-agnostic) |
+| 46 | oecd-tg490-in-vitro-mammalian-cell-gene-mutation-tests | `null` (route-agnostic) |
+| 47 | oecd-tg494-vitrigel-eye-irritancy-test | `["ocular"]` |
+| 49 | oecd-tg496-in-vitro-macromolecular-test-method | `["ocular"]` |
+| 50 | oecd-tg495-ros-assay-photoreactivity | `null` (route-agnostic) |
+| 51 | oecd-tg212-fish-embryo-sac-fry-toxicity | `["aquatic-waterborne"]` |
+| 53 | oecd-tg236-fish-embryo-acute-toxicity-test | `["aquatic-waterborne"]` |
+| 54 | oecd-tg319a-rt-hep-clearance | `null` (route-agnostic) |
+| 55 | oecd-tg319b-rt-s9-intrinsic-clearance | `null` (route-agnostic) |
+| 56 | european-pharmacopoeia-bacterial-endotoxins-test-recombinant-reagents | `null` (route-agnostic) |
 
 ---
 
@@ -533,9 +558,7 @@ Per-field confidence scale:
       "route_evidence": "exact quote from text, MAX 15 WORDS" or null,
       "route_confidence": "high"|"medium"|"low" or null if route is null,
 
-      "application": one of [basic-research, translational-applied-research,
-        regulatory-use, routine-production, education-training,
-        environmental-protection, species-preservation, forensic-inquiry, other],
+      "application": one of the slugs of the applications table (listed in the prompt at runtime),
       "application_evidence": "exact quote from text, MAX 15 WORDS" or null,
       "application_confidence": "high"|"medium"|"low",
       // Use "basic-research" when: (a) the study is validating a method rather than

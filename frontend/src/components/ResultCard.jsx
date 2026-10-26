@@ -68,6 +68,29 @@ function formatRegulationDate(value) {
   return text
 }
 
+function IndentedList({ items, highlightQuery }) {
+  return (
+    <ul className="ml-5 list-disc space-y-0.5">
+      {items.map((entry, index) => (
+        <li key={`${entry}-${index}`}>
+          <HighlightedText text={entry} query={highlightQuery} />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function Quote({ label, text, highlightQuery }) {
+  return (
+    <div>
+      <p className="text-on-surface-variant">{label}:</p>
+      <blockquote className="whitespace-pre-line border-l-2 border-border-emphasis pl-3 italic">
+        <HighlightedText text={text} query={highlightQuery} />
+      </blockquote>
+    </div>
+  )
+}
+
 export function RegulationDetail({
   item,
   statusLabel,
@@ -76,9 +99,19 @@ export function RegulationDetail({
   onEdit,
   editLabel,
 }) {
-  const citation = item.citation?.trim() || null
+  const { t } = useTranslation()
+  // The document citation has its own line and the regulation quote its own
+  // block; the merged citation is used only when neither is available.
+  const citation =
+    item.documentCitation?.trim() ||
+    (item.regulationQuote ? null : item.citation?.trim()) ||
+    null
   const linkHref = item.url || (isHttpUrl(citation) ? citation : null)
   const date = formatRegulationDate(item.date)
+  const publishedDate = formatRegulationDate(item.publishedDate)
+  const effectiveDate = formatRegulationDate(item.effectiveDate)
+  const deadline = formatRegulationDate(item.replacementDeadline)
+  const endpoints = item.endpoints ?? []
   const statusHeading = date
     ? `${statusLabel} (${date})`
     : statusLabel
@@ -110,6 +143,11 @@ export function RegulationDetail({
           </svg>
         </button>
       ) : null}
+      {item.body ? (
+        <p className="font-medium">
+          <HighlightedText text={item.body} query={highlightQuery} />
+        </p>
+      ) : null}
       {item.status ? (
         <p>
           <span className="text-on-surface-variant">{statusHeading}: </span>
@@ -121,16 +159,54 @@ export function RegulationDetail({
           {date}
         </p>
       ) : null}
-      {item.purpose ? (
+      {publishedDate ? (
         <p>
-          <span className="text-on-surface-variant">{purposeLabel}: </span>
-          <HighlightedText text={item.purpose} query={highlightQuery} />
+          <span className="text-on-surface-variant">
+            {t('s3.regulation.publishedDate')}:{' '}
+          </span>
+          {publishedDate}
         </p>
       ) : null}
-      {item.body ? (
+      {effectiveDate ? (
         <p>
-          <HighlightedText text={item.body} query={highlightQuery} />
+          <span className="text-on-surface-variant">
+            {t('s3.regulation.effectiveDate')}:{' '}
+          </span>
+          {effectiveDate}
         </p>
+      ) : null}
+      {deadline ? (
+        <p>
+          <span className="text-on-surface-variant">
+            {t('s3.regulation.replacementDeadline')}:{' '}
+          </span>
+          {deadline}
+          {item.replacementTermYears
+            ? ` (${t('s3.regulation.termYears', { count: item.replacementTermYears })})`
+            : ''}
+        </p>
+      ) : null}
+      {endpoints.length > 0 ? (
+        <div>
+          <p className="text-on-surface-variant">
+            {t('s3.regulation.endpoints', { defaultValue: purposeLabel })}:
+          </p>
+          <IndentedList items={endpoints} highlightQuery={highlightQuery} />
+        </div>
+      ) : null}
+      {item.endpointQuote ? (
+        <Quote
+          label={t('s3.regulation.endpointQuote')}
+          text={item.endpointQuote}
+          highlightQuery={highlightQuery}
+        />
+      ) : null}
+      {item.regulationQuote ? (
+        <Quote
+          label={t('s3.regulation.regulationQuote')}
+          text={item.regulationQuote}
+          highlightQuery={highlightQuery}
+        />
       ) : null}
       {citation ? (
         <p className="break-words">
@@ -192,6 +268,8 @@ export default function ResultCard({
       THREE_R_ORDER.indexOf(a.type) - THREE_R_ORDER.indexOf(b.type),
   )
   const citationText = protocolCitation?.trim() || null
+  const curationRow = detailRows.find((row) => row.key === 'review_status') ?? null
+  const otherRows = detailRows.filter((row) => row.key !== 'review_status')
   const [selectedRegulation, setSelectedRegulation] = useState(null)
   const [activeRationale, setActiveRationale] = useState(null)
   const showHeader = !hideTitle || score != null
@@ -248,22 +326,43 @@ export default function ResultCard({
           </div>
         ) : null}
 
+        {curationRow ? (
+          <p className="font-metadata text-metadata font-bold text-on-secondary-container">
+            <span className="font-bold text-on-surface-variant">
+              {curationRow.label}:{' '}
+            </span>
+            {curationRow.value}
+          </p>
+        ) : null}
+
         {description ? (
           <p className="pt-1 font-body-base text-body-base text-on-secondary-container">
             <HighlightedText text={description} query={highlightQuery} />
           </p>
         ) : null}
 
-        {detailRows.length > 0 ? (
+        {otherRows.length > 0 ? (
           <dl className="space-y-2 font-metadata text-metadata text-on-secondary-container">
-            {detailRows.map((row) => (
-              <div key={row.key} className="flex flex-wrap gap-x-2">
-                <dt className="text-on-surface-variant">{row.label}</dt>
-                <dd>
-                  <HighlightedText text={row.value} query={highlightQuery} />
-                </dd>
-              </div>
-            ))}
+            {otherRows.map((row) =>
+              row.items?.length ? (
+                <div key={row.key}>
+                  <dt className="text-on-surface-variant">{row.label}</dt>
+                  <dd>
+                    <IndentedList
+                      items={row.items}
+                      highlightQuery={highlightQuery}
+                    />
+                  </dd>
+                </div>
+              ) : (
+                <div key={row.key} className="flex flex-wrap gap-x-2">
+                  <dt className="text-on-surface-variant">{row.label}</dt>
+                  <dd>
+                    <HighlightedText text={row.value} query={highlightQuery} />
+                  </dd>
+                </div>
+              ),
+            )}
           </dl>
         ) : null}
 

@@ -21,8 +21,9 @@ If a field is not explicitly stated, return null (or an empty methods array).
        or regulatory purpose), as stated or clearly implied by the surrounding
        text. If not stated, return null.
      - status: regulatory standing for this method in the document. Must be
-       one of: "not_approved", "approved", "recommended", "mandatory".
-       Map wording in the text (e.g. accepted/recognized/validated →
+       one of: "not_approved", "approved", "recognized", "recommended",
+       "mandatory". Map wording in the text (e.g. recognized/reconhecido →
+       "recognized"; accepted/validated/approved →
        "approved"; recommended/preferred → "recommended"; mandatory/required
        /obrigatório → "mandatory"; rejected/not accepted → "not_approved").
        If the standing is not clear, return null.
@@ -72,7 +73,7 @@ Schema:
       "code": "string",
       "name": "string",
       "purpose": "string or null",
-      "status": "not_approved|approved|recommended|mandatory|null"
+      "status": "not_approved|approved|recognized|recommended|mandatory|null"
     }
   ],
   "document_name": "string or null",

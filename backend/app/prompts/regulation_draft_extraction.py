@@ -17,7 +17,7 @@ jurisdiction — prefer one of these localized pairs when supported:
   into both locales. Null if unclear.
 
 regulatory_status — exactly one of:
-  not_approved, approved, recommended, mandatory
+  not_approved, approved, recognized, recommended, mandatory
   (or null if unclear)
 
 ── FIELD GUIDANCE ───────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ Your first character must be `{`. Do not write reasoning before the JSON object.
 Schema:
 {
   "jurisdiction": {"en-us": "string", "pt-br": "string"} or null,
-  "regulatory_status": "not_approved|approved|recommended|mandatory|null",
+  "regulatory_status": "not_approved|approved|recognized|recommended|mandatory|null",
   "regulatory_date": "string or null",
   "regulatory_endpoints": [1, 2] or null,
   "endpoint_quote": "string or null",

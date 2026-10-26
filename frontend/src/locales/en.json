@@ -19,7 +19,6 @@
     "sendLink": "Send sign-in link",
     "openDevLink": "Open sign-in link (development)"
   },
-
   "info": {
     "title": "Info"
   },
@@ -77,9 +76,6 @@
     "booleanFalse": "false",
     "originalValue": "Original: {{value}}",
     "restoreOriginal": "Restore original value",
-
-
-
     "database": {
       "label": "Database",
       "subtitle": "Browse and edit public PostgreSQL tables. Double-click a cell to edit."
@@ -295,38 +291,8 @@
         "bacterial_endotoxin": "Bacterial endotoxin",
         "rabies_diagnosis": "Rabies diagnosis"
       },
-      "route": {
-        "cutaneous": "Cutaneous",
-        "inhalation": "Inhalation",
-        "oral": "Oral",
-        "ocular": "Ocular",
-        "intranasal": "Intranasal",
-        "intratracheal": "Intratracheal",
-        "intravenous": "Intravenous",
-        "intra-arterial": "Intra-arterial",
-        "intramuscular": "Intramuscular",
-        "subcutaneous": "Subcutaneous",
-        "intradermal": "Intradermal",
-        "intraperitoneal": "Intraperitoneal",
-        "rectal": "Rectal",
-        "vaginal": "Vaginal",
-        "topical-mucosal": "Topical mucosal",
-        "implantation": "Implantation",
-        "multiple": "Multiple routes",
-        "not-applicable": "Not applicable",
-        "unspecified": "Unspecified",
-        "other": "Other"
-      },
       "application": {
-        "basic-research": "Basic research",
-        "translational-applied-research": "Translational and applied research",
-        "regulatory-use": "Regulatory use",
-        "routine-production": "Routine production",
-        "education-training": "Education and training",
-        "environmental-protection": "Protection of the natural environment",
-        "species-preservation": "Preservation of species",
-        "forensic-inquiry": "Forensic inquiry",
-        "other": "Other"
+        "basic-research": "Basic research"
       },
       "species": {
         "rat": "Rat",
@@ -377,54 +343,31 @@
       "us": "US",
       "oecd": "OECD"
     },
-    "validationStatus": {
-      "not_evaluated": "Not evaluated",
-      "under_validation": "Under validation",
-      "validated": "Validated",
-      "partially_validated": "Partially validated",
-      "not_validated": "Not validated",
-      "unclear": "Unclear"
-    },
-    "regulatoryStatus": {
-      "not_approved": "Not approved",
-      "approved": "Approved",
-      "recommended": "Recommended",
-      "mandatory": "Mandatory"
-    },
     "purposeLabel": "Endpoint",
     "regulationStatusLabel": "Regulation status",
     "validationStatusLabel": "Validation status",
     "approvedJurisdictionsLabel": "Approved jurisdictions",
-    "routeAgnostic": "Route-agnostic",
+    "routeAgnostic": "Not applicable (route-independent method)",
     "fields": {
       "animalUse": "Animal use",
       "testSystem": "Test system",
-      "routesApplicable": "Routes applicable"
+      "routesApplicable": "Routes applicable",
+      "reviewStatus": "Curation status",
+      "materials": "Biological material",
+      "proceduresAvoided": "Animal procedures avoided"
     },
-    "enums": {
-      "animalUse": {
-        "none": "None",
-        "animal_derived_material": "Animal-derived material",
-        "slaughterhouse_byproduct": "Slaughterhouse byproduct",
-        "animals_killed_for_tissue": "Animals killed for tissue",
-        "live_animals": "Live animals",
-        "mixed_or_variable": "Mixed or variable"
-      },
-      "testSystem": {
-        "in_silico": "In silico",
-        "in_chemico": "In chemico",
-        "in_vitro": "In vitro",
-        "ex_vivo": "Ex vivo",
-        "in_vivo": "In vivo",
-        "hybrid": "Hybrid",
-        "unclear": "Unclear"
-      }
+    "regulation": {
+      "publishedDate": "Published",
+      "effectiveDate": "In force from",
+      "replacementDeadline": "Replacement deadline",
+      "termYears_one": "{{count}} year term",
+      "termYears_other": "{{count}} year term",
+      "endpoints": "Endpoints",
+      "endpointQuote": "Endpoint quote",
+      "regulationQuote": "Regulation quote"
     },
-    "threeR": {
-      "replacement": "Replacement",
-      "reduction": "Reduction",
-      "refinement": "Refinement"
-    }
+    "animalDerivedYes": "animal-derived",
+    "animalDerivedNo": "not animal-derived"
   },
   "s4": {
     "title": "Explore",
@@ -442,15 +385,20 @@
       "date": "Date",
       "url": "URL"
     },
-    "documentCategory": {
-      "method_protocol": "Method protocol",
-      "guideline": "Guideline",
-      "regulation": "Regulation",
-      "other": "Other"
-    },
     "methods": {
       "label": "Methods",
       "empty": "No methods in the catalogue yet."
+    },
+    "citedDocuments": "Cited documents",
+    "regulationCard": {
+      "jurisdiction": "Jurisdiction",
+      "body": "Body",
+      "date": "Date",
+      "publishedDate": "Publication date",
+      "effectiveDate": "Effective date",
+      "quote": "Quote",
+      "endpoint": "Endpoint",
+      "document": "Document"
     },
     "associatedRegulations": "Associated regulations",
     "noAssociatedRegulations": "No methods are linked to this document yet.",

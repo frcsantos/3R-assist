@@ -52,7 +52,7 @@ _DOCUMENT_CATEGORY_VALUES: frozenset[str] = frozenset(
 _DESCRIPTION_MAX_CHARS = 300
 
 _REGULATORY_STATUS_VALUES: frozenset[str] = frozenset(
-    {"not_approved", "approved", "recommended", "mandatory"}
+    {"not_approved", "approved", "recognized", "recommended", "mandatory"}
 )
 _ENDPOINT_CATEGORY_VALUES: frozenset[str] = frozenset(
     {
@@ -74,19 +74,6 @@ _ENDPOINT_CATEGORY_VALUES: frozenset[str] = frozenset(
         "rabies_diagnosis",
     }
 )
-_APPLICATION_VALUES: frozenset[str] = frozenset(
-    {
-        "basic-research",
-        "translational-applied-research",
-        "regulatory-use",
-        "routine-production",
-        "education-training",
-        "environmental-protection",
-        "species-preservation",
-        "forensic-inquiry",
-        "other",
-    }
-)
 _ANIMAL_USE_VALUES: frozenset[str] = frozenset(
     {
         "none",
@@ -95,16 +82,17 @@ _ANIMAL_USE_VALUES: frozenset[str] = frozenset(
         "animals_killed_for_tissue",
         "live_animals",
         "mixed_or_variable",
+        "embryos_and_larvae",
     }
 )
 _TEST_SYSTEM_VALUES: frozenset[str] = frozenset(
     {
         "in_silico",
         "in_chemico",
+        "in_data",
         "in_vitro",
         "ex_vivo",
         "in_vivo",
-        "hybrid",
         "unclear",
     }
 )
@@ -457,6 +445,8 @@ class StubLLMAdapter(LLMAdapter):
             regulatory_status = "mandatory"
         elif re.search(r"\brecommended\b|recomend", lowered):
             regulatory_status = "recommended"
+        elif re.search(r"\brecogni[sz]ed\b|reconhecid|reconhece", lowered):
+            regulatory_status = "recognized"
         elif re.search(r"\bapproved\b|aprovad", lowered):
             regulatory_status = "approved"
         elif re.search(r"not approved|não aprov|nao aprov", lowered):
@@ -671,7 +661,9 @@ class StubLLMAdapter(LLMAdapter):
             return "routine-production"
         if re.search(r"oecd|regulatory|guideline|reach|anvisa|fda", text):
             return "regulatory-use"
-        if re.search(r"vaccine|pharma|medicinal|drug safety|diagnos|treatment", text):
+        if re.search(r"diagnos|rabies|raiva", text):
+            return "diagnostic-testing"
+        if re.search(r"vaccine|pharma|medicinal|drug safety|treatment", text):
             return "translational-applied-research"
         if re.search(r"cosmetic|higiene pessoal", text):
             return "regulatory-use"
@@ -733,8 +725,6 @@ class StubLLMAdapter(LLMAdapter):
             systems.append("ex_vivo")
         if re.search(r"\bin vivo\b|whole animal", text):
             systems.append("in_vivo")
-        if re.search(r"\bhybrid\b|integrated approach|iata\b|defined approach", text):
-            systems.append("hybrid")
         return systems or None
 
     @staticmethod
@@ -1882,7 +1872,6 @@ def _method_draft_from_payload(
         routes_applicable=_routes_or_none(payload.get("routes_applicable")),  # type: ignore[arg-type]
         application=application,
         oecd_ref=oecd_ref,
-        ncit_id=_nullable_str(payload.get("ncit_id")),
         source_citation=_nullable_str(payload.get("source_citation")),
         source_db=source_db,  # type: ignore[arg-type]
         replacement_rationale=_localized_str_from_payload(

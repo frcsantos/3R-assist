@@ -22,7 +22,7 @@ def _parse_categories(value) -> list[str]:
 class DocumentRepository:
     _SELECT_COLUMNS = """
         d.id, d.slug, d.doc_citation, d.description, d."date",
-        d.categories, d.institution, d.url
+        d.categories, d.institution, d.url, d.internal_doc_refs
     """
 
     async def list_all(
@@ -63,4 +63,5 @@ class DocumentRepository:
             categories=_parse_categories(row["categories"]),
             institution=parse_localized_str(row["institution"], required=False),
             url=row["url"],
+            internal_doc_refs=list(row["internal_doc_refs"] or []),
         )

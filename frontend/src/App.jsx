@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import TopNav from './components/TopNav'
 import { analyzeProtocol } from './lib/analyze'
@@ -11,8 +12,15 @@ import LiteratureSearchPage from './pages/LiteratureSearchPage'
 import LoginPage from './pages/LoginPage'
 import PubMedResultsPage from './pages/PubMedResultsPage'
 import ResultsPage from './pages/ResultsPage'
+import { loadVocabularies } from './lib/vocabularies'
 
 export default function App() {
+  // Re-render once the vocabularies from the database are loaded.
+  const [, setVocabulariesLoaded] = useState(false)
+  useEffect(() => {
+    loadVocabularies().then(setVocabulariesLoaded)
+  }, [])
+
   return (
     <div className="flex min-h-screen flex-col">
       <TopNav />
@@ -24,6 +32,7 @@ export default function App() {
         <Route path="/results" element={<ResultsPage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/explore/:section" element={<ExplorePage />} />
+        <Route path="/explore/:section/:slug" element={<ExplorePage />} />
         <Route path="/resultados" element={<Navigate to="/results" replace />} />
         <Route path="/buscar" element={<Navigate to="/explore" replace />} />
         <Route path="/literature" element={<PubMedResultsPage />} />
