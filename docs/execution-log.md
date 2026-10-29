@@ -144,6 +144,21 @@ H2 and H5 remain formally Untested in `assumption-log.md` until the structured c
 | Applications | `study_domains` replaced by `applications` (061); unique integer `id` added to `routes`/`applications` (062); `methods.application` → `application_ids`, `routes_applicable` → `INTEGER[]` (063) |
 | Fix-ups | `regulations.regulatory_endpoints` fixes (064); TG 442B doc + TG 456 endpoint fixes (065) |
 
+## M3+ — Curation review and data model refinement (2026-09 → 2026-10)
+
+| Area | Change |
+|---|---|
+| Sessions / regulations | `user_sessions` (066); `regulations.regulatory_quote` (067); regulation dates `published_date`, `effective_date`, `replacement_term_years`, generated `replacement_deadline` (081, 087) |
+| Vocabularies | `test_system` revised (`hybrid` removed, `in_data` added); `validation_status` gains `recognized` (default `unclear`); `regulatory_status` gains `recognized`; `animal_use` gains `embryos_and_larvae` (078, 111, 118); `applications` gains `diagnostic-testing` and is read at runtime (080); `enum_terms` table with `GET /vocabularies/enums` (115) |
+| Species and materials | `species` (082) and `method_materials` (083, 088, 089, 092, 098, 099, 100–109, 121, 124) filled from the full TGs, Farmacopeia and protocols |
+| 3Rs | `methods.animal_procedures_avoided` with CHECK constraints (084, 090); total/partial replacement wording (079); rationale fixes from the full TGs (075, 093, 099, 120) |
+| Curation workflow | `methods.review_status` (085, 086); `documents.internal_doc_refs` and protocol documents (110, 112–114); `docs/decisoes_curadoria.md`, `docs/curadoria_decisoes.xlsx` (generated from the database) and `docs/feedback_checklist.md` replace the old reviewer checklist |
+| Cleanup | PT/EN method names and official titles (068–070, 091, 103); OHT codes on endpoints (071–073); slug typos and format consistency (123, 125); `methods.ncit_id` dropped (126) |
+| Frontend | Explore page with vocabulary-driven filters and richer `ResultCard`; labels moved from locale files to `/vocabularies` |
+| Extraction prompts | Updated for the new vocabularies (`animal_use`, materials, procedures avoided) |
+
+**Still open:** the curation decisions in `docs/decisoes_curadoria.md` (items 1–18, several applied provisionally in 118–120) await confirmation.
+
 ## M3+ — PubMed literature search module (2026)
 
 | Area | Change |

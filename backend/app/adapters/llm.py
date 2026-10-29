@@ -17,6 +17,7 @@ from app.models.protocol import (
     Species,
     coerce_application,
     coerce_route_list,
+    normalize_endpoint_slug,
 )
 from app.models.method import AnimalUse, RegulatoryStatus, TestSystem
 from app.models.method_draft import MethodDraftExtractResponse, MethodDraftFields
@@ -35,6 +36,7 @@ from app.prompts.policy_extraction import build_policy_extraction_prompt
 from app.prompts.regulation_draft_extraction import (
     build_regulation_draft_extraction_prompt,
 )
+from app.services import vocabulary
 from app.services.oecd_citation import prefer_oecd_tg_citation
 
 logger = logging.getLogger(__name__)
@@ -52,27 +54,7 @@ _DOCUMENT_CATEGORY_VALUES: frozenset[str] = frozenset(
 _DESCRIPTION_MAX_CHARS = 300
 
 _REGULATORY_STATUS_VALUES: frozenset[str] = frozenset(
-    {"not_approved", "approved", "recognized", "recommended", "mandatory"}
-)
-_ENDPOINT_CATEGORY_VALUES: frozenset[str] = frozenset(
-    {
-        "acute_toxicity",
-        "skin_irritation",
-        "skin_corrosion",
-        "ocular_irritation",
-        "skin_sensitisation",
-        "phototoxicity",
-        "genotoxicity",
-        "pyrogenicity",
-        "skin_absorption",
-        "reproductive_toxicity",
-        "endocrine_activity",
-        "photoreactivity",
-        "aquatic_toxicity",
-        "toxicokinetics",
-        "bacterial_endotoxin",
-        "rabies_diagnosis",
-    }
+    {"not_approved", "approved", "recognized", "adopted", "published", "recommended", "mandatory"}
 )
 _ANIMAL_USE_VALUES: frozenset[str] = frozenset(
     {
@@ -319,7 +301,7 @@ class StubLLMAdapter(LLMAdapter):
 
         endpoint = self._method_endpoint(normalized.lower())
         routes = self._extract_routes(normalized.lower())
-        study_domain = self._extract_application(normalized.lower())
+        application = self._extract_application(normalized.lower())
         animal_use = self._extract_animal_use(normalized.lower())
         test_system = self._extract_test_system(normalized.lower())
         slug_seed = (
@@ -337,7 +319,7 @@ class StubLLMAdapter(LLMAdapter):
             test_system=test_system,
             endpoint_category=endpoint,
             routes_applicable=routes,
-            application=study_domain,
+            application=application,
             oecd_ref=oecd_ref,
             source_db="OECD_TG" if oecd_ref else None,
             text_for_embedding=" — ".join(
@@ -546,13 +528,13 @@ class StubLLMAdapter(LLMAdapter):
         species = self._extract_species(lowered)
         animal_counts = self._extract_animal_counts(lowered)
         regulatory = self._extract_regulatory(lowered)
-        study_domain = self._extract_application(lowered)
+        application = self._extract_application(lowered)
         procedure_text = self._extract_procedure_text(normalized, study_type)
 
         raw = RawExtraction(
             study_type=study_type,
             route=routes,
-            application=study_domain,
+            application=application,
             procedure_text=procedure_text,
             species=species,
             animal_counts=animal_counts,
@@ -866,14 +848,7 @@ def _coerce_animal_counts(payload: dict) -> AnimalCounts | None:
 
 
 def _coerce_application(payload: dict) -> None:
-    raw = payload.get("application")
-    if raw is None or (isinstance(raw, str) and not raw.strip()):
-        raw = payload.get("study_domain")
-    payload["application"] = coerce_application(raw)
-    if payload.get("application_evidence") is None:
-        payload["application_evidence"] = payload.get("study_domain_evidence")
-    if payload.get("application_confidence") is None:
-        payload["application_confidence"] = payload.get("study_domain_confidence")
+    payload["application"] = coerce_application(payload.get("application"))
 
 
 def _is_null_route_marker(value: object) -> bool:
@@ -1743,6 +1718,20 @@ def _enum_or_none(value: object, allowed: frozenset[str]) -> str | None:
     return None
 
 
+def _endpoint_or_none(value: object) -> str | None:
+    """Endpoint category accepted by the `endpoints` table, or None."""
+    text = _nullable_str(value)
+    if text is None:
+        return None
+    normalized = text.lower().replace(" ", "_").replace("-", "_")
+    if not re.fullmatch(r"[a-z][a-z0-9_]*", normalized):
+        return None
+    if vocabulary.slugs_loaded("endpoints"):
+        if normalize_endpoint_slug(normalized) not in vocabulary.endpoint_slugs():
+            return None
+    return normalized
+
+
 def _routes_or_none(value: object) -> list[str] | None:
     return coerce_route_list(value)
 
@@ -1838,9 +1827,9 @@ def _method_draft_from_payload(
         seed = f"oecd-{oecd_ref}-{name_en}" if oecd_ref else name_en or ""
         slug = _ensure_oecd_slug(seed, oecd_ref)
 
-    endpoint = _enum_or_none(payload.get("endpoint_category"), _ENDPOINT_CATEGORY_VALUES)
+    endpoint = _endpoint_or_none(payload.get("endpoint_category"))
     application = coerce_application(
-        payload.get("application") or payload.get("study_domain")
+        payload.get("application")
     )
     text_for_embedding = _nullable_str(payload.get("text_for_embedding"))
     if not text_for_embedding:

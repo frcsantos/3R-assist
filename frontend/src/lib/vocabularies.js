@@ -1,6 +1,6 @@
 import { apiFetch } from './api'
 import i18n from './i18n'
-import { setApplications, setRoutes } from './parameterVocabulary'
+import { setApplications, setRoutes, setSpecies } from './parameterVocabulary'
 
 const LOCALE_KEYS = { pt: 'pt-br', en: 'en-us' }
 
@@ -68,6 +68,21 @@ export async function loadRoutes() {
   }
 }
 
+/** Same for the species table (GET /vocabularies/species) -> t('s2.enums.species.<slug>'). */
+export async function loadSpecies() {
+  try {
+    const data = await apiFetch('/vocabularies/species')
+    const items = data?.items ?? []
+    if (!items.length) return false
+
+    setSpecies(items.map((item) => item.slug))
+    registerLabels(['s2', 'enums', 'species'], items, (item) => item.slug)
+    return true
+  } catch {
+    return false
+  }
+}
+
 /**
  * Load the labels of the coded columns (GET /vocabularies/enums) and register
  * them under the i18n paths listed in ENUM_DOMAIN_PATHS.
@@ -87,7 +102,12 @@ export async function loadEnumTerms() {
 }
 
 export function loadVocabularies() {
-  return Promise.all([loadApplications(), loadRoutes(), loadEnumTerms()]).then(
+  return Promise.all([
+    loadApplications(),
+    loadRoutes(),
+    loadSpecies(),
+    loadEnumTerms(),
+  ]).then(
     (results) => results.some(Boolean),
   )
 }

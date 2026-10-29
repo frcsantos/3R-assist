@@ -44,28 +44,23 @@ export function setApplications(slugs) {
   APPLICATIONS.splice(0, APPLICATIONS.length, ...slugs)
 }
 
-const APPLICATION_ALIASES = {
-  general: 'basic-research',
-  pharma: 'regulatory-use',
-  cosmetics: 'regulatory-use',
-  'chemical-safety': 'regulatory-use',
-  'chemical_safety': 'regulatory-use',
-}
-
 export function canonicalApplication(code) {
   const slug = String(code ?? '')
     .trim()
     .replaceAll('_', '-')
-  return APPLICATION_ALIASES[slug] ?? slug
+  return slug
 }
 
-export const SPECIES = [
-  'rat',
-  'mouse',
-  'rabbit',
-  'guinea_pig',
-  'chicken',
-  'zebrafish',
-  'in_vitro',
-  'other',
-]
+// Species rows come from the database (lib/vocabularies.js); these two markers
+// are not organisms and always close the list.
+export const SPECIES_MARKERS = ['in_vitro', 'other']
+export const SPECIES = [...SPECIES_MARKERS]
+
+export function setSpecies(slugs) {
+  SPECIES.splice(
+    0,
+    SPECIES.length,
+    ...slugs.filter((slug) => !SPECIES_MARKERS.includes(slug)),
+    ...SPECIES_MARKERS,
+  )
+}

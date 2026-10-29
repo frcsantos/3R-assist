@@ -224,11 +224,11 @@ O OHT (OECD Harmonised Templates) está ligado aos métodos pelos endpoints (`me
   - [ ] Confirmar com o usuário do feedback #11.
 - [ ] **Pergunta dos usuários sobre TG ou GD (feedback #15):** a RN 18 chama o GD 129 de "TG 129". Como o título foi mantido, a pergunta fica sem efeito. Responder aos usuários.
 - [ ] **Exibição das referências das RNs na interface:** todos os métodos têm uma regulação do Brasil com o documento da RN, mas não verifiquei se a interface mostra isso (feedback #17).
-- [ ] **Já lidos e incorporados:** o capítulo 3.1.19 de raiva do Manual da WOAH (2023), o volume I da Farmacopeia Brasileira, 7ª edição, em texto (capítulos do MAT, do teste de pirogênios em coelhos e do LAL; o capítulo do LAL, lido antes por OCR no PDF escaneado, foi confirmado no texto) e o capítulo <86> da USP sobre reagentes recombinantes (registrado em `documents`, migration 097). Da Farmacopeia Europeia só os títulos dos capítulos 2.6.8, 2.6.14, 2.6.30 e 2.6.32 foram fornecidos (já usados nos nomes em inglês de MAT, LAL e rFC); os textos dos capítulos continuam faltando, e o 2.6.32 é a fonte cadastrada do rFC.
+- [ ] **Já lidos e incorporados:** o capítulo 3.1.19 de raiva do Manual da WOAH (2023), o volume I da Farmacopeia Brasileira, 7ª edição, em texto (capítulos do MAT, do teste de pirogênios em coelhos e do LAL; o capítulo do LAL, lido antes por OCR no PDF escaneado, foi confirmado no texto) e o capítulo <86> da USP sobre reagentes recombinantes (registrado em `documents`, migration 097). Da Farmacopeia Europeia, os textos dos capítulos 2.6.30 (MAT, ed. 11.5, que inclui o 2.6.40, MAT para vacinas com componentes pirogênicos próprios) e 2.6.32 (rFC, ed. 10.3) estão na pasta `docs` e conferem com os registros de `method_materials` dos métodos 20 e 56: o MAT usa células humanas (sangue total, PBMC ou linhagem monocítica) em meio com plasma do próprio doador, soro AB humano ou soro fetal bovino, e o rFC é baseado na sequência gênica do caranguejo-ferradura, sem material animal declarado. Os capítulos 2.6.8 (Pyrogens) e 2.6.14 (Bacterial endotoxins) não estão na pasta; só os títulos são usados (migration 103), e nenhuma decisão depende do texto.
 - [ ] **USP <86> e o rFC:** o capítulo da USP é uma proposta de novo capítulo (ainda não vinculado a monografia), descreve o teste como alternativo (sujeito às Notas Gerais 6.30) e diz que autoridades podem exigir estudo comparativo com o capítulo <85>. Decidir se ele entra como segunda fonte ou como evidência de validação do rFC (`validation_doc_id`), sabendo que ele não é uma aceitação em vigor; a evidência de aceitação internacional é a Farmacopeia Europeia.
-- [ ] **Textos completos:** todas as TGs do catálogo e as candidatas (TGs 249, 444A e 498), a TG 427, o GD 280, o manual do LabCyte EPI-MODEL e o folheto do EpiSensA estão na pasta. Continuam faltando: os textos dos capítulos da Farmacopeia Europeia (2.6.8, 2.6.14, 2.6.30 e 2.6.32; só os títulos foram fornecidos); os protocolos dos demais modelos reconstruídos (EpiDerm SIT e SCT, epiCS, Skin+, KeraSkin, EpiOcular, SkinEthic HCE, LabCyte CORNEA-MODEL24 e MCTT HCE); a origem dos componentes das TGs 435, 494 e 496; a ficha do conjugado de anticorpos do DFA e do dRIT.
+- [ ] **Textos completos:** todas as TGs do catálogo e as candidatas (TGs 249, 444A e 498), a TG 427, o GD 280, o manual do LabCyte EPI-MODEL e o folheto do EpiSensA estão na pasta. Continuam faltando: os protocolos dos demais modelos reconstruídos (EpiDerm SIT e SCT, epiCS, Skin+, KeraSkin, EpiOcular, SkinEthic HCE, LabCyte CORNEA-MODEL24 e MCTT HCE); a origem dos componentes das TGs 435, 494 e 496; a ficha do conjugado de anticorpos do DFA e do dRIT.
 - [ ] **Migrations 068 a 102, as mudanças de código e de interface (vocabulários de `test_system`, `validation_status`, `regulatory_status` e `applications`) e os documentos desta pasta** ainda não foram commitados nem testados na interface.
-- [ ] **Outros vocabulários fixos no código:** só `applications` passou a ser lido da tabela. Endpoints (`EndpointCategory`), vias (`Route`) e espécies continuam em listas fixas no backend e no frontend. Estender a mudança a eles?
+- [x] **Outros vocabulários fixos no código:** `applications`, vias (`routes`), espécies (`species`) e endpoints (`endpoints`) são lidos das tabelas no backend (`services/vocabulary.py`); no frontend, aplicações, vias e espécies vêm da API (`/vocabularies/species` é novo). Ficam fixos só os marcadores `in_vitro` e `other` de espécie. Pendente: a lista de endpoints do formulário do frontend (16 categorias gerais, `ENDPOINT_CATEGORIES`) e o texto dos prompts de extração (sinônimos de via e espécie).
 
 ## 12. Nomes dos métodos (pt-br e en-us) e TG 442D e 442E
 
@@ -312,7 +312,7 @@ Já aplicado (migration 080 e mudanças no código): ver "Decididos e já aplica
     - [ ] Ajustar as definições para separar uso regulatório do controle de qualidade e do ambiental.
   - [ ] "Teste diagnóstico" não está na lista do plano como subtipo de outra categoria: confirmar que fica como categoria própria.
 - [ ] **Remover "Investigação forense" e "Outro"**, que o plano não lista (nenhum método usa).
-- [ ] **Remover as aplicações aceitas pela extração só como legado** (`general`, `pharma`, `cosmetics`, `chemical-safety`, `education`): hoje viram `basic-research`, `regulatory-use` ou `education-training` (apelidos fixos no código).
+- [x] **Remover as aplicações aceitas pela extração só como legado** (`general`, `pharma`, `cosmetics`, `chemical-safety`, `education`): os apelidos fixos foram retirados do backend e do frontend. Esses valores agora não existem na tabela `applications` e, no backend, caem no padrão `basic-research`. O nome antigo do campo, `study_domain` (e `study_domain_evidence` e `study_domain_confidence`), também deixou de ser aceito nas respostas da extração e no frontend.
 
 ## 15. Endpoints
 
@@ -326,10 +326,8 @@ Para confirmar:
 
 ## 16. Status regulatório `recognized`
 
-O valor `recognized` foi aberto em `regulations.regulatory_status` (migration 078), junto com `approved`, `not_approved`, `recommended` e `mandatory`. As 87 regulações continuam `approved`, tanto as do CONCEA ("reconhece") quanto as da OECD. O plano diz que "validated", "accepted", "recognized", "recommended" e "approved" não são sinônimos.
-- [ ] Passar as regulações do Brasil (reconhecimento por RN do CONCEA) para `recognized` e deixar as da OECD como `approved`.
-- [ ] Passar todas para `recognized`.
-- [ ] Manter como está.
+**Decidido e aplicado (migrations 111 e 128):** as 47 regulações do Brasil (reconhecimento por RN do CONCEA) são `recognized`; as 39 TGs da OECD são `adopted` e o GD 129 é `published`. `adopted` e `published` foram acrescentados a `regulations.regulatory_status`, aos rótulos (`enum_terms`), aos modelos e aos prompts de extração. O valor `approved` continua permitido, mas nenhuma regulação o usa. O plano diz que "validated", "accepted", "recognized", "recommended" e "approved" não são sinônimos.
+- [x] Passar as regulações do Brasil para `recognized` e as da OECD para `adopted` (TGs) e `published` (GD).
 
 ---
 
@@ -451,5 +449,5 @@ Resumo da revisão feita depois das migrations 068 a 090. "Conforme" quer dizer 
 | Espécie | Conforme: tabela `species` com 13 espécies | Item 13 |
 | Procedimento animal evitado | 36 de 47 métodos preenchidos; 3 têm R e não têm procedimento; 8 não têm R | Item 13 |
 | Marca de revisado | `review_status` existe e os 47 métodos estão `in_review`; faltam revisor, data e as 10 perguntas de controle | Item 13 |
-| Terminologia regulatória (aprovado, reconhecido, recomendado...) | `recognized` existe em `regulatory_status`, mas as 87 regulações continuam `approved` | Item 16 |
+| Terminologia regulatória (aprovado, reconhecido, recomendado...) | `recognized` existe em `regulatory_status`, e as regulações do Brasil são `recognized`, as TGs da OECD `adopted` e o GD 129 `published` (migration 128) | Item 16 (decidido) |
 | Redação final (clareza, sem exagero, limitações) | Revisão editorial das descrições e dos rationales ainda não feita | Fora do banco |

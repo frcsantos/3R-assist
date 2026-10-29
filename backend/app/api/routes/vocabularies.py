@@ -71,6 +71,44 @@ async def list_routes() -> RoutesResponse:
     )
 
 
+class SpeciesItem(BaseModel):
+    id: int
+    slug: str
+    name: dict
+    scientific_name: str | None
+    taxon_group: str | None
+    sort_order: int
+
+
+class SpeciesResponse(BaseModel):
+    items: list[SpeciesItem]
+
+
+@router.get("/species", response_model=SpeciesResponse)
+async def list_species() -> SpeciesResponse:
+    from app.db.connection import get_pool
+
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        records = await conn.fetch(
+            "SELECT id, slug, name, scientific_name, taxon_group, sort_order "
+            "FROM species WHERE active ORDER BY sort_order, id"
+        )
+    return SpeciesResponse(
+        items=[
+            SpeciesItem(
+                id=r["id"],
+                slug=r["slug"],
+                name=r["name"] or {},
+                scientific_name=r["scientific_name"],
+                taxon_group=r["taxon_group"],
+                sort_order=r["sort_order"] or 0,
+            )
+            for r in records
+        ]
+    )
+
+
 class EnumTermItem(BaseModel):
     code: str
     name: dict

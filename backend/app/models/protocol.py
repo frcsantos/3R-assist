@@ -1,8 +1,14 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    field_validator,
+)
 
 from app.models.recommendation import Recommendation
 from app.services import vocabulary
@@ -10,24 +16,20 @@ from app.services.vocabulary import DEFAULT_APPLICATION
 
 ConfidenceLevel = Literal["high", "medium", "low"]
 
-EndpointCategory = Literal[
-    "acute_toxicity",
-    "skin_irritation",
-    "skin_corrosion",
-    "ocular_irritation",
-    "skin_sensitisation",
-    "phototoxicity",
-    "genotoxicity",
-    "pyrogenicity",
-    "skin_absorption",
-    "reproductive_toxicity",
-    "endocrine_activity",
-    "photoreactivity",
-    "aquatic_toxicity",
-    "toxicokinetics",
-    "bacterial_endotoxin",
-    "rabies_diagnosis",
-]
+# Valid slugs come from the `endpoints` table (app.services.vocabulary). The
+# extraction still writes the legacy underscore form (acute_toxicity), which
+# normalize_endpoint_slug maps to the table slug; the value is kept as given.
+
+
+def _check_endpoint_category(value):
+    if value is None or not isinstance(value, str):
+        return value
+    # Before the table is loaded (tests, database unavailable) any value passes.
+    if vocabulary.slugs_loaded("endpoints"):
+        slug = normalize_endpoint_slug(value)
+        if slug not in vocabulary.endpoint_slugs():
+            raise ValueError(f"unknown endpoint category: {value!r}")
+    return value
 
 
 def normalize_endpoint_slug(value: str | None) -> str | None:
@@ -40,6 +42,8 @@ def normalize_endpoint_slug(value: str | None) -> str | None:
     return _ENDPOINT_SLUG_ALIASES.get(slug, slug)
 
 
+EndpointCategory = Annotated[str, BeforeValidator(_check_endpoint_category)]
+
 _ENDPOINT_SLUG_ALIASES = {
     "acute-toxicity": "acute-systemic-toxicity",
     "ocular-irritation": "eye-irritation",
@@ -48,30 +52,10 @@ _ENDPOINT_SLUG_ALIASES = {
     "toxicokinetics": "toxicokinetic-properties",
 }
 
-Route = Literal[
-    "cutaneous",
-    "inhalation",
-    "oral",
-    "ocular",
-    "intranasal",
-    "intratracheal",
-    "intravenous",
-    "intra-arterial",
-    "intramuscular",
-    "subcutaneous",
-    "intradermal",
-    "intraperitoneal",
-    "rectal",
-    "vaginal",
-    "topical-mucosal",
-    "implantation",
-    "multiple",
-    "not-applicable",
-    "unspecified",
-    "other",
-]
+# Valid slugs come from the `routes` table (app.services.vocabulary).
+Route = str
 
-_ROUTE_SLUGS: frozenset[str] = frozenset(Route.__args__)
+
 _ROUTE_ALIASES = {
     "dermal": "cutaneous",
 }
@@ -100,22 +84,16 @@ def coerce_route_list(value) -> list[str] | None:
     routes: list[str] = []
     for item in value:
         slug = normalize_route_slug(str(item))
-        if slug in _ROUTE_SLUGS and slug not in routes:
+        if not slug or slug in routes:
+            continue
+        # Unknown slugs are dropped once the table is loaded; before that
+        # (tests, database unavailable) any well-formed slug is kept.
+        if not vocabulary.slugs_loaded("routes") or slug in vocabulary.route_slugs():
             routes.append(slug)
     return routes or None
 
 # Valid slugs come from the `applications` table (app.services.vocabulary).
 Application = str
-
-# Legacy study_domain values only; the categories themselves are not listed here.
-_APPLICATION_ALIASES = {
-    "general": "basic-research",
-    "pharma": "regulatory-use",
-    "cosmetics": "regulatory-use",
-    "chemical-safety": "regulatory-use",
-    "education": "education-training",
-}
-
 
 def normalize_application_slug(value: str | None) -> str | None:
     if value is None:
@@ -124,7 +102,7 @@ def normalize_application_slug(value: str | None) -> str | None:
     if not text:
         return None
     slug = text.replace("_", "-")
-    return _APPLICATION_ALIASES.get(slug, slug)
+    return slug
 
 
 def coerce_application(value) -> Application:
@@ -137,16 +115,17 @@ def coerce_application(value) -> Application:
         return DEFAULT_APPLICATION
     return slug
 
-Species = Literal[
-    "rat",
-    "mouse",
-    "rabbit",
-    "guinea_pig",
-    "chicken",
-    "zebrafish",
-    "in_vitro",
-    "other",
-]
+def _check_species(value):
+    if value is None or not isinstance(value, str):
+        return value
+    if vocabulary.slugs_loaded("species") and value not in vocabulary.species_slugs():
+        raise ValueError(f"unknown species: {value!r}")
+    return value
+
+
+# Valid slugs come from the `species` table plus the markers in
+# vocabulary.SPECIES_MARKERS (in_vitro, other).
+Species = Annotated[str, BeforeValidator(_check_species)]
 
 
 class AnimalCounts(BaseModel):
@@ -163,22 +142,9 @@ class RawExtraction(BaseModel):
     route: list[Route] | None = None
     route_evidence: str | None = None
     route_confidence: ConfidenceLevel | None = None
-    application: Application = Field(
-        default=DEFAULT_APPLICATION,
-        validation_alias=AliasChoices("application", "study_domain"),
-    )
-    application_evidence: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices(
-            "application_evidence", "study_domain_evidence"
-        ),
-    )
-    application_confidence: ConfidenceLevel | None = Field(
-        default=None,
-        validation_alias=AliasChoices(
-            "application_confidence", "study_domain_confidence"
-        ),
-    )
+    application: Application = DEFAULT_APPLICATION
+    application_evidence: str | None = None
+    application_confidence: ConfidenceLevel | None = None
     procedure_text: str | None = None
     procedure_text_evidence: str | None = None
     procedure_text_confidence: ConfidenceLevel | None = None
@@ -216,10 +182,7 @@ class ProtocolParameters(BaseModel):
 
     endpoint_category: EndpointCategory | None = None
     route: list[Route] | None = None
-    application: Application = Field(
-        default=DEFAULT_APPLICATION,
-        validation_alias=AliasChoices("application", "study_domain"),
-    )
+    application: Application = DEFAULT_APPLICATION
     procedure_text: str | None = None
     species: Species | None = None
     n_animals: int | None = None

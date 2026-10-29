@@ -260,11 +260,11 @@ def test_parse_json_payload_repairs_truncated_unterminated_string():
     raw = (
         '{"experiments": [{"study_type": "acute toxicity LD50 study", "route": ["oral"], '
         '"route_evidence": "administered EO p.o. by gastric tube", '
-        '"study_domain": "general'
+        '"application": "general'
     )
     payload = _parse_json_payload(raw)
     assert isinstance(payload, dict)
-    assert payload["experiments"][0]["study_domain"] == "general"
+    assert payload["experiments"][0]["application"] == "general"
 
 
 def test_parse_json_payload_repairs_truncated_mid_evidence_field():
@@ -272,7 +272,7 @@ def test_parse_json_payload_repairs_truncated_mid_evidence_field():
 
     raw = (
         '{"experiments": [{"study_type": "genotoxicity battery", "route": ["oral"], '
-        '"route_evidence": "treated by gavage", "study_domain": null, '
+        '"route_evidence": "treated by gavage", "application": null, '
         '"procedure_text": "Gavage dosing study.", '
         '"procedure_text_evidence": "treated by gavage'
     )

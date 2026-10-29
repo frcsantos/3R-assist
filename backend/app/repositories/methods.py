@@ -288,8 +288,7 @@ class MethodRepository:
             source_doc_id=row.get("source_doc_id"),
             source_url=row.get("source_url"),
             source_db=row["source_db"],
-            validation_status=MethodRepository._norm_vocab(row["validation_status"])
-            or "unclear",
+            validation_status=MethodRepository._norm_vocab(row["validation_status"]),
             validation_doc_id=row.get("validation_doc_id"),
             validation_url=row.get("validation_url"),
         )

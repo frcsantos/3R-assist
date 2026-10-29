@@ -35,7 +35,8 @@ ValidationStatus = Literal[
     "unclear",
 ]
 RegulatoryStatus = Literal[
-    "not_approved", "approved", "recognized", "recommended", "mandatory"
+    "not_approved", "approved", "recognized", "adopted", "published",
+    "recommended", "mandatory"
 ]
 # Preferred curated values: OECD_TG | ECVAM_DBALM | NICEATM | FARMACOPEIA_BR | TSAR.
 # Stored as free text so admin-curated / imported rows are not rejected at read time.
@@ -180,7 +181,7 @@ class Method(BaseModel):
     # Resolved from documents.url when source_doc_id is set (not a DB column).
     source_url: str | None = None
     source_db: SourceDb
-    validation_status: ValidationStatus = "unclear"
+    validation_status: ValidationStatus | None = None
     validation_doc_id: int | None = None
     # Resolved from documents.url when validation_doc_id is set (not a DB column).
     validation_url: str | None = None

@@ -132,7 +132,7 @@ export function normalizeParamsFromExperiment(experiment) {
     endpoint_category: experiment?.endpoint_category ?? params.endpoint_category,
     route: raw.route ?? params.route,
     application: canonicalApplication(
-      raw.application ?? raw.study_domain ?? params.application ?? params.study_domain,
+      raw.application ?? params.application,
     ),
     procedure_text: raw.procedure_text ?? params.procedure_text,
     species: raw.species ?? params.species,
@@ -146,7 +146,7 @@ export function normalizeParams(params) {
     endpoint_category: params?.endpoint_category ?? '',
     route: normalizeRoutes(params?.route),
     application: canonicalApplication(
-      params?.application ?? params?.study_domain ?? 'basic-research',
+      params?.application ?? 'basic-research',
     ),
     procedure_text: params?.procedure_text ?? '',
     species: params?.species ?? '',
@@ -181,7 +181,7 @@ export function emptyParameterKeys(params) {
 export function extractEvidence(raw = {}) {
   return {
     route: raw.route_evidence ?? null,
-    application: raw.application_evidence ?? raw.study_domain_evidence ?? null,
+    application: raw.application_evidence ?? null,
     procedure_text: raw.procedure_text_evidence ?? null,
     species: raw.species_evidence ?? null,
     animal_counts: raw.animal_counts_evidence ?? null,
@@ -191,7 +191,7 @@ export function extractEvidence(raw = {}) {
 export function extractFieldConfidence(raw = {}) {
   return {
     route: raw.route_confidence ?? null,
-    application: raw.application_confidence ?? raw.study_domain_confidence ?? null,
+    application: raw.application_confidence ?? null,
     procedure_text: raw.procedure_text_confidence ?? null,
     species: raw.species_confidence ?? null,
     animal_counts: raw.animal_counts_confidence ?? null,

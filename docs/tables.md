@@ -47,7 +47,7 @@ Curated catalogue of alternative methods (replacement, reduction, refinement). O
 | `source_citation` | `TEXT` | YES | — | Bibliographic citation for the primary source document. API responses fall back to `documents.doc_citation` (`en-us`, then `pt-br`) when null. |
 | `source_doc_id` | `INTEGER` | YES | — | FK → `documents(id)` `ON DELETE SET NULL`. Primary source document. API exposes `source_url` from `documents.url`. |
 | `source_db` | `TEXT` | NO | — | Provenance of the curated entry. Values: `OECD_TG`, `ECVAM_DBALM`, `NICEATM`, `FARMACOPEIA_BR`, `TSAR`. |
-| `validation_status` | `TEXT` | NO | `unclear` | Scientific validation standing: `recognized`, `under_validation`, `validated`, `partially_validated`, `not_validated`, `unclear`. |
+| `validation_status` | `TEXT` | YES | NULL | Scientific validation standing: `recognized`, `under_validation`, `validated`, `partially_validated`, `not_validated`, `unclear`; NULL (the default) when not assessed (migrations 129 and 130). |
 | `validation_doc_id` | `INTEGER` | YES | — | FK → `documents(id)` `ON DELETE SET NULL`. Primary document evidencing validation status. API exposes `validation_url` from `documents.url`. |
 | `replacement_rationale` | `JSONB` | YES | — | Localized replacement rationale `{"en-us":"...","pt-br":"..."}`. Non-null with non-empty locale text ⇒ qualifies as replacement (ADR-023). |
 | `reduction_rationale` | `JSONB` | YES | — | Localized reduction rationale. Non-null with non-empty locale text ⇒ qualifies as reduction. |
@@ -75,7 +75,7 @@ Regulatory recognition for a method, scoped by jurisdiction. One row per `(metho
 | `id` | `SERIAL` | NO | auto | Primary key. |
 | `method_id` | `INTEGER` | NO | — | FK → `methods(id)` `ON DELETE CASCADE`. |
 | `jurisdiction` | `JSONB` | NO | — | Localized regulatory jurisdiction: `{"en-us":"...","pt-br":"..."}` — Brazil/Brasil, EU/UE, US/EUA, OECD/OCDE. |
-| `regulatory_status` | `TEXT` | YES | — | Regulatory standing: `not_approved`, `approved`, `recognized`, `recommended`, or `mandatory`. |
+| `regulatory_status` | `TEXT` | YES | — | Regulatory standing: `not_approved`, `approved`, `recognized`, `adopted` (OECD TGs), `published` (OECD GD), `recommended`, or `mandatory`. |
 | `regulatory_date` | `DATE` | YES | — | Date of the regulation / recognition / adoption for this context (`YYYY-MM-DD`). |
 | `published_date` | `DATE` | YES | — | Publication date in the official gazette (DOU). |
 | `effective_date` | `DATE` | YES | — | Date the act enters into force. |

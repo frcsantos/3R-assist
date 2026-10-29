@@ -143,8 +143,6 @@ A lista vem da tabela `applications` e é lida em tempo de execução; só o val
 
 **Regra de fallback:** se não for possível determinar com segurança → `basic-research`.
 
-Valores legados `study_domain`: `general` → `basic-research`; `pharma` / `cosmetics` / `chemical_safety` → `regulatory-use`.
-
 ### 3.4 `species` (display-only)
 
 Normalizar para identificação no S2. Não usado em filtros.

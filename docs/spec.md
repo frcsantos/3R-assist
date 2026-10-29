@@ -162,7 +162,7 @@ oecd_ref            TEXT                          -- e.g. 'TG 439', 'GD 129'; NU
 source_citation     TEXT                          -- bibliographic citation for the primary source
 source_doc_id       INTEGER                       -- FK → documents(id); primary source document
 source_db           TEXT NOT NULL                 -- 'OECD_TG' | 'ECVAM_DBALM' | 'NICEATM' | 'FARMACOPEIA_BR' | 'TSAR'
-validation_status   TEXT NOT NULL DEFAULT 'unclear'
+validation_status   TEXT                          -- NULL allowed and default (migrations 129, 130)
                                                   -- recognized | under_validation | validated |
                                                   -- partially_validated | not_validated | unclear
 validation_doc_id   INTEGER                       -- FK → documents(id); evidence for validation_status
@@ -183,7 +183,7 @@ updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 id                SERIAL PRIMARY KEY
 method_id         INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE
 jurisdiction      JSONB   NOT NULL   -- {"en-us":"Brazil"|"EU"|"US"|"OECD","pt-br":"Brasil"|"UE"|"EUA"|"OCDE"}
-regulatory_status TEXT               -- 'not_approved' | 'approved' | 'recognized' | 'recommended' | 'mandatory'
+regulatory_status TEXT               -- 'not_approved' | 'approved' | 'recognized' | 'adopted' | 'published' | 'recommended' | 'mandatory'
 regulatory_date   DATE               -- date of regulation / recognition / adoption (YYYY-MM-DD)
 regulatory_endpoints INTEGER[]       -- recognized endpoints.id values
 endpoint_quote    TEXT               -- supporting quotation for regulatory_endpoints
