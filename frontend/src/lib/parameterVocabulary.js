@@ -1,3 +1,4 @@
+// Fallback only: the real tree comes from the database (lib/vocabularies.js).
 export const ENDPOINT_CATEGORIES = [
   'acute_toxicity',
   'skin_irritation',
@@ -16,6 +17,28 @@ export const ENDPOINT_CATEGORIES = [
   'bacterial_endotoxin',
   'rabies_diagnosis',
 ]
+
+export function setEndpointCategories(slugs) {
+  ENDPOINT_CATEGORIES.splice(0, ENDPOINT_CATEGORIES.length, ...slugs)
+}
+
+// Same aliases as the backend (normalize_endpoint_slug) for the old underscore codes.
+const ENDPOINT_ALIASES = {
+  'acute-toxicity': 'acute-systemic-toxicity',
+  'ocular-irritation': 'eye-irritation',
+  'skin-absorption': 'dermal-absorption',
+  'bacterial-endotoxin': 'bacterial-endotoxins',
+  toxicokinetics: 'toxicokinetic-properties',
+}
+
+/** Map an endpoint code to the one in the current option list (old codes included). */
+export function canonicalEndpoint(code) {
+  const raw = String(code ?? '').trim()
+  if (!raw || ENDPOINT_CATEGORIES.includes(raw)) return raw
+  const slug = raw.replaceAll('_', '-')
+  const aliased = ENDPOINT_ALIASES[slug] ?? slug
+  return ENDPOINT_CATEGORIES.includes(aliased) ? aliased : raw
+}
 
 // Fallback only: the real list comes from the database (lib/vocabularies.js).
 export const DEFAULT_ROUTE = 'unspecified'

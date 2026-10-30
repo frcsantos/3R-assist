@@ -267,6 +267,8 @@ export function formatMatchedParams(matchedParams, t) {
     endpoint_category: t('s2.fields.endpointCategory'),
     route: t('s2.fields.route'),
     application: t('s2.fields.application'),
+    avoided_procedure: t('s3.matchedLabels.avoidedProcedure'),
+    animal_use: t('s3.matchedLabels.animalUse'),
   }
   return (matchedParams ?? []).map((key) => labels[key] ?? key)
 }

@@ -312,6 +312,10 @@
     "multiExperimentHint": "{{count}} experimentos detectados — selecione uma aba para ver os resultados de cada um.",
     "experimentTabsLabel": "Resultados por experimento",
     "protocolSummary": "Resumo do protocolo",
+    "matchedLabels": {
+      "avoidedProcedure": "Substitui um procedimento como o seu",
+      "animalUse": "Menor uso de animais"
+    },
     "recommendedAlternatives": "Alternativas recomendadas",
     "matchedParams": "Parâmetros correspondentes",
     "matchLabel": "Relevância",

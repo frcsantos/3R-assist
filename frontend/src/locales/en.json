@@ -312,6 +312,10 @@
     "multiExperimentHint": "{{count}} experiments detected — select a tab to view results for each.",
     "experimentTabsLabel": "Experiment results",
     "protocolSummary": "Protocol summary",
+    "matchedLabels": {
+      "avoidedProcedure": "Replaces a procedure like yours",
+      "animalUse": "Lower animal use"
+    },
     "recommendedAlternatives": "Recommended alternatives",
     "matchedParams": "Matched parameters",
     "matchLabel": "Relevance",

@@ -4,6 +4,7 @@ import {
   ROUTES,
   SPECIES,
   canonicalApplication,
+  canonicalEndpoint,
   canonicalRoute,
 } from './parameterVocabulary'
 
@@ -130,6 +131,8 @@ export function normalizeParamsFromExperiment(experiment) {
 
   return normalizeParams({
     endpoint_category: experiment?.endpoint_category ?? params.endpoint_category,
+    test_system: raw.test_system ?? params.test_system,
+    guideline_ref: raw.guideline_ref ?? params.guideline_ref,
     route: raw.route ?? params.route,
     application: canonicalApplication(
       raw.application ?? params.application,
@@ -143,7 +146,10 @@ export function normalizeParamsFromExperiment(experiment) {
 
 export function normalizeParams(params) {
   return {
-    endpoint_category: params?.endpoint_category ?? '',
+    endpoint_category: canonicalEndpoint(params?.endpoint_category),
+    // Not editable in the form; carried through so the search can use them.
+    test_system: params?.test_system ?? null,
+    guideline_ref: params?.guideline_ref ?? null,
     route: normalizeRoutes(params?.route),
     application: canonicalApplication(
       params?.application ?? 'basic-research',
@@ -163,6 +169,8 @@ export function serializeParams(form) {
 
   return {
     endpoint_category: form.endpoint_category || null,
+    test_system: form.test_system?.length ? form.test_system : null,
+    guideline_ref: form.guideline_ref || null,
     route: routes.length ? routes : null,
     application: form.application || 'basic-research',
     procedure_text: form.procedure_text?.trim() || null,
