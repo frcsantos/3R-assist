@@ -33,9 +33,12 @@ export default function TopNav() {
         <div className="flex items-center gap-8">
           <NavLink
             to="/"
-            className="font-nav-logo text-nav-logo font-medium text-primary"
+            className="relative font-nav-logo text-[24px] font-medium leading-none text-primary"
           >
             Assist3R
+            <span className="pointer-events-none absolute -right-7 -top-2 text-[10px] font-medium uppercase leading-none tracking-wider text-on-surface-variant">
+              Beta
+            </span>
           </NavLink>
           <nav className="hidden items-center gap-6 md:flex" aria-label="Main">
             {routes.map((route) => (
