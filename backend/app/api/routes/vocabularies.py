@@ -109,6 +109,46 @@ async def list_species() -> SpeciesResponse:
     )
 
 
+class EndpointItem(BaseModel):
+    id: int
+    slug: str
+    name: dict
+    code: str
+    parent_slug: str | None
+    sort_order: int
+
+
+class EndpointsResponse(BaseModel):
+    items: list[EndpointItem]
+
+
+@router.get("/endpoints", response_model=EndpointsResponse)
+async def list_endpoints() -> EndpointsResponse:
+    """Endpoint tree in display order; `parent_slug` carries the hierarchy."""
+    from app.db.connection import get_pool
+
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        records = await conn.fetch(
+            "SELECT e.id, e.slug, e.name, e.code, p.slug AS parent_slug, e.sort_order "
+            "FROM endpoints e LEFT JOIN endpoints p ON p.id = e.parent_id "
+            "WHERE e.active ORDER BY e.sort_order, e.id"
+        )
+    return EndpointsResponse(
+        items=[
+            EndpointItem(
+                id=r["id"],
+                slug=r["slug"],
+                name=r["name"] or {},
+                code=r["code"] or "",
+                parent_slug=r["parent_slug"],
+                sort_order=r["sort_order"] or 0,
+            )
+            for r in records
+        ]
+    )
+
+
 class EnumTermItem(BaseModel):
     code: str
     name: dict

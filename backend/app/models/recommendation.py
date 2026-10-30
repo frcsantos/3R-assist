@@ -9,3 +9,5 @@ class Recommendation(BaseModel):
     rank: int
     score: float
     matched_params: list[str]
+    # Weighted components behind `score` (component name -> 0..1); only those that applied.
+    score_breakdown: dict[str, float] = Field(default_factory=dict)

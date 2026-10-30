@@ -5,7 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from app.adapters.llm import ExtractionError
-from app.models.protocol import AnimalCounts, ExtractionResult, RawExtraction
+from app.models.protocol import (
+    AnimalCounts,
+    ExtractionResult,
+    RawExtraction,
+    normalize_endpoint_slug,
+)
 from tests.fixtures.ground_truth import (
     ExpectedAnimalCounts,
     ExpectedExtraction,
@@ -103,7 +108,14 @@ def build_performance_report(model: str) -> PerformanceReport:
 
 
 def score_endpoint_category(result: ExtractionResult, expected: ExpectedExtraction) -> float:
-    return 1.0 if result.endpoint_category == expected.endpoint_category else 0.0
+    # 'acute_toxicity' (keyword lookup) and 'acute-systemic-toxicity' (model, table slug)
+    # are the same endpoint; compare them in their normalized form.
+    return (
+        1.0
+        if normalize_endpoint_slug(result.endpoint_category)
+        == normalize_endpoint_slug(expected.endpoint_category)
+        else 0.0
+    )
 
 
 def score_route(

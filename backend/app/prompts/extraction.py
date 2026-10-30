@@ -59,6 +59,19 @@ describes substance-to-tissue contact, not the culture setup.
 ── APPLICATION VALUES ──────────────────────────────────────────────────────
 {application_values}
 
+── ENDPOINT VALUES ─────────────────────────────────────────────────────────
+{endpoint_values}
+
+── TEST SYSTEM VALUES ───────────────────────────────────────────────────────
+How the protocol itself tests the substance (an array; most protocols have one):
+  in_vivo     ← living animals dosed or exposed (including fish/amphibian embryos)
+  ex_vivo     ← tissue or organs taken from animals and tested outside the body
+                  (isolated corneas, skin discs, explants, perfused organs)
+  in_vitro    ← cultured cells, reconstructed tissues, cell lines
+  in_chemico  ← cell-free chemical or biochemical reactivity assays
+  in_silico   ← computational models, QSAR, read-across
+  in_data     ← analysis of existing data only (no new test)
+
 ── SPECIES SYNONYMS ─────────────────────────────────────────────────────────
   rat         ← Rattus norvegicus, Wistar, Sprague-Dawley, SD, F344, Fischer,
                   IGS, Crj:CD(SD), SKH (rat strain)
@@ -105,7 +118,8 @@ Per-field confidence scale:
       // specific product class. The identity of the test substance alone does
       // not determine this field.
 
-      "procedure_text": "brief English description, max 30 words" or null,
+      "procedure_text": "brief description of the procedure, max 30 words,
+        in the source language (see the end of this prompt)" or null,
       "procedure_text_evidence": "exact quote from text, MAX 20 WORDS" or null,
       "procedure_text_confidence": "high"|"medium"|"low" or null if procedure_text is null,
 
@@ -121,6 +135,24 @@ Per-field confidence scale:
       } or null if no counts are explicitly stated,
       "animal_counts_evidence": "exact quote from text, MAX 15 WORDS" or null,
       "animal_counts_confidence": "high"|"medium"|"low" or null if animal_counts is null,
+
+      "endpoint": the single most specific slug from "Endpoint values" that
+        the study measures (e.g. prefer "eye-irritation" over "eye-effects"),
+        or null if none fits. Choose by what the study assesses, not by the
+        substance tested. Mapping the study to the list is expected here.
+      "endpoint_evidence": "exact quote from text, MAX 15 WORDS" or null,
+      "endpoint_confidence": "high"|"medium"|"low" or null if endpoint is null,
+
+      "test_system": array of values from "Test system values" or null,
+      "test_system_evidence": "exact quote from text, MAX 15 WORDS" or null,
+      "test_system_confidence": "high"|"medium"|"low" or null if test_system is null,
+
+      "guideline_ref": the test guideline the protocol follows or cites, in the
+        form "TG 420" or "GD 129" (OECD), or null if none is named. Only a
+        guideline the experiment is actually performed under; not one that is
+        merely mentioned as background or as a method to be replaced.
+      "guideline_ref_evidence": "exact quote from text, MAX 15 WORDS" or null,
+      "guideline_ref_confidence": "high"|"medium"|"low" or null if guideline_ref is null,
 
       "regulatory": true if a named regulatory guideline or authority is
         explicitly cited, false if explicitly stated as non-regulatory,
@@ -152,6 +184,18 @@ Protocol description:
 {protocol_text}"""
 
 
+def _endpoint_values_block() -> str:
+    from app.services.vocabulary import endpoint_prompt_lines
+
+    lines = endpoint_prompt_lines()
+    if not lines:
+        return "Endpoint values: not available; return null for endpoint."
+    return (
+        "Endpoint values (slug: name; indentation shows the hierarchy, deeper = more "
+        "specific). Use a slug exactly as written:\n" + lines
+    )
+
+
 def build_extraction_prompt(protocol_text: str, *, source_language: str = "English") -> str:
     from app.services.vocabulary import DEFAULT_APPLICATION, application_prompt_lines
 
@@ -159,7 +203,7 @@ def build_extraction_prompt(protocol_text: str, *, source_language: str = "Engli
         "{application_values}",
         f"Application values (slug: description; default {DEFAULT_APPLICATION}):\n"
         + application_prompt_lines(),
-    )
+    ).replace("{endpoint_values}", _endpoint_values_block())
     return template.replace(
         "{protocol_text}",
         protocol_text.strip(),

@@ -6,12 +6,24 @@ from app.models.protocol import (
     RawExtraction,
     to_protocol_parameters,
 )
+from app.services import vocabulary
 from app.services.language import detect_lang, language_label
 from app.services.study_type_lookup import map_study_type_to_endpoint
 
 
+def _model_endpoint(raw: RawExtraction) -> str | None:
+    """The endpoint the model picked from the table, unless it is a root group."""
+    if raw.endpoint is None:
+        return None
+    if vocabulary.endpoint_rows() and not vocabulary.endpoint_ancestors(raw.endpoint):
+        return None  # e.g. "human-health-effects" says nothing about the study
+    return raw.endpoint
+
+
 def enrich_raw_extraction(raw: RawExtraction) -> ExtractionResult:
-    endpoint_category = map_study_type_to_endpoint(raw.study_type)
+    # The model chooses from the endpoints table; the keyword lookup on study_type
+    # only covers what it left empty (or the stub adapter, which never sets it).
+    endpoint_category = _model_endpoint(raw) or map_study_type_to_endpoint(raw.study_type)
     return ExtractionResult(raw=raw, endpoint_category=endpoint_category)
 
 

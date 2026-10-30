@@ -60,7 +60,7 @@ def test_build_query_text_includes_matching_fields():
         procedure_text="LD50 single dose",
     )
     text = build_query_text(params)
-    assert "acute_toxicity" in text
+    assert "acute" in text.lower()
     assert "LD50 single dose" in text
     assert "oral" in text
 

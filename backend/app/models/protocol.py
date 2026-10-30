@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -10,6 +11,7 @@ from pydantic import (
     field_validator,
 )
 
+from app.models.method import TestSystem
 from app.models.recommendation import Recommendation
 from app.services import vocabulary
 from app.services.vocabulary import DEFAULT_APPLICATION
@@ -43,6 +45,22 @@ def normalize_endpoint_slug(value: str | None) -> str | None:
 
 
 EndpointCategory = Annotated[str, BeforeValidator(_check_endpoint_category)]
+
+
+def coerce_endpoint(value) -> str | None:
+    """Lenient counterpart of the EndpointCategory check, for LLM output.
+
+    Returns the table slug, or None for anything the table does not know (a bad
+    value from the model must not discard the whole experiment).
+    """
+    if not isinstance(value, str):
+        return None
+    slug = normalize_endpoint_slug(value)
+    if not slug:
+        return None
+    if vocabulary.slugs_loaded("endpoints") and slug not in vocabulary.endpoint_slugs():
+        return None
+    return slug
 
 _ENDPOINT_SLUG_ALIASES = {
     "acute-toxicity": "acute-systemic-toxicity",
@@ -128,6 +146,37 @@ def _check_species(value):
 Species = Annotated[str, BeforeValidator(_check_species)]
 
 
+# Test systems a protocol can declare (Method.test_system minus the "unclear" marker).
+_PROTOCOL_TEST_SYSTEMS = ("in_silico", "in_chemico", "in_data", "in_vitro", "ex_vivo", "in_vivo")
+
+
+def coerce_test_system(value) -> list[TestSystem] | None:
+    if value is None:
+        return None
+    items = [value] if isinstance(value, str) else value
+    if not isinstance(items, (list, tuple)):
+        return None
+    systems: list[TestSystem] = []
+    for item in items:
+        slug = str(item).strip().lower().replace("-", "_").replace(" ", "_")
+        if slug in _PROTOCOL_TEST_SYSTEMS and slug not in systems:
+            systems.append(slug)  # type: ignore[arg-type]
+    return systems or None
+
+
+_GUIDELINE_RE = re.compile(r"\b(?:OECD\s*)?(TG|GD)\s*-?\s*(\d{3,4}[A-Z]?)\b", re.I)
+
+
+def normalize_guideline_ref(value) -> str | None:
+    """Map 'OECD TG 420' or 'tg420' to 'TG 420', the form stored in methods.oecd_ref."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    match = _GUIDELINE_RE.search(value)
+    if match:
+        return f"{match.group(1).upper()} {match.group(2).upper()}"
+    return value.strip()[:60]
+
+
 class AnimalCounts(BaseModel):
     female: int | None = None
     male: int | None = None
@@ -157,7 +206,34 @@ class RawExtraction(BaseModel):
     regulatory: bool | None = None
     regulatory_evidence: str | None = None
     regulatory_confidence: ConfidenceLevel | None = None
+    # Endpoint slug chosen by the model from the endpoints table (any depth).
+    endpoint: str | None = None
+    endpoint_evidence: str | None = None
+    endpoint_confidence: ConfidenceLevel | None = None
+    # How the protocol tests: in_vivo, ex_vivo, in_vitro, in_chemico, in_silico, in_data.
+    test_system: list[TestSystem] | None = None
+    test_system_evidence: str | None = None
+    test_system_confidence: ConfidenceLevel | None = None
+    # Guideline the protocol follows or cites (e.g. "TG 420"); matches methods.oecd_ref.
+    guideline_ref: str | None = None
+    guideline_ref_evidence: str | None = None
+    guideline_ref_confidence: ConfidenceLevel | None = None
     notes: str | None = None
+
+    @field_validator("endpoint", mode="before")
+    @classmethod
+    def _coerce_endpoint(cls, value):
+        return coerce_endpoint(value)
+
+    @field_validator("test_system", mode="before")
+    @classmethod
+    def _coerce_test_system(cls, value):
+        return coerce_test_system(value)
+
+    @field_validator("guideline_ref", mode="before")
+    @classmethod
+    def _coerce_guideline_ref(cls, value):
+        return normalize_guideline_ref(value)
 
     @field_validator("route", mode="before")
     @classmethod
@@ -187,6 +263,18 @@ class ProtocolParameters(BaseModel):
     species: Species | None = None
     n_animals: int | None = None
     regulatory: bool | None = None
+    test_system: list[TestSystem] | None = None
+    guideline_ref: str | None = None
+
+    @field_validator("test_system", mode="before")
+    @classmethod
+    def _coerce_test_system(cls, value):
+        return coerce_test_system(value)
+
+    @field_validator("guideline_ref", mode="before")
+    @classmethod
+    def _coerce_guideline_ref(cls, value):
+        return normalize_guideline_ref(value)
 
     @field_validator("route", mode="before")
     @classmethod
@@ -221,6 +309,8 @@ def to_protocol_parameters(result: ExtractionResult) -> ProtocolParameters:
         species=result.raw.species,
         n_animals=primary_animal_count(result.raw.animal_counts),
         regulatory=result.raw.regulatory,
+        test_system=result.raw.test_system,
+        guideline_ref=result.raw.guideline_ref,
     )
 
 

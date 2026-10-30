@@ -315,11 +315,23 @@ applied_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 
 At 25 methods, full corpus comparison is trivially fast. No vector index or approximate nearest-neighbor library needed. Algorithm (see `docs/parameter_model.md` §6 for full specification):
 
-1. **Hard filter:** retain only methods whose `endpoints` include the protocol endpoint id (if endpoint is not null). Endpoint slugs are normalized through aliases (`acute-toxicity` → `acute-systemic-toxicity`, etc. — see `app/models/protocol.py`).
-2. **Soft filter:** retain methods where `routes_applicable IS NULL` (route-agnostic) OR the method's route ids include any protocol route id (if route is not null). Catch-all slugs (`other`, `multiple`, `not-applicable`, `unspecified`) do not participate in filtering.
-3. **Soft filter:** application matching uses `application_ids` against protocol `application`.
-4. **Ranking (MVP default, `SEMANTIC_RANKING=false`):** heuristic filter-only score — base 0.5 + matched-param bonus + procedure-text token overlap against the method's `text_for_embedding`/name/description/keywords. With `SEMANTIC_RANKING=true`, query text is embedded with `sentence-transformers` and ranked by cosine similarity against `methods.embedding_json`.
-5. **Minimum results rule:** if fewer than 3 methods pass filters, relax route filter then endpoint+route filters until ≥ 3 results or all methods are returned (`filter_relaxation` returned in the response). Log each relaxation for H3 analysis.
+1. **Endpoint filter (hierarchical):** retain methods whose `endpoints` relate to the protocol endpoint through the `endpoints.parent_id` tree: *exact*, *specific* (the method lists a descendant, e.g. protocol `endocrine-activity`, method `estrogenic-activity`) or *general* (the method lists a non-root ancestor). Siblings never match. Slugs are normalized through aliases (`acute-toxicity` → `acute-systemic-toxicity`, etc. — see `app/models/protocol.py`). Without the tree loaded, only exact matches count.
+2. **Route filter (soft):** retain methods where `routes_applicable IS NULL` (route-agnostic) OR the method's route ids include any protocol route id. Catch-all slugs (`other`, `multiple`, `not-applicable`, `unspecified`) do not participate.
+3. **Score (0–1)** — weighted sum of components; a component the protocol gives no information for is dropped and the others re-weighted (`app/services/retrieval.py`, `WEIGHTS`):
+
+   | Component | Weight | Signal |
+   |---|---|---|
+   | `endpoint` | 0.30 | exact 1.0 · specific 0.8 · general 0.6 |
+   | `text` | 0.25 | token overlap with `text_for_embedding`/name/description/keywords; with `SEMANTIC_RANKING=true`, 65 % cosine (rescaled 0.15→0.60) + 35 % token overlap |
+   | `animal_use` | 0.15 | animal use saved: protocol (`test_system`, `species`) vs `methods.animal_use` / `test_system`; live-animal methods keep a floor of 0.25 if they have a reduction/refinement rationale |
+   | `avoided_procedure` | 0.10 | `animal_procedures_avoided`: `oecd_ref` equals the protocol `guideline_ref` → 1.0; same species 0.6; name overlap up to 0.9 |
+   | `route` | 0.10 | match 1.0 · route-agnostic method 0.5 · mismatch 0 |
+   | `application` | 0.04 | `application_ids` contains the protocol application (or the method lists none) |
+   | `validation` | 0.06 | `validation_status`: validated/recognized 1.0 → not_validated 0.2 |
+
+   A method whose `oecd_ref` equals the protocol `guideline_ref` (the protocol already follows it) is multiplied by 0.5. `Recommendation.score_breakdown` returns the applied components.
+4. **Minimum results rule:** if fewer than 3 methods pass, the route filter is dropped (reported as `route_filter_relaxed` only when that adds methods). If no method matches the endpoint at all, the 3 best by score are returned (`endpoint_and_route_filters_relaxed`). A short list of real matches is never padded with unrelated methods.
+5. **Embedding size guard:** a query vector whose length differs from `embedding_json` (stub embedder, model swapped without re-embedding) falls back to token overlap instead of failing.
 
 Revisit at Phase 3 when the corpus exceeds ~200 methods (pgvector extension available on Neon).
 

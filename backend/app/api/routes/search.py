@@ -8,6 +8,7 @@ from app.models.jurisdiction import jurisdiction_matches
 from app.models.protocol import SearchFilters, SearchRequest, SearchResponse, normalize_endpoint_slug
 from app.models.recommendation import Recommendation
 from app.services.retrieval import RetrievalService
+from app.services.vocabulary import ensure_applications_loaded
 
 router = APIRouter(tags=["search"])
 
@@ -58,7 +59,11 @@ def _apply_filters(
     return filtered
 
 
-@router.post("/search", response_model=SearchResponse)
+@router.post(
+    "/search",
+    response_model=SearchResponse,
+    dependencies=[Depends(ensure_applications_loaded)],
+)
 async def search_methods(
     payload: SearchRequest,
     retrieval: RetrievalService = Depends(get_retrieval_service),

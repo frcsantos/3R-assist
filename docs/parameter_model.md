@@ -350,11 +350,11 @@ Regras:
 3. SOFT FILTER: application
    → Protocolo envia slug `application`; métodos têm `application_ids` (INTEGER[]) e `application_codes`
 
-4. RANKING (default do MVP: `SEMANTIC_RANKING=false`):
-   → Score heurístico filter-only: base 0.5 + bônus por parâmetro casado + overlap de tokens
-     de `procedure_text` contra `text_for_embedding`/name/description/keywords do método
-   → Com `SEMANTIC_RANKING=true`: cosine_similarity(protocol_embedding, method.embedding_json)
-     sobre os métodos que passaram nos filtros 1–3
+4. RANKING (ver docs/spec.md, "Algorithm", para a tabela de pesos):
+   → Score 0–1 = soma ponderada de: endpoint (hierárquico, 0.30), texto (0.25), uso animal
+     economizado (0.15), procedimento evitado (0.10), via (0.10), aplicação (0.04), validação (0.06)
+   → Componentes sem informação no protocolo saem da soma e os demais são re-ponderados
+   → `SEMANTIC_RANKING=true` troca o overlap de tokens por 65 % cosseno + 35 % overlap
    → Retornar todos, ordenados por score DESC
    → Frontend aplica opacidade para scores ≤ 65% (ADR-011)
 
