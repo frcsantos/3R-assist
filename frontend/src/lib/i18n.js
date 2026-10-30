@@ -25,12 +25,18 @@ function langFromStorage() {
   }
 }
 
+// Browser language: pt / pt-BR → Portuguese; anything else → English.
+function langFromBrowser() {
+  const preferred = navigator.languages?.[0] ?? navigator.language
+  return normalizeLang(preferred) ?? 'en'
+}
+
 i18n.use(initReactI18next).init({
   resources: {
     pt: { translation: pt },
     en: { translation: en },
   },
-  lng: langFromUrl() ?? langFromStorage() ?? 'en',
+  lng: langFromUrl() ?? langFromStorage() ?? langFromBrowser(),
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
   react: {
