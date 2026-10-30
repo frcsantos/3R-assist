@@ -191,9 +191,8 @@
     }
   },
   "s1": {
-    "title": "Describe your experimental protocol",
-    "subtitle": "In Portuguese or English.",
-    "pasteLabel": "Paste protocol text",
+    "title": "Let's find which alternative methods exist for your protocol",
+    "pasteLabel": "Paste protocol text in Portuguese or English",
     "placeholder": "We used Wistar rats to assess acute oral toxicity…",
     "upload": "Upload",
     "uploading": "Uploading…",
@@ -312,11 +311,11 @@
     "multiExperimentHint": "{{count}} experiments detected — select a tab to view results for each.",
     "experimentTabsLabel": "Experiment results",
     "protocolSummary": "Protocol summary",
+    "recommendedAlternatives": "Recommended alternatives",
     "matchedLabels": {
       "avoidedProcedure": "Replaces a procedure like yours",
       "animalUse": "Lower animal use"
     },
-    "recommendedAlternatives": "Recommended alternatives",
     "matchedParams": "Matched parameters",
     "matchLabel": "Relevance",
     "sourceLink": "Primary source",

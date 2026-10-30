@@ -179,9 +179,6 @@ export default function AnalyzePage({ onSubmit }) {
         <h1 className="font-headline-lg text-headline-xl text-primary">
           {t('s1.title')}
         </h1>
-        <p className="mt-fine-gap font-body-base text-body-base text-on-secondary-container opacity-65">
-          {t('s1.subtitle')}
-        </p>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-card-gap">
