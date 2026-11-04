@@ -176,9 +176,15 @@ export default function AnalyzePage({ onSubmit }) {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-container-padding py-section-gap">
       <header className="mb-section-gap">
+        <p className="mb-3 font-label-caps text-label-caps uppercase text-tertiary">
+          {t('s1.eyebrow')}
+        </p>
         <h1 className="font-headline-lg text-headline-xl text-primary">
           {t('s1.title')}
         </h1>
+        <p className="mt-4 font-body-base text-body-base text-on-surface-variant">
+          {t('s1.subtitle')}
+        </p>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-card-gap">

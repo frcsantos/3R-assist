@@ -15,11 +15,11 @@ Como registrar a decisão: marque a opção escolhida e, depois, a mudança vai 
 | 5 | Soro animal (SFB) | `animal_use` de 8 métodos |
 | 6 | Possíveis `none` | `animal_use` |
 | 7 | Rationale dos 3Rs | `replacement_`, `reduction_` e `refinement_rationale` |
-| 8 | Status de validação | vocabulário de `validation_status` |
+| 8 | Status de validação (decidido, falta aplicar) | vocabulário de `validation_status` |
 | 9 | Valor `in_data` | `test_system` |
 | 10 | Mapeamento OHT | `endpoints.external_oht_codes` e catálogo de métodos |
 | 11 | Confirmações e verificações | vários |
-| 12 | Nomes dos métodos (pt-br e en-us) e TG 442D e 442E | `methods.name` |
+| 12 | Nomes dos métodos (decidido) | `methods.name` |
 | 13 | Campos exigidos pelo plano e que não existem | tabela `methods` |
 | 14 | Finalidade e contexto de aplicação | `applications` e `methods.application_ids` |
 | 15 | Endpoints | `methods.endpoints` |
@@ -172,13 +172,12 @@ Pendências:
 
 ## 8. Status de validação
 
-- **Já aplicado (migration 078):** `recognized` foi adicionado e `not_evaluated` foi removido. O vocabulário atual é `recognized`, `under_validation`, `validated`, `partially_validated`, `not_validated` e `unclear`. Nenhum método usava `not_evaluated`. Os 47 métodos continuam `validated`.
-- **Plano (`Revisao.md`):** Validado (aceitação regulatória internacional, como OECD, farmacopeia ou OMS), Reconhecido (específico do Brasil), Em processo de validação, Descrito na literatura científica e Descrito na literatura cinzenta.
-- **Decisões:**
-  - [ ] Padrão de métodos novos: o padrão passou a `unclear`, porque `not_evaluated` saiu. Manter, ou exigir que o campo seja preenchido?
-  - [ ] Quais dos 47 métodos passam a `recognized`. Os usuários pedem "Reconhecido" para 11 (registros #6, #10 a #14 e #22 a #26 do feedback): dRIT, ICE, TG 442C, RT-PCR, DFA, RTCIT, TER, TG 435, TG 439, TG 460 e TG 432. Todos os 47 têm reconhecimento por uma RN, então a regra precisa ser definida: quem tem aceitação internacional (OECD, farmacopeia) fica `validated`, ou o reconhecimento pelo Brasil prevalece?
-  - [ ] Acrescentar "Descrito na literatura científica" e "Descrito na literatura cinzenta" ao vocabulário.
-  - [ ] Manter `partially_validated`, `not_validated` e `unclear`, que o plano não lista.
+**Decidido (ainda não aplicado no banco):** o `validation_status` segue a mesma lógica do status regulatório (item 16): `recognized` para os métodos reconhecidos pelo CONCEA, `adopted` para as TGs da OECD e `published` para os GDs da OECD. Na prática, os 47 métodos do Brasil ficam `recognized`, as TGs `adopted` e o GD 129 `published`.
+- **Estado atual (migration 078):** o vocabulário é `recognized`, `under_validation`, `validated`, `partially_validated`, `not_validated` e `unclear`, e os 47 métodos ainda estão `validated`.
+- **Falta aplicar:** acrescentar `adopted` e `published` à CHECK constraint, aos rótulos (`enum_terms`), aos modelos, ao frontend (`vocabularies.js`) e aos prompts de extração, e atualizar os métodos (migration nova, como a 128 fez com `regulatory_status`).
+- **Ainda em aberto:**
+  - [ ] Padrão de métodos novos (hoje `unclear`).
+  - [ ] Manter ou retirar `validated`, `partially_validated` e `not_validated`, que a regra acima deixa sem uso, e decidir se entram as duas categorias de literatura do plano.
 
 ## 9. Valor `in_data` em `test_system`
 
@@ -232,30 +231,8 @@ O OHT (OECD Harmonised Templates) está ligado aos métodos pelos endpoints (`me
 
 ## 12. Nomes dos métodos (pt-br e en-us) e TG 442D e 442E
 
-O plano diz: em inglês, manter o nome como está no documento oficial (OECD, farmacopeias); em português, usar o nome como está na RN do CONCEA; para métodos ainda não reconhecidos, tradução livre. Hoje todos os 47 métodos têm RN, então não há caso de tradução livre.
-
-- **Português:** em 22 métodos o nome é diferente do texto da RN (Apêndice A.2). Isso reverte a decisão anterior de manter os títulos.
-  - [ ] Manter os títulos atuais.
-  - [ ] Usar o texto da RN nos 22 métodos.
-  - [ ] Com o prefixo "Método OECD TG nnn - " (como nos pedidos dos usuários), ou só o texto depois do hífen.
-- **Inglês:** 11 dos 15 métodos com nome diferente do título do documento-fonte foram corrigidos (migrations 091, 095 e 103); os 4 restantes estão no Apêndice A.3.
-- **LAL em português:** o capítulo da Farmacopeia Brasileira (MG 5.5.2.7.3-02) se chama "Teste de endotoxinas bacterianas" (plural), e a RN 31/2016 escreve "Teste de Endotoxina Bacteriana (Farmacopeia Brasileira)" (singular). O nome em português do método usa a RN, como pede o plano.
-  - [ ] Manter a redação da RN (singular).
-  - [ ] Usar o título da Farmacopeia (plural).
-  - [ ] Trocar pelos títulos oficiais.
-  - [ ] Manter os nomes atuais nos casos em que a diferença é só de forma.
-  - [ ] Conferir o nome oficial dos métodos de farmacopeia e de raiva, que dependem de documentos que não estão na pasta.
-- **Regra para métodos novos:** o plano diz que, para métodos ainda não reconhecidos, o nome em português é tradução livre. O prompt de extração de métodos (`method_draft_extraction.py`) ainda não tem essa regra de nomes (inglês oficial; português igual à RN quando reconhecido, tradução livre caso contrário).
-  - [ ] Acrescentar a regra ao prompt.
-  - [ ] Manter sem regra.
-- **TG 442D e TG 442E (confirmação):** o título oficial das duas é o mesmo, "In Vitro Skin Sensitisation". Os subtítulos que acrescentei (migration 069) são paráfrases minhas, e "Evento-Chave" (en: "Key Event") é uma tradução minha.
-  - Subtítulo oficial do 442D: "Assays addressing the Adverse Outcome Pathway Key Event on Keratinocyte activation".
-  - Subtítulo oficial do 442E: "In Vitro Skin Sensitisation assays addressing the Key Event on activation of dendritic cells on the Adverse Outcome Pathway for Skin Sensitisation".
-  - Em pt-br, o texto da RN é "Sensibilização cutânea in vitro" para as duas (a RN 56/2022 acrescenta uma descrição longa ao 442E), então o texto da RN sozinho voltaria a deixar os nomes iguais.
-  - [ ] Manter os subtítulos atuais.
-  - [ ] Usar os subtítulos oficiais.
-  - [ ] Diferenciar só pela sigla (TG 442D e TG 442E).
-  - [ ] Confirmar a tradução "Evento-Chave" ou indicar o termo da plataforma.
+**Decidido:** os nomes dos métodos (pt-br e en-us), incluindo os subtítulos do TG 442D e 442E, estão definidos e não precisam de nova decisão. Os apêndices A.2 e A.3 ficam só como registro das diferenças em relação às RNs e aos documentos-fonte.
+- [ ] Se a regra de nomes (inglês oficial; português igual à RN quando reconhecido, tradução livre caso contrário) deve entrar no prompt de extração de métodos (`method_draft_extraction.py`).
 
 ## 13. Campos exigidos pelo plano
 
@@ -434,10 +411,10 @@ Resumo da revisão feita depois das migrations 068 a 090. "Conforme" quer dizer 
 
 | Ponto do plano | Situação | Pendência |
 |---|---|---|
-| Nomes em inglês (oficiais) | 4 métodos ainda divergem do título do documento-fonte (11 foram corrigidos nas migrations 091, 095 e 103) | Item 12 e Apêndice A.3 |
-| Nomes em português (como na RN) | 25 conformes; 22 diferem | Item 12 e Apêndice A.2 |
+| Nomes em inglês (oficiais) | 4 métodos ainda divergem do título do documento-fonte (11 foram corrigidos nas migrations 091, 095 e 103) | Decidido (item 12) |
+| Nomes em português (como na RN) | 25 conformes; 22 diferem | Decidido (item 12) |
 | Sistema de teste (6 categorias) | Conforme, com `in_data` aberto e sem `hybrid`; o banco ainda aceita `unclear` | Itens 9 e 12 |
-| Status (5 categorias) | `recognized` existe, mas os 47 métodos continuam `validated`; faltam as duas categorias de literatura; sobram `partially_validated`, `not_validated` e `unclear` | Item 8 |
+| Status (5 categorias) | `recognized` existe, mas os 47 métodos continuam `validated`; decidido `recognized` (CONCEA), `adopted` (TGs) e `published` (GD), falta aplicar | Item 8 |
 | Uso de animais (6 categorias) | Conforme nos valores e nos rótulos; 20 métodos continuam sem classificação (`NULL`) | Itens 1 a 6 |
 | Referência: RNs | Conforme nos dados (regulação do Brasil com o documento); exibição na interface não verificada | Item 11 |
 | Data limite de substituição (5 anos) | Conforme: datas e prazo em `regulations` (RN 18, 31 e 45 já vencidas) | Item 13 |

@@ -175,6 +175,9 @@ export default function ParametersPage() {
       </div>
 
       <header className="mb-card-gap">
+        <p className="mb-3 font-label-caps text-label-caps uppercase text-tertiary">
+          {t('s2.eyebrow')}
+        </p>
         <h1 className="font-headline-lg text-headline-xl text-primary">
           {t('s2.title')}
         </h1>
@@ -185,6 +188,7 @@ export default function ParametersPage() {
 
       <div className="grid gap-section-gap lg:grid-cols-2 lg:items-start">
         <div className="space-y-section-gap">
+          <div>
           <ExperimentTabs
             tabs={tabLabels}
             activeIndex={activeExperimentIndex}
@@ -282,6 +286,7 @@ export default function ParametersPage() {
               </div>
             )}
           </section>
+          </div>
 
           {incompleteKeys.size > 0 && (
             <p

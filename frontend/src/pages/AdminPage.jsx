@@ -27,6 +27,7 @@ import {
 import { currentLanguage } from '../lib/i18n'
 import {
   formatRegulatoryStatusItems,
+  methodStatusLabel,
   JURISDICTION_LABELS,
   methodDescription,
   methodDetailRows,
@@ -2895,13 +2896,11 @@ function ExtractedMethodRow({
                             score={scorePercent(candidate.score)}
                             matchLabel={t('s3.matchLabel')}
                             dimmed={!dbMethod.active}
-                            validationStatus={
-                              dbMethod.validation_status
-                                ? t(
-                                    `s3.validationStatus.${dbMethod.validation_status}`,
-                                  )
-                                : null
-                            }
+                            validationStatus={methodStatusLabel(
+                              dbMethod,
+                              contexts,
+                              t,
+                            )}
                             regulatoryStatuses={formatRegulatoryStatusItems(
                               contexts,
                               lang,

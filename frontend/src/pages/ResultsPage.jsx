@@ -2,11 +2,14 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import ExperimentTabs, { experimentTabLabel } from '../components/ExperimentTabs'
+import FeedbackButton from '../components/FeedbackButton'
+import FeedbackModal from '../components/FeedbackModal'
 import ResultCard from '../components/ResultCard'
 import {
   formatMatchedParams,
   formatOecdReference,
   formatRegulatoryStatusItems,
+  methodStatusLabel,
   isLowConfidenceScore,
   jurisdictionMatches,
   methodDescription,
@@ -64,6 +67,7 @@ export default function ResultsPage() {
   )
   const [threeRFilter, setThreeRFilter] = useState('all')
   const [jurisdictionFilter, setJurisdictionFilter] = useState('all')
+  const [feedbackObject, setFeedbackObject] = useState(null)
 
   const activeResult =
     experimentSearchResults[activeExperimentIndex] ??
@@ -130,6 +134,9 @@ export default function ResultsPage() {
       </div>
 
       <header className="mb-section-gap">
+        <p className="mb-3 font-label-caps text-label-caps uppercase text-tertiary">
+          {t('s3.eyebrow')}
+        </p>
         <h1 className="font-headline-lg text-headline-xl text-primary">
           {t('s3.title')}
         </h1>
@@ -138,6 +145,7 @@ export default function ResultsPage() {
         </p>
       </header>
 
+      <div>
       <ExperimentTabs
         tabs={tabLabels}
         activeIndex={activeExperimentIndex}
@@ -152,7 +160,7 @@ export default function ResultsPage() {
         role="tabpanel"
         id={`results-experiment-panel-${activeExperimentIndex}`}
         aria-labelledby={`results-experiment-tab-${activeExperimentIndex}`}
-        className="mb-section-gap overflow-hidden rounded-lg border border-border-subtle bg-surface-container-lowest"
+        className="relative mb-section-gap overflow-hidden rounded-lg border border-border-subtle bg-surface-container-lowest"
       >
         <div className="border-b border-border-subtle px-container-padding py-4">
           <h2 className="font-label-caps text-label-caps uppercase text-on-surface-variant">
@@ -195,7 +203,18 @@ export default function ResultsPage() {
             </p>
           </div>
         )}
+        <div className="absolute bottom-0 right-0 z-10 p-1">
+          <FeedbackButton
+            label={t('s4.reportFeedback')}
+            onClick={() =>
+              setFeedbackObject(
+                [t('s3.protocolSummary'), studyType].filter(Boolean).join(' · '),
+              )
+            }
+          />
+        </div>
       </section>
+      </div>
 
       {filterRelaxation && (
         <p
@@ -278,11 +297,7 @@ export default function ResultsPage() {
                   title={methodDisplayName(method, lang)}
                   score={percent}
                   dimmed={isLowConfidenceScore(item.score)}
-                  validationStatus={
-                    method.validation_status
-                      ? t(`s3.validationStatus.${method.validation_status}`)
-                      : null
-                  }
+                  validationStatus={methodStatusLabel(method, contexts, t)}
                   regulatoryStatuses={formatRegulatoryStatusItems(
                     contexts,
                     lang,
@@ -305,6 +320,14 @@ export default function ResultsPage() {
                   regulatoryLinkLabel={t('s3.regulatoryLink')}
                   closeLabel={t('s3.close')}
                   matchLabel={t('s3.matchLabel')}
+                  endAction={
+                    <FeedbackButton
+                      label={t('s4.reportFeedback')}
+                      onClick={() =>
+                        setFeedbackObject(methodDisplayName(method, lang))
+                      }
+                    />
+                  }
                 />
               )
             })}
@@ -322,12 +345,20 @@ export default function ResultsPage() {
           }}
           className="inline-flex items-center gap-fine-gap rounded-lg border border-primary px-container-padding py-3 font-badge-button text-badge-button text-primary transition-colors hover:bg-primary hover:text-on-primary"
         >
-          {t('pubmed.cta.label')} ↗
+          {t('pubmed.cta.label')}
         </Link>
         <p className="mt-fine-gap font-metadata text-metadata text-on-secondary-container">
           {t('pubmed.cta.description')}
         </p>
       </div>
+
+      {feedbackObject ? (
+        <FeedbackModal
+          object={feedbackObject}
+          url={window.location.href}
+          onClose={() => setFeedbackObject(null)}
+        />
+      ) : null}
     </main>
   )
 }

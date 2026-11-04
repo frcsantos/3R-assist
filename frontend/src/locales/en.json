@@ -191,7 +191,9 @@
     }
   },
   "s1": {
-    "title": "Let's find which alternative methods exist for your protocol",
+    "eyebrow": "Step I of III · Protocol",
+    "title": "Describe your experimental protocol",
+    "subtitle": "Assist3R identifies the experiment's parameters and looks for methods that can replace, reduce or refine the use of animals.",
     "pasteLabel": "Paste protocol text in Portuguese or English",
     "placeholder": "We used Wistar rats to assess acute oral toxicity…",
     "upload": "Upload",
@@ -214,7 +216,8 @@
     "charCount": "{{count}} / {{max}}"
   },
   "s2": {
-    "title": "Extracted parameters",
+    "eyebrow": "Step II of III",
+    "title": "Review the extracted parameters",
     "subtitle": "Confirm or correct before searching.",
     "backToEdit": "Edit protocol",
     "backToParams": "Back to parameters",
@@ -306,6 +309,7 @@
     }
   },
   "s3": {
+    "eyebrow": "Step III of III",
     "title": "Alternative methods",
     "subtitle": "Ranked by relevance to your confirmed parameters.",
     "multiExperimentHint": "{{count}} experiments detected — select a tab to view results for each.",
@@ -348,8 +352,8 @@
     },
     "purposeLabel": "Endpoint",
     "regulationStatusLabel": "Regulation status",
-    "validationStatusLabel": "Validation status",
-    "approvedJurisdictionsLabel": "Approved jurisdictions",
+    "validationStatusLabel": "Status",
+    "approvedJurisdictionsLabel": "Jurisdictions",
     "routeAgnostic": "Not applicable (route-independent method)",
     "fields": {
       "animalUse": "Animal use",

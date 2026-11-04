@@ -238,7 +238,7 @@ export default function ResultCard({
   purposeLabel,
   regulationStatusLabel = 'Regulation status',
   validationStatusLabel = 'Validation status',
-  approvedJurisdictionsLabel = 'Approved jurisdictions',
+  approvedJurisdictionsLabel = 'Jurisdictions',
   matchedParams = [],
   description,
   primaryUrl,

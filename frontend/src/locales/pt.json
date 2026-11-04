@@ -191,8 +191,10 @@
     }
   },
   "s1": {
-    "title": "Vamos analisar que métodos alternativos existem para seu protocolo",
-    "pasteLabel": "Cole o texto do protocolo em português ou inglês",
+    "eyebrow": "Etapa I de III · Protocolo",
+    "title": "Descreva seu protocolo experimental",
+    "subtitle": "O Assist3R identifica os parâmetros do experimento e procura métodos capazes de substituir, reduzir ou refinar o uso de animais.",
+    "pasteLabel": "Colar texto do protocolo",
     "placeholder": "Utilizamos camundongos Wistar para avaliar a toxicidade aguda por via oral…",
     "upload": "Enviar arquivo",
     "uploading": "Enviando…",
@@ -214,7 +216,8 @@
     "charCount": "{{count}} / {{max}}"
   },
   "s2": {
-    "title": "Parâmetros extraídos",
+    "eyebrow": "Etapa II de III",
+    "title": "Revise os parâmetros extraídos",
     "subtitle": "Confirme ou corrija antes de buscar.",
     "backToEdit": "Editar protocolo",
     "backToParams": "Voltar aos parâmetros",
@@ -306,6 +309,7 @@
     }
   },
   "s3": {
+    "eyebrow": "Etapa III de III",
     "title": "Métodos alternativos",
     "subtitle": "Ordenados por relevância aos parâmetros confirmados.",
     "multiExperimentHint": "{{count}} experimentos detectados — selecione uma aba para ver os resultados de cada um.",
@@ -348,8 +352,8 @@
     },
     "purposeLabel": "Desfecho",
     "regulationStatusLabel": "Status regulatório",
-    "validationStatusLabel": "Status de validação",
-    "approvedJurisdictionsLabel": "Jurisdições aprovadas",
+    "validationStatusLabel": "Status",
+    "approvedJurisdictionsLabel": "Jurisdições",
     "routeAgnostic": "Não aplicável (método independente de via)",
     "fields": {
       "animalUse": "Uso de animais",

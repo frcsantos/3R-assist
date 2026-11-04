@@ -35,7 +35,7 @@ export default function TopNav() {
             to="/"
             className="relative font-nav-logo text-[24px] font-medium leading-none text-primary"
           >
-            Assist3R
+            Assist<span className="text-on-surface-variant">3R</span>
             <span className="pointer-events-none absolute -right-7 -top-2 text-[10px] font-medium uppercase leading-none tracking-wider text-on-surface-variant">
               Beta
             </span>
@@ -64,16 +64,6 @@ export default function TopNav() {
               void setLanguage(nextLang)
             }}
           />
-          <NavLink
-            to="/admin"
-            className={({ isActive }) =>
-              isActive
-                ? 'rounded-md border border-primary bg-surface-container-low px-4 py-2 font-nav-link text-nav-link font-medium text-primary'
-                : 'rounded-md border border-border-emphasis bg-surface-container-lowest px-4 py-2 font-nav-link text-nav-link text-on-surface transition-colors hover:bg-surface-container'
-            }
-          >
-            {t('nav.admin')}
-          </NavLink>
           {authEnabled && (
             <NavLink
               to="/auth"

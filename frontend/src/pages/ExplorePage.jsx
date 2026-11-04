@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ResultCard, { RegulationDetail } from '../components/ResultCard'
+import FeedbackButton from '../components/FeedbackButton'
 import FeedbackModal from '../components/FeedbackModal'
 import HighlightedText from '../components/HighlightedText'
 import {
@@ -11,6 +12,7 @@ import {
 import {
   formatOecdReference,
   formatRegulatoryStatusItems,
+  methodStatusLabel,
   methodDescription,
   methodDetailRows,
   methodDisplayName,
@@ -47,43 +49,6 @@ function ExpandArrow({ open }) {
         strokeLinejoin="round"
       />
     </svg>
-  )
-}
-
-function FeedbackIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4">
-      <circle
-        cx="10"
-        cy="10"
-        r="8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M10 6v5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <circle cx="10" cy="14" r="1" fill="currentColor" />
-    </svg>
-  )
-}
-
-function FeedbackButton({ label, onClick }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className="flex h-8 w-8 items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-container hover:text-primary"
-    >
-      <FeedbackIcon />
-    </button>
   )
 }
 
@@ -615,11 +580,7 @@ function MethodsPanel({ lang, t, selectedKey }) {
             hideTitle
             className="rounded-none border-0 bg-transparent hover:border-transparent"
             detailRows={methodDetailRows(method, t, lang)}
-            validationStatus={
-              method.validation_status
-                ? t(`s3.validationStatus.${method.validation_status}`)
-                : null
-            }
+            validationStatus={methodStatusLabel(method, contexts, t)}
             regulatoryStatuses={formatRegulatoryStatusItems(contexts, lang, t)}
             purposeLabel={t('s3.purposeLabel')}
             regulationStatusLabel={t('s3.regulationStatusLabel')}

@@ -211,6 +211,23 @@ export function formatJurisdictionBadges(contexts = [], lang, t) {
   return labels.join(' · ')
 }
 
+/**
+ * Status shown on method cards: "recognized" when any regulation of the method
+ * has regulatory_status recognized; otherwise "validated" when the method's
+ * validation_status is validated; otherwise "not_validated".
+ */
+export function methodStatusLabel(method, contexts = [], t) {
+  const recognized = (contexts ?? []).some(
+    (context) => context.regulatory_status === 'recognized',
+  )
+  const code = recognized
+    ? 'recognized'
+    : method?.validation_status === 'validated'
+      ? 'validated'
+      : 'not_validated'
+  return t(`s3.validationStatus.${code}`, { defaultValue: code })
+}
+
 export function formatRegulatoryStatusItems(contexts = [], lang, t) {
   return (contexts ?? []).map((context, index) => {
     const jurisdiction = jurisdictionLabel(context.jurisdiction, lang, t)
