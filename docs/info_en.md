@@ -1,6 +1,4 @@
-# About Assist3R (English translation)
-
-Oct 9, 2026 · @Leo
+# About Assist3R
 
 ## About Assist3R
 
