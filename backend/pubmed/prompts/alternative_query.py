@@ -29,14 +29,25 @@ about this endpoint regardless of methodology.
 
 ═══════════════════════════════════════════════════════════════════
 PATH B — RECONSTRUCTION SEARCH
-Three concrete descriptions of alternative methods that could achieve the same
-scientific objective. Each description is embedded and matched independently against
-the literature. ORDER AND SPECIFICITY MATTER:
+Concrete descriptions of alternative methods. Each is embedded and matched independently
+against the literature. ORDER AND SPECIFICITY MATTER:
   — Replacement: highest priority, most detail required
   — Reduction: medium priority
   — Refinement: lowest priority
 Each description should be specific enough to retrieve real papers (name cell types,
 assays, readouts, computational approaches, regulatory models, etc.).
+
+MULTI-ORGAN RULE: If the protocol evaluates histopathology or toxicity for multiple
+specific organs (e.g. "liver, kidney, brain, heart, spleen, stomach were removed and
+processed"), include ONE REPLACEMENT entry per identified organ — each describing the
+organ-specific in vitro or organoid model. Use these mappings:
+  liver   → HepaRG cells, 3D liver spheroid, liver-on-chip, primary hepatocyte sandwich culture
+  kidney  → RPTEC proximal tubule cells, kidney organoid, kidney-on-chip
+  brain   → neurosphere assay, iPSC-derived cortical neurons, brain organoid
+  heart   → iPSC-derived cardiomyocytes, cardiac organ-on-chip, hERG channel assay
+  stomach → gastric organoid, stomach-on-chip, primary gastric epithelial culture
+  spleen  → human PBMC co-culture, splenic immune cell assay, spleen organoid
+Each organ entry: 30-60 words, name the specific model and its toxicity readout.
 ═══════════════════════════════════════════════════════════════════
 
 PROTOCOL:
@@ -88,13 +99,6 @@ Return ONLY valid JSON. No preamble. No markdown.
     }}
   ]
 }}
-
-CRITICAL: The replacement description carries the most weight in the subsequent search.
-Make it the most specific and technically detailed of the three.
-Focus it on the PRIMARY animal procedure being replaced — typically the most acute or
-direct animal test. Subacute and organ-specific components are handled by separate
-dedicated search queries, so do not dilute the replacement description by trying to
-cover all endpoints at once.
 
 KNOWLEDGE BASE VOCABULARY — use these terms where relevant to improve literature retrieval:
 - 3Rs / general: "alternative method", "non-animal", "animal-free", "new approach method (NAM)",

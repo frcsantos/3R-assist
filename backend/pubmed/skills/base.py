@@ -21,6 +21,16 @@ class DomainProfile:
     # Guidance appended to the ranker's include/exclude section
     rank_guidance: str = ""
 
+    # ── Acute extension ───────────────────────────────────────────────────────
+    # Activated only when acute lethality / single-dose signals appear.
+    # Keeps FET and acute-specific injections out of pure subacute protocols.
+    acute_signals: tuple[str, ...] = field(default_factory=tuple)
+    acute_path_a: list[str] = field(default_factory=list)
+
+    def has_acute(self, protocol_text: str) -> bool:
+        lowered = protocol_text.lower()
+        return any(sig in lowered for sig in self.acute_signals)
+
     # ── Subacute / organ-toxicity extension ──────────────────────────────────
     # Activated only when these signals appear in the protocol text.
     # Keeps organ-model injection scoped to protocols that actually need it.

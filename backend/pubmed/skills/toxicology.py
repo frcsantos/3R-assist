@@ -61,6 +61,9 @@ ALWAYS include (cross-cutting for any toxicology/safety protocol):
   - in silico / computational: QSAR, PBPK, machine learning toxicity prediction,
     read-across, molecular docking, AOP models — include even if the route of
     administration or specific compound differs; the modelling approach is transferable
+  - zebrafish embryo / fish embryo toxicity test (FET, OECD TG 236): always include
+    as a replacement for acute mammalian lethality testing regardless of compound class;
+    do NOT exclude because it replaces fish tests — it is validated as a mammalian LD50 surrogate
   - reduced-animal statistical designs: fixed dose procedure, up-and-down procedure,
     acute toxic class method, sequential testing, dose-range finding
   - omics or mechanistic characterisation that informs whether animal testing is needed
@@ -82,13 +85,39 @@ Be generous — aim to include 10-15 papers. When in doubt, include."""
 
 # ── Always-on Path B injections ───────────────────────────────────────────────
 
-_IN_SILICO_INJECTION =(
-        "In silico computational toxicology methods replacing animal testing: "
-        "QSAR quantitative structure-activity relationship models for toxicity prediction; "
-        "PBPK physiologically-based pharmacokinetic modelling for dose-response; "
-        "machine learning deep learning toxicity classifiers; molecular docking and "
-        "molecular dynamics simulation; read-across and chemical category approaches; "
-        "adverse outcome pathway (AOP) network analysis; systems biology toxicity models."
+_IN_SILICO_QSAR_INJECTION = (
+    "QSAR quantitative structure-activity relationship models replacing animal "
+    "toxicity testing: chemical descriptor fingerprint toxicity prediction; "
+    "structure-activity relationship acute oral toxicity LD50 estimation; "
+    "Ames mutagenicity QSAR model; REACH regulation in silico QSAR."
+)
+
+_IN_SILICO_ML_DL_INJECTION = (
+    "Machine learning deep learning neural network models replacing animal toxicity "
+    "testing: convolutional neural network graph neural network toxicity prediction; "
+    "random forest gradient boosting ensemble classifiers for LD50 prediction; "
+    "transformer models chemical toxicity; deep learning ADMET prediction."
+)
+
+_IN_SILICO_PBPK_INJECTION = (
+    "PBPK physiologically-based pharmacokinetic modelling replacing animal dosimetry "
+    "studies: in vitro to in vivo extrapolation (IVIVE); population PBPK model; "
+    "compartmental toxicokinetic model; reverse dosimetry; PBPK-based risk assessment "
+    "without animal experiments."
+)
+
+_IN_SILICO_READACROSS_AOP_INJECTION = (
+    "Read-across chemical category analogue approach and adverse outcome pathway (AOP) "
+    "replacing animal toxicity testing: structural analogue read-across prediction; "
+    "chemical category grouping OECD; AOP network mechanistic toxicity prediction; "
+    "systems biology pathway toxicology without animal data."
+)
+
+_IN_SILICO_DOCKING_INJECTION = (
+    "Molecular docking virtual screening replacing animal toxicity studies: "
+    "structure-based binding affinity prediction; protein-ligand docking toxicity target; "
+    "molecular dynamics simulation toxicity mechanism; computational drug-target "
+    "interaction toxicity prediction; AutoDock Vina Glide docking toxicology."
 )
 
 _FET_INJECTION =(
@@ -110,22 +139,40 @@ _SUBACUTE_SIGNALS = (
     "organ weight", "organ histol",
 )
 
-_ORGAN_MODEL_INJECTION =(
-        "In vitro organ-specific toxicity models as alternatives to subacute "
-        "repeated-dose animal study with histological and biochemical evaluation: "
-        "HepaRG cells or 3D primary hepatocyte spheroids for hepatotoxicity "
-        "(AST ALT ALP biomarkers); RPTEC proximal tubule cells or kidney organoids "
-        "for nephrotoxicity (creatinine urea biomarkers); iPSC-derived cardiomyocytes "
-        "or hERG channel assay for cardiotoxicity; neurosphere or cortical neuron "
-        "assay for neurotoxicity; multi-organ microphysiological system body-on-chip "
-        "for systemic repeated-dose toxicity profiling."
+_LIVER_MODEL_INJECTION = (
+    "In vitro liver hepatotoxicity models replacing animal histopathology: "
+    "HepaRG cells 3D primary hepatocyte spheroids liver organoid liver-on-chip "
+    "hepatocyte sandwich culture for drug-induced liver injury (DILI); "
+    "AST ALT ALP LDH biomarkers in vitro; HepG2 cytotoxicity; "
+    "3D HepaRG repeated-dose hepatotoxicity assessment."
 )
 
-_ORGAN_ENDPOINT_INJECTION = (
-    "In vitro hepatotoxicity nephrotoxicity cardiotoxicity neurotoxicity "
-    "prediction and assessment: liver cell models ALT AST LDH biomarkers, "
-    "kidney tubular toxicity creatinine, cardiac cell viability, "
-    "organ-specific cytotoxicity drug-induced organ injury in vitro."
+_KIDNEY_MODEL_INJECTION = (
+    "In vitro kidney nephrotoxicity models replacing animal renal histopathology: "
+    "RPTEC renal proximal tubule epithelial cells kidney organoid kidney-on-chip "
+    "tubular toxicity assay; creatinine urea nitrogen biomarkers in vitro; "
+    "3D kidney tubuloid drug-induced nephrotoxicity assessment."
+)
+
+_HEART_MODEL_INJECTION = (
+    "In vitro cardiac cardiotoxicity models replacing animal heart histopathology: "
+    "iPSC-derived cardiomyocytes cardiac organ-on-chip heart-on-chip; "
+    "hERG channel assay QT prolongation; contractility beating frequency assay; "
+    "3D cardiac spheroid drug-induced cardiotoxicity assessment."
+)
+
+_BRAIN_MODEL_INJECTION = (
+    "In vitro brain neurotoxicity models replacing animal brain histopathology: "
+    "neurosphere assay iPSC-derived cortical neurons brain organoid cerebral organoid; "
+    "SH-SY5Y differentiation; DNT developmental neurotoxicity in vitro; "
+    "neural network-on-chip drug-induced neurotoxicity assessment."
+)
+
+_MULTI_ORGAN_INJECTION = (
+    "Multi-organ microphysiological system body-on-chip replacing systemic repeated-dose "
+    "animal toxicity with multi-organ histopathology: liver-kidney-heart-brain "
+    "interconnected organ chips; human organ-on-chip platform; body-on-chip systemic "
+    "toxicity profiling; multi-organ organoid co-culture repeated-dose toxicity."
 )
 
 _PRE_LETHALITY_ENDPOINT_INJECTION = (
@@ -138,13 +185,39 @@ _PRE_LETHALITY_ENDPOINT_INJECTION = (
 
 # ── Profile ───────────────────────────────────────────────────────────────────
 
+_ACUTE_SIGNALS = (
+    "ld50", "dl50", "lethal dose 50", "lethal dose50",
+    "acute toxicity", "acute lethality", "acute oral",
+    "single dose", "single-dose",
+    "fixed dose procedure", "up-and-down procedure", "acute toxic class",
+)
+
 TOXICOLOGY_PROFILE = DomainProfile(
     name="toxicology_safety",
     vocabulary=TOXICOLOGY_VOCABULARY,
     base_path_b=[],
-    base_path_a=[_FET_INJECTION, _IN_SILICO_INJECTION, _PRE_LETHALITY_ENDPOINT_INJECTION],
+    base_path_a=[
+        # Computational / in silico replacements (always-on for any tox protocol)
+        _IN_SILICO_QSAR_INJECTION,
+        _IN_SILICO_ML_DL_INJECTION,
+        _IN_SILICO_PBPK_INJECTION,
+        _IN_SILICO_READACROSS_AOP_INJECTION,
+        _IN_SILICO_DOCKING_INJECTION,
+    ],
+    acute_signals=_ACUTE_SIGNALS,
+    acute_path_a=[
+        # In vitro / biological replacements (only for acute lethality protocols)
+        _FET_INJECTION,
+        _PRE_LETHALITY_ENDPOINT_INJECTION,
+    ],
     rank_guidance=TOXICOLOGY_RANK_GUIDANCE,
     subacute_signals=_SUBACUTE_SIGNALS,
     subacute_path_b=[],
-    subacute_path_a=[_ORGAN_MODEL_INJECTION,_ORGAN_ENDPOINT_INJECTION],
+    subacute_path_a=[
+        _LIVER_MODEL_INJECTION,
+        _KIDNEY_MODEL_INJECTION,
+        _HEART_MODEL_INJECTION,
+        _BRAIN_MODEL_INJECTION,
+        _MULTI_ORGAN_INJECTION,
+    ],
 )

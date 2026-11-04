@@ -57,6 +57,14 @@ def _parse_pub_date(article: ET.Element) -> tuple[int | None, int | None]:
     if month_el is not None and month_el.text:
         raw = month_el.text.strip().lower()[:3]
         month = _MONTH_MAP.get(raw) or (int(raw) if raw.isdigit() else None)
+    # Fallback: MedlineDate e.g. "2010 Mar" or "2009-2010" when Year element absent
+    if year is None:
+        medline_el = pub_date.find("MedlineDate")
+        if medline_el is not None and medline_el.text:
+            import re as _re
+            m = _re.search(r'\b(19|20)\d{2}\b', medline_el.text)
+            if m:
+                year = int(m.group())
     return year, month
 
 

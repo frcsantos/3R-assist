@@ -33,7 +33,7 @@ O Assist3R surgiu em 2026, em um hackathon de IA para a causa animal promovido p
 
 ## **Equipe**
 
-[**Bianca Marigliani, PhD**](https://www.linkedin.com/in/bmarigliani/) — Senior Principal in Regulatory Science na Humane World for Animals. Avaliação científica e regulatória de métodos não animais (NAMs).
+[**Bianca Marigliani, PhD**](https://www.linkedin.com/in/bmarigliani/) — Senior Principal in Regulatory Science na Humane World for Animals. Avaliação científica e regulatória de novas abordagens metodológicas (NAMs).
 
 [**Felipe Rodolfo Camargo dos Santos, PhD**](https://www.linkedin.com/in/felipercsantos/) — Bioinformata, Postdoctoral Associate no Broad Institute of MIT and Harvard. Recuperação de informação científica e desenvolvimento do Basket 2\.
 

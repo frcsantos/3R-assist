@@ -15,7 +15,7 @@ const API_TOKEN = import.meta.env.VITE_API_TOKEN ?? ''
  * Calls onPing() every ~10 s while the server processes.
  * Resolves with the final PubMedAnalysisResponse object.
  */
-export async function analyzePubMedStream({ protocol_text, params, lang }, { onPing } = {}) {
+export async function analyzePubMedStream({ protocol_text, params, lang }, { onPing, onQueue } = {}) {
   const headers = { 'Content-Type': 'application/json' }
   if (API_TOKEN) headers['Authorization'] = `Bearer ${API_TOKEN}`
 
@@ -59,6 +59,11 @@ export async function analyzePubMedStream({ protocol_text, params, lang }, { onP
       }
       if (eventType === 'ping') {
         onPing?.()
+        continue
+      }
+      if (eventType === 'queue') {
+        const { position } = JSON.parse(data)
+        onQueue?.(position)
         continue
       }
       if (eventType === 'result') return JSON.parse(data)

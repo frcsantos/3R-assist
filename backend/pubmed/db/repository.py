@@ -7,17 +7,23 @@ from pubmed.models.record import Author, PubMedRecord
 
 # ── Vector search queries ────────────────────────────────────────────────────
 
-_SET_PROBES = "SET ivfflat.probes = 100"
+# v1 (all-MiniLM-L6-v2, 384-dim, 1000 lists) — revert by swapping _SET_PROBES and the two queries below
+# _SET_PROBES = "SET ivfflat.probes = 100"
+# _SEARCH_ENDPOINT_V1 = endpoint_embedding, WHERE endpoint_embedding IS NOT NULL
+# _SEARCH_METHOD_V1   = method_embedding,   WHERE method_embedding IS NOT NULL
+
+# v2 (bge-m3, 1024-dim, 5000 lists) — probes=300 ≈ 6% of lists; ceiling ~500 before RAM thrash
+_SET_PROBES = "SET ivfflat.probes = 300"
 
 _SEARCH_ENDPOINT = """
     SELECT
         pmid, title, authors, institutions,
         pub_year, pub_month, journal,
         abstract_text, endpoint_text, method_text, mesh_terms, cluster,
-        1 - (endpoint_embedding <=> $1::vector) AS score
+        1 - (endpoint_embedding_v2 <=> $1::vector) AS score
     FROM pubmed_abstracts
-    WHERE endpoint_embedding IS NOT NULL
-    ORDER BY endpoint_embedding <=> $1::vector
+    WHERE endpoint_embedding_v2 IS NOT NULL
+    ORDER BY endpoint_embedding_v2 <=> $1::vector
     LIMIT $2
 """
 
@@ -26,10 +32,10 @@ _SEARCH_METHOD = """
         pmid, title, authors, institutions,
         pub_year, pub_month, journal,
         abstract_text, endpoint_text, method_text, mesh_terms, cluster,
-        1 - (method_embedding <=> $1::vector) AS score
+        1 - (method_embedding_v2 <=> $1::vector) AS score
     FROM pubmed_abstracts
-    WHERE method_embedding IS NOT NULL
-    ORDER BY method_embedding <=> $1::vector
+    WHERE method_embedding_v2 IS NOT NULL
+    ORDER BY method_embedding_v2 <=> $1::vector
     LIMIT $2
 """
 

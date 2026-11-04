@@ -34,6 +34,24 @@ function LoadingState() {
   )
 }
 
+function QueueState({ position }) {
+  const { t } = useTranslation()
+  return (
+    <div className="flex flex-col items-center gap-card-gap py-section-gap text-on-secondary-container">
+      <svg className="h-8 w-8 animate-spin text-primary" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+      <p className="font-body-base text-body-base text-center">
+        {t('pubmed.page.queueAhead', { count: position })}
+      </p>
+      <p className="font-metadata text-metadata text-center">
+        {t('pubmed.page.queueWaiting')}
+      </p>
+    </div>
+  )
+}
+
 function ErrorState({ message, onRetry }) {
   const { t } = useTranslation()
   return (
@@ -64,6 +82,7 @@ export default function PubMedResultsPage() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [queuePosition, setQueuePosition] = useState(null)
 
   if (!protocol_text) {
     return <Navigate to="/" replace />
@@ -73,21 +92,21 @@ export default function PubMedResultsPage() {
     setLoading(true)
     setError(null)
     setResult(null)
+    setQueuePosition(null)
     try {
       const data = await analyzePubMedStream(
         { protocol_text, params, lang },
-        { onPing: () => {} },
+        {
+          onPing: () => {},
+          onQueue: (position) => setQueuePosition(position),
+        },
       )
       setResult(data)
     } catch (err) {
-      const code = err?.code ?? ''
-      if (code === 'SERVER_BUSY' || err?.status === 503) {
-        setError('__serverBusy__')
-      } else {
-        setError(err?.message ?? 'Unknown error')
-      }
+      setError(err?.message ?? 'Unknown error')
     } finally {
       setLoading(false)
+      setQueuePosition(null)
     }
   }
 
@@ -118,7 +137,8 @@ export default function PubMedResultsPage() {
         </p>
       </header>
 
-      {loading && <LoadingState />}
+      {loading && queuePosition > 0 && <QueueState position={queuePosition} />}
+      {loading && !(queuePosition > 0) && <LoadingState />}
 
       {!loading && error && (
         <ErrorState message={error} onRetry={runAnalysis} />
