@@ -44,6 +44,7 @@ logger = logging.getLogger("re_embed")
 MODEL_NAME    = "BAAI/bge-m3"
 DEFAULT_BATCH = 1024        # DB records per round-trip
 CURSOR_FILE   = Path("/tmp/re_embed_bge_m3_cursor.txt")
+OLLAMA_FLAG   = Path("/tmp/ollama_active")
 _TIMING_BATCHES = 5         # show embed/write split for first N batches
 
 
@@ -201,6 +202,7 @@ def save_cursor(pmid: str) -> None:
 
 async def run(database_url: str, batch_size: int, dry_run: bool, reset: bool, device: str | None = None, sleep: float = 0.0) -> None:
     conn = await connect(database_url)
+    await conn.execute("SET synchronous_commit = off")
     try:
         total     = await conn.fetchval("SELECT COUNT(*) FROM pubmed_abstracts")
         remaining = await conn.fetchval(
@@ -253,10 +255,6 @@ async def run(database_url: str, batch_size: int, dry_run: bool, reset: bool, de
             write_t0   = time.monotonic()
             write_task = asyncio.create_task(save_batch(conn, pmids, ep_bytes, meth_bytes))
 
-            if next_rows:
-                embed_t0  = time.monotonic()
-                embed_fut = loop.run_in_executor(executor, embed_records, model, next_rows)
-
             await write_task
             write_elapsed = time.monotonic() - write_t0
 
@@ -268,28 +266,50 @@ async def run(database_url: str, batch_size: int, dry_run: bool, reset: bool, de
             rate    = processed / elapsed if elapsed > 0 else 0
             eta_h   = (remaining - processed) / rate / 3600 if rate > 0 else float("inf")
 
-            if batch_num <= _TIMING_BATCHES:
-                logger.info(
-                    "  %d / %d  (%.1f%%)  |  %.0f rec/s  |  ETA %.1fh"
-                    "  [embed %.2fs  write %.2fs]",
-                    done + processed, total,
-                    100 * (done + processed) / total,
-                    rate, eta_h,
-                    embed_elapsed, write_elapsed,
-                )
-            else:
-                logger.info(
-                    "  %d / %d  (%.1f%%)  |  %.0f rec/s  |  ETA %.1fh",
-                    done + processed, total,
-                    100 * (done + processed) / total,
-                    rate, eta_h,
-                )
+            logger.info(
+                "  %d / %d  (%.1f%%)  |  %.0f rec/s  |  ETA %.1fh"
+                "  [embed %.2fs  write %.2fs]",
+                done + processed, total,
+                100 * (done + processed) / total,
+                rate, eta_h,
+                embed_elapsed, write_elapsed,
+            )
 
             if not next_rows:
                 break
 
+            # Check BEFORE starting the next GPU encode so Ollama doesn't compete.
+            try:
+                import torch as _torch
+                if hasattr(_torch, 'mps') and _torch.backends.mps.is_available():
+                    _torch.mps.empty_cache()
+            except Exception:
+                pass
+
+            if OLLAMA_FLAG.exists():
+                logger.info("Ollama active — pausing until model is unloaded.")
+                while OLLAMA_FLAG.exists():
+                    await asyncio.sleep(3)
+                # Flag clears when HTTP response lands; Ollama unloads asynchronously.
+                # Poll /api/ps until no models occupy MPS memory.
+                for _ in range(30):
+                    try:
+                        import urllib.request as _urllib
+                        import json as _json
+                        with _urllib.urlopen("http://localhost:11434/api/ps", timeout=2) as r:
+                            if not _json.loads(r.read()).get("models"):
+                                break
+                    except Exception:
+                        break
+                    await asyncio.sleep(2)
+                logger.info("Ollama done — resuming.")
+
             if sleep > 0:
                 await asyncio.sleep(sleep)
+
+            if next_rows:
+                embed_t0  = time.monotonic()
+                embed_fut = loop.run_in_executor(executor, embed_records, model, next_rows)
 
             rows = next_rows
 

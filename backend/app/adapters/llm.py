@@ -41,6 +41,9 @@ from app.services.oecd_citation import prefer_oecd_tg_citation
 
 logger = logging.getLogger(__name__)
 
+from pathlib import Path as _Path
+_OLLAMA_ACTIVE_FLAG = _Path("/tmp/ollama_active")
+
 RAW_RESPONSE_LOG_LIMIT = 1200
 EXTRACTION_MAX_TOKENS = 8192
 POLICY_EXTRACTION_MAX_TOKENS = 4096
@@ -1337,7 +1340,7 @@ class OllamaLLMAdapter(LLMAdapter):
             "model": self._model,
             "prompt": prompt,
             "stream": False,
-            "keep_alive": -1,
+            "keep_alive": 0,
             "options": {"num_predict": max_tokens, "temperature": 0.0, "num_ctx": 16384, "seed": 42},
         }
         if json_mode:
@@ -1349,6 +1352,7 @@ class OllamaLLMAdapter(LLMAdapter):
             headers={"Content-Type": "application/json"},
             method="POST",
         )
+        _OLLAMA_ACTIVE_FLAG.touch()
         try:
             with urllib.request.urlopen(req, timeout=600) as resp:
                 body = json.loads(resp.read())
@@ -1356,6 +1360,8 @@ class OllamaLLMAdapter(LLMAdapter):
         except Exception as exc:
             logger.warning("Ollama call failed: %s", exc)
             return None
+        finally:
+            _OLLAMA_ACTIVE_FLAG.unlink(missing_ok=True)
 
     def extract_raw_experiments(
         self,
