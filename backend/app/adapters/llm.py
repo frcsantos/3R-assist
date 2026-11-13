@@ -42,7 +42,7 @@ from app.services.oecd_citation import prefer_oecd_tg_citation
 logger = logging.getLogger(__name__)
 
 RAW_RESPONSE_LOG_LIMIT = 1200
-EXTRACTION_MAX_TOKENS = 4096
+EXTRACTION_MAX_TOKENS = 8192
 POLICY_EXTRACTION_MAX_TOKENS = 4096
 METHOD_DRAFT_EXTRACTION_MAX_TOKENS = 4096
 DOCUMENT_DRAFT_EXTRACTION_MAX_TOKENS = 2048
@@ -1053,7 +1053,26 @@ class LlmCallAdapter(LLMAdapter):
         if isinstance(result, LlmCallError):
             logger.warning("LLM API error: %s", result.message)
             return ExtractionError(message=f"LLM API error: {result.message}")
-        return _extract_from_raw(result.content)
+        parsed = _extract_from_raw(result.content)
+        # Output hit the token cap: the JSON was cut off, so say so instead of
+        # reporting a generic parse failure (or silently losing the last experiment).
+        output_tokens = getattr(result, "output_tokens", 0) or 0
+        if output_tokens >= EXTRACTION_MAX_TOKENS * 0.98:
+            logger.warning(
+                "Extraction output reached max_tokens (%s/%s); response likely truncated",
+                output_tokens,
+                EXTRACTION_MAX_TOKENS,
+            )
+            if isinstance(parsed, ExtractionError):
+                return ExtractionError(
+                    message=(
+                        "The protocol is too long or complex: the AI model's answer was "
+                        "cut off. Try a shorter excerpt (e.g. only the methods section)."
+                    ),
+                    reason="output_truncated",
+                    raw_response=parsed.raw_response,
+                )
+        return parsed
 
     def extract_policy(
         self,

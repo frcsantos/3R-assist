@@ -1,5 +1,3 @@
-# **Sobre o Assist3R**
-
 O **Assist3R** é uma ferramenta online que procura métodos capazes de substituir  o uso de animais em experimentos (foco principal), reduzir o seu número ou refinar os procedimentos. Esses são os chamados **3Rs (*Replacement, Reduction, Refinement*)**.
 
 A partir de um protocolo em texto livre, em português ou inglês, a ferramenta usa inteligência artificial para identificar os parâmetros do experimento, e devolve dois tipos de resultado: métodos alternativos já reconhecidos, aprovados pelo [CONCEA](https://antigo.mctic.gov.br/mctic/opencms/institucional/concea/old-index.html), e estudos científicos que usam abordagens sem animais para objetivos semelhantes. Cada resultado traz o link para a fonte original.

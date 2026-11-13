@@ -20,6 +20,6 @@
    cascade layer, including the utilities that set `text-card-title` on the
    markdown h2. Scoped to the glossary and info pages only. */
 .glossary-markdown h2,
-.info-markdown h2 {
+.about-markdown h2 {
   @apply text-headline-lg;
 }

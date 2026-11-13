@@ -813,6 +813,9 @@ export default function ExplorePage() {
         <h1 className="font-headline-lg text-headline-xl text-primary">
           {t('s4.title')}
         </h1>
+        <p className="mt-4 font-body-base text-body-base text-on-surface-variant">
+          {t('s4.subtitle')}
+        </p>
 
         <div
           className="mt-card-gap flex flex-wrap gap-2 border-b border-border-subtle"

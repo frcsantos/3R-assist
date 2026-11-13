@@ -43,6 +43,81 @@ def _decode_text(raw: bytes) -> str:
     return raw.decode("utf-8", errors="replace")
 
 
+_PAGE_NUMBER_RE = re.compile(
+    r"^\s*(?:page|p[áa]gina|p\.)?\s*\d+(?:\s*(?:of|de|/)\s*\d+)?\s*$", re.IGNORECASE
+)
+_REFERENCES_HEADING_RE = re.compile(
+    r"^\s*(?:\d+[.)]?\s*)?(?:references|bibliography|literature cited|"
+    r"refer[êe]ncias(?: bibliogr[áa]ficas)?|bibliografia)\s*:?\s*$",
+    re.IGNORECASE,
+)
+_REPEAT_LINE_MAX_LEN = 100
+
+
+def _line_key(line: str) -> str:
+    """Normalise a line so headers differing only in page number compare equal."""
+    return re.sub(r"\d+", "#", line.strip().lower())
+
+
+def clean_pdf_pages(pages: list[str]) -> str:
+    """Join PDF page texts, dropping noise that only inflates the prompt.
+
+    Removes running headers/footers (short lines repeated across pages), bare page
+    numbers and the reference list; rejoins words hyphenated across line breaks.
+    """
+    if len(pages) >= 3:
+        counts: dict[str, int] = {}
+        for page in pages:
+            for key in {
+                _line_key(line)
+                for line in page.splitlines()
+                if line.strip() and len(line.strip()) <= _REPEAT_LINE_MAX_LEN
+            }:
+                counts[key] = counts.get(key, 0) + 1
+        threshold = max(3, int(len(pages) * 0.4))
+        repeated = {key for key, n in counts.items() if n >= threshold}
+    else:
+        repeated = set()
+
+    kept_pages: list[str] = []
+    for page in pages:
+        lines = [
+            line
+            for line in page.splitlines()
+            if not _PAGE_NUMBER_RE.match(line)
+            and _line_key(line) not in repeated
+        ]
+        kept_pages.append("\n".join(lines).strip())
+
+    text = "\n\n".join(page for page in kept_pages if page)
+    text = re.sub(r"(\w)-\n(\w)", r"\1\2", text)
+
+    # Drop the reference list, but only if it starts after the first third of the
+    # document (avoids cutting everything on a "References" line in a table of contents).
+    lines = text.split("\n")
+    offset = 0
+    for index, line in enumerate(lines):
+        if _REFERENCES_HEADING_RE.match(line) and offset > len(text) / 3:
+            text = "\n".join(lines[:index])
+            break
+        offset += len(line) + 1
+
+    text = re.sub(r"[ \t]+", " ", text)
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
+def _truncate_at_boundary(text: str, limit: int) -> str:
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    boundary = cut.rfind("\n\n")
+    if boundary < limit * 0.8:
+        boundary = cut.rfind("\n")
+    if boundary < limit * 0.8:
+        return cut
+    return cut[:boundary].rstrip()
+
+
 def _pdf_to_text(raw: bytes) -> str:
     try:
         from pypdf import PdfReader
@@ -60,7 +135,7 @@ def _pdf_to_text(raw: bytes) -> str:
             "Could not read the PDF file.",
         ) from exc
 
-    parts: list[str] = []
+    pages: list[str] = []
     for page in reader.pages:
         try:
             page_text = page.extract_text() or ""
@@ -68,9 +143,9 @@ def _pdf_to_text(raw: bytes) -> str:
             page_text = ""
         cleaned = page_text.strip()
         if cleaned:
-            parts.append(cleaned)
+            pages.append(cleaned)
 
-    text = re.sub(r"\n{3,}", "\n\n", "\n\n".join(parts)).strip()
+    text = clean_pdf_pages(pages)
     if len(text) < 20:
         raise FileTextError(
             "FILE_NO_TEXT",
@@ -133,6 +208,4 @@ def extract_text_from_upload(
                 "Could not extract enough text from the file.",
             )
 
-    if len(text) > MAX_EXTRACTED_CHARS:
-        text = text[:MAX_EXTRACTED_CHARS]
-    return text
+    return _truncate_at_boundary(text, MAX_EXTRACTED_CHARS)

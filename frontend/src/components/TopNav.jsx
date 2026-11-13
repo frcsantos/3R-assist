@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
+import ContactModal from './ContactModal'
 import LangToggle from './LangToggle'
 import { currentLanguage, setLanguage } from '../lib/i18n'
 import { isAuthEnabled } from '../lib/auth'
@@ -10,12 +11,38 @@ const routes = [
   { key: 'explore', to: '/explore' },
   { key: 'literature', to: '/literature-search' },
   { key: 'glossary', to: '/glossary' },
-  { key: 'info', to: '/info' },
+  { key: 'about', to: '/about' },
 ]
+
+function ContactIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" className="h-5 w-5">
+      <rect
+        x="2.5"
+        y="4.5"
+        width="15"
+        height="11"
+        rx="2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M3 6l7 5 7-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
 
 export default function TopNav() {
   const { t } = useTranslation()
   const [authEnabled, setAuthEnabled] = useState(false)
+  const [contactOpen, setContactOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -58,6 +85,15 @@ export default function TopNav() {
           </nav>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            aria-label={t('nav.contact')}
+            title={t('nav.contact')}
+            onClick={() => setContactOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded text-on-secondary-container transition-colors hover:bg-surface-container hover:text-primary"
+          >
+            <ContactIcon />
+          </button>
           <LangToggle
             value={currentLanguage()}
             onChange={(nextLang) => {
@@ -78,6 +114,7 @@ export default function TopNav() {
           )}
         </div>
       </div>
+      {contactOpen ? <ContactModal onClose={() => setContactOpen(false)} /> : null}
     </header>
   )
 }

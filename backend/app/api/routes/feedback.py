@@ -6,6 +6,7 @@ from app.api.errors import error_response
 from app.config import get_settings
 from app.models.feedback import Feedback, FeedbackCreate
 from app.repositories.feedback import FeedbackRepository
+from app.services.contact_email import forward_contact_message
 
 router = APIRouter(tags=["feedback"])
 
@@ -22,4 +23,12 @@ async def create_feedback(
             message="Feedback database is not configured.",
         )
 
-    return await repository.create(payload)
+    created = await repository.create(payload)
+    if payload.object == "contact":
+        await forward_contact_message(
+            get_settings(),
+            message=payload.feedback_text,
+            page_url=payload.url,
+            subject=payload.subject,
+        )
+    return created

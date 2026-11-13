@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.models.protocol import (
+    MAX_PROTOCOL_CHARS,
     ConfidenceLevel,
     EndpointCategory,
     ProtocolParameters,
@@ -53,7 +54,7 @@ class Citation(BaseModel):
 
 
 class PubMedAnalyzeRequest(BaseModel):
-    protocol_text: str = Field(..., min_length=20, max_length=40_000)
+    protocol_text: str = Field(..., min_length=20, max_length=MAX_PROTOCOL_CHARS)
     params: ProtocolParameters | None = None
     lang: Literal["pt", "en"] | None = None
 

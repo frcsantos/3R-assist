@@ -35,7 +35,7 @@ Institutional backing: **Fórum Animal**
 | `docs/dev-plan.md` | Phase-by-phase development plan |
 | `docs/execution-log.md` | Narrative deviation log (updated during development) |
 | `docs/tables.md` | Database schema reference |
-| `docs/info.md` | Living product + how-to-run summary |
+| `docs/about_en.md`, `docs/about_pt.md` | Living product + how-to-run summary (About page) |
 | `/design/` | Tokens, Ethos theme, component inventory |
 | `/notebooks/` | LLM experiment notebooks |
 

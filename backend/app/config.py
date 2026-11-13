@@ -67,6 +67,10 @@ class Settings(BaseSettings):
         default=None,
         alias="EMAIL_FROM_ADDRESS",
     )
+    contact_to_email: str | None = Field(
+        default=None,
+        alias="CONTACT_TO_EMAIL",
+    )
 
     @property
     def cors_origin_list(self) -> list[str]:

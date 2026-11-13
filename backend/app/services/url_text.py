@@ -10,8 +10,10 @@ from urllib.parse import urlparse
 
 import httpx
 
+from app.models.protocol import MAX_PROTOCOL_CHARS
+
 MAX_RESPONSE_BYTES = 5 * 1024 * 1024
-MAX_EXTRACTED_CHARS = 50_000
+MAX_EXTRACTED_CHARS = MAX_PROTOCOL_CHARS
 FETCH_TIMEOUT_SECONDS = 30.0
 MAX_REDIRECTS = 5
 

@@ -6,7 +6,7 @@ import AdminPage from './pages/AdminPage'
 import AnalyzePage from './pages/AnalyzePage'
 import ExplorePage from './pages/ExplorePage'
 import GlossaryPage from './pages/GlossaryPage'
-import InfoPage from './pages/InfoPage'
+import AboutPage from './pages/AboutPage'
 import ParametersPage from './pages/ParametersPage'
 import LiteratureSearchPage from './pages/LiteratureSearchPage'
 import LoginPage from './pages/LoginPage'
@@ -39,7 +39,8 @@ export default function App() {
         <Route path="/literature-search" element={<LiteratureSearchPage />} />
         <Route path="/auth" element={<LoginPage />} />
         <Route path="/glossary" element={<GlossaryPage />} />
-        <Route path="/info" element={<InfoPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/info" element={<Navigate to="/about" replace />} />
       </Routes>
     </div>
   )

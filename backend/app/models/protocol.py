@@ -314,8 +314,11 @@ def to_protocol_parameters(result: ExtractionResult) -> ProtocolParameters:
     )
 
 
+MAX_PROTOCOL_CHARS = 40_000  # single source of truth: API limit and upload/URL truncation
+
+
 class AnalyzeRequest(BaseModel):
-    protocol_text: str = Field(..., min_length=20, max_length=40000)
+    protocol_text: str = Field(..., min_length=20, max_length=MAX_PROTOCOL_CHARS)
     lang: Literal["pt", "en"] | None = None
 
 

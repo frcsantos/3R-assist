@@ -4,7 +4,8 @@
     "explore": "Explorar",
     "literature": "Literatura",
     "glossary": "Glossário",
-    "info": "Info",
+    "about": "Sobre",
+    "contact": "Fale conosco",
     "admin": "Admin",
     "signIn": "Entrar"
   },
@@ -19,8 +20,26 @@
     "sendLink": "Enviar link de acesso",
     "openDevLink": "Abrir link de acesso (desenvolvimento)"
   },
-  "info": {
-    "title": "Info"
+  "about": {
+    "title": "Sobre",
+    "contactPrompt": "Dúvidas, sugestões ou parcerias?",
+    "contactLink": "Fale conosco"
+  },
+  "contact": {
+    "title": "Fale conosco",
+    "intro": "Envie uma mensagem e responderemos em breve.",
+    "emailLabel": "Seu e-mail (opcional)",
+    "emailPlaceholder": "voce@instituicao.org",
+    "subjectLabel": "Assunto",
+    "subjectPlaceholder": "Sobre o que você quer falar?",
+    "messageLabel": "Mensagem",
+    "messagePlaceholder": "Como podemos ajudar?",
+    "submit": "Enviar",
+    "submitting": "Enviando…",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "success": "Obrigado — sua mensagem foi enviada.",
+    "submitError": "Não foi possível enviar a mensagem. Tente novamente."
   },
   "admin": {
     "title": "Admin",
@@ -378,6 +397,7 @@
   },
   "s4": {
     "title": "Explorar",
+    "subtitle": "Explore nossa base de dados de métodos, regulamentações e documentos.",
     "tabsLabel": "Seções de exploração",
     "loading": "Carregando…",
     "loadError": "Não foi possível carregar o catálogo.",
