@@ -393,7 +393,12 @@
       "regulationQuote": "Trecho da regulamentação"
     },
     "animalDerivedYes": "de origem animal",
-    "animalDerivedNo": "sem origem animal"
+    "animalDerivedNo": "sem origem animal",
+    "threeR": {
+      "replacement": "Substituição",
+      "reduction": "Redução",
+      "refinement": "Refinamento"
+    }
   },
   "s4": {
     "title": "Explorar",
@@ -484,7 +489,11 @@
     },
     "results": {
       "scoreLabel": "Relevância:",
-      "pubmedLink": "Ver no PubMed"
+      "pubmedLink": "Ver no PubMed ↗",
+      "pathAlternative": "Busca por método alternativo",
+      "pathEndpoint": "Busca por desfecho",
+      "showSimilar": "{{count}} artigo(s) similar(es)",
+      "hideSimilar": "Ocultar similares"
     }
   },
   "feedback": {

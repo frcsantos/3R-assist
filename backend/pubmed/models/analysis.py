@@ -33,6 +33,7 @@ class LLMProposedAlternative(BaseModel):
     """
     three_r_class: ThreeRClass
     method_description: str
+    search_query: str | None = None  # short technique-only phrase for vector search
 
 
 class SupportingPaper(BaseModel):

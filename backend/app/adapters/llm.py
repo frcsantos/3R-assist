@@ -972,6 +972,10 @@ def _raw_from_experiment_item(item: object) -> RawExtraction | None:
         else:
             return None
 
+    for k, v in payload.items():
+        if v == "null":
+            payload[k] = None
+
     try:
         raw = RawExtraction.model_validate(payload)
     except ValueError:

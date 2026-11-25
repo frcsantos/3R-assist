@@ -1,26 +1,19 @@
 """Classify a protocol into a domain profile.
 
-Classification order:
-  1. Detection / contamination signals           → general
-  2. Potency-assay signals                       → general
-  3. Known toxicology endpoint_category          → toxicology
-  4. Toxicology text signals                     → toxicology
-  5. Cancer / oncology signals                   → cancer
-  6. Neurodegeneration signals                   → neurodegeneration
-  7. Psychiatric / psychological signals         → psychiatry
-  8. Cardiometabolic signals                     → cardiometabolic
-  9. Rare disease / orphan / epigenetic signals  → rare_disease
- 10. Autoimmune / autoinflammatory signals       → autoimmune
- 11. Consumer product safety signals             → consumer_safety
- 12. Infectious disease signals                  → infectious_disease
- 13. Cosmetics / personal care signals           → cosmetics
- 14. Fallback                                    → general
+Primary path: LLM-based via async_classify_domain() — the LLM reasons about the
+protocol's primary scientific purpose and picks the most appropriate profile.
+
+Fallback: keyword-based classify_domain() — used when the LLM is unavailable.
 """
 
 from __future__ import annotations
 
+import json
+import logging
+
 from pubmed.skills.autoimmune import AUTOIMMUNE_PROFILE
 from pubmed.skills.base import DomainProfile
+from pubmed.skills.basic_science import BASIC_SCIENCE_PROFILE
 from pubmed.skills.rare_disease import RARE_DISEASE_PROFILE
 from pubmed.skills.cancer import CANCER_PROFILE
 from pubmed.skills.cardiometabolic import CARDIOMETABOLIC_PROFILE
@@ -30,6 +23,8 @@ from pubmed.skills.infectious_disease import INFECTIOUS_DISEASE_PROFILE
 from pubmed.skills.neurodegeneration import NEURODEGENERATION_PROFILE
 from pubmed.skills.psychiatry import PSYCHIATRY_PROFILE
 from pubmed.skills.toxicology import TOXICOLOGY_PROFILE
+
+logger = logging.getLogger(__name__)
 
 # ── General / fallback profile (no injections, minimal vocabulary) ────────────
 
@@ -216,6 +211,10 @@ _AUTOIMMUNE_SIGNALS = (
     "dss colitis", "tnbs colitis",
     "autoantibody", "anti-citrullinated", "anti-ccp",
     "th17", "treg induction", "regulatory t cell autoimmune",
+    # EAE is an autoimmune model (not a primary neurodegeneration model)
+    "experimental autoimmune encephalomyelitis", "eae mouse", "eae model",
+    "thymic epithelial", "thymic selection", "t cell central tolerance",
+    "negative selection thymus", "positive selection thymus",
 )
 
 _INFECTIOUS_DISEASE_SIGNALS = (
@@ -295,6 +294,11 @@ def classify_domain(
     if any(sig in lowered for sig in _CANCER_SIGNALS):
         return CANCER_PROFILE
 
+    # Autoimmune and autoinflammatory disease protocols — checked before neurodegeneration
+    # because EAE and other autoimmune models would otherwise mis-route to neuro
+    if any(sig in lowered for sig in _AUTOIMMUNE_SIGNALS):
+        return AUTOIMMUNE_PROFILE
+
     # Neurodegenerative disease protocols
     if any(sig in lowered for sig in _NEURODEGENERATION_SIGNALS):
         return NEURODEGENERATION_PROFILE
@@ -311,10 +315,6 @@ def classify_domain(
     if any(sig in lowered for sig in _RARE_DISEASE_SIGNALS):
         return RARE_DISEASE_PROFILE
 
-    # Autoimmune and autoinflammatory disease protocols
-    if any(sig in lowered for sig in _AUTOIMMUNE_SIGNALS):
-        return AUTOIMMUNE_PROFILE
-
     # Consumer product safety protocols (food, textiles, objects, packaging)
     if any(sig in lowered for sig in _CONSUMER_SAFETY_SIGNALS):
         return CONSUMER_SAFETY_PROFILE
@@ -328,3 +328,53 @@ def classify_domain(
         return COSMETICS_PROFILE
 
     return GENERAL_PROFILE
+
+
+# ── LLM-based classifier ──────────────────────────────────────────────────────
+
+_PROFILE_MAP: dict[str, DomainProfile] = {
+    "toxicology":        TOXICOLOGY_PROFILE,
+    "cancer":            CANCER_PROFILE,
+    "neurodegeneration": NEURODEGENERATION_PROFILE,
+    "psychiatry":        PSYCHIATRY_PROFILE,
+    "cardiometabolic":   CARDIOMETABOLIC_PROFILE,
+    "rare_disease":      RARE_DISEASE_PROFILE,
+    "autoimmune":        AUTOIMMUNE_PROFILE,
+    "consumer_safety":   CONSUMER_SAFETY_PROFILE,
+    "infectious_disease":INFECTIOUS_DISEASE_PROFILE,
+    "cosmetics":         COSMETICS_PROFILE,
+    "basic_science":     BASIC_SCIENCE_PROFILE,
+    "general":           GENERAL_PROFILE,
+}
+
+
+async def async_classify_domain(
+    protocol_text: str,
+    endpoint_category: str | None,
+    llm,
+) -> DomainProfile:
+    """LLM-based domain classification with keyword fallback.
+
+    Asks the LLM to reason about the protocol's primary scientific purpose
+    rather than matching keywords. Falls back to classify_domain() if the
+    LLM is unavailable or returns an unrecognised domain name.
+    """
+    from pubmed.adapters.llm import async_call
+    from pubmed.prompts.domain_classifier import build_domain_classifier_prompt
+
+    prompt = build_domain_classifier_prompt(protocol_text, endpoint_category)
+    raw = await async_call(llm, prompt, max_tokens=64, json_mode=True)
+
+    if raw:
+        try:
+            domain = json.loads(raw).get("domain", "").strip().lower()
+            profile = _PROFILE_MAP.get(domain)
+            if profile:
+                logger.info("LLM domain classification: %s", domain)
+                return profile
+            logger.warning("LLM returned unknown domain %r — falling back to keywords", domain)
+        except Exception as exc:
+            logger.warning("Domain classifier parse error: %s", exc)
+
+    logger.info("Using keyword domain classifier")
+    return classify_domain(protocol_text, endpoint_category)

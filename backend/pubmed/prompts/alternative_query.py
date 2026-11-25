@@ -37,17 +37,17 @@ against the literature. ORDER AND SPECIFICITY MATTER:
 Each description should be specific enough to retrieve real papers (name cell types,
 assays, readouts, computational approaches, regulatory models, etc.).
 
-MULTI-ORGAN RULE: If the protocol evaluates histopathology or toxicity for multiple
-specific organs (e.g. "liver, kidney, brain, heart, spleen, stomach were removed and
-processed"), include ONE REPLACEMENT entry per identified organ — each describing the
-organ-specific in vitro or organoid model. Use these mappings:
-  liver   → HepaRG cells, 3D liver spheroid, liver-on-chip, primary hepatocyte sandwich culture
-  kidney  → RPTEC proximal tubule cells, kidney organoid, kidney-on-chip
-  brain   → neurosphere assay, iPSC-derived cortical neurons, brain organoid
-  heart   → iPSC-derived cardiomyocytes, cardiac organ-on-chip, hERG channel assay
-  stomach → gastric organoid, stomach-on-chip, primary gastric epithelial culture
-  spleen  → human PBMC co-culture, splenic immune cell assay, spleen organoid
-Each organ entry: 30-60 words, name the specific model and its toxicity readout.
+ORGANOID HYPOTHESIS RULE: For any protocol that uses an animal tissue, organ, or biological
+system as the primary experimental model, include at least one replacement alternative
+describing the appropriate human organoid, iPSC-derived model, or microphysiological system.
+Reason from the protocol's specific biology — identify the primary cell type, tissue, or
+organ being studied and propose the matching 3D model. Do NOT default to liver spheroids or
+generic toxicology models unless the protocol actually studies liver. The organoid hypothesis
+must follow from what the protocol is modelling (e.g. thymus → thymic organoid or artificial
+thymic organoid; joint → joint-on-chip; gut → intestinal organoid; skin → reconstructed skin
+model; immune niche → immune-stroma co-culture). If multiple distinct tissues are involved,
+include one replacement entry per tissue. Each entry: 30-60 words, name the specific 3D
+model and its key biological readout.
 ═══════════════════════════════════════════════════════════════════
 
 PROTOCOL:
@@ -75,27 +75,32 @@ Return ONLY valid JSON. No preamble. No markdown.
   "alternatives": [
     {{
       "three_r_class": "replacement",
-      "method_description": "40-80 word description of a specific non-animal method
-        that could fully replace the animal procedure. Focus on the REPLACEMENT DEVICE
-        OR TECHNIQUE NAME and how it works — not on the biology of the animal being replaced.
-        Name specific devices, membranes, systems, assay names, validated protocols, or
-        regulatory guidelines where known. Do NOT add unrelated cell biology (cell lines,
-        receptors, signalling) unless those are the actual replacement method.
-        This is the most important field — be as technically specific as possible."
+      "method_description": "40-80 words describing the alternative method and how it
+        works. Can include the biological context.",
+      "search_query": "5-10 words: the technique name only. No biology, no protocol
+        context, no gene names. This phrase is embedded to search a literature database
+        for papers about the technique — it must describe the METHOD, not the experiment.
+        Example: 'iPSC-derived thymic organoid in vitro T cell development'."
     }},
     {{
       "three_r_class": "reduction",
-      "method_description": "30-60 word description of a specific approach that uses
-        the same or similar species but substantially reduces animal numbers. Include
-        statistical designs (e.g. sequential testing, ToxicoPrediction-guided dose
-        setting), in silico starting point selection, or pilot study frameworks."
+      "method_description": "30-60 words. Reason from the protocol's specific experimental
+        system: what animal use is proposed, and what approach would reduce it most
+        directly? For mechanism studies in a specific tissue or cell type, consider
+        lower-organism models where the mechanism is conserved (e.g. zebrafish, C. elegans,
+        Drosophila), ex vivo tissue culture replacing in vivo endpoints, or in vitro
+        functional assays reducing mammalian cohort size. For dose-response or toxicity
+        studies, consider statistical optimisation designs. Name the specific model,
+        tissue, or design — do not use generic descriptions."
     }},
     {{
       "three_r_class": "refinement",
-      "method_description": "25-50 word description of a specific procedural refinement
-        that minimises pain or distress while achieving the same scientific endpoint.
-        Include non-invasive monitoring, anaesthesia protocols,
-        or validated welfare scoring systems."
+      "method_description": "25-50 words. Describe a concrete procedural improvement
+        specific to the animal model and experimental system in this protocol. Reason from
+        the procedure: what causes the most pain or distress, and how can it be reduced?
+        Consider non-invasive readouts replacing invasive sampling, optimised anaesthesia
+        or analgesia for the specific surgery or procedure, or validated welfare assessment
+        tools. Be specific to the tissue/procedure — not a generic welfare statement."
     }}
   ]
 }}

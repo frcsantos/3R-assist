@@ -119,17 +119,13 @@ _IMMUNE_CELL_INJECTION =(
 )
 
 _ORGANOID_TISSUE_INJECTION =(
-        "Organoid, 3D tissue, and organ-on-chip models replacing animal autoimmune disease models: "
-        "intestinal organoid colonic organoid patient-derived IBD Crohn's disease "
-        "ulcerative colitis as replacement for DSS TNBS colitis rodent models; "
-        "gut-on-chip inflammatory bowel disease model; "
-        "joint-on-chip synovial joint organoid for rheumatoid arthritis "
-        "replacing collagen-induced arthritis CIA mouse; "
-        "3D skin model keratinocyte T cell co-culture for psoriasis; "
-        "skin organoid psoriasis replacing ear oedema or psoriasiform skin mouse model; "
-        "thyroid organoid for Hashimoto's Graves' autoimmune thyroiditis; "
-        "liver organoid precision-cut liver slice autoimmune hepatitis; "
-        "co-culture immune cell epithelial barrier model intestinal permeability assay."
+        "Organoid and microphysiological system models replacing animal autoimmune and immune disease models: "
+        "tissue-specific 3D organoid or organ-on-chip as animal-free replacement for the in vivo model; "
+        "patient-derived organoid from disease-relevant primary tissue; "
+        "iPSC-derived 3D model of the target organ or primary cell type; "
+        "co-culture model replicating key tissue cellular interactions, immune-stromal or epithelial-immune; "
+        "organotypic culture maintaining tissue architecture and function; "
+        "body-on-chip multi-organ microphysiological system as systemic disease model replacement."
 )
 
 _COMPUTATIONAL_INJECTION =(

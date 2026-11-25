@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from app.adapters.llm import ExtractionError
 from app.api.deps import (
     get_admin_repository,
+    get_current_user,
     get_document_draft_extraction_service,
     get_extract_estimate_service,
     get_method_draft_extraction_service,
@@ -15,7 +16,6 @@ from app.api.deps import (
     get_policy_extraction_service,
     get_policy_method_match_service,
     get_regulation_draft_extraction_service,
-    require_admin_token,
 )
 from app.api.errors import ErrorEnvelope, error_response
 from app.config import get_settings
@@ -71,7 +71,7 @@ from app.services.policy_extraction import PolicyExtractionService
 from app.services.policy_method_match import PolicyMethodMatchService
 from app.services.url_text import UrlTextError, resolve_extraction_source
 
-router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin_token)])
+router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/settings", response_model=AdminSettingsResponse)

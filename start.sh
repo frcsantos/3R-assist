@@ -23,6 +23,10 @@ echo "==> Keeping GPU awake on lid close..."
 pkill -f "caffeinate -di" 2>/dev/null
 caffeinate -di &
 
+echo "==> Ensuring PostgreSQL is running..."
+brew services start postgresql@17 2>/dev/null || true
+echo "    PostgreSQL ready."
+
 echo "==> Restarting Ollama (num_ctx=16384)..."
 pkill -x ollama 2>/dev/null
 pkill -f llama-server 2>/dev/null
