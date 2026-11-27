@@ -1,4 +1,5 @@
 import { apiFetch } from './api'
+import { assertUploadSize } from './uploadLimits.js'
 
 export function fetchAdminSettings() {
   return apiFetch('/admin/settings')
@@ -115,7 +116,8 @@ export function resolveExtractSource({ text, signal }) {
   })
 }
 
-export function uploadExtractSource(file) {
+export async function uploadExtractSource(file) {
+  assertUploadSize(file)
   const body = new FormData()
   body.append('file', file)
   return apiFetch('/admin/extract/upload', {

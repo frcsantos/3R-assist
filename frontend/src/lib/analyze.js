@@ -1,4 +1,5 @@
 import { apiFetch } from './api'
+import { assertUploadSize } from './uploadLimits.js'
 import {
   buildExperimentState,
   buildExperimentStates,
@@ -18,7 +19,8 @@ export async function analyzeProtocol({ protocolText, lang }) {
   })
 }
 
-export function uploadProtocolSource(file) {
+export async function uploadProtocolSource(file) {
+  assertUploadSize(file)
   const body = new FormData()
   body.append('file', file)
   return apiFetch('/admin/extract/upload', {

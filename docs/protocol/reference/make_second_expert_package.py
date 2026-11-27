@@ -20,9 +20,9 @@ shutil.copyfile(R + r'\expert_package\LEIA-ME_instrucoes_especialista.md', OUT +
 open(OUT + r'\LEIA-ME_segundo_especialista.md', 'w', encoding='utf-8').write(
     '# Segundo especialista: revisão independente de 10 casos\n\n'
     'Você recebeu 10 dos 30 casos. Siga as instruções em `LEIA-ME_instrucoes_especialista.md`, '
-    'preenchendo a planilha **em branco** `extraction_template.csv` a partir do texto original.\n\n'
+    'preenchendo a planilha **em branco** `extraction_template.xlsx` a partir do texto original.\n\n'
     '- **Não** consulte a extração do primeiro especialista nem converse com ele sobre estes casos antes da adjudicação.\n'
     '- Os casos usam os mesmos identificadores (RCxx). Divergências serão adjudicadas pela equipe do estudo, em consenso documentado ou por um terceiro especialista (protocolo §4, item 2).\n'
-    '- Devolva `extraction_<expert_id>.csv` (UTF-8) e registre `minutes_spent` por caso.\n')
+    '- Devolva `extraction_<expert_id>.xlsx` e registre `minutes_spent` por caso.\n')
 print('second package cases:', ids)
 print('files:', sorted(os.listdir(OUT + r'\sources')))
