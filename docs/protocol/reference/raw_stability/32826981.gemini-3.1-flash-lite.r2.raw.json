@@ -1,0 +1,102 @@
+{
+  "experiments": [
+    {
+      "study_type": "neurochemical phenotyping of CeA CART neurons",
+      "procedure_text": "Immunohistochemistry was conducted for CART/PKCδ and CART/tdTomato in CeA neurons of alcohol-naïve rats and mice. FISH was conducted for Cartpt/Nts and Cartpt/Drd2 in alcohol-naïve rats.",
+      "procedure_text_evidence": "To characterise the neurochemical phenotype of CART-positive CeA neurons, immunohistochemistry was conducted for CART/PKCδ in alcohol naïve adult male iP rats (n = 3) and CART/tdTomato (tdT) in pENK-IRES-Cre::Ai14 (n = 3) and CRF-IRES-Cre::Ai14 mice (n = 3). Fluroescent in situ hybirdisation (FISH; RNAScope) was conducted for Cartpt/Nts and Cartpt/Drd2 in alcohol naïve adult male iP rats (n = 3)",
+      "species": "rat",
+      "species_evidence": "adult male iP rats",
+      "animal_counts": {
+        "female": null,
+        "male": 9,
+        "total": 9,
+        "per_group": 3
+      },
+      "animal_counts_evidence": "alcohol naïve adult male iP rats (n = 3)",
+      "test_system": [
+        "ex_vivo"
+      ],
+      "test_system_evidence": "immunohistochemistry",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "regulatory": null,
+      "missing_or_ambiguous": [],
+      "notes": "Includes rats (iP) and two mouse strains (pENK-IRES-Cre::Ai14, CRF-IRES-Cre::Ai14)."
+    },
+    {
+      "study_type": "yohimbine-induced reinstatement of alcohol seeking on Fos/CART co-expression",
+      "procedure_text": "Rats underwent operant alcohol self-administration training, followed by yohimbine or vehicle administration, and Fos-CART immunohistochemistry analysis in the CeA.",
+      "procedure_text_evidence": "Following >30 sessions of alcohol self-administration, male iP rats were randomly divided into three groups; group 1 (n = 5) where reinstatement of alcohol seeking was measured in rats during a 20 min operant session, 30 min following administration of yohimbine (1 mg/kg, i.p.)",
+      "species": "rat",
+      "species_evidence": "male iP rats",
+      "animal_counts": {
+        "female": null,
+        "male": 22,
+        "total": 22,
+        "per_group": null
+      },
+      "animal_counts_evidence": "group 1 (n = 5)... Group 2 (n = 6)... Group 3 (n = 5)... group 4 (n = 6, naive)",
+      "test_system": [
+        "in_vivo",
+        "ex_vivo"
+      ],
+      "test_system_evidence": "operant session... immunohistochemistry",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "intraperitoneal"
+      ],
+      "route_evidence": "yohimbine (1 mg/kg, i.p.)",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Fos/CART co-localisation",
+          "role": "primary",
+          "evidence": "immunohistochemistry to examine CART and Fos co-localisation within the CeA."
+        }
+      ],
+      "substances": [
+        {
+          "name": "yohimbine",
+          "role": "test",
+          "evidence": "administration of yohimbine (1 mg/kg, i.p.)"
+        },
+        {
+          "name": "vehicle",
+          "role": "control",
+          "evidence": "administered vehicle (1 ml/kg, i.p.)"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "1 mg/kg",
+          "1 ml/kg"
+        ],
+        "dose_units": "mg/kg",
+        "frequency": null,
+        "duration": "20 min",
+        "timing": "30 min following administration",
+        "conditions": null
+      },
+      "exposure_evidence": "30 min following administration of yohimbine (1 mg/kg, i.p.)",
+      "guideline_ref": null,
+      "regulatory": null,
+      "missing_or_ambiguous": [],
+      "notes": null
+    }
+  ]
+}

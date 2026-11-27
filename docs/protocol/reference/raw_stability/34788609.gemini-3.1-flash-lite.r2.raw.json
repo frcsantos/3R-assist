@@ -1,0 +1,97 @@
+{
+  "experiments": [
+    {
+      "study_type": "prostate cancer initiation and metastasis model",
+      "procedure_text": "Surgical delivery of Cre/Luciferase lentivirus (LV-Cre/ Luci) into the right anterior prostate in triple-knockin Pten loxP/loxP -Trp53 loxP/loxP -Ai9(RCL-tdT) mice.",
+      "procedure_text_evidence": "Surgical delivery of Cre/Luciferase lentivirus (LV-Cre/ Luci) into the right anterior prostate in triple-knockin Pten loxP/loxP -Trp53 loxP/loxP -Ai9(RCL-tdT) mice.",
+      "species": "mouse",
+      "species_evidence": "Pten loxP/loxP , Trp53 loxP/loxP , and wild-type C57BL/6J mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo",
+        "ex_vivo"
+      ],
+      "test_system_evidence": "In vivo and ex-vivo, bioluminescence imaging was performed",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "other"
+      ],
+      "route_evidence": "Intra-prostate injection",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "bioluminescence imaging",
+          "role": "secondary",
+          "evidence": "Bioluminescence signal reveals metastatic disease spread across the body at 15 months post-injection."
+        },
+        {
+          "slug": null,
+          "label": "3D reconstruction of tissue",
+          "role": "secondary",
+          "evidence": "3D reconstruction of the imaged prostate (4 mm × 1.6 mm × 7 mm) from a RapidCaP mouse"
+        },
+        {
+          "slug": null,
+          "label": "volume quantification of foci",
+          "role": "primary",
+          "evidence": "Quantification of the complete volume of the tdT + focal regions (mm 3 ) in prostate"
+        },
+        {
+          "slug": null,
+          "label": "nuclear size quantification",
+          "role": "secondary",
+          "evidence": "Quantification of the increase in nuclear size of tdT + compared to nearby tdT -epithelial cells"
+        },
+        {
+          "slug": null,
+          "label": "metastatic cell count and distribution",
+          "role": "primary",
+          "evidence": "The density of total tdTomato + /-cells in the brain areas was obtained"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Luc. Cre lentiviral plasmid",
+          "role": "test",
+          "evidence": "Luc. Cre lentiviral plasmid"
+        },
+        {
+          "name": "isoflurane",
+          "role": "other",
+          "evidence": "After exposure to anesthesia (isoflurane, 2%)"
+        },
+        {
+          "name": "luciferin",
+          "role": "other",
+          "evidence": "animals received intraperitoneal injections of 200 mg/kg luciferin"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "20"
+        ],
+        "dose_units": "μL",
+        "frequency": "single injection",
+        "duration": null,
+        "timing": null,
+        "conditions": "Intra-prostate injection"
+      },
+      "exposure_evidence": "20 μL of the concentrated virus was injected into the right anterior prostate.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": false,
+      "regulatory_evidence": "All protocols for mouse experiments were performed following the institutional guidelines protocols and were approved by the Institutional Animal Care and Use Committee (IACUC).",
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Experimental animals were male mice between 2 to 6 months old, with an additional cohort for metastasis analysis at 15 months."
+    }
+  ]
+}

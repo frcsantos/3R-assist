@@ -1,0 +1,156 @@
+{
+  "experiments": [
+    {
+      "study_type": "tumor xenograft generation",
+      "procedure_text": "male athymic nude mice (Taconic, Foxn1 nu ) aged 4-10 weeks were injected subcutaneously in the flank (0.5-1 million cells in 200 μL of DMEM-F12)",
+      "procedure_text_evidence": "male athymic nude mice (Taconic, Foxn1 nu ) aged 4-10 weeks were injected subcutaneously in the flank (0.5-1 million cells in 200 μL of DMEM-F12 serum and antibiotic-free medium).",
+      "species": "mouse",
+      "species_evidence": "male athymic nude mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "To generate xenograft tumor mice, male athymic nude mice",
+      "application": "translational-applied-research",
+      "application_evidence": null,
+      "route": [
+        "subcutaneous"
+      ],
+      "route_evidence": "injected subcutaneously in the flank",
+      "endpoints": [],
+      "substances": [
+        {
+          "name": "U-87 MG (U87) cells",
+          "role": "test",
+          "evidence": "injected subcutaneously in the flank (0.5-1 million cells"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "0.5-1 million"
+        ],
+        "dose_units": "cells",
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": "200 μL of DMEM-F12 serum and antibiotic-free medium"
+      },
+      "exposure_evidence": "injected subcutaneously in the flank (0.5-1 million cells in 200 μL",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Tissue harvested from mice used for later ex vivo cuboid experiments."
+    },
+    {
+      "study_type": "cuboid microdissection characterization",
+      "procedure_text": "Mouse liver tissue was chopped with a McIlwain tissue chopper into 400 μm slices, then cut into cuboids, filtered, and analyzed for size distribution and tissue loss.",
+      "procedure_text_evidence": "Using a mechanical (McIlwain-type) tissue chopper, we perform three series of cuts. ... We analyzed freshly microdissected cuboids before and after filtering",
+      "species": "mouse",
+      "species_evidence": "mouse liver",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": [
+        "ex_vivo"
+      ],
+      "test_system_evidence": "Livers from male nude mice ... were used for the intact cuboid imaging. For the chopping quantitation experiments, we used livers from adult ... C57BL6-derived mice",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "size distribution",
+          "role": "primary",
+          "evidence": "We evaluated the size distribution and sample loss for the cutting and filtering/enrichment steps"
+        },
+        {
+          "slug": null,
+          "label": "sample loss",
+          "role": "primary",
+          "evidence": "We evaluated the size distribution and sample loss"
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Uses harvested tissue from mice."
+    },
+    {
+      "study_type": "in vitro drug testing (cisplatin)",
+      "procedure_text": "U87 glioma cuboids cultured in microfluidic device exposed to cisplatin to assess cell death via fluorescence microscopy.",
+      "procedure_text_evidence": "we treated two wells with each concentration of cisplatin (0, 10, 30, 100 μM) for 2 days",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vitro"
+      ],
+      "test_system_evidence": "cultured within a collagen hydrogel layer ... U87 glioma cuboids in the device",
+      "application": "translational-applied-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": "basal-cytotoxicity",
+          "label": "cell viability",
+          "role": "primary",
+          "evidence": "As a straightforward, simple measure of cell viability, we measured the mean fluorescence ratio"
+        }
+      ],
+      "substances": [
+        {
+          "name": "cisplatin",
+          "role": "test",
+          "evidence": "exposed U87 cuboids in the device with different concentrations of a cytotoxic chemotherapy drug, cisplatin"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "0",
+          "10",
+          "30",
+          "100"
+        ],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": "2 days",
+        "timing": "from day 1 to day 3",
+        "conditions": null
+      },
+      "exposure_evidence": "we treated two wells with each concentration of cisplatin (0, 10, 30, 100 μM) for 2 days from day 1 to day 3",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": "Uses cuboids derived from mouse xenografts."
+    }
+  ]
+}

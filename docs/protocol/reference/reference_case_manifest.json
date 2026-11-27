@@ -1,0 +1,12 @@
+{
+ "seed": 20261116,
+ "generated": "2026-11-27T17:18:35.278224+00:00",
+ "per_stratum": {
+  "A": 10,
+  "B": 10,
+  "C": 10
+ },
+ "c_composition": "4 underspecified + 3 near-miss + 3 no-match",
+ "second_review": 10,
+ "script_sha256": "a0e083aada5a1eeb4da7123d1ae7dd756c7e16e828052edba83975882d7388fa"
+}

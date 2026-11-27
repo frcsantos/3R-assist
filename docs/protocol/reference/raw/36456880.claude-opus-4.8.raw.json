@@ -1,0 +1,362 @@
+{
+  "experiments": [
+    {
+      "study_type": "Inducible lineage tracing of Prrx1+ cells in adult mice",
+      "procedure_text": "TAM in corn oil injected into adult male mice at 120 mg/kg daily for 1 or 3 days to trace Prrx1 lineage in bone, iWAT, dermis.",
+      "procedure_text_evidence": "TAM (Sigma) was dissolved in corn oil and was injected into adult male mice at 65 mg kg -1",
+      "species": "mouse",
+      "species_evidence": "adult male mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": null},
+      "animal_counts_evidence": "N = 3 mice",
+      "test_system": ["in_vivo"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["subcutaneous"],
+      "route_evidence": "was injected into adult male mice",
+      "endpoints": [
+        {"slug": null, "label": "lineage tracing of Prrx1+ cell turnover in connective tissues", "role": "primary", "evidence": "Prrx1 + cells drive the turnover of the three connective tissues"}
+      ],
+      "substances": [
+        {"name": "TAM", "role": "test", "evidence": "TAM (Sigma) was dissolved in corn oil"},
+        {"name": "corn oil", "role": "other", "evidence": "dissolved in corn oil"}
+      ],
+      "exposure": {
+        "dose_levels": ["65 mg kg -1 (pregnant mice)", "120 mg kg -1 (normal mice)", "12 mg kg -1 (clone formation)"],
+        "dose_units": "mg kg -1",
+        "frequency": "daily",
+        "duration": "either 1 or 3 days",
+        "timing": null,
+        "conditions": "dissolved in corn oil"
+      },
+      "exposure_evidence": "injected into adult male mice at 65 mg kg -1 (pregnant mice) or 120 mg kg -1 (normal mice) body weight daily for either 1 or 3 days",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "route"],
+      "notes": "Route not stated explicitly; injection assumed. In vivo clone formation used single 12 mg/kg TAM dose, mice killed 1 month later."
+    },
+    {
+      "study_type": "Conditional Wls deletion via dietary TAM in Prrx1-CreERT2 Wls f/f mice",
+      "procedure_text": "Adult male mice fed TAM-containing chow (250 mg/kg diet) to delete Wls; bone, iWAT and dermis analyzed.",
+      "procedure_text_evidence": "To delete Wls, adult male mice were fed TAM (250 mg kg -1 diet)-containing chow",
+      "species": "mouse",
+      "species_evidence": "adult male mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": null},
+      "animal_counts_evidence": "N = 6 mice per group",
+      "test_system": ["in_vivo"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["oral"],
+      "route_evidence": "were fed TAM (250 mg kg -1 diet)-containing chow",
+      "endpoints": [
+        {"slug": null, "label": "bone mass change after Wls deletion", "role": "primary", "evidence": "Depletion of Wls in Prrx1 + stem cells led to decreases in bone mass"},
+        {"slug": null, "label": "adipocyte size/number in iWAT and dermis", "role": "secondary", "evidence": "decrease in the size of adipocytes and the number of Ki67 + cells"}
+      ],
+      "substances": [
+        {"name": "TAM", "role": "test", "evidence": "fed TAM (250 mg kg -1 diet)-containing chow"}
+      ],
+      "exposure": {
+        "dose_levels": ["250 mg kg -1 diet"],
+        "dose_units": "mg kg -1 diet",
+        "frequency": null,
+        "duration": "for the indicated period of time",
+        "timing": null,
+        "conditions": "TAM-containing chow"
+      },
+      "exposure_evidence": "adult male mice were fed TAM (250 mg kg -1 diet)-containing chow for the indicated period of time",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "duration"],
+      "notes": "Three-month-old male mice used. Used Prrx1-CreERT2 Wls f/f mice."
+    },
+    {
+      "study_type": "Diphtheria toxin depletion of Prrx1+ stem cells (iDTR)",
+      "procedure_text": "DT injected daily at 50 mg/kg body weight to deplete Prrx1+ stem cells, causing osteoporosis and atrophy of iWAT and dermis.",
+      "procedure_text_evidence": "To deplete Prrx1 + stem cells, we injected DT daily at a dose of 50 mg kg -1 body weight",
+      "species": "mouse",
+      "species_evidence": "3-month-old male mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": null},
+      "animal_counts_evidence": "N = 8 mice",
+      "test_system": ["in_vivo"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["unspecified"],
+      "route_evidence": "we injected DT daily at a dose of 50 mg kg -1",
+      "endpoints": [
+        {"slug": null, "label": "osteoporosis / trabecular and cortical bone defects", "role": "primary", "evidence": "Depletion of Prrx1 + cells led to defects in trabecular and cortical bones"},
+        {"slug": null, "label": "iWAT atrophy / adipocyte number", "role": "secondary", "evidence": "decrease in the number of adipocytes per DAPI + nuclei"},
+        {"slug": null, "label": "dermal fat layer thickness", "role": "secondary", "evidence": "decreases in the thickness of dermal fat layer"}
+      ],
+      "substances": [
+        {"name": "DT", "role": "test", "evidence": "we injected DT daily at a dose of 50 mg kg -1 body weight"}
+      ],
+      "exposure": {
+        "dose_levels": ["50 mg kg -1"],
+        "dose_units": "mg kg -1",
+        "frequency": "daily",
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": "we injected DT daily at a dose of 50 mg kg -1 body weight",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["route", "animal_counts"],
+      "notes": "Used Prrx1-CreERT2; iDTR mice. Controls treated with Veh."
+    },
+    {
+      "study_type": "Bone fracture model (closed femoral fracture) healing",
+      "procedure_text": "Closed midshaft fracture produced on right femur of anesthetized adult male mice using 3-point bending device; healing analyzed by μCT and histology.",
+      "procedure_text_evidence": "a closed fracture was produced at the midshaft of the right femur using a custom-made 3-point bending device",
+      "species": "mouse",
+      "species_evidence": "adult male mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": null},
+      "animal_counts_evidence": "N = 6 mice",
+      "test_system": ["in_vivo"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["intraperitoneal"],
+      "route_evidence": "anesthetized by an intraperitoneal injection of 40 mg kg -1 sodium pentobarbital",
+      "endpoints": [
+        {"slug": null, "label": "bone fracture healing / callus formation", "role": "primary", "evidence": "defects in healing of bone fractures, evidenced by μCT analysis"},
+        {"slug": null, "label": "chondrocyte and osteoblast numbers at fracture site", "role": "secondary", "evidence": "decreased numbers of chondrocytes (e, upper panels) and osteoblasts"}
+      ],
+      "substances": [
+        {"name": "sodium pentobarbital", "role": "other", "evidence": "intraperitoneal injection of 40 mg kg -1 sodium pentobarbital"},
+        {"name": "povidone-iodine solution", "role": "other", "evidence": "sterilized with a 10% povidone-iodine solution"}
+      ],
+      "exposure": {
+        "dose_levels": ["40 mg kg -1"],
+        "dose_units": "mg kg -1",
+        "frequency": null,
+        "duration": "approximately 20 min of deep anesthesia",
+        "timing": null,
+        "conditions": "metal dull blade (weighted 500 g) dropping from a height of 20 cm"
+      },
+      "exposure_evidence": "anesthetized by an intraperitoneal injection of 40 mg kg -1 sodium pentobarbital",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Route refers to anesthetic administration; the surgical fracture itself has no chemical route. Fractures generated at day 1 or 240 post-TAM."
+    },
+    {
+      "study_type": "Skin wound healing model (full-thickness dorsal wound)",
+      "procedure_text": "Full-thickness 10 mm circular dorsal wounds made through panniculus carnosus; wound size measured daily until closure.",
+      "procedure_text_evidence": "Circular wounds of 10 mm in diameter and the full thickness of the skin were produced",
+      "species": "mouse",
+      "species_evidence": "the mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": null},
+      "animal_counts_evidence": "N = 6 mice",
+      "test_system": ["in_vivo"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["cutaneous"],
+      "route_evidence": "the skin was prepped with povidone-iodine and alcohol",
+      "endpoints": [
+        {"slug": null, "label": "skin wound closure / healing rate", "role": "primary", "evidence": "Partial depletion of Prrx1 + stem cells led to a delay in skin wound healing"}
+      ],
+      "substances": [
+        {"name": "povidone-iodine", "role": "other", "evidence": "skin was prepped with povidone-iodine and alcohol"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": "Dressings were changed every other day",
+        "duration": "until full wound closure",
+        "timing": null,
+        "conditions": "Circular wounds of 10 mm in diameter"
+      },
+      "exposure_evidence": "Circular wounds of 10 mm in diameter and the full thickness of the skin were produced",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "route"],
+      "notes": "No therapeutic chemical administered; route reflects skin surface preparation only. Wound tissues analyzed by H&E at day 19."
+    },
+    {
+      "study_type": "Bone dynamic histomorphometry with calcein double labeling",
+      "procedure_text": "Mice received calcein injections (20 mg/kg) at 8 and 2 days before killing; femur sections analyzed for double calcein labeling and bone parameters.",
+      "procedure_text_evidence": "Mice received injections of calcein (20 mg kg -1 ) at 8 and 2 days before killing",
+      "species": "mouse",
+      "species_evidence": "3-month-old male mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": null},
+      "animal_counts_evidence": "N = 8 mice",
+      "test_system": ["in_vivo"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["unspecified"],
+      "route_evidence": "received injections of calcein (20 mg kg -1 )",
+      "endpoints": [
+        {"slug": null, "label": "bone histomorphometry / mineral apposition", "role": "primary", "evidence": "double calcein labeling"}
+      ],
+      "substances": [
+        {"name": "calcein", "role": "other", "evidence": "injections of calcein (20 mg kg -1 )"}
+      ],
+      "exposure": {
+        "dose_levels": ["20 mg kg -1"],
+        "dose_units": "mg kg -1",
+        "frequency": "at 8 and 2 days before killing",
+        "duration": null,
+        "timing": "before killing",
+        "conditions": null
+      },
+      "exposure_evidence": "Mice received injections of calcein (20 mg kg -1 ) at 8 and 2 days before killing",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["route", "animal_counts"],
+      "notes": "Parameters expressed following American Society for Bone and Mineral Research nomenclature guidelines."
+    },
+    {
+      "study_type": "In vitro CFU and proliferation/differentiation assays of sorted Prrx1+ cells",
+      "procedure_text": "FACS-sorted Prrx1+ and BM cells cultured for CFU assays, CCK-8 proliferation, and osteoblast/chondrocyte/adipocyte differentiation.",
+      "procedure_text_evidence": "sorted Prrx1 + stem cells from Prrx1-CreER T2 tdTomato mice at day 1 post-TAM were seeded at a density of 250 cells per cm 2",
+      "species": "mouse",
+      "species_evidence": "Prrx1-CreER T2 tdTomato mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": null},
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "colony forming unit capacity", "role": "primary", "evidence": "CFU colonies were stained by crystal violet staining"},
+        {"slug": null, "label": "cell proliferation", "role": "secondary", "evidence": "used to draw proliferation curve"},
+        {"slug": null, "label": "osteoblast/chondrocyte/adipocyte differentiation", "role": "secondary", "evidence": "For osteoblast differentiation assays, sorted cells were seeded"}
+      ],
+      "substances": [
+        {"name": "β-glycerol phosphate", "role": "other", "evidence": "supplemented with 10 mM β-glycerol phosphate"},
+        {"name": "TGF-β1", "role": "other", "evidence": "10 ng ml -1 TGF-β1"},
+        {"name": "insulin", "role": "other", "evidence": "100 nM dexamethasone and 5 μM insulin"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": "cultured for 9 days",
+        "timing": null,
+        "conditions": "complete medium containing 20% FBS"
+      },
+      "exposure_evidence": "CFU colonies were stained by crystal violet staining (1% in formalin solution) and counted after culturing for 9 days",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Cells derived from tdTomato mice; in vitro assays on sorted primary cells."
+    },
+    {
+      "study_type": "Subcutaneous bone formation transplantation into nude mice",
+      "procedure_text": "Sorted BM Prrx1+ cells with HA/TCP scaffolds implanted subcutaneously into nude mice; collected after 3 months; serial retransplantation performed.",
+      "procedure_text_evidence": "implanted subcutaneously onto the back of 2-month-old BALB/C homozygous nude (nu/nu) mice",
+      "species": "mouse",
+      "species_evidence": "BALB/C homozygous nude (nu/nu) mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": null},
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["subcutaneous", "implantation"],
+      "route_evidence": "implanted subcutaneously onto the back of 2-month-old BALB/C",
+      "endpoints": [
+        {"slug": null, "label": "ectopic bone formation / ossification", "role": "primary", "evidence": "BM Prrx1 + cells generated bones in serial transplantation assays"}
+      ],
+      "substances": [
+        {"name": "hydroxyapatite/tricalcium phosphate carrier scaffolds", "role": "other", "evidence": "40 mg hydroxyapatite/tricalcium phosphate carrier scaffolds"}
+      ],
+      "exposure": {
+        "dose_levels": ["5 × 10 5 cells"],
+        "dose_units": "cells",
+        "frequency": null,
+        "duration": "Mice were killed 3 months later",
+        "timing": null,
+        "conditions": "incubated with 40 mg HA/TCP scaffolds"
+      },
+      "exposure_evidence": "sorted Prrx1 + cells from bones (5 × 10 5 ) ... implanted subcutaneously",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Retransplantation of Tomato+CD29+CD130+ cells performed, collected 3 months later."
+    },
+    {
+      "study_type": "Subcutaneous adipose formation transplantation into C57BL/6 mice",
+      "procedure_text": "Sorted iWAT Prrx1+ cells in Matrigel transplanted subcutaneously onto edge of iWAT of C57BL/6 mice; collected after 1 month; retransplantation performed.",
+      "procedure_text_evidence": "The mixture (10 μl per mouse) was transplanted subcutaneously on the edge of iWAT of 2-month-old C57BL/6 mice",
+      "species": "mouse",
+      "species_evidence": "2-month-old C57BL/6 mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": null},
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["subcutaneous"],
+      "route_evidence": "transplanted subcutaneously on the edge of iWAT",
+      "endpoints": [
+        {"slug": null, "label": "adipose tissue formation", "role": "primary", "evidence": "For adipose formation assays"}
+      ],
+      "substances": [
+        {"name": "Matrigel", "role": "other", "evidence": "mixed with an equal volume of Matrigel (Corning)"}
+      ],
+      "exposure": {
+        "dose_levels": ["5 × 10 4 cells per μl"],
+        "dose_units": "cells per μl",
+        "frequency": null,
+        "duration": "Mice were killed 1 month later",
+        "timing": null,
+        "conditions": "mixed with equal volume of Matrigel"
+      },
+      "exposure_evidence": "resuspended at a density of 5 × 10 4 cells per μl ... mixed with an equal volume of Matrigel",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Retransplantation of Tomato+CD29+CD130+ cells, collected 1 month later."
+    },
+    {
+      "study_type": "Skin reconstitution transplantation into nude mice",
+      "procedure_text": "Sorted dermal Prrx1+ cells mixed with epidermal cells injected into chamber on full-thickness back wound of nude mice; collected after 1 month.",
+      "procedure_text_evidence": "A 1-cm full-thickness wound was made on the back and a rubber chamber was inserted into the wound",
+      "species": "mouse",
+      "species_evidence": "BALB/C homozygous nude (nu/nu) mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": null},
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["implantation"],
+      "route_evidence": "The cell mixture was injected into the chamber",
+      "endpoints": [
+        {"slug": null, "label": "dermal cell differentiation / skin reconstitution", "role": "primary", "evidence": "dermal Prrx1 + cells could differentiate into different dermal cell types"}
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": ["5 × 10 6 Prrx1 + cells", "8 × 10 6 back skin epidermal cells"],
+        "dose_units": "cells",
+        "frequency": null,
+        "duration": "Mice were killed 1 month later",
+        "timing": null,
+        "conditions": "resuspended in 200 μl DMEM containing 10% FBS"
+      },
+      "exposure_evidence": "sorted 5 × 10 6 Prrx1 + cells from dermis ... and 8 × 10 6 back skin epidermal cells from P2 C57BL/6 pups",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Retransplantation of Tomato+ITGAV+CD130+ cells with P2 dermal and epithelial cells, collected 1 month later."
+    }
+  ]
+}

@@ -1,0 +1,684 @@
+{
+  "experiments": [
+    {
+      "study_type": "Immunofluorescence/FISH/RT-PCR on human DRG tissue",
+      "procedure_text": "Adult and foetal human DRGs obtained from donors, sectioned and processed for DBI immunofluorescence, FISH and RT-PCR.",
+      "procedure_text_evidence": "Adult human DRGs were obtained from a healthy donor",
+      "species": "human",
+      "species_evidence": "Adult human DRGs",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "Adult human DRGs were blocked and fixed overnight",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "DBI protein localization (immunofluorescence)",
+          "role": "primary",
+          "evidence": "incubated overnight at 4\u00b0C with an anti-DBI antibody"
+        },
+        {
+          "slug": null,
+          "label": "Dbi mRNA expression (FISH/RT-PCR)",
+          "role": "primary",
+          "evidence": "detection of Dbi mRNA expression in human and mouse DRG by RT-PCR"
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "approved by the University of Cincinnati Institutional Review Boards",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Human tissue from adult and foetal donors; thoracolumbar harvest T10/11 to L5/S1 for foetal DRGs."
+    },
+    {
+      "study_type": "Primary mouse DRG neuron culture for patch clamp",
+      "procedure_text": "DRG cultures from adult male C57BL/6 mice dissociated enzymatically, plated, and used for patch clamp recording within 48 hours.",
+      "procedure_text_evidence": "DRG cultures from adult male C57BL/6 mice were prepared",
+      "species": "mouse",
+      "species_evidence": "adult male C57BL/6 mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "DRG cultures from adult male C57BL/6 mice were prepared",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "DBI/GABA-induced currents (whole-cell patch clamp)",
+          "role": "primary",
+          "evidence": "DBI-and GABA-induced currents recorded from cultured mouse"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Recombinant purified DBI",
+          "role": "test",
+          "evidence": "Recombinant purified DBI (200 nM)"
+        },
+        {
+          "name": "GABA",
+          "role": "test",
+          "evidence": "GABA (200 M) were applied via localised perfusion"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["200 nM", "200 M"],
+        "dose_units": null,
+        "frequency": null,
+        "duration": "within 48 hours",
+        "timing": null,
+        "conditions": "applied via localised perfusion system"
+      },
+      "exposure_evidence": "Recombinant purified DBI (200 nM) or GABA (200 M) were applied",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "housed in a controlled environment following the institutional guidelines and the Reporting of In vivo Experiments (ARRIVE) guidelines",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": null
+    },
+    {
+      "study_type": "Purified SGC culture from Wistar rats",
+      "procedure_text": "Purified SGC cultures prepared from Wistar rats 5-12 days old, enzymatically dissociated, and used in co-culture reporter assays.",
+      "procedure_text_evidence": "Purified SGC cultures were prepared from Wistar rats (5-12 days old)",
+      "species": "rat",
+      "species_evidence": "Wistar rats (5-12 days old)",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "Purified SGC cultures were prepared from Wistar rats",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "DBI/endozepine release (ELISA, iodide imaging)",
+          "role": "primary",
+          "evidence": "detection of an endozepine release by the cultured purified SGCs"
+        }
+      ],
+      "substances": [
+        {
+          "name": "bicuculline",
+          "role": "other",
+          "evidence": "GABAA receptor blocker, bicuculline (50 M"
+        },
+        {
+          "name": "flumazenil",
+          "role": "other",
+          "evidence": "benzodiazepine antagonist, flumazenil (8 M"
+        },
+        {
+          "name": "GABA",
+          "role": "other",
+          "evidence": "GABA (5 M) is added at the end of experiment"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["50 M", "8 M", "5 M"],
+        "dose_units": null,
+        "frequency": null,
+        "duration": "co-cultured for with the purified SGCs for 24 h",
+        "timing": null,
+        "conditions": "in the presence of the GABAA receptor blocker"
+      },
+      "exposure_evidence": "bicuculline (50 M; F) or the benzodiazepine antagonist, flumazenil (8 M",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "following the institutional guidelines and the Reporting of In vivo Experiments (ARRIVE) guidelines",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "SGC culture used in co-culture with reporter HEK293 cells."
+    },
+    {
+      "study_type": "HEK293 heterologous expression and iodide imaging/patch clamp",
+      "procedure_text": "HEK293 cells transfected with GABAA receptor subunits and halide-sensitive EYFP mutant for iodide imaging and patch clamp recordings.",
+      "procedure_text_evidence": "HEK293 cells were co-transfected with cDNA encoding human \u03b11, \u03b22, and \u03b32 subunits",
+      "species": null,
+      "species_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "HEK293 cells were grown in DMEM",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "EYFP-QL fluorescence quenching / GABAA currents",
+          "role": "primary",
+          "evidence": "produces EYFP-QL fluorescence quenching"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Recombinant purified DBI",
+          "role": "test",
+          "evidence": "Recombinant purified DBI (200 nM) or GABA (200 M)"
+        },
+        {
+          "name": "GABA",
+          "role": "test",
+          "evidence": "GABA (200 M) were applied via localised perfusion"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["200 nM", "200 M"],
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": "applied via localised perfusion system"
+      },
+      "exposure_evidence": "Recombinant purified DBI (200 nM) or GABA (200 M) were applied via localised perfusion",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["species"],
+      "notes": "HEK293 is a human cell line; coded species null per cell-line rule. Transfected with human or mouse/rat GABAA subunits."
+    },
+    {
+      "study_type": "Immunofluorescence/FISH/qPCR on mouse and rat DRG tissue",
+      "procedure_text": "Mice or rats anaesthetized, perfused, DRGs isolated, sectioned and processed for immunofluorescence, FISH and qPCR of DBI/GABAA/Piezo2/Trpv1.",
+      "procedure_text_evidence": "mice or rats were deeply anaesthetized with isoflurane or pentobarbital sodium, transcardially perfused",
+      "species": "mouse",
+      "species_evidence": "mice or rats were deeply anaesthetized",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "Lumbar DRGs were isolated and post-fixed in PFA",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "DBI/marker protein localization (immunofluorescence)",
+          "role": "primary",
+          "evidence": "tissue sections were incubated overnight with the following primary antibodies"
+        },
+        {
+          "slug": null,
+          "label": "mRNA expression (FISH Dbi/Gabra1/Gabrg2/Piezo2/Trpv1)",
+          "role": "primary",
+          "evidence": "Probes against the mouse Dbi, Gagra1, Gabrg2, Piezo2, and Trpv1 mRNA"
+        },
+        {
+          "slug": null,
+          "label": "Dbi expression (qPCR)",
+          "role": "secondary",
+          "evidence": "Quantitative PCR (qPCR) analysis was performed"
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "in accordance with the Animal Care and Ethical Committee of Hebei Medical University",
+      "missing_or_ambiguous": ["animal_counts", "species"],
+      "notes": "Both mice and rats used for tissue IF/FISH; CD1 and C57BL/6J mice and Wistar rats, males and females, listed under Animals."
+    },
+    {
+      "study_type": "Rat DRG neuron perforated-patch recording",
+      "procedure_text": "Perforated-patch recordings from cultured rat DRG neurons assessing DBI modulation of GABA currents in mechanosensitive and nociceptor neurons.",
+      "procedure_text_evidence": "the perforated-patch recording the pipette solution contained",
+      "species": "rat",
+      "species_evidence": "perforated patch recordings from cultured rat DRG neurons",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "cultured rat DRG neurons",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "GABA current concentration dependency / DBI PAM effect",
+          "role": "primary",
+          "evidence": "concentration dependency of GABA currents (quantified as current densities)"
+        }
+      ],
+      "substances": [
+        {
+          "name": "DBI",
+          "role": "test",
+          "evidence": "presence (blue) of 500 nM DBI"
+        },
+        {
+          "name": "GABA",
+          "role": "test",
+          "evidence": "responses to GABA (1 -5000 M)"
+        },
+        {
+          "name": "capsaicin",
+          "role": "other",
+          "evidence": "no repose to 1 M capsaicin"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["500 nM", "1 -5000 M", "1 M"],
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": "perforated patch recordings"
+      },
+      "exposure_evidence": "in the absence (black) and presence (blue) of 500 nM DBI",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "following the institutional guidelines and the Reporting of In vivo Experiments (ARRIVE) guidelines",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": null
+    },
+    {
+      "study_type": "DBI ELISA from mouse DRG supernatant",
+      "procedure_text": "DRGs from C57BL/6 mice extracted, incubated in control or high-K+ solution; supernatants assayed for DBI by ELISA.",
+      "procedure_text_evidence": "DRGs from all spinal levels of C57BL/6 mice were rapidly extracted into HBSS",
+      "species": "mouse",
+      "species_evidence": "DRGs from all spinal levels of C57BL/6 mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "ganglia were incubated for 30 minutes at room temperature",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "DBI release (ELISA)",
+          "role": "primary",
+          "evidence": "supernatants were collected for DBI detection using DBI ELISA kit"
+        }
+      ],
+      "substances": [
+        {
+          "name": "High-K+ solution (150 mM KCl)",
+          "role": "test",
+          "evidence": "medium with high extracellular [K + ] (150 mM; 'High-K + ')"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["150 mM"],
+        "dose_units": "mM",
+        "frequency": null,
+        "duration": "30 min incubation",
+        "timing": null,
+        "conditions": "equimolar replacement of 150 mM NaCl with 150 mM KCl"
+      },
+      "exposure_evidence": "The 'High-K + ' solution was produced by equimolar replacement of 150 mM NaCl with 150 mM KCl",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "following the institutional guidelines and the Reporting of In vivo Experiments (ARRIVE) guidelines",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": null
+    },
+    {
+      "study_type": "DRG cannula/osmotic pump implantation for focal drug delivery",
+      "procedure_text": "DRG cannula implanted at L4 of adult male C57BL/6 mice for focal application; osmotic minipumps for continuous local delivery.",
+      "procedure_text_evidence": "A DRG cannula for focal application of substances to DRG was implanted",
+      "species": "mouse",
+      "species_evidence": "adult male mouse (C57BL/6; 20 -25 g)",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "a midline incision was made at the L3 -L5 spinal level of adult male mouse",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other", "intramuscular"],
+      "route_evidence": "Intramuscular injection of benzylpenicillin (19 mg/0.1 ml)",
+      "endpoints": [],
+      "substances": [
+        {
+          "name": "benzylpenicillin",
+          "role": "other",
+          "evidence": "Intramuscular injection of benzylpenicillin (19 mg/0.1 ml)"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["19 mg/0.1 ml"],
+        "dose_units": null,
+        "frequency": null,
+        "duration": "releases approximately 0.5 \u03bcl/h for 14 days",
+        "timing": "immediately after surgery",
+        "conditions": "focal application of substances to DRG"
+      },
+      "exposure_evidence": "This pump model releases approximately 0.5 \u03bcl/h for 14 days",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "in accordance with the Animal Care and Ethical Committee of Hebei Medical University",
+      "missing_or_ambiguous": ["animal_counts", "endpoints"],
+      "notes": "Cannula is a surgical delivery route to DRG ('other'); analgesic/antibiotic given intramuscularly."
+    },
+    {
+      "study_type": "Viral DRG gene delivery (AAV) with chronic pain models",
+      "procedure_text": "AAV virions injected into L4 DRG of C57BL/6 male mice; mechanical and heat sensitivity monitored in naive, SNI and CFA models.",
+      "procedure_text_evidence": "AAV virions were injected into the right-side L4 DRG of C57BL/6 male mice",
+      "species": "mouse",
+      "species_evidence": "L4 DRG of C57BL/6 male mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "L4 DRGs of adult C57BL/6 male mice were exposed",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other"],
+      "route_evidence": "The microinjector (Hamilton Company) was inserted into the ganglion",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Mechanical sensitivity (von Frey)",
+          "role": "primary",
+          "evidence": "Mechanical (von Frey; C) and heat (Hargreaves; D) sensitivity was monitored"
+        },
+        {
+          "slug": null,
+          "label": "Heat sensitivity (Hargreaves)",
+          "role": "primary",
+          "evidence": "heat (Hargreaves; D) sensitivity was monitored"
+        },
+        {
+          "slug": null,
+          "label": "Dbi overexpression (RT-PCR)",
+          "role": "secondary",
+          "evidence": "RT-PCR confirmation of Dbi overexpression in the DRG"
+        }
+      ],
+      "substances": [
+        {
+          "name": "AAV5-gfaABC1D-DBI-EGFP virions",
+          "role": "test",
+          "evidence": "injection with AAV5-gfaABC1D-DBI-EGFP virions"
+        },
+        {
+          "name": "GFP control virions",
+          "role": "control",
+          "evidence": "AAV5-gfaABC1D-DBI-EGFP virions or GFP control virions"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["1.1 -1.2x10 12 vg/ml", "2 \u03bcl"],
+        "dose_units": "vg/ml",
+        "frequency": null,
+        "duration": "during 42 days after the DRG injection",
+        "timing": "8 weeks after injection",
+        "conditions": "injected into the right-side L4 DRG"
+      },
+      "exposure_evidence": "GFP control virions (1.1 -1.2x10 12 vg/ml; 2 \u03bcl)",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "in accordance with the Animal Care and Ethical Committee of Hebei Medical University",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Combined with SNI and CFA chronic pain models in pre-injected mice."
+    },
+    {
+      "study_type": "Intrathecal siRNA/protein delivery with behavioural testing",
+      "procedure_text": "Mice received intrathecal injections of siRNAs targeting Dbi/Gabra1/Gabrg2 or recombinant human DBI protein; behavioural tests 48 h later.",
+      "procedure_text_evidence": "Mice received an intrathecal injection of siRNAs targeting Dbi",
+      "species": "mouse",
+      "species_evidence": "Mice received an intrathecal injection",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "Intrathecal injections were performed by a spinal puncture",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["intrathecal"],
+      "route_evidence": "Intrathecal injections were performed by a spinal puncture",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Mechanical sensitivity (von Frey)",
+          "role": "primary",
+          "evidence": "mechanical sensitivity (von Frey) test (A)"
+        },
+        {
+          "slug": null,
+          "label": "Cold allodynia (dry ice)",
+          "role": "primary",
+          "evidence": "cold allodynia (dry ice)"
+        }
+      ],
+      "substances": [
+        {
+          "name": "siRNAs targeting Dbi, Gabra1, Gabrg2",
+          "role": "test",
+          "evidence": "siRNAs targeting Dbi (s64829), Gabra1 (s201367), Gabrg2 (s66392)"
+        },
+        {
+          "name": "non-targeting control siRNA",
+          "role": "control",
+          "evidence": "a non-targeting control siRNA (4390846) was used as negative control"
+        },
+        {
+          "name": "Recombinant Human DBI protein",
+          "role": "test",
+          "evidence": "Recombinant Human DBI protein (Abcam, Cat. No ab84342)"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["2 \u03bcg of siRNA per delivery", "10 ng per delivery"],
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": "Behavioral tests were performed 48 h after the injection",
+        "conditions": "in the transfection agent PEI"
+      },
+      "exposure_evidence": "2 \u03bcg of siRNA per delivery in the transfection agent PEI",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "under the UK Home Office License P40AD29D7 in accordance with the regulations of the UK Animals (Scientific Procedures) Act 1986",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "intrathecal route not in route vocabulary; mapped to 'intrathecal' as provided."
+    },
+    {
+      "study_type": "CFA chronic inflammatory pain model",
+      "procedure_text": "Mice injected with 20 \u03bcl complete Freund's adjuvant in right hind paw; control mice received sterile saline.",
+      "procedure_text_evidence": "mice were injected with 20 \u03bcl of complete Freund's adjuvant",
+      "species": "mouse",
+      "species_evidence": "mice were injected with 20 \u03bcl",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "injected with 20 \u03bcl of complete Freund's adjuvant",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["subcutaneous"],
+      "route_evidence": "in the glabrous surface of the right hind paw",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Chronic inflammatory pain induction",
+          "role": "primary",
+          "evidence": "To induce chronic inflammatory pain"
+        }
+      ],
+      "substances": [
+        {
+          "name": "complete Freund's adjuvant",
+          "role": "test",
+          "evidence": "20 \u03bcl of complete Freund's adjuvant (Sigma)"
+        },
+        {
+          "name": "sterile 0.9% NaCl",
+          "role": "control",
+          "evidence": "sterile 0.9% NaCl was injected into the control mice"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["20 \u03bcl"],
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": "in the glabrous surface of the right hind paw"
+      },
+      "exposure_evidence": "mice were injected with 20 \u03bcl of complete Freund's adjuvant",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "following the institutional guidelines and the Reporting of In vivo Experiments (ARRIVE) guidelines",
+      "missing_or_ambiguous": ["animal_counts", "route"],
+      "notes": "Paw injection route not explicitly named; subcutaneous coded tentatively from 'glabrous surface'."
+    },
+    {
+      "study_type": "Spared nerve injury (SNI) neuropathic pain model",
+      "procedure_text": "Mice anaesthetized, sciatic nerve exposed; peroneal and tibial branches ligated and transected, leaving sural nerve intact.",
+      "procedure_text_evidence": "The peroneal and tibial branches were tightly ligated with 5-0 silk and transected",
+      "species": "mouse",
+      "species_evidence": "mice were deeply anesthetized by sodium pentobarbital",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "expose the three branches of the sciatic nerve",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["intraperitoneal"],
+      "route_evidence": "sodium pentobarbital (40-60 mg/kg, i.p)",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Neuropathic pain induction (SNI)",
+          "role": "primary",
+          "evidence": "SNI was performed following the procedure described previously"
+        }
+      ],
+      "substances": [
+        {
+          "name": "sodium pentobarbital",
+          "role": "other",
+          "evidence": "deeply anesthetized by sodium pentobarbital (40-60 mg/kg, i.p)"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["40-60 mg/kg"],
+        "dose_units": "mg/kg",
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": "deeply anesthetized"
+      },
+      "exposure_evidence": "mice were deeply anesthetized by sodium pentobarbital (40-60 mg/kg, i.p)",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "following the institutional guidelines and the Reporting of In vivo Experiments (ARRIVE) guidelines",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Anaesthetic route i.p.; surgical procedure itself has no administered compound."
+    },
+    {
+      "study_type": "Behavioural nociception testing battery in mice",
+      "procedure_text": "Mice assessed for mechanical threshold (von Frey), dynamic allodynia, pinprick, blunt pressure, cold allodynia, heat (Hargreaves) and rotarod motor function.",
+      "procedure_text_evidence": "Fifty percent mechanical threshold was measured with calibrated von Frey filaments",
+      "species": "mouse",
+      "species_evidence": "Mice were acclimated for 30-60 min",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "Mice were acclimated for 30-60 min in von Frey testing chambers",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Mechanical threshold (von Frey)",
+          "role": "primary",
+          "evidence": "Fifty percent mechanical threshold was measured with calibrated von Frey filaments"
+        },
+        {
+          "slug": null,
+          "label": "Dynamic mechanical allodynia (brush)",
+          "role": "primary",
+          "evidence": "cotton wisp test was used to evaluate dynamic mechanical allodynia"
+        },
+        {
+          "slug": null,
+          "label": "Pinprick response",
+          "role": "secondary",
+          "evidence": "Response to pinprick"
+        },
+        {
+          "slug": null,
+          "label": "Blunt pressure response (alligator clip)",
+          "role": "secondary",
+          "evidence": "Response to blunt pressure application was assessed with the alligator clip assay"
+        },
+        {
+          "slug": null,
+          "label": "Cold allodynia (dry ice)",
+          "role": "primary",
+          "evidence": "Cold allodynia (dry ice test)"
+        },
+        {
+          "slug": null,
+          "label": "Heat sensitivity (Hargreaves)",
+          "role": "primary",
+          "evidence": "Heat sensitivity was assessed using the Hargreaves method"
+        },
+        {
+          "slug": "neurotoxicity",
+          "label": "Motor function (rotarod)",
+          "role": "secondary",
+          "evidence": "Motor function was assessed using a rotarod apparatus"
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "following the institutional guidelines and the Reporting of In vivo Experiments (ARRIVE) guidelines",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Behavioural battery performed on mice from treatment groups; cut-offs applied to prevent tissue damage."
+    }
+  ]
+}

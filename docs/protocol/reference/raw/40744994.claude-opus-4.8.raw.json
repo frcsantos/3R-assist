@@ -1,0 +1,200 @@
+{
+  "experiments": [
+    {
+      "study_type": "Hepatocyte-specific Kctd17 depletion via AAV8-Cre in Cas9 knockin mice, FPC diet MASH model",
+      "procedure_text": "Cas9 knockin mice transduced with AAV8-TBG-Cre or AAV8-U6-sgKctd17-TBG-Cre with FPC diet, euthanized 16 weeks after transduction",
+      "procedure_text_evidence": "Cas9 knockin mice were transduced with AAV8-TBG-Cre (control) or AAV8-U6-sgKctd17-TBG-Cre (L-Kctd17) with an FPC diet",
+      "species": "mouse",
+      "species_evidence": "Cas9 knockin mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": 7},
+      "animal_counts_evidence": "Liver gene expression (n = 7-8 per group)",
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "Cas9 knockin mice were transduced",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "liver fibrosis (H&E and Sirius red staining)", "role": "primary", "evidence": "H&E and Sirius red staining in histological sections of mouse liver"},
+        {"slug": null, "label": "serum ALT and AST (liver injury)", "role": "secondary", "evidence": "ALT (e) and AST (f) levels in serum"}
+      ],
+      "substances": [
+        {"name": "AAV8-U6-sgKctd17-TBG-Cre", "role": "test", "evidence": "AAV8-U6-sgKctd17-TBG-Cre (L-Kctd17)"},
+        {"name": "AAV8-TBG-Cre", "role": "control", "evidence": "AAV8-TBG-Cre (control)"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": "16 weeks after transduction",
+        "timing": null,
+        "conditions": "with an FPC diet"
+      },
+      "exposure_evidence": "euthanized 16 weeks after transduction",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "route", "sex"],
+      "notes": "AAV transduction route not stated; counts given only as n per group for specific assays."
+    },
+    {
+      "study_type": "Hepatocyte-specific Kctd17 depletion via AAV8-Cre in Cas9 knockin mice, CDAHFD diet MASH model",
+      "procedure_text": "Control or L-Kctd17 mice with CDAHFD euthanized 12 weeks after transduction",
+      "procedure_text_evidence": "Control or L-Kctd17 mice with CDAHFD were euthanized 12 weeks after transduction",
+      "species": "mouse",
+      "species_evidence": "CDAHFD-fed mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": 7},
+      "animal_counts_evidence": "Liver gene expression (n = 7 and 8 per group)",
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "L-Kctd17 mice with CDAHFD",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "liver fibrosis (H&E and Sirius red staining)", "role": "primary", "evidence": "H&E and Sirius red staining in histological sections of mouse liver"},
+        {"slug": null, "label": "serum ALT and AST levels", "role": "secondary", "evidence": "Serum ALT (k) and AST (l) levels"}
+      ],
+      "substances": [
+        {"name": "AAV8-U6-sgKctd17-TBG-Cre (L-Kctd17)", "role": "test", "evidence": "Control or L-Kctd17 mice with CDAHFD"},
+        {"name": "AAV8-TBG-Cre (control)", "role": "control", "evidence": "Control or L-Kctd17 mice"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": "12 weeks after transduction",
+        "timing": null,
+        "conditions": "with CDAHFD"
+      },
+      "exposure_evidence": "euthanized 12 weeks after transduction",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "route", "sex"],
+      "notes": "Distinct diet model (CDAHFD, 12 weeks) from the FPC-diet cohort; AAV administration route not stated."
+    },
+    {
+      "study_type": "Hepatocyte Serpina3k/SERPINA3 restoration via AAV8 in C57BL/6 WT mice, CDAHFD MASH model",
+      "procedure_text": "C57BL/6 WT mice transduced with AAV8-TBG, AAV8-TBG-mSerpina3k-GFP or AAV8-TBG-hSERPINA3-GFP with CDAHFD, euthanized 12 weeks after transduction",
+      "procedure_text_evidence": "C57BL/6 WT mice were transduced with AAV8-TBG or AAV8-TBG-mSerpina3k-GFP",
+      "species": "mouse",
+      "species_evidence": "C57BL/6 WT mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": 7},
+      "animal_counts_evidence": "liver gene expression (n = 7-8 per group)",
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "C57BL/6 WT mice were transduced",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "liver fibrosis (H&E and Sirius red staining)", "role": "primary", "evidence": "H&E and Sirius red staining in histological sections of mouse liver"},
+        {"slug": null, "label": "serum ALT and AST levels", "role": "secondary", "evidence": "ALT (g) and AST (h) levels in serum"},
+        {"slug": null, "label": "cathepsin G activity in liver", "role": "secondary", "evidence": "cathepsin G activity in the liver (n = 7 per group)"}
+      ],
+      "substances": [
+        {"name": "AAV8-TBG-mSerpina3k-GFP", "role": "test", "evidence": "AAV8-TBG-mSerpina3k-GFP (AAV8-TBG-mSerpina3k)"},
+        {"name": "AAV8-TBG-hSERPINA3-GFP", "role": "test", "evidence": "AAV8-TBG-hSERPINA3-GFP (AAV8-TBG-hSERPINA3)"},
+        {"name": "AAV8-TBG", "role": "control", "evidence": "AAV8-TBG"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": "12 weeks after transduction",
+        "timing": null,
+        "conditions": "with CDAHFD"
+      },
+      "exposure_evidence": "euthanized 12 weeks after transduction",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "route", "sex"],
+      "notes": "Gain-of-function study restoring Serpina3k/SERPINA3; AAV administration route not stated."
+    },
+    {
+      "study_type": "Pharmacologic Kctd17 inhibition with ASOs in C57BL/6 WT mice, FPC diet MASH model",
+      "procedure_text": "C57BL/6 WT mice fed FPC diet 10 weeks, then control ASO or Kctd17 ASOs weekly intraperitoneally at 25 mg/kg, euthanized 6 weeks later",
+      "procedure_text_evidence": "administered control ASO or two different Kctd17-targeting ASO ... weekly by intraperitoneal injection a dose of 25 mg/kg",
+      "species": "mouse",
+      "species_evidence": "C57BL/6 WT mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": 6},
+      "animal_counts_evidence": "liver gene expression (n = 6-7 per group)",
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "C57BL/6 WT mice were fed FPC diet",
+      "application": "translational-applied-research",
+      "application_evidence": "Pharmacologic Kctd17 inhibition protects from MASH-induced liver fibrosis",
+      "route": ["intraperitoneal"],
+      "route_evidence": "administered by intraperitoneal injection",
+      "endpoints": [
+        {"slug": null, "label": "liver fibrosis (H&E and Sirius red staining)", "role": "primary", "evidence": "H&E and Sirius red staining in histological sections of mouse liver"},
+        {"slug": null, "label": "serum ALT and AST levels", "role": "secondary", "evidence": "ALT (f) and AST (g) levels in serum"},
+        {"slug": null, "label": "serum Serpina3k protein level", "role": "secondary", "evidence": "Serpina3k protein level in serum (c)"}
+      ],
+      "substances": [
+        {"name": "Kctd17 ASO-1", "role": "test", "evidence": "Kctd17 ASO-1 (5′-AGG TAA TGA TTG TAG C-3′)"},
+        {"name": "Kctd17 ASO-2", "role": "test", "evidence": "Kctd17 ASO-2 (5′-AAG GTA ATG ATT GTA G-3′)"},
+        {"name": "control ASO", "role": "control", "evidence": "nonspecific control ASO"}
+      ],
+      "exposure": {
+        "dose_levels": ["25 mg/kg", "20-25 mg/kg"],
+        "dose_units": "mg/kg body weight",
+        "frequency": "once weekly",
+        "duration": "6-7 weeks before euthanasia",
+        "timing": "fed FPC diet for 10 weeks and then administered",
+        "conditions": "diluted in 0.9% NaCl before injection"
+      },
+      "exposure_evidence": "administered to male C57BL/6N mice at a dosage of 20-25 mg/kg body weight once weekly",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Methods state male C57BL/6N mice, 20-25 mg/kg, once weekly, 6-7 weeks; Fig.7 FPC cohort specifies 25 mg/kg for 6 weeks."
+    },
+    {
+      "study_type": "Pharmacologic Kctd17 inhibition with ASOs in C57BL/6 WT mice, CDAHFD diet MASH model",
+      "procedure_text": "C57BL/6 WT mice fed CDAHFD 6 weeks, then control ASO or Kctd17 ASOs weekly intraperitoneally at 20 mg/kg, euthanized 6 weeks later",
+      "procedure_text_evidence": "fed CDAHFD for 6 weeks and then administered control ASO, Kctd17 ASO-1 or ASO-2 weekly by intraperitoneal injection a dose of 20 mg/kg",
+      "species": "mouse",
+      "species_evidence": "C57BL/6 WT mice",
+      "animal_counts": {"female": null, "male": null, "total": null, "per_group": 7},
+      "animal_counts_evidence": "liver gene expression (n = 7-8 per group)",
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "C57BL/6 WT mice were fed CDAHFD",
+      "application": "translational-applied-research",
+      "application_evidence": "Pharmacologic Kctd17 inhibition protects from MASH-induced liver fibrosis",
+      "route": ["intraperitoneal"],
+      "route_evidence": "administered ... by intraperitoneal injection",
+      "endpoints": [
+        {"slug": null, "label": "liver fibrosis (H&E and Sirius red staining)", "role": "primary", "evidence": "H&E and Sirius red staining in histological sections of mouse liver"},
+        {"slug": null, "label": "serum ALT and AST levels", "role": "secondary", "evidence": "ALT (m) and AST (n) levels in serum"},
+        {"slug": null, "label": "serum Serpina3k level", "role": "secondary", "evidence": "Serpina3k level in serum (j)"}
+      ],
+      "substances": [
+        {"name": "Kctd17 ASO-1", "role": "test", "evidence": "Kctd17 ASO-1 or ASO-2"},
+        {"name": "Kctd17 ASO-2", "role": "test", "evidence": "Kctd17 ASO-1 or ASO-2"},
+        {"name": "control ASO", "role": "control", "evidence": "administered control ASO"}
+      ],
+      "exposure": {
+        "dose_levels": ["20 mg/kg"],
+        "dose_units": "mg/kg",
+        "frequency": "weekly",
+        "duration": "euthanized 6 weeks after the injections",
+        "timing": "fed CDAHFD for 6 weeks and then administered",
+        "conditions": null
+      },
+      "exposure_evidence": "weekly by intraperitoneal injection a dose of 20 mg/kg",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "sex"],
+      "notes": "Distinct CDAHFD model with 20 mg/kg dose, differing from the FPC cohort at 25 mg/kg."
+    }
+  ]
+}

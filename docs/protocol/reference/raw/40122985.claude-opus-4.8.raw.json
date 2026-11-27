@@ -1,0 +1,92 @@
+{
+  "experiments": [
+    {
+      "study_type": "Assessment of surgical grasping-force-induced tissue damage using robotic forceps",
+      "procedure_text": "Fenestrated grasping forceps grasped lungs, esophagus, aorta, liver, spleen, intestines with forces of 1,2,3 N for 1,2,4 min; histological tissue damage assessed.",
+      "procedure_text_evidence": "the fenestrated grasping forceps of the Saroa surgical system were used to grasp the lungs, esophagus, aorta, liver",
+      "species": "dog",
+      "species_evidence": "six adult male beagle dogs",
+      "animal_counts": {
+        "female": null,
+        "male": 6,
+        "total": 6,
+        "per_group": null
+      },
+      "animal_counts_evidence": "six adult male beagle dogs weighing 8.06 to 9.08 kg",
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "the fenestrated grasping forceps of the Saroa surgical system were used to grasp the lungs",
+      "application": "translational-applied-research",
+      "application_evidence": "Saroa is a pneumatically actuated robotic system developed by Riverfield Inc.",
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Lung tissue damage (hemorrhage/congestion, RBC count, pleural elastic and collagen layer thickness)",
+          "role": "primary",
+          "evidence": "we measured the area of hemorrhage and/ or congestion, red blood cell (RBC) count, and thickness of the pleural elastic layers and collagen layers"
+        },
+        {
+          "slug": null,
+          "label": "Liver and spleen tissue damage (hemorrhage/congestion, RBC count, degeneration)",
+          "role": "primary",
+          "evidence": "we measured the area of hemorrhage and/ or congestion, RBC count, and area of degeneration"
+        },
+        {
+          "slug": null,
+          "label": "Gastrointestinal tract tissue damage (hemorrhage/congestion, RBC count, mucosal erosion)",
+          "role": "primary",
+          "evidence": "we measured the area of hemorrhage and/ or congestion, RBC count, and area of mucosal erosion"
+        },
+        {
+          "slug": null,
+          "label": "Aortic tissue damage (RBC count, elastic layer thickness)",
+          "role": "primary",
+          "evidence": "we measured the RBC count and elastic layer thickness in the intima, media, and adventitia"
+        }
+      ],
+      "substances": [
+        {
+          "name": "atropine sulfate",
+          "role": "other",
+          "evidence": "intramuscular injection of 0.05 mg/kg atropine sulfate"
+        },
+        {
+          "name": "ketamine hydrochloride",
+          "role": "other",
+          "evidence": "10 mg/kg ketamine hydrochloride"
+        },
+        {
+          "name": "xylazine",
+          "role": "other",
+          "evidence": "7 mg/kg xylazine"
+        },
+        {
+          "name": "sevoflurane",
+          "role": "other",
+          "evidence": "maintained using inhalational sevoflurane"
+        },
+        {
+          "name": "thiopental Sodium",
+          "role": "other",
+          "evidence": "an overdose of thiopental Sodium"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["1, 2, and 3 N"],
+        "dose_units": "N",
+        "frequency": null,
+        "duration": "1, 2, and 4 min",
+        "timing": null,
+        "conditions": "grasp the lungs, esophagus, aorta, liver, spleen, small intestine, and large intestine"
+      },
+      "exposure_evidence": "with forces of 1, 2, and 3 N for durations of 1, 2, and 4 min",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "in compliance with the \"Guide for the Care and Use of Laboratory Animals\" published by the US National Institutes of Health",
+      "missing_or_ambiguous": ["route", "per_group"],
+      "notes": "Grasping forces are mechanical loads, not chemical administration; no route applicable to the test intervention. Anesthetic/euthanasia agents listed as 'other' role."
+    }
+  ]
+}

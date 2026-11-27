@@ -1,0 +1,75 @@
+{
+  "experiments": [
+    {
+      "study_type": "Form deprivation myopia (FDM) recovery",
+      "procedure_text": "Form deprivation myopia (FDM) was induced in 3 to 4 day-old chicks by applying translucent plastic goggles to the right eye for 10 days.",
+      "procedure_text_evidence": "Form deprivation myopia (FDM) was induced in 3 to 4 day-old chicks by applying translucent plastic goggles to the right eye",
+      "species": "chicken",
+      "species_evidence": "3 to 4 day-old chicks",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": 30,
+        "per_group": null
+      },
+      "animal_counts_evidence": "30 chickens total",
+      "test_system": [
+        "in_vivo",
+        "ex_vivo"
+      ],
+      "test_system_evidence": "chicks were euthanized... Eyes were enucleated... Punches were located... retina and majority of RPE were removed",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "single cell RNA sequencing",
+          "role": "primary",
+          "evidence": "to generate enough biological replicates for statistical analyses... for RNA seq analysis"
+        },
+        {
+          "slug": null,
+          "label": "Immunolabelling",
+          "role": "secondary",
+          "evidence": "Immunolabelling... Immunolabeled choroids were examined under an Olympus Fluoview 1000 laser-scanning confocal microscope"
+        }
+      ],
+      "substances": [
+        {
+          "name": "isoflurane",
+          "role": "other",
+          "evidence": "chicks were euthanized by an overdose of isoflurane inhalant anesthetic"
+        },
+        {
+          "name": "collagenase",
+          "role": "other",
+          "evidence": "digested with collagenase [Worthington; 2mg/ml in HBSS]"
+        },
+        {
+          "name": "trypsin",
+          "role": "other",
+          "evidence": "samples were digested with 2 ml trypsin (Sigma; 0.2% in PBS"
+        }
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": "daily",
+        "duration": "10 days",
+        "timing": null,
+        "conditions": "translucent plastic goggles"
+      },
+      "exposure_evidence": "Goggles remained in place for 10 days.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "route"
+      ],
+      "notes": "Recovery phase involved 24 hours of unrestricted vision following goggle removal. 30 chickens total comprised 3 pools of control eyes and 3 pools of recovering eyes."
+    }
+  ]
+}

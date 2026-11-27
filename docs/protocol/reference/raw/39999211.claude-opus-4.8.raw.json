@@ -1,0 +1,218 @@
+{
+  "experiments": [
+    {
+      "study_type": "Conditional knockout phenotyping of glutamatergic Ago2 in brain development (Slc17a6-Cre, Ago2 flox/flox mice)",
+      "procedure_text": "Glutamatergic Ago2 conditional knockout mice assessed for postnatal growth, survival, cortical development, synaptogenesis, vascularization, NVU formation, and neuroinflammation.",
+      "procedure_text_evidence": "Deletion of glutamatergic Argonaute2 impairs postnatal growth and development in mice",
+      "species": "mouse",
+      "species_evidence": "Mice of both genders",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": "n = 19 mice) and a littermate control (of n = 5 mice)",
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "Brains were isolated from mice and postfixed overnight in 4% PFA",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Postnatal growth and body weight",
+          "role": "primary",
+          "evidence": "impairs postnatal growth and development in mice"
+        },
+        {
+          "slug": null,
+          "label": "Survival",
+          "role": "unspecified",
+          "evidence": "Survival curve of Slc17a6-cre, Ago2 flox/flox mice"
+        },
+        {
+          "slug": null,
+          "label": "Cortical thickness / brain development",
+          "role": "unspecified",
+          "evidence": "reduced cortical thicknesses in Slc17a6cre, Ago2 flox/flox mice"
+        },
+        {
+          "slug": null,
+          "label": "Synaptogenesis / synaptic puncta",
+          "role": "unspecified",
+          "evidence": "Loss of glutamatergic Ago2 reduces synaptogenesis"
+        },
+        {
+          "slug": null,
+          "label": "Vascular morphogenesis / NVU formation",
+          "role": "unspecified",
+          "evidence": "essential for normal vascular morphogenesis in the CNS"
+        },
+        {
+          "slug": null,
+          "label": "BBB permeability (cadaverine leakage)",
+          "role": "unspecified",
+          "evidence": "To detect cadaverine leakage"
+        },
+        {
+          "slug": "immunotoxicity",
+          "label": "Neuroinflammation (microglia, IL-6, IFNβ)",
+          "role": "unspecified",
+          "evidence": "Loss of Ago2 in glutamatergic neurons incurs neuroinflammation"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Alexa Fluor 555-conjugated cadaverine",
+          "role": "other",
+          "evidence": "Alexa Fluor 555-conjugated cadaverine (1 mg/ml; A30677"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["40 μl"],
+        "dose_units": "mg/ml",
+        "frequency": null,
+        "duration": "circulate for 2 hours",
+        "timing": "injected intraperitoneally into P14 postnatal mice",
+        "conditions": null
+      },
+      "exposure_evidence": "40 μl of Alexa Fluor 555-conjugated cadaverine (1 mg/ml; A30677",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "route"],
+      "notes": "Genetic model using Cre-driver crosses; Cre-expressing mice used as controls. Permeability assay uses intraperitoneal cadaverine injection, but main genetic manipulation has no administered compound."
+    },
+    {
+      "study_type": "Primary hippocampal neuron culture immunohistochemistry",
+      "procedure_text": "Primary neurons derived from hippocampi of P2 mice, cultured 7 days, then immunostained for Ago2, Vglut2, and MAP2.",
+      "procedure_text_evidence": "Primary neurons were derived from the hippocampi of C57BL/6 mice of both genders at age P2",
+      "species": "mouse",
+      "species_evidence": "hippocampi of C57BL/6 mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "Primary cells were cultured in 24-well dishes with 12-mm coverslips",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Ago2/Vglut2/MAP2 protein localization in neurons",
+          "role": "unspecified",
+          "evidence": "incubated with primary antibody against Ago2 (018-22021, Wako), Vglut2"
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": "collected for immunohistochemistry at 7 days",
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Primary culture derived from named animal source (mouse)."
+    },
+    {
+      "study_type": "Ribonucleoprotein immunoprecipitation from mouse brain tissue",
+      "procedure_text": "Brain tissues from P14 C57BL/6 mice lysed; Ago2 immunoprecipitation performed; incorporated mRNA/miRNA quantified by qPCR.",
+      "procedure_text_evidence": "the brain tissues from P14 C57BL/6 mice were lysed using an equal volume of lysis buffer",
+      "species": "mouse",
+      "species_evidence": "brain tissues from P14 C57BL/6 mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "Ribonucleoprotein immunoprecipitation experiments were performed",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Ago2-bound mRNA/miRNA quantification",
+          "role": "unspecified",
+          "evidence": "Incorporated mRNA or miRNA was quantified using quantitative PCR"
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Ex vivo analysis of brain tissue from named animal source."
+    },
+    {
+      "study_type": "SH-SY5Y human neuronal cell line AGO2 overexpression and variant functional analysis",
+      "procedure_text": "Human SH-SY5Y cells transfected with GFP-tagged AGO2 wild-type or variant plasmids, analyzed by immunofluorescence, FACS sorting, and Western blot.",
+      "procedure_text_evidence": "The human neuronal SH-SY5Y cell line (CRL-2266, American Type Culture Collection)",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "human neuronal SH-SY5Y cell line (CRL-2266",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "AGO2 protein expression / localization and PTEN targeting",
+          "role": "primary",
+          "evidence": "Mutations in human AGO2 disrupt targeting of PTEN in neuronal cells"
+        }
+      ],
+      "substances": [
+        {
+          "name": "GFP-tagged human AGO2 plasmid",
+          "role": "test",
+          "evidence": "transfected with 2.5 μg of GFP-tagged human AGO2 plasmid"
+        },
+        {
+          "name": "Empty vector",
+          "role": "control",
+          "evidence": "Empty vector was used for control cells"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["2.5 μg"],
+        "dose_units": "μg",
+        "frequency": null,
+        "duration": "incubated for 48 hours",
+        "timing": null,
+        "conditions": "transfected with ... using Lipofectamine 3000"
+      },
+      "exposure_evidence": "transfected with 2.5 μg of GFP-tagged human AGO2 plasmid",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": "Human cell line with no animal source; species null. Includes CRISPR G733R point mutation generation in same cell line."
+    }
+  ]
+}

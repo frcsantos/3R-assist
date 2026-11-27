@@ -1,0 +1,92 @@
+{
+  "experiments": [
+    {
+      "study_type": "Induction of acute cholestasis by common bile duct ligation",
+      "procedure_text": "The bile duct was isolated and a 7-0 silk ligature was tied at proximal and distal end to the liver hilus, followed by resection between the two ligatures.",
+      "procedure_text_evidence": "The bile duct was isolated from the surrounding tissues, and a 7-0 silk ligature was tied at proximal and distal end to the liver hilus. Finally, the bile duct was resected between the two ligatures.",
+      "species": "mouse",
+      "species_evidence": "Male C57BL/6",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 3
+      },
+      "animal_counts_evidence": "all experimental groups (n = 3/ group)",
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "Male C57BL/6, aged 10-12 weeks, GF (germ-free) and ASF (altered Schaedler's flora) mice",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "subcutaneous"
+      ],
+      "route_evidence": "the mice received 60 μg/ kg body weight of buprenorphine subcutaneously",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "quantification of bile infarcts",
+          "role": "primary",
+          "evidence": "quantification of bile infarcts as well as Sirius red staining for determination of fibrotic tissue"
+        },
+        {
+          "slug": null,
+          "label": "fibrotic tissue",
+          "role": "secondary",
+          "evidence": "Sirius red staining for determination of fibrotic tissue in the liver"
+        },
+        {
+          "slug": null,
+          "label": "CK-19",
+          "role": "secondary",
+          "evidence": "quantification of positive CK-19"
+        },
+        {
+          "slug": null,
+          "label": "mRNA sequencing",
+          "role": "secondary",
+          "evidence": "Total RNA concentration of 1-2 μg was used for mRNA sequencing"
+        },
+        {
+          "slug": null,
+          "label": "total-free fatty acids",
+          "role": "secondary",
+          "evidence": "total-free fatty acids were measured in 10 mg of liver tissue"
+        },
+        {
+          "slug": null,
+          "label": "oxygen consumption rates",
+          "role": "secondary",
+          "evidence": "The oxygen consumption rates (OCRs) in homogenates from frozen livers were measured"
+        }
+      ],
+      "substances": [
+        {
+          "name": "buprenorphine",
+          "role": "other",
+          "evidence": "the mice received 60 μg/ kg body weight of buprenorphine subcutaneously"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "60"
+        ],
+        "dose_units": "μg/ kg",
+        "frequency": "before the surgery",
+        "duration": "5 days after BDL",
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": "mice received 60 μg/ kg body weight of buprenorphine subcutaneously (Reckitt Benckiser, 0.3 mg/ml) before the surgery.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Experiment utilized both germ-free (GF) and altered Schaedler's flora (ASF) mice."
+    }
+  ]
+}

@@ -1,0 +1,183 @@
+{
+  "experiments": [
+    {
+      "study_type": "Robotic forceps grasping at different forces and durations with tissue damage assessment",
+      "procedure_text": "After thoracotomy and laparotomy, the fenestrated grasping forceps of the Saroa surgical system were used to grasp the lungs, esophagus, aorta, liver, spleen, small intestine, and large intestine",
+      "procedure_text_evidence": "the fenestrated grasping forceps of the Saroa surgical system were used to grasp the lungs, esophagus, aorta, liver, spleen",
+      "species": "dog",
+      "species_evidence": "adult male beagle dogs",
+      "animal_counts": {
+        "female": null,
+        "male": 6,
+        "total": 6,
+        "per_group": null
+      },
+      "animal_counts_evidence": "The study used six adult male beagle dogs",
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "Surgically resected specimens were fixed in 10% formalin",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["intramuscular", "inhalation", "unspecified"],
+      "route_evidence": "sedated with an intramuscular injection",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Macroscopic hemorrhage in grasped lung and liver",
+          "role": "unspecified",
+          "evidence": "The grasped areas of the lung and liver show hemorrhage and congestion"
+        },
+        {
+          "slug": null,
+          "label": "Macroscopic congestion in grasped lung and liver",
+          "role": "unspecified",
+          "evidence": "The grasped areas of the lung and liver show hemorrhage and congestion"
+        },
+        {
+          "slug": null,
+          "label": "Histological presence or absence of hemorrhage in lung, liver, spleen, gastrointestinal tract, and aorta",
+          "role": "unspecified",
+          "evidence": "examined for the presence or absence of hemorrhage and congestion"
+        },
+        {
+          "slug": null,
+          "label": "Histological presence or absence of congestion in lung, liver, spleen, gastrointestinal tract, and aorta",
+          "role": "unspecified",
+          "evidence": "examined for the presence or absence of hemorrhage and congestion"
+        },
+        {
+          "slug": null,
+          "label": "Area of hemorrhage and/or congestion in lung, liver, spleen, and gastrointestinal tract",
+          "role": "unspecified",
+          "evidence": "area of hemorrhage and/ or congestion"
+        },
+        {
+          "slug": null,
+          "label": "Red blood cell count in lung, liver, spleen, gastrointestinal tract, and aorta",
+          "role": "unspecified",
+          "evidence": "red blood cell (RBC) count"
+        },
+        {
+          "slug": null,
+          "label": "Changes in alveoli",
+          "role": "unspecified",
+          "evidence": "changes in alveoli, pleural elastic layers, and collagen layers"
+        },
+        {
+          "slug": null,
+          "label": "Changes in pleural elastic layers, including layer thickness",
+          "role": "unspecified",
+          "evidence": "Pleural elastic layer thickness"
+        },
+        {
+          "slug": null,
+          "label": "Changes in pleural collagen layers, including layer thickness",
+          "role": "unspecified",
+          "evidence": "Pleural collagen layer thickness"
+        },
+        {
+          "slug": null,
+          "label": "Histological degeneration in liver and spleen",
+          "role": "unspecified",
+          "evidence": "for the presence or absence of hemorrhage and congestion, and degeneration"
+        },
+        {
+          "slug": null,
+          "label": "Area of degeneration in liver and spleen",
+          "role": "unspecified",
+          "evidence": "RBC count, and area of degeneration"
+        },
+        {
+          "slug": null,
+          "label": "Liver glycogen on PAS staining",
+          "role": "unspecified",
+          "evidence": "shows reduced glycogen (PAS staining)"
+        },
+        {
+          "slug": null,
+          "label": "Histological mucosal erosion in gastrointestinal tract",
+          "role": "unspecified",
+          "evidence": "for the presence or absence of hemorrhage and congestion, and mucosal erosion"
+        },
+        {
+          "slug": null,
+          "label": "Area of mucosal erosion in gastrointestinal tract",
+          "role": "unspecified",
+          "evidence": "RBC count, and area of mucosal erosion"
+        },
+        {
+          "slug": null,
+          "label": "Changes in aortic elastic layers, including thickness in the intima, media, and adventitia",
+          "role": "unspecified",
+          "evidence": "elastic layer thickness in the intima, media, and adventitia"
+        }
+      ],
+      "substances": [
+        {
+          "name": "atropine sulfate",
+          "role": "other",
+          "evidence": "0.05 mg/kg atropine sulfate"
+        },
+        {
+          "name": "ketamine hydrochloride",
+          "role": "other",
+          "evidence": "10 mg/kg ketamine hydrochloride"
+        },
+        {
+          "name": "xylazine",
+          "role": "other",
+          "evidence": "7 mg/kg xylazine"
+        },
+        {
+          "name": "sevoflurane",
+          "role": "other",
+          "evidence": "Anesthesia during mechanical ventilation was maintained using inhalational sevoflurane."
+        },
+        {
+          "name": "thiopental Sodium",
+          "role": "other",
+          "evidence": "an overdose of thiopental Sodium"
+        },
+        {
+          "name": "10% formalin",
+          "role": "other",
+          "evidence": "fixed in 10% formalin (room temperature for 24 h)"
+        },
+        {
+          "name": "paraffin blocks",
+          "role": "other",
+          "evidence": "embedded in paraffin blocks"
+        },
+        {
+          "name": "Hematoxylin and eosin (H&E)",
+          "role": "other",
+          "evidence": "Hematoxylin and eosin (H&E) staining"
+        },
+        {
+          "name": "Elastica van Gieson (EVG)",
+          "role": "other",
+          "evidence": "Elastica van Gieson (EVG) staining"
+        },
+        {
+          "name": "Periodic acid-Schiff (PAS)",
+          "role": "other",
+          "evidence": "Periodic acid-Schiff (PAS) staining"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["1, 2, and 3 N"],
+        "dose_units": "N",
+        "frequency": null,
+        "duration": "1, 2, and 4 min",
+        "timing": "After thoracotomy and laparotomy",
+        "conditions": "the fenestrated grasping forceps of the Saroa surgical system"
+      },
+      "exposure_evidence": "forces of 1, 2, and 3 N for durations of 1, 2, and 4 min",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "the study is reported in accordance with ARRIVE guidelines",
+      "missing_or_ambiguous": ["animal_counts.per_group", "exposure.frequency", "exposure.force_duration_pairing", "route.thiopental"],
+      "notes": "Dogs weighed 8.06 to 9.08 kg; force–duration pairings were not specified. Two pathologists assessed tissue damage microscopically after fixation at room temperature for 24 h, paraffin embedding, and sectioning at the reported thickness of 4 mm; areas were measured using BX-analyzer."
+    }
+  ]
+}

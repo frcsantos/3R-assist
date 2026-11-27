@@ -1,0 +1,228 @@
+{
+  "experiments": [
+    {
+      "study_type": "Acute cholestasis induced by common bile duct ligation in GF mice",
+      "procedure_text": "The common bile duct was isolated, ligated and resected between the ligatures; animals were sacrificed 5 days after BDL for plasma and tissue collection.",
+      "procedure_text_evidence": "The animals were sacrificed 5 days after BDL, plasma and tissues were collected for further experiments.",
+      "species": "mouse",
+      "species_evidence": "flora) mice were generated",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 3
+      },
+      "animal_counts_evidence": "all experimental groups (n = 3/ group)",
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "The mice",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["subcutaneous"],
+      "route_evidence": "of buprenorphine subcutaneously",
+      "endpoints": [
+        {"slug": null, "label": "Bile infarct area (focal necrosis, percentage pixel area)", "role": "unspecified", "evidence": "Bile infarct area quantification (percentage pixel area)"},
+        {"slug": null, "label": "Fibrotic tissue in the liver (Sirius red staining)", "role": "unspecified", "evidence": "Sirius red staining for determination of fibrotic tissue in the liver"},
+        {"slug": null, "label": "CK-19 positivity (ductular reaction)", "role": "unspecified", "evidence": "quantification of positive CK-19"},
+        {"slug": null, "label": "Differential hepatic gene expression by mRNA sequencing", "role": "unspecified", "evidence": "The number of reads per gene were compared between the different experimental groups"},
+        {"slug": null, "label": "Hepatic transcriptomic pathway enrichment, including inflammation", "role": "unspecified", "evidence": "shows increased hepatic inflammation after acute cholestasis in GF mice"},
+        {"slug": null, "label": "Relative expression of fatty acid metabolic genes", "role": "unspecified", "evidence": "Gene expression of fatty acid metabolic genes significantly different between ASF-BDL and GF-BDL"},
+        {"slug": null, "label": "Hepatic fatty acid synthesis protein abundance", "role": "unspecified", "evidence": "Immunoblots of fatty acid synthesis proteins in liver homogenates"},
+        {"slug": null, "label": "Total hepatic free fatty acid levels", "role": "unspecified", "evidence": "total-free fatty acids were measured in 10 mg of liver tissue"},
+        {"slug": null, "label": "Hepatic oxygen consumption profiles normalized to protein", "role": "unspecified", "evidence": "profiles of respirometry in the homogenates of frozen livers normalized to protein levels"},
+        {"slug": null, "label": "Hepatic mitochondrial Complex I activity", "role": "unspecified", "evidence": "Measurement of Complex I, II, and IV activity in liver homogenates"},
+        {"slug": null, "label": "Hepatic mitochondrial Complex II activity", "role": "unspecified", "evidence": "Measurement of Complex I, II, and IV activity in liver homogenates"},
+        {"slug": null, "label": "Hepatic mitochondrial Complex IV activity", "role": "unspecified", "evidence": "Measurement of Complex I, II, and IV activity in liver homogenates"},
+        {"slug": null, "label": "Hepatic mitochondrial protein abundance", "role": "unspecified", "evidence": "Immunoblots of mitochondrial proteins in liver homogenates from ASF and GF groups"},
+        {"slug": null, "label": "Plasma metabolomic profile (PCA)", "role": "unspecified", "evidence": "Score blots showing PCA of plasma samples from sham (blue), with respect to BDL (red)."},
+        {"slug": null, "label": "Plasma bile acid identity, profile and concentration", "role": "unspecified", "evidence": "qualitative and quantitative analyses of the plasma concentration of BA"}
+      ],
+      "substances": [
+        {"name": "buprenorphine", "role": "other", "evidence": "60 μg/ kg body weight of buprenorphine subcutaneously"},
+        {"name": "isoflurane", "role": "other", "evidence": "under isoflurane anesthesia"},
+        {"name": "7-0 silk ligature", "role": "other", "evidence": "a 7-0 silk ligature was tied"},
+        {"name": "cytochrome c", "role": "other", "evidence": "MAS containing cytochrome c (10 μg/ml) was added to each well"},
+        {"name": "pyruvate + malate", "role": "other", "evidence": "pyruvate + malate (5 mM each)"},
+        {"name": "NADH", "role": "other", "evidence": "NADH (1 mM)"},
+        {"name": "succinate + rotenone", "role": "other", "evidence": "5 mM succinate + rotenone (5 mM + 2 μM)"},
+        {"name": "Rotenone and antimycin A", "role": "other", "evidence": "Rotenone and antimycin A (2 μM + 4 μM) were delivered by port B."},
+        {"name": "TMPD + ascorbic acid", "role": "other", "evidence": "TMPD + ascorbic acid (0.5 mM + 1 mM) at port C"},
+        {"name": "azide", "role": "other", "evidence": "azide (50 mM) at port D"}
+      ],
+      "exposure": {
+        "dose_levels": ["60 μg/ kg body weight"],
+        "dose_units": "μg/ kg body weight",
+        "frequency": null,
+        "duration": null,
+        "timing": "before the surgery",
+        "conditions": "under isoflurane anesthesia"
+      },
+      "exposure_evidence": "60 μg/ kg body weight of buprenorphine subcutaneously",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "approval of the Research Animal Ethics Committee of Canton Bern (BE66/10)",
+      "missing_or_ambiguous": ["animal_counts", "endpoints", "guideline_ref"],
+      "notes": "Male C57BL/6 germ-free mice were 10-12 weeks old; three per group is reported for specified analyses, not as a cohort total. Respirometry reagents were applied to liver homogenates, and the protocol does not specify the group allocation for fibrosis scoring or the tissue allocation for each qPCR target."
+    },
+    {
+      "study_type": "Acute cholestasis induced by common bile duct ligation in ASF mice",
+      "procedure_text": "The common bile duct was isolated, ligated and resected between the ligatures; animals were sacrificed 5 days after BDL for plasma and tissue collection.",
+      "procedure_text_evidence": "The animals were sacrificed 5 days after BDL, plasma and tissues were collected for further experiments.",
+      "species": "mouse",
+      "species_evidence": "ASF and GF mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 3
+      },
+      "animal_counts_evidence": "all experimental groups (n = 3/ group)",
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "The animals were sacrificed 5 days after BDL, plasma and tissues were collected",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["subcutaneous"],
+      "route_evidence": "of buprenorphine subcutaneously",
+      "endpoints": [
+        {"slug": null, "label": "Bile infarct area (focal necrosis, percentage pixel area)", "role": "unspecified", "evidence": "Bile infarct area quantification (percentage pixel area)"},
+        {"slug": null, "label": "Fibrotic tissue in the liver (Sirius red staining)", "role": "unspecified", "evidence": "Sirius red staining for determination of fibrotic tissue in the liver"},
+        {"slug": null, "label": "CK-19 positivity (ductular reaction)", "role": "unspecified", "evidence": "quantification of positive CK-19"},
+        {"slug": null, "label": "Differential hepatic gene expression by mRNA sequencing", "role": "unspecified", "evidence": "The number of reads per gene were compared between the different experimental groups"},
+        {"slug": null, "label": "Hepatic transcriptomic pathway enrichment, including regenerative response", "role": "unspecified", "evidence": "an increased regenerative response to the liver injury in mice with microbiota"},
+        {"slug": null, "label": "Relative expression of fatty acid metabolic genes", "role": "unspecified", "evidence": "Gene expression of fatty acid metabolic genes significantly different between ASF-BDL and GF-BDL"},
+        {"slug": null, "label": "Hepatic fatty acid synthesis protein abundance", "role": "unspecified", "evidence": "Immunoblots of fatty acid synthesis proteins in liver homogenates"},
+        {"slug": null, "label": "Total hepatic free fatty acid levels", "role": "unspecified", "evidence": "total-free fatty acids were measured in 10 mg of liver tissue"},
+        {"slug": null, "label": "Hepatic oxygen consumption profiles normalized to protein", "role": "unspecified", "evidence": "profiles of respirometry in the homogenates of frozen livers normalized to protein levels"},
+        {"slug": null, "label": "Hepatic mitochondrial Complex I activity", "role": "unspecified", "evidence": "Measurement of Complex I, II, and IV activity in liver homogenates"},
+        {"slug": null, "label": "Hepatic mitochondrial Complex II activity", "role": "unspecified", "evidence": "Measurement of Complex I, II, and IV activity in liver homogenates"},
+        {"slug": null, "label": "Hepatic mitochondrial Complex IV activity", "role": "unspecified", "evidence": "Measurement of Complex I, II, and IV activity in liver homogenates"},
+        {"slug": null, "label": "Hepatic mitochondrial protein abundance", "role": "unspecified", "evidence": "Immunoblots of mitochondrial proteins in liver homogenates from ASF and GF groups"},
+        {"slug": null, "label": "Plasma metabolomic profile (PCA)", "role": "unspecified", "evidence": "Score blots showing PCA of plasma samples from sham (blue), with respect to BDL (red)."},
+        {"slug": null, "label": "Plasma bile acid identity, profile and concentration", "role": "unspecified", "evidence": "qualitative and quantitative analyses of the plasma concentration of BA"}
+      ],
+      "substances": [
+        {"name": "buprenorphine", "role": "other", "evidence": "60 μg/ kg body weight of buprenorphine subcutaneously"},
+        {"name": "isoflurane", "role": "other", "evidence": "under isoflurane anesthesia"},
+        {"name": "7-0 silk ligature", "role": "other", "evidence": "a 7-0 silk ligature was tied"},
+        {"name": "cytochrome c", "role": "other", "evidence": "MAS containing cytochrome c (10 μg/ml) was added to each well"},
+        {"name": "pyruvate + malate", "role": "other", "evidence": "pyruvate + malate (5 mM each)"},
+        {"name": "NADH", "role": "other", "evidence": "NADH (1 mM)"},
+        {"name": "succinate + rotenone", "role": "other", "evidence": "5 mM succinate + rotenone (5 mM + 2 μM)"},
+        {"name": "Rotenone and antimycin A", "role": "other", "evidence": "Rotenone and antimycin A (2 μM + 4 μM) were delivered by port B."},
+        {"name": "TMPD + ascorbic acid", "role": "other", "evidence": "TMPD + ascorbic acid (0.5 mM + 1 mM) at port C"},
+        {"name": "azide", "role": "other", "evidence": "azide (50 mM) at port D"}
+      ],
+      "exposure": {
+        "dose_levels": ["60 μg/ kg body weight"],
+        "dose_units": "μg/ kg body weight",
+        "frequency": null,
+        "duration": null,
+        "timing": "before the surgery",
+        "conditions": "under isoflurane anesthesia"
+      },
+      "exposure_evidence": "60 μg/ kg body weight of buprenorphine subcutaneously",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "approval of the Research Animal Ethics Committee of Canton Bern (BE66/10)",
+      "missing_or_ambiguous": ["animal_counts", "endpoints", "guideline_ref"],
+      "notes": "Male C57BL/6 mice aged 10-12 weeks carried eight altered Schaedler's flora species; three per group is reported for specified analyses, not as a cohort total. Respirometry reagents were applied to liver homogenates, and the protocol does not specify the group allocation for fibrosis scoring or the tissue allocation for each qPCR target."
+    },
+    {
+      "study_type": "Sham operation for common bile duct ligation in GF mice",
+      "procedure_text": "In sham-operated animals, the bile duct was only isolated but not ligated.",
+      "procedure_text_evidence": "In sham-operated animals, the bile duct was only isolated but not ligated.",
+      "species": "mouse",
+      "species_evidence": "ASF and GF mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 3
+      },
+      "animal_counts_evidence": "all experimental groups (n = 3/ group)",
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "Transcriptomic analysis of liver samples from sham-operated or BDL mice with or without microbiota.",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["subcutaneous"],
+      "route_evidence": "of buprenorphine subcutaneously",
+      "endpoints": [
+        {"slug": null, "label": "CK-19 positivity (ductular reaction)", "role": "unspecified", "evidence": "quantification of positive CK-19"},
+        {"slug": null, "label": "Differential hepatic gene expression by mRNA sequencing", "role": "unspecified", "evidence": "Transcriptomic analysis of liver samples from sham-operated or BDL mice with or without microbiota."},
+        {"slug": null, "label": "Hepatic transcriptomic pathway enrichment", "role": "unspecified", "evidence": "Go enrichment analysis for biological processes among differentially regulated genes in ASF vs GF mice"},
+        {"slug": null, "label": "Hepatic fatty acid synthesis protein abundance", "role": "unspecified", "evidence": "Immunoblots of fatty acid synthesis proteins in liver homogenates from all experimental groups"},
+        {"slug": null, "label": "Hepatic free fatty acid levels", "role": "unspecified", "evidence": "FFAs levels in liver homogenates from all groups included in the study."},
+        {"slug": null, "label": "Plasma metabolomic profile (PCA)", "role": "unspecified", "evidence": "Score blots showing PCA of plasma samples from sham (blue), with respect to BDL (red)."},
+        {"slug": null, "label": "Plasma bile acid identity, profile and concentration", "role": "unspecified", "evidence": "qualitative and quantitative analyses of the plasma concentration of BA"}
+      ],
+      "substances": [
+        {"name": "buprenorphine", "role": "other", "evidence": "60 μg/ kg body weight of buprenorphine subcutaneously"},
+        {"name": "isoflurane", "role": "other", "evidence": "under isoflurane anesthesia"}
+      ],
+      "exposure": {
+        "dose_levels": ["60 μg/ kg body weight"],
+        "dose_units": "μg/ kg body weight",
+        "frequency": null,
+        "duration": null,
+        "timing": "before the surgery",
+        "conditions": "under isoflurane anesthesia"
+      },
+      "exposure_evidence": "60 μg/ kg body weight of buprenorphine subcutaneously",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "approval of the Research Animal Ethics Committee of Canton Bern (BE66/10)",
+      "missing_or_ambiguous": ["animal_counts", "endpoints", "exposure.timing", "guideline_ref"],
+      "notes": "Male C57BL/6 germ-free mice were 10-12 weeks old; three per group is reported for specified analyses, not as a cohort total. The interval from sham surgery to sampling and the sham coverage of histology, qPCR and mitochondrial assays are not independently specified."
+    },
+    {
+      "study_type": "Sham operation for common bile duct ligation in ASF mice",
+      "procedure_text": "In sham-operated animals, the bile duct was only isolated but not ligated.",
+      "procedure_text_evidence": "In sham-operated animals, the bile duct was only isolated but not ligated.",
+      "species": "mouse",
+      "species_evidence": "ASF and GF mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 3
+      },
+      "animal_counts_evidence": "all experimental groups (n = 3/ group)",
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "Transcriptomic analysis of liver samples from sham-operated or BDL mice with or without microbiota.",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["subcutaneous"],
+      "route_evidence": "of buprenorphine subcutaneously",
+      "endpoints": [
+        {"slug": null, "label": "CK-19 positivity (ductular reaction)", "role": "unspecified", "evidence": "quantification of positive CK-19"},
+        {"slug": null, "label": "Differential hepatic gene expression by mRNA sequencing", "role": "unspecified", "evidence": "Transcriptomic analysis of liver samples from sham-operated or BDL mice with or without microbiota."},
+        {"slug": null, "label": "Hepatic transcriptomic pathway enrichment", "role": "unspecified", "evidence": "Go enrichment analysis for biological processes among differentially regulated genes in ASF vs GF mice"},
+        {"slug": null, "label": "Hepatic fatty acid synthesis protein abundance", "role": "unspecified", "evidence": "Immunoblots of fatty acid synthesis proteins in liver homogenates from all experimental groups"},
+        {"slug": null, "label": "Hepatic free fatty acid levels", "role": "unspecified", "evidence": "FFAs levels in liver homogenates from all groups included in the study."},
+        {"slug": null, "label": "Plasma metabolomic profile (PCA)", "role": "unspecified", "evidence": "Score blots showing PCA of plasma samples from sham (blue), with respect to BDL (red)."},
+        {"slug": null, "label": "Plasma bile acid identity, profile and concentration", "role": "unspecified", "evidence": "qualitative and quantitative analyses of the plasma concentration of BA"}
+      ],
+      "substances": [
+        {"name": "buprenorphine", "role": "other", "evidence": "60 μg/ kg body weight of buprenorphine subcutaneously"},
+        {"name": "isoflurane", "role": "other", "evidence": "under isoflurane anesthesia"}
+      ],
+      "exposure": {
+        "dose_levels": ["60 μg/ kg body weight"],
+        "dose_units": "μg/ kg body weight",
+        "frequency": null,
+        "duration": null,
+        "timing": "before the surgery",
+        "conditions": "under isoflurane anesthesia"
+      },
+      "exposure_evidence": "60 μg/ kg body weight of buprenorphine subcutaneously",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "approval of the Research Animal Ethics Committee of Canton Bern (BE66/10)",
+      "missing_or_ambiguous": ["animal_counts", "endpoints", "exposure.timing", "guideline_ref"],
+      "notes": "Male C57BL/6 mice aged 10-12 weeks carried eight altered Schaedler's flora species; three per group is reported for specified analyses, not as a cohort total. The interval from sham surgery to sampling and the sham coverage of histology, qPCR and mitochondrial assays are not independently specified."
+    }
+  ]
+}

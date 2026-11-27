@@ -1,0 +1,11 @@
+﻿case_id,source_file,procedure_to_extract,expert_id,minutes_spent,study_type,procedure_text,species,strain_or_line,sex,age_or_weight,animal_counts_total,animal_counts_per_group,route,dose_and_frequency,duration_and_timepoints,test_system,application,endpoints,regulatory_or_guideline_reference,unknown_or_not_stated_items,ask_for_clarification_yes_no,clarification_questions,expert_notes
+RC01,RC01.pdf,The hepatocyte-specific Kctd17 knockdown experiment in mice fed a MASH-inducing diet.,,,,,,,,,,,,,,,,,,,,,
+RC04,RC04.txt,The 10-day broad-spectrum antibiotic treatment in young and older mice with gut microbiota follow-up.,,,,,,,,,,,,,,,,,,,,,
+RC10,RC10.pdf,The intracardiac injection of radiolabelled cancer cells in mice followed by PET imaging.,,,,,,,,,,,,,,,,,,,,,
+RC14,RC14.txt,The reproductive and developmental toxicity study in Sprague-Dawley rats (F0 and F1 generations).,,,,,,,,,,,,,,,,,,,,,
+RC17,RC17.txt,The behavioural testing of mice with brain-specific RagA overexpression.,,,,,,,,,,,,,,,,,,,,,
+RC20,RC20.pdf,The in vivo TCDD dosing study in E-Rep transgenic reporter mice.,,,,,,,,,,,,,,,,,,,,,
+RC22,RC22.txt,"The LPS-induced fever model in rabbits (intravenous LPS, rectal temperature) used to test an antipyretic compound.",,,,,,,,,,,,,,,,,,,,,
+RC24,RC24.pdf,"The exposure experiment in juvenile hook snout carp to beta-cypermethrin and pyraclostrobin, alone and combined.",,,,,,,,,,,,,,,,,,,,,
+RC26,RC26.pdf,The in vivo bone-marrow micronucleus test in Swiss mice treated with the plant extract.,,,,,,,,,,,,,,,,,,,,,
+RC29,RC29.pdf,Whole-organ imaging and immunofluorescence analysis of prostate cancer and its metastases in the RapidCaP mouse model.,,,,,,,,,,,,,,,,,,,,,

@@ -1,0 +1,73 @@
+{
+  "experiments": [
+    {
+      "study_type": "Viral gene delivery for chronic pain modulation",
+      "procedure_text": "C57BL/6 mice received L4 DRG injection of AAV5-gfaABC1D-DBI-EGFP virions, with subsequent monitoring of mechanical and heat sensitivity to evaluate pain responses over 42 days.",
+      "procedure_text_evidence": "mechanical and heat sensitivity was monitored on the ipsilateral paws during 42 days after the DRG injection of AAV5-gfaABC1D-DBI-EGFP virions or GFP control virions",
+      "species": "mouse",
+      "species_evidence": "adult male mouse (C57BL/6",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "Adult male mouse (C57BL/6; 20 -25 g",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "other"
+      ],
+      "route_evidence": "AAV virions were injected into the right-side L4 DRG",
+      "endpoints": [
+        {
+          "slug": "other-health-effects",
+          "label": "Mechanical sensitivity (von Frey)",
+          "role": "primary",
+          "evidence": "Mechanical (von Frey; C) and heat (Hargreaves; D) sensitivity was monitored"
+        },
+        {
+          "slug": "other-health-effects",
+          "label": "Heat sensitivity (Hargreaves)",
+          "role": "primary",
+          "evidence": "Mechanical (von Frey; C) and heat (Hargreaves; D) sensitivity was monitored"
+        }
+      ],
+      "substances": [
+        {
+          "name": "AAV5-gfaABC1D-DBI-EGFP",
+          "role": "test",
+          "evidence": "DRG injection of AAV5-gfaABC1D-DBI-EGFP virions"
+        },
+        {
+          "name": "GFP control virions",
+          "role": "control",
+          "evidence": "GFP control virions"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "1.1 -1.2x10 12 vg/ml"
+        ],
+        "dose_units": "vg/ml",
+        "frequency": "single injection",
+        "duration": "42 days",
+        "timing": null,
+        "conditions": "2 μl volume"
+      },
+      "exposure_evidence": "1.1 -1.2x10 12 vg/ml; 2 μl",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "The procedure involved focal delivery via DRG cannula/injection. Mechanical and heat sensitivity were assessed as endpoints."
+    }
+  ]
+}

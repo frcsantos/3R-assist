@@ -1,0 +1,117 @@
+{
+  "experiments": [
+    {
+      "study_type": "biodistribution of 68Ga-MSNP 2",
+      "procedure_text": "To study the in vivo stability of 68 Ga-MSNP 2, the nanoparticle radioconjugate was injected intravenously and imaged using a small-animal PET scanner.",
+      "procedure_text_evidence": "To study the in vivo stability of 68 Ga-MSNP 2, the nanoparticle radioconjugate was injected intravenously and imaged (5 min) using a small-animal PET scanner",
+      "species": "mouse",
+      "species_evidence": "Female athymic nude mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": 6,
+        "per_group": null
+      },
+      "animal_counts_evidence": "Biodistribution (time=1 h) of 68 Ga-MSNP 2 in immunodeficient mice (n=6)",
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "In vivo studies",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "intravenous"
+      ],
+      "route_evidence": "injected intravenously",
+      "endpoints": [
+        {
+          "slug": "distribution",
+          "label": "Biodistribution",
+          "role": "primary",
+          "evidence": "Biodistribution (time=1 h) of 68 Ga-MSNP 2"
+        },
+        {
+          "slug": null,
+          "label": "PET imaging",
+          "role": "primary",
+          "evidence": "PET imaging validates strong nanoparticle uptake in the liver."
+        }
+      ],
+      "substances": [
+        {
+          "name": "68 Ga-MSNP 2",
+          "role": "test",
+          "evidence": "68 Ga-MSNP 2"
+        }
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": "single",
+        "duration": "1 h",
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": "Biodistribution (time=1 h) of 68 Ga-MSNP 2",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "In vivo procedures were approved by the Administrative Panel on Laboratory Animal Care at Stanford University",
+      "missing_or_ambiguous": [
+        "dose_levels"
+      ],
+      "notes": null
+    },
+    {
+      "study_type": "single-cell PET imaging",
+      "procedure_text": "Radiolabeled B16F10 cells were injected intracardially into nude mice, and PET imaging was performed 15 minutes post-injection.",
+      "procedure_text_evidence": "For in vivo single-cell imaging, radiolabeled cells were resuspended in PBS to a concentration of 1,000 cells/ml, and 100 μl of this solution (~ 100 cells) was administered to the animals. ... For intracardiac injection, we used an ultrasound system",
+      "species": "mouse",
+      "species_evidence": "Female athymic nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "In vivo studies",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "other"
+      ],
+      "route_evidence": "For intracardiac injection",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "PET imaging",
+          "role": "primary",
+          "evidence": "PET imaging of nude mice shows biodistribution of 50-100 radiolabeled cells"
+        }
+      ],
+      "substances": [
+        {
+          "name": "radiolabeled B16F10 cells",
+          "role": "test",
+          "evidence": "radiolabeled cells were resuspended in PBS"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "~ 100 cells"
+        ],
+        "dose_units": null,
+        "frequency": "single",
+        "duration": "15 min post-injection",
+        "timing": "15 min post-injection",
+        "conditions": "anesthetized using 1-2% isoflurane"
+      },
+      "exposure_evidence": "100 μl of this solution (~ 100 cells) was administered to the animals.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "In vivo procedures were approved by the Administrative Panel on Laboratory Animal Care at Stanford University",
+      "missing_or_ambiguous": [],
+      "notes": "Route is intracardiac, not explicitly in the defined route list."
+    }
+  ]
+}

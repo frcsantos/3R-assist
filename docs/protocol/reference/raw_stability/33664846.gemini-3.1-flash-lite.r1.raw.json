@@ -1,0 +1,77 @@
+{
+  "experiments": [
+    {
+      "study_type": "in vivo tumor xenograft growth inhibition",
+      "procedure_text": "OVCAR5 cells were injected subcutaneously into the axillary region of nude mice. Mice were injected daily with vehicle or 673A and/or given vehicle, AZD1390, or AZD6738 by oral gavage daily.",
+      "procedure_text_evidence": "This cell suspension was injected subcutaneously into the axillary region of nude mice. The cells were given 3 days to engraft before treatments were started. Mice were injected daily with vehicle or 20 mg/kg 673A and/or given vehicle, 20 mg/kg AZD1390, or 50 mg/kg AZD 6738 by oral gavage daily.",
+      "species": "mouse",
+      "species_evidence": "nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "subcutaneously into the axillary region of nude mice",
+      "application": "translational-applied-research",
+      "application_evidence": null,
+      "route": [
+        "subcutaneous",
+        "oral"
+      ],
+      "route_evidence": "injected subcutaneously into the axillary region... given... by oral gavage",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "tumor growth",
+          "role": "primary",
+          "evidence": "Tumors were measure by caliper and volume was calculated"
+        },
+        {
+          "slug": "other-health-effects",
+          "label": "gamma-H2AX levels",
+          "role": "secondary",
+          "evidence": "Immunofluorescence images of γ-H2AX levels in mouse tumors"
+        }
+      ],
+      "substances": [
+        {
+          "name": "673A",
+          "role": "test",
+          "evidence": "20 mg/kg 673A"
+        },
+        {
+          "name": "AZD1390",
+          "role": "test",
+          "evidence": "20 mg/kg AZD1390"
+        },
+        {
+          "name": "AZD6738",
+          "role": "test",
+          "evidence": "50 mg/kg AZD 6738"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "20 mg/kg",
+          "20 mg/kg",
+          "50 mg/kg"
+        ],
+        "dose_units": "mg/kg",
+        "frequency": "daily",
+        "duration": null,
+        "timing": "3 days to engraft before treatments were started",
+        "conditions": null
+      },
+      "exposure_evidence": "Mice were injected daily with vehicle or 20 mg/kg 673A and/or given vehicle, 20 mg/kg AZD1390, or 50 mg/kg AZD 6738 by oral gavage daily.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts",
+        "duration"
+      ],
+      "notes": "Experimental animals were identified as nude mice. Dosing refers to 673A (subcutaneous/intraperitoneal injection implied by 'injected') and AZD1390/AZD6738 (oral)."
+    }
+  ]
+}

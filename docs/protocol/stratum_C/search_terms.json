@@ -1,0 +1,30 @@
+{
+ "_note": "Written 2026-11-27 BEFORE any result list was seen. Every query = frozen v3 frame AND terms AND \"pubmed pmc\"[sb] NOT preprint[pt]. PMC restriction guarantees accessible Methods (section 3.7 criterion 2) without manual PDF collection; it is a deliberate difference from strata A and B.",
+ "near_miss": {
+  "_note": "Section 3.4 source 1: similar but not identical endpoint to a B1 method family (same biological theme, different tissue/route/endpoint). 6 of these 12 families are drawn at random.",
+  "Eye irritation and damage": "(\"mucosal irritation\"[tiab] OR \"vaginal irritation\"[tiab] OR \"nasal irritation\"[tiab] OR \"oral mucosa irritation\"[tiab] OR \"otic irritation\"[tiab]) AND (rabbit*[tiab] OR rat[tiab] OR rats[tiab] OR hamster*[tiab] OR \"guinea pig*\"[tiab] OR mice[tiab])",
+  "Skin sensitisation": "(\"respiratory sensitization\"[tiab] OR \"respiratory sensitisation\"[tiab] OR \"occupational asthma\"[tiab] OR \"food allergy\"[tiab]) AND (mice[tiab] OR mouse[tiab] OR \"guinea pig*\"[tiab] OR rat[tiab] OR rats[tiab]) AND (sensitiz*[tiab] OR sensitis*[tiab])",
+  "Genotoxicity": "(\"germ cell\"[tiab] OR \"dominant lethal\"[tiab] OR \"sperm DNA\"[tiab] OR spermatogenic[tiab]) AND (mutation*[tiab] OR \"DNA damage\"[tiab] OR genotoxic*[tiab] OR clastogenic*[tiab]) AND (mice[tiab] OR mouse[tiab] OR rat[tiab] OR rats[tiab])",
+  "Skin irritation and corrosion": "(\"irritant contact dermatitis\"[tiab] OR \"chemical burn\"[tiab] OR \"skin barrier disruption\"[tiab] OR \"tape stripping\"[tiab]) AND (mice[tiab] OR mouse[tiab] OR rat[tiab] OR rats[tiab] OR rabbit*[tiab] OR pig[tiab] OR pigs[tiab])",
+  "Acute oral toxicity": "(\"acute inhalation toxicity\"[tiab] OR \"acute dermal toxicity\"[tiab] OR \"inhalation exposure\"[tiab] OR LC50[tiab]) AND (rat[tiab] OR rats[tiab] OR mice[tiab] OR mouse[tiab])",
+  "Endocrine activity": "(\"thyroid disruption\"[tiab] OR \"thyroid-disrupting\"[tiab] OR \"thyroid hormone\"[tiab]) AND (exposure[tiab] OR exposed[tiab]) AND (rat[tiab] OR rats[tiab] OR mice[tiab] OR zebrafish[tiab] OR Xenopus[tiab])",
+  "Rabies diagnostics": "(\"Japanese encephalitis\"[tiab] OR \"West Nile\"[tiab] OR \"tick-borne encephalitis\"[tiab] OR \"canine distemper\"[tiab]) AND (mice[tiab] OR mouse[tiab] OR hamster*[tiab]) AND (diagnos*[tiab] OR detection[tiab] OR assay[tiab])",
+  "Absorption and clearance": "(toxicokinetic*[tiab]) AND (rat[tiab] OR rats[tiab] OR mice[tiab] OR mouse[tiab]) AND (chemical[tiab] OR exposure[tiab] OR oral[tiab] OR inhalation[tiab])",
+  "Pyrogen and endotoxin": "(endotoxemia[tiab] OR sepsis[tiab] OR \"cytokine storm\"[tiab]) AND (rat[tiab] OR rats[tiab] OR mice[tiab] OR rabbit*[tiab]) AND (LPS[tiab] OR lipopolysaccharide[tiab])",
+  "Phototoxicity": "(UVB[tiab] OR \"ultraviolet\"[tiab] OR photoaging[tiab] OR photocarcinogenesis[tiab]) AND (hairless[tiab] OR SKH-1[tiab] OR mice[tiab] OR mouse[tiab]) AND (skin[tiab])",
+  "Reproductive toxicity": "(\"developmental neurotoxicity\"[tiab] OR \"neurodevelopmental toxicity\"[tiab] OR \"neurodevelopmental\"[tiab]) AND (exposure[tiab] OR exposed[tiab]) AND (rat[tiab] OR rats[tiab] OR mice[tiab] OR zebrafish[tiab])",
+  "Fish embryo": "(Xenopus[tiab] OR frog[tiab] OR amphibian*[tiab] OR Daphnia[tiab] OR \"sea urchin\"[tiab]) AND (embryo*[tiab] OR larva*[tiab]) AND (toxic*[tiab])"
+ },
+ "no_match": {
+  "_note": "Section 3.4 source 2: animal procedures in areas without B1 methods or needing unmodelled systemic complexity. 5 of these 8 areas are drawn at random from the frozen frame.",
+  "Behaviour and cognition": "(anxiety[tiab] OR \"memory\"[tiab] OR \"learning\"[tiab] OR \"social behavior\"[tiab] OR \"open field\"[tiab]) AND (mice[tiab] OR rats[tiab]) AND (behavio*[tiab])",
+  "Cardiac physiology": "(\"myocardial infarction\"[tiab] OR \"cardiac hypertrophy\"[tiab] OR \"heart failure\"[tiab] OR hemodynamic*[tiab]) AND (mice[tiab] OR rats[tiab] OR pig[tiab] OR pigs[tiab] OR dog[tiab] OR dogs[tiab]) AND (\"ligation\"[tiab] OR \"echocardiograph*\"[tiab] OR \"pressure-volume\"[tiab])",
+  "Tumour therapy efficacy": "(xenograft*[tiab] OR \"tumor-bearing\"[tiab] OR \"tumour-bearing\"[tiab]) AND (mice[tiab] OR mouse[tiab]) AND (\"tumor growth\"[tiab] OR \"tumour growth\"[tiab] OR \"survival\"[tiab])",
+  "Bone and orthopaedics": "(\"fracture healing\"[tiab] OR osteotomy[tiab] OR \"bone defect\"[tiab] OR osteoporosis[tiab] OR ovariectomized[tiab]) AND (rat[tiab] OR rats[tiab] OR mice[tiab] OR rabbit*[tiab] OR sheep[tiab])",
+  "Metabolic disease": "(\"high-fat diet\"[tiab] OR obesity[tiab] OR diabetes[tiab] OR \"insulin resistance\"[tiab]) AND (mice[tiab] OR rats[tiab]) AND (\"glucose tolerance\"[tiab] OR \"body weight\"[tiab])",
+  "Neurodegeneration": "(Alzheimer*[tiab] OR Parkinson*[tiab] OR \"amyloid\"[tiab] OR \"alpha-synuclein\"[tiab] OR Huntington*[tiab]) AND (transgenic[tiab] OR mice[tiab] OR rats[tiab])",
+  "Infection challenge": "(\"challenge\"[tiab] OR infected[tiab] OR infection[tiab]) AND (vaccin*[tiab] OR immuniz*[tiab] OR immunis*[tiab]) AND (mice[tiab] OR hamster*[tiab] OR ferret*[tiab] OR macaque*[tiab]) AND (protection[tiab] OR survival[tiab])",
+  "Stroke and ischaemia": "(stroke[tiab] OR \"middle cerebral artery occlusion\"[tiab] OR MCAO[tiab] OR \"cerebral ischemia\"[tiab] OR \"ischemia-reperfusion\"[tiab]) AND (mice[tiab] OR rats[tiab])"
+ },
+ "underspecified": "(\"short communication\"[ti] OR \"brief report\"[ti] OR \"rapid communication\"[ti] OR \"technical note\"[ti] OR \"research letter\"[ti] OR \"brief communication\"[ti] OR \"preliminary study\"[ti] OR \"pilot study\"[ti]) AND (mice[tiab] OR mouse[tiab] OR rats[tiab] OR rat[tiab] OR rabbit*[tiab] OR zebrafish[tiab] OR \"guinea pig*\"[tiab])"
+}

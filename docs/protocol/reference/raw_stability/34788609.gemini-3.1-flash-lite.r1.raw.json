@@ -1,0 +1,90 @@
+{
+  "experiments": [
+    {
+      "study_type": "prostate cancer tumor initiation and metastasis study",
+      "procedure_text": "Surgical delivery of Cre/Luciferase lentivirus into the right anterior prostate in Pten loxP/loxP -Trp53 loxP/loxP -Ai9(RCL-tdT) mice to model prostate cancer initiation and distant metastasis.",
+      "procedure_text_evidence": "Surgical delivery of Cre/Luciferase lentivirus (LV-Cre/ Luci) into the right anterior prostate in triple-knockin Pten loxP/loxP -Trp53 loxP/loxP -Ai9(RCL-tdT) mice.",
+      "species": "mouse",
+      "species_evidence": "Pten loxP/loxP , Trp53 loxP/loxP , and wild-type C57BL/6J mice were used in this study.",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo",
+        "ex_vivo"
+      ],
+      "test_system_evidence": "In vivo and ex-vivo, bioluminescence imaging was performed",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "other"
+      ],
+      "route_evidence": "Intra-prostate injection",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "tumor volume quantification",
+          "role": "primary",
+          "evidence": "Quantification of the complete volume of the tdT + focal regions"
+        },
+        {
+          "slug": "other-health-effects",
+          "label": "metastasis analysis",
+          "role": "primary",
+          "evidence": "animals of 15 months old for distant metastasis analysis"
+        },
+        {
+          "slug": null,
+          "label": "nuclear size quantification",
+          "role": "secondary",
+          "evidence": "Quantification of the increase in nuclear size of tdT + compared to nearby tdT -epithelial cells"
+        },
+        {
+          "slug": null,
+          "label": "cellular spatial distribution",
+          "role": "secondary",
+          "evidence": "The distribution of metastatic tdT + cells in the neocortex shows enrichment"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Luc. Cre lentiviral plasmid",
+          "role": "test",
+          "evidence": "the Luc. Cre lentiviral plasmid (Tyler Jacks, Addgene plasmid 20905)"
+        },
+        {
+          "name": "luciferin",
+          "role": "test",
+          "evidence": "animals received intraperitoneal injections of 200 mg/kg luciferin"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "20",
+          "200"
+        ],
+        "dose_units": [
+          "μL",
+          "mg/kg"
+        ],
+        "frequency": "single (virus), repeated (luciferin)",
+        "duration": "up to 15 months",
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": "Typically, 20 μL of the concentrated virus was injected into the right anterior prostate.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "The study utilized genetically modified mice for prostate cancer modeling. Animal counts for specific experimental groups are provided in figure legends but not globally specified."
+    }
+  ]
+}

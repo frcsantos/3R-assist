@@ -1,0 +1,87 @@
+{
+  "experiments": [
+    {
+      "study_type": "pulmonary fibrosis model",
+      "procedure_text": "C57BL/6J mice were intratracheally injected with 3 mg/kg BLM to induce pulmonary fibrosis, followed by tail vein injection of 20 μg MSC-exos in the treatment group.",
+      "procedure_text_evidence": "3 mg/kg of BLM (Zhejiang Hisun Pharmaceutical Co., Ltd., China) was intratracheally injected... mice in the BLM + MSC-exos group were treated with 20 μg MSC-exos in 100 μL PBS via tail vein injection",
+      "species": "mouse",
+      "species_evidence": "C57BL/6J mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 3
+      },
+      "animal_counts_evidence": "random allocation into three distinct experimental groups: control group, BLM group, and BLM + MSC-exos group(n = 3).",
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "Following a week of acclimatization, the mice underwent random allocation",
+      "application": "translational-applied-research",
+      "application_evidence": null,
+      "route": [
+        "intratracheal",
+        "intravenous"
+      ],
+      "route_evidence": "3 mg/kg of BLM ... was intratracheally injected... treated with 20 μg MSC-exos ... via tail vein injection",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "pulmonary fibrosis pathology",
+          "role": "primary",
+          "evidence": "HE staining evaluation of mouse lung tissue pathology. B. Masson staining evaluation of lung tissue pathology."
+        },
+        {
+          "slug": null,
+          "label": "α-SMA and Co1-I expression",
+          "role": "secondary",
+          "evidence": "RT-qPCR detection of α-SMA and Co1-I expression in mouse lung tissue."
+        },
+        {
+          "slug": null,
+          "label": "EMT process markers",
+          "role": "secondary",
+          "evidence": "RT-qPCR detection of MMP2, MMP9, N-cadherin, snail, vimentin, fibronectin, and E-cadherin expression"
+        },
+        {
+          "slug": "immunotoxicity",
+          "label": "inflammation markers",
+          "role": "secondary",
+          "evidence": "RT-qPCR detection of NLRP3, NOD1, Caspase1, caspase11, ASC, IL-1beta, IL-18 expression in lung tissue."
+        }
+      ],
+      "substances": [
+        {
+          "name": "BLM",
+          "role": "test",
+          "evidence": "3 mg/kg of BLM (Zhejiang Hisun Pharmaceutical Co., Ltd., China) was intratracheally injected."
+        },
+        {
+          "name": "MSC-exos",
+          "role": "test",
+          "evidence": "treated with 20 μg MSC-exos in 100 μL PBS via tail vein injection"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "3 mg/kg",
+          "20 μg"
+        ],
+        "dose_units": "mg/kg, μg",
+        "frequency": "single",
+        "duration": "21 days",
+        "timing": "BLM induction followed by post-modeling treatment",
+        "conditions": null
+      },
+      "exposure_evidence": "3 mg/kg of BLM ... intratracheally injected... after the modeling was completed ... treated with 20 μg MSC-exos",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Experimental protocol approved by the Experimental Animal Ethics Review Committee of Guangzhou Seyotin Biotechnology Co., LTD (SYT2023036)."
+    }
+  ]
+}

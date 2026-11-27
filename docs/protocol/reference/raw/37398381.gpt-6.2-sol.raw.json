@@ -1,0 +1,304 @@
+{
+  "experiments": [
+    {
+      "study_type": "Form deprivation myopia (FDM) and recovery with single-cell analysis of chick choroids",
+      "procedure_text": "Apply translucent goggles to right eyes; leave left eyes untreated. After 24 hours of recovery, isolate choroidal cells for FACS and RNA sequencing and examine immunolabelled choroidal whole mounts.",
+      "procedure_text_evidence": "Form deprivation myopia (FDM) was induced in 3 to 4 day-old chicks by applying translucent plastic goggles",
+      "species": "chicken",
+      "species_evidence": "30 chickens total",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": 30,
+        "per_group": null
+      },
+      "animal_counts_evidence": "10 recovering choroids/pool; 30 chickens total",
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "Choroids were isolated from control (left) eyes and eyes recovering from form deprivation myopia (right)",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["inhalation"],
+      "route_evidence": "euthanized by an overdose of isoflurane inhalant anesthetic",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Choroidal cell viability",
+          "role": "unspecified",
+          "evidence": "Living and dead cells were identified"
+        },
+        {
+          "slug": null,
+          "label": "Post-sort living cell count",
+          "role": "unspecified",
+          "evidence": "Following FACS, cells were counted with an automated Cell Counter"
+        },
+        {
+          "slug": null,
+          "label": "Single-cell choroidal gene expression",
+          "role": "unspecified",
+          "evidence": "Read mapping, and expression quantification were performed"
+        },
+        {
+          "slug": null,
+          "label": "Choroidal cell cluster identity and cell types",
+          "role": "unspecified",
+          "evidence": "24 distinct choroid cell types based on the transcriptomes of 71,054 cells"
+        },
+        {
+          "slug": null,
+          "label": "Cluster-specific marker genes",
+          "role": "unspecified",
+          "evidence": "Selected marker genes identified in 24 chicken choroid cell clusters"
+        },
+        {
+          "slug": null,
+          "label": "Cell-cycle phase of choroidal subclusters",
+          "role": "unspecified",
+          "evidence": "identify subclusters of cells in G1, S and G2/M phases"
+        },
+        {
+          "slug": null,
+          "label": "Choroidal cell cluster proportions in control and recovering eyes",
+          "role": "unspecified",
+          "evidence": "Comparison of the number of cells in clusters between control and recovering choroids"
+        },
+        {
+          "slug": null,
+          "label": "Immune cell type proportions in control and recovering eyes",
+          "role": "unspecified",
+          "evidence": "Comparison of immune cell types between control and recovering choroids"
+        },
+        {
+          "slug": null,
+          "label": "Differential gene expression in recovering versus control choroidal cell clusters",
+          "role": "unspecified",
+          "evidence": "genes down-regulated in recovering choroids compared with controls"
+        },
+        {
+          "slug": null,
+          "label": "Cluster 21 neuronal gene expression signature",
+          "role": "unspecified",
+          "evidence": "Genes upregulated in cluster 21 relative to all other clusters"
+        },
+        {
+          "slug": null,
+          "label": "Opsin gene expression across choroidal cell clusters",
+          "role": "unspecified",
+          "evidence": "Opsin gene expression (FKPM) was compared among the 24 choroid cell clusters"
+        },
+        {
+          "slug": null,
+          "label": "CHRNA3-positive neurons in control and recovering choroidal whole mounts",
+          "role": "unspecified",
+          "evidence": "identify cluster 21 neurons in whole mounts of chick choroids from control and recovering eyes"
+        },
+        {
+          "slug": null,
+          "label": "Predicted marker-gene interactions and within-cluster co-expression",
+          "role": "unspecified",
+          "evidence": "determine if those interacting genes were also expressed in the same cluster"
+        },
+        {
+          "slug": null,
+          "label": "Predicted canonical pathway enrichment in recovering choroidal clusters",
+          "role": "unspecified",
+          "evidence": "canonical pathways significantly enriched in the indicated cell clusters from recovering eyes compared with controls"
+        },
+        {
+          "slug": null,
+          "label": "Predicted upstream regulators of the choroidal recovery response",
+          "role": "unspecified",
+          "evidence": "IPA comparison analysis predicted upstream regulators involved in the choroidal recovery response"
+        }
+      ],
+      "substances": [
+        {
+          "name": "translucent plastic goggles",
+          "role": "test",
+          "evidence": "applying translucent plastic goggles to the right eye"
+        },
+        {
+          "name": "isoflurane",
+          "role": "other",
+          "evidence": "overdose of isoflurane inhalant anesthetic"
+        },
+        {
+          "name": "phosphate buffered saline",
+          "role": "other",
+          "evidence": "a drop of phosphate buffered saline"
+        },
+        {
+          "name": "HBSS",
+          "role": "other",
+          "evidence": "containing 2 ml of HBSS"
+        },
+        {
+          "name": "collagenase",
+          "role": "other",
+          "evidence": "digested with collagenase"
+        },
+        {
+          "name": "trypsin",
+          "role": "other",
+          "evidence": "samples were digested with 2 ml trypsin"
+        },
+        {
+          "name": "BSA",
+          "role": "other",
+          "evidence": "resuspended in PBS + 0.04% BSA"
+        },
+        {
+          "name": "calcein-AM",
+          "role": "other",
+          "evidence": "green-fluorescent calcein-AM"
+        },
+        {
+          "name": "ethidium homodimer-1",
+          "role": "other",
+          "evidence": "redfluorescent ethidium homodimer-1"
+        },
+        {
+          "name": "Chromium Next GEM Single Cell 3' Reagent Kits v3.1",
+          "role": "other",
+          "evidence": "Chromium Next GEM Single Cell 3' Reagent Kits v3.1"
+        },
+        {
+          "name": "paraformaldehyde",
+          "role": "other",
+          "evidence": "placed in 4% paraformaldehyde at 4 °C overnight"
+        },
+        {
+          "name": "Triton X-100",
+          "role": "other",
+          "evidence": "2% BSA, 0.2% Triton X-100, 0.004% sodium azide in PBS"
+        },
+        {
+          "name": "sodium azide",
+          "role": "other",
+          "evidence": "0.004% sodium azide in PBS"
+        },
+        {
+          "name": "Anti-CHRNA3 antibodies",
+          "role": "other",
+          "evidence": "Anti-CHRNA3 antibodies were used to identify cluster 21 neurons"
+        },
+        {
+          "name": "goat anti-rabbit IgG conjugated to AlexaFluor 568",
+          "role": "other",
+          "evidence": "incubated with goat anti-rabbit IgG conjugated to AlexaFluor 568"
+        },
+        {
+          "name": "anti-rat AlexaFluor 568",
+          "role": "other",
+          "evidence": "CHRNA3-positive cells were labeled with anti-rat AlexaFluor 568"
+        },
+        {
+          "name": "DAPI",
+          "role": "other",
+          "evidence": "choroids were stained with DAPI"
+        },
+        {
+          "name": "Prolong Gold with DAPI",
+          "role": "other",
+          "evidence": "Prolong Gold with DAPI"
+        }
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": "10 days",
+        "timing": "At the start of the light cycle on the 11 th day (7 am)",
+        "conditions": "unrestricted vision (recover) for 24 hrs"
+      },
+      "exposure_evidence": "Goggles remained in place for 10 days.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts.female", "animal_counts.male", "animal_counts.per_group", "immunolabelling_cohort", "immunolabelling_secondary_antibody", "exposure.dose_levels"],
+      "notes": "Goggles were checked daily in chicks aged 3–4 days at application; RNA sequencing used three pools of ten choroids per eye condition, and inhalation refers only to euthanasia. Whole-mount cohort overlap is unstated, and the secondary is described as anti-rabbit in Methods but anti-rat in Figure 8A."
+    },
+    {
+      "study_type": "FACS sorting of CHRNA3-positive cells from normal chicken eyes",
+      "procedure_text": "Fix and immunolabel choroidal cells from normal chicken eyes with anti-chick CHRNA3, label nuclei with DAPI, and analyze stained cells by flow cytometry.",
+      "procedure_text_evidence": "CHRNA3-positive cells were isolated from choroid tissue homogenates from normal chicken eyes by FACS",
+      "species": "chicken",
+      "species_evidence": "normal chicken eyes",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "isolated from choroid tissue homogenates from normal chicken eyes by FACS",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "CHRNA3-positive fraction of DAPI-positive choroidal cells",
+          "role": "unspecified",
+          "evidence": "CHRNA3/AlexaFluor 647/DAPI positive cells represented 0.60% of the total DAPI-positive cells"
+        },
+        {
+          "slug": null,
+          "label": "Nonspecific labelling fraction in the secondary-only control",
+          "role": "unspecified",
+          "evidence": "cells were labelled only with AlexaFluor 647 and DAPI represented 0.11%"
+        }
+      ],
+      "substances": [
+        {
+          "name": "formaldehyde",
+          "role": "other",
+          "evidence": "fixed in 4% formaldehyde at 4°C overnight"
+        },
+        {
+          "name": "PBS",
+          "role": "other",
+          "evidence": "wash buffer (PBS + 2% BSA)"
+        },
+        {
+          "name": "BSA",
+          "role": "other",
+          "evidence": "wash buffer (PBS + 2% BSA)"
+        },
+        {
+          "name": "Triton X-100",
+          "role": "other",
+          "evidence": "2% BSA, 0.2% Triton X-100 in PBS"
+        },
+        {
+          "name": "anti-chick CHRNA3",
+          "role": "other",
+          "evidence": "immunolabelled with anti-chick CHRNA3 (1:4000)"
+        },
+        {
+          "name": "goat anti-rat alexafluor 647",
+          "role": "other",
+          "evidence": "incubation in goat anti-rat alexafluor 647"
+        },
+        {
+          "name": "DAPI",
+          "role": "other",
+          "evidence": "nuclei were labelled with DAPI (1:1000 in wash buffer)"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["4%", "1:4000", "1:1000"],
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": "Cells were immunolabelled with anti-chick CHRNA3 (1:4000) in blocking buffer overnight 4°C with rotation.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "animal_age", "cohort_overlap"],
+      "notes": "Normal-eye overlap with the paired-eye cohort is not stated. Cells were fixed in 4% formaldehyde overnight at 4°C and labelled with anti-CHRNA3 (1:4000) overnight at 4°C, secondary antibody (1:1000) for 1 hour at room temperature, and DAPI (1:1000); the nonspecific control used only the secondary antibody and DAPI."
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+(english[Language] OR portuguese[Language]) AND journal article[Publication Type] AND (animals[MeSH Terms] OR "animal model"[Title/Abstract])

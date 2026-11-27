@@ -1,0 +1,479 @@
+{
+  "experiments": [
+    {
+      "study_type": "eTOM RapidCaP prostate cancer time course after intra-prostate lentivirus injection",
+      "procedure_text": "Inject Cre/Luciferase lentivirus into the right anterior prostate and reconstruct and quantify tdT + prostate foci at 5 days post-injection.",
+      "procedure_text_evidence": "Reconstruction and volume quantification of tdT + foci in prostate at 5, 10, 20, and 50 days post-injection.",
+      "species": "mouse",
+      "species_evidence": "wild-type C57BL/6J mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": 5,
+        "per_group": null
+      },
+      "animal_counts_evidence": "including five, seven, five, and five mice analyzed at days 5, 10, 20, and 50",
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "visualized in vivo by bioluminescence imaging before ex vivo imaging of the prostate by STPT",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other", "inhalation", "cutaneous"],
+      "route_evidence": "20 μL of the concentrated virus was injected into the right anterior prostate",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Volume of tdT + prostate foci",
+          "role": "unspecified",
+          "evidence": "Quantification of the complete volume of the tdT + focal regions"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Cre/Luciferase lentivirus",
+          "role": "test",
+          "evidence": "Surgical delivery of Cre/Luciferase lentivirus"
+        },
+        {
+          "name": "isoflurane",
+          "role": "other",
+          "evidence": "isoflurane via a nose cone"
+        },
+        {
+          "name": "betadine",
+          "role": "other",
+          "evidence": "The shaved region was cleaned with betadine"
+        },
+        {
+          "name": "70% ethanol",
+          "role": "other",
+          "evidence": "followed by 70% ethanol three times"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["20 μL"],
+        "dose_units": "μL",
+        "frequency": null,
+        "duration": null,
+        "timing": "5, 10, 20, and 50 days post-injection",
+        "conditions": "into the right anterior prostate"
+      },
+      "exposure_evidence": "Typically, 20 μL of the concentrated virus was injected into the right anterior prostate.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "were approved by the Institutional Animal Care and Use Committee (IACUC)",
+      "missing_or_ambiguous": ["exposure.dose_levels", "exposure.frequency"],
+      "notes": "This is the day-5 cohort of male triple-knockin RapidCaP eTOM mice; the time-course animals were described as 2 to 6 months old. The injection volume is typical, and the lentiviral titer is not stated."
+    },
+    {
+      "study_type": "eTOM RapidCaP prostate cancer time course after intra-prostate lentivirus injection",
+      "procedure_text": "Deliver Cre/Luciferase lentivirus into the right anterior prostate and assess reporter signal and prostate foci by bioluminescence imaging, STPT and immunofluorescence.",
+      "procedure_text_evidence": "The Pten-Trp53 deletion can be visualized in vivo by bioluminescence imaging before ex vivo imaging of the prostate by STPT.",
+      "species": "mouse",
+      "species_evidence": "seven mice analyzed",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": 7,
+        "per_group": null
+      },
+      "animal_counts_evidence": "seven mice analyzed at 10 days post-injection",
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "visualized in vivo by bioluminescence imaging before ex vivo imaging of the prostate by STPT",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other", "intraperitoneal", "inhalation", "cutaneous"],
+      "route_evidence": "intraperitoneal injections of 200 mg/kg luciferin 10 minutes before imaging",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Bioluminescence signal in trunk and extremities",
+          "role": "unspecified",
+          "evidence": "regions of interest were measured with standardized rectangular regions covering the mouse trunk and extremities"
+        },
+        {
+          "slug": null,
+          "label": "Volume of tdT + prostate foci",
+          "role": "unspecified",
+          "evidence": "Quantification of the complete volume of the tdT + focal regions"
+        },
+        {
+          "slug": null,
+          "label": "Tumor border convexity",
+          "role": "unspecified",
+          "evidence": "The Convexity morphological feature algorithm was developed to quantify shape variation of the tumor border."
+        },
+        {
+          "slug": null,
+          "label": "Prostate epithelial architecture by CK8 immunofluorescence",
+          "role": "unspecified",
+          "evidence": "confirms normal epithelial architecture at 10 days"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Cre/Luciferase lentivirus",
+          "role": "test",
+          "evidence": "Surgical delivery of Cre/Luciferase lentivirus"
+        },
+        {
+          "name": "luciferin",
+          "role": "other",
+          "evidence": "intraperitoneal injections of 200 mg/kg luciferin 10 minutes before imaging"
+        },
+        {
+          "name": "isoflurane",
+          "role": "other",
+          "evidence": "isoflurane via a nose cone"
+        },
+        {
+          "name": "betadine",
+          "role": "other",
+          "evidence": "The shaved region was cleaned with betadine"
+        },
+        {
+          "name": "70% ethanol",
+          "role": "other",
+          "evidence": "followed by 70% ethanol three times"
+        },
+        {
+          "name": "cytokeratin 8 (CK8) antibody",
+          "role": "other",
+          "evidence": "Immunofluorescence (IF) with cytokeratin 8 (CK8) antibody"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["20 μL", "200 mg/kg"],
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": "10 days post-injection",
+        "conditions": "into the right anterior prostate"
+      },
+      "exposure_evidence": "Typically, 20 μL of the concentrated virus was injected into the right anterior prostate.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "were approved by the Institutional Animal Care and Use Committee (IACUC)",
+      "missing_or_ambiguous": ["exposure.dose_levels", "exposure.frequency", "animal_counts.per_group"],
+      "notes": "The typical intra-prostate virus volume was 20 μL; for in vivo imaging, luciferin was given intraperitoneally at 200 mg/kg 10 minutes before imaging. The methods describe 2% isoflurane during the 10-minute surgery and 3 minutes of imaging; the number of mice used for each imaging or staining assay is not specified."
+    },
+    {
+      "study_type": "eTOM RapidCaP prostate cancer time course after intra-prostate lentivirus injection",
+      "procedure_text": "Inject lentivirus into the right anterior prostate and assess tdT + focus volume, epithelial architecture and nuclear size at 20 days post-injection.",
+      "procedure_text_evidence": "a transverse section of prostate at 20 days post-injection reveals a focus of tdT + cells",
+      "species": "mouse",
+      "species_evidence": "wild-type C57BL/6J mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": 5,
+        "per_group": null
+      },
+      "animal_counts_evidence": "including five, seven, five, and five mice analyzed at days 5, 10, 20, and 50",
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "visualized in vivo by bioluminescence imaging before ex vivo imaging of the prostate by STPT",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other", "inhalation", "cutaneous"],
+      "route_evidence": "20 μL of the concentrated virus was injected into the right anterior prostate",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Volume of tdT + prostate foci",
+          "role": "unspecified",
+          "evidence": "Quantification of the complete volume of the tdT + focal regions"
+        },
+        {
+          "slug": null,
+          "label": "Prostate epithelial architecture and hyperplastic-like changes by CK8 immunofluorescence",
+          "role": "unspecified",
+          "evidence": "disrupted hyperplastic-like changes at 20 days post-injection"
+        },
+        {
+          "slug": null,
+          "label": "Nuclear volume of tdT + and nearby tdT - prostate epithelial cells",
+          "role": "unspecified",
+          "evidence": "Quantification of the increase in nuclear size of tdT + compared to nearby tdT -epithelial"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Cre/Luciferase lentivirus",
+          "role": "test",
+          "evidence": "Surgical delivery of Cre/Luciferase lentivirus"
+        },
+        {
+          "name": "isoflurane",
+          "role": "other",
+          "evidence": "isoflurane via a nose cone"
+        },
+        {
+          "name": "betadine",
+          "role": "other",
+          "evidence": "The shaved region was cleaned with betadine"
+        },
+        {
+          "name": "70% ethanol",
+          "role": "other",
+          "evidence": "followed by 70% ethanol three times"
+        },
+        {
+          "name": "cytokeratin 8 (CK8) antibody",
+          "role": "other",
+          "evidence": "Immunofluorescence (IF) with cytokeratin 8 (CK8) antibody"
+        },
+        {
+          "name": "DAPI",
+          "role": "other",
+          "evidence": "(DAPI) for 5 mins at room temperature to stain the cell nuclei"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["20 μL"],
+        "dose_units": "μL",
+        "frequency": null,
+        "duration": null,
+        "timing": "20 days post-injection",
+        "conditions": "into the right anterior prostate"
+      },
+      "exposure_evidence": "Typically, 20 μL of the concentrated virus was injected into the right anterior prostate.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "were approved by the Institutional Animal Care and Use Committee (IACUC)",
+      "missing_or_ambiguous": ["exposure.dose_levels", "exposure.frequency", "animal_counts.per_group"],
+      "notes": "Five mice were analyzed for focus volume at day 20; nuclear size was analyzed in two mice, without explicit confirmation of their overlap with the five. The general prostate and liver immunofluorescence method also lists E-Cad staining but gives no separate E-Cad result for this cohort."
+    },
+    {
+      "study_type": "eTOM RapidCaP prostate cancer time course after intra-prostate lentivirus injection",
+      "procedure_text": "Inject Cre/Luciferase lentivirus into the right anterior prostate and reconstruct and quantify tdT + prostate foci at 50 days post-injection.",
+      "procedure_text_evidence": "Reconstruction and volume quantification of tdT + foci in prostate at 5, 10, 20, and 50 days post-injection.",
+      "species": "mouse",
+      "species_evidence": "wild-type C57BL/6J mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": 5,
+        "per_group": null
+      },
+      "animal_counts_evidence": "including five, seven, five, and five mice analyzed at days 5, 10, 20, and 50",
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "visualized in vivo by bioluminescence imaging before ex vivo imaging of the prostate by STPT",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other", "inhalation", "cutaneous"],
+      "route_evidence": "20 μL of the concentrated virus was injected into the right anterior prostate",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Volume of tdT + prostate foci",
+          "role": "unspecified",
+          "evidence": "Quantification of the complete volume of the tdT + focal regions"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Cre/Luciferase lentivirus",
+          "role": "test",
+          "evidence": "Surgical delivery of Cre/Luciferase lentivirus"
+        },
+        {
+          "name": "isoflurane",
+          "role": "other",
+          "evidence": "isoflurane via a nose cone"
+        },
+        {
+          "name": "betadine",
+          "role": "other",
+          "evidence": "The shaved region was cleaned with betadine"
+        },
+        {
+          "name": "70% ethanol",
+          "role": "other",
+          "evidence": "followed by 70% ethanol three times"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["20 μL"],
+        "dose_units": "μL",
+        "frequency": null,
+        "duration": null,
+        "timing": "50 post-injection",
+        "conditions": "into the right anterior prostate"
+      },
+      "exposure_evidence": "Typically, 20 μL of the concentrated virus was injected into the right anterior prostate.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "were approved by the Institutional Animal Care and Use Committee (IACUC)",
+      "missing_or_ambiguous": ["exposure.dose_levels", "exposure.frequency"],
+      "notes": "This is the cohort analyzed at day 50 post-injection. The injection volume is typical, and the lentiviral titer is not stated."
+    },
+    {
+      "study_type": "Distant prostate cancer metastasis analysis after intra-prostate lentivirus injection",
+      "procedure_text": "Assess distant metastatic spread by bioluminescence imaging and map tdT + cells in liver and brain by STPT and histological staining.",
+      "procedure_text_evidence": "Bioluminescence signal reveals metastatic disease spread across the body at 15 months post-injection.",
+      "species": "mouse",
+      "species_evidence": "n = 2 mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo", "ex_vivo"],
+      "test_system_evidence": "In vivo and ex-vivo, bioluminescence imaging was performed",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other", "intraperitoneal", "inhalation", "cutaneous"],
+      "route_evidence": "intraperitoneal injections of 200 mg/kg luciferin 10 minutes before imaging",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Whole-body metastatic spread by bioluminescence",
+          "role": "unspecified",
+          "evidence": "Bioluminescence signal reveals metastatic disease spread across the body at 15 months post-injection."
+        },
+        {
+          "slug": null,
+          "label": "Number and 3D distribution of liver tdT + metastatic foci and cells",
+          "role": "unspecified",
+          "evidence": "liver highlighted seven tdT + foci (shown in red) distributed among main blood vessels"
+        },
+        {
+          "slug": null,
+          "label": "Distance from metastatic liver tdT + cells to nearby veins",
+          "role": "unspecified",
+          "evidence": "the distance between tdT + cells and the closest veins to each cluster"
+        },
+        {
+          "slug": null,
+          "label": "CK8 immunoreactivity of metastatic liver tdT + cells",
+          "role": "unspecified",
+          "evidence": "Anti-CK8 IF labeling reveals that the metastatic tdT + cells in the liver are CK8"
+        },
+        {
+          "slug": null,
+          "label": "Nuclear volume of liver metastatic cells and hepatocytes",
+          "role": "unspecified",
+          "evidence": "calculate the nucleus volume for hepatocytes and the metastatic tdTomato + /-cells"
+        },
+        {
+          "slug": null,
+          "label": "Layer-specific cortical distribution of metastatic tdT + cells",
+          "role": "unspecified",
+          "evidence": "Comparison of layer-specific cortical distribution confirms deep-layer tdT + cell enrichment in two brains"
+        },
+        {
+          "slug": null,
+          "label": "Regional density and distribution of brain tdTomato + cells",
+          "role": "unspecified",
+          "evidence": "positive cells normalized for the volume in the specific brain regions"
+        },
+        {
+          "slug": null,
+          "label": "Anatomical brain region volume",
+          "role": "unspecified",
+          "evidence": "resulting in the total volume of each region"
+        },
+        {
+          "slug": null,
+          "label": "RFP immunoreactivity in brain sections",
+          "role": "unspecified",
+          "evidence": "primary Ab incubation was performed at 37 • C for 1hr (RFP-1:200, Ki-67-1:250)"
+        },
+        {
+          "slug": null,
+          "label": "Ki-67 immunoreactivity in brain sections",
+          "role": "unspecified",
+          "evidence": "primary Ab incubation was performed at 37 • C for 1hr (RFP-1:200, Ki-67-1:250)"
+        },
+        {
+          "slug": null,
+          "label": "Coronal brain histology by H&E",
+          "role": "unspecified",
+          "evidence": "we processed coronal brain sections with H&E staining"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Cre/Luciferase lentivirus",
+          "role": "test",
+          "evidence": "Surgical delivery of Cre/Luciferase lentivirus"
+        },
+        {
+          "name": "luciferin",
+          "role": "other",
+          "evidence": "intraperitoneal injections of 200 mg/kg luciferin 10 minutes before imaging"
+        },
+        {
+          "name": "isoflurane",
+          "role": "other",
+          "evidence": "continuous exposure to 2% isoflurane"
+        },
+        {
+          "name": "betadine",
+          "role": "other",
+          "evidence": "The shaved region was cleaned with betadine"
+        },
+        {
+          "name": "70% ethanol",
+          "role": "other",
+          "evidence": "followed by 70% ethanol three times"
+        },
+        {
+          "name": "ice-cold PBS",
+          "role": "other",
+          "evidence": "perfused transcardially with ice-cold PBS followed by 4% PFA"
+        },
+        {
+          "name": "4% PFA",
+          "role": "other",
+          "evidence": "perfused transcardially with ice-cold PBS followed by 4% PFA"
+        },
+        {
+          "name": "CK8",
+          "role": "other",
+          "evidence": "primary antibodies at 1:100 dilution for CK8 and 1:100 for E-Cad"
+        },
+        {
+          "name": "E-Cad",
+          "role": "other",
+          "evidence": "primary antibodies at 1:100 dilution for CK8 and 1:100 for E-Cad"
+        },
+        {
+          "name": "DAPI",
+          "role": "other",
+          "evidence": "(DAPI) for 5 mins at room temperature to stain the cell nuclei"
+        },
+        {
+          "name": "RFP",
+          "role": "other",
+          "evidence": "(RFP-1:200, Ki-67-1:250)"
+        },
+        {
+          "name": "Ki-67",
+          "role": "other",
+          "evidence": "(RFP-1:200, Ki-67-1:250)"
+        },
+        {
+          "name": "H&E",
+          "role": "other",
+          "evidence": "we processed coronal brain sections with H&E staining"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["20 μL", "200 mg/kg"],
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": "into the right anterior prostate"
+      },
+      "exposure_evidence": "Typically, 20 μL of the concentrated virus was injected into the right anterior prostate.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "were approved by the Institutional Animal Care and Use Committee (IACUC)",
+      "missing_or_ambiguous": ["segmentation", "animal_counts", "exposure.dose_levels", "exposure.frequency", "exposure.timing"],
+      "notes": "Liver nuclear-size and brain distribution analyses each report two mice, but overlap and the total distant-metastasis cohort size are not stated. The methods describe animals of 15 months of age, whereas whole-body metastatic imaging is reported at 15 months post-injection; for that imaging, luciferin was given at 200 mg/kg 10 minutes beforehand, separately from the typical 20 μL intra-prostate virus injection."
+    }
+  ]
+}

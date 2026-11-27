@@ -1,0 +1,79 @@
+{
+  "experiments": [
+    {
+      "study_type": "fDTH-EAE focal delayed-type hypersensitivity model of experimental autoimmune encephalomyelitis",
+      "procedure_text": "fDTH-EAE rats with acute inflammation were administered EC2319 or saline on days 0, 3, 7, and 10 and sacrificed on day 14 for PET/CT and ex vivo analyses.",
+      "procedure_text_evidence": "fDTH-EAE rats with acute inflammation were administered EC2319 (750 nmol/kg/day) or saline on days 0, 3, 7, and 10 after disease activation and were used for 68 Ga-FOL, histology, and immunofluorescence analyses on day 14.",
+      "species": "rat",
+      "species_evidence": "Male Lewis rats",
+      "animal_counts": {
+        "female": null,
+        "male": 60,
+        "total": 60,
+        "per_group": 10
+      },
+      "animal_counts_evidence": "Male Lewis rats (2-3 months, n = 60, 270 ± 23 g)",
+      "test_system": [
+        "in_vivo",
+        "ex_vivo",
+        "in_vitro"
+      ],
+      "test_system_evidence": "in vivo imaging was performed... sacrificed for ex vivo gamma counting... used to evaluate the in vitro binding",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "subcutaneous"
+      ],
+      "route_evidence": "subcutaneously administered with EC2319",
+      "endpoints": [
+        {
+          "slug": "other-health-effects",
+          "label": "neuroinflammation",
+          "role": "primary",
+          "evidence": "focal delayed-type hypersensitivity model of experimental autoimmune encephalomyelitis"
+        },
+        {
+          "slug": "biological-mechanistic-activities",
+          "label": "biodistribution of 68Ga-FOL",
+          "role": "secondary",
+          "evidence": "ex vivo gamma counting of excised tissues"
+        },
+        {
+          "slug": null,
+          "label": "plasma cytokine levels",
+          "role": "secondary",
+          "evidence": "Plasma levels of interferon γ (IFN-γ) and interleukins IL-1β, IL-4, IL-6, and IL-10 were measured"
+        }
+      ],
+      "substances": [
+        {
+          "name": "EC2319",
+          "role": "test",
+          "evidence": "subcutaneously administered with EC2319"
+        },
+        {
+          "name": "saline",
+          "role": "control",
+          "evidence": "fDTH-EAE rats receiving only saline"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "750 nmol/kg/day"
+        ],
+        "dose_units": "nmol/kg/day",
+        "frequency": "0, 3, 7, and 10 days after lesion activation",
+        "duration": null,
+        "timing": null,
+        "conditions": "400 ± 100 μL in saline"
+      },
+      "exposure_evidence": "subcutaneously administered with EC2319 (750 nmol/kg/day, 400 ± 100 μL in saline) in the nuchal area 0, 3, 7, and 10 days after lesion activation.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": "Includes acute and chronic phase cohorts, and healthy control rats."
+    }
+  ]
+}

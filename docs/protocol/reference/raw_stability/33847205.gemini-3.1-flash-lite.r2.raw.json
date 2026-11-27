@@ -1,0 +1,80 @@
+{
+  "experiments": [
+    {
+      "study_type": "Induction of acute cholestasis by common bile duct ligation",
+      "procedure_text": "Mice underwent common bile duct ligation or sham operation. Animals were sacrificed 5 days after BDL, and plasma and tissues were collected.",
+      "procedure_text_evidence": "The bile duct was isolated from the surrounding tissues, and a 7-0 silk ligature was tied at proximal and distal end to the liver hilus. Finally, the bile duct was resected between the two ligatures. In sham-operated animals, the bile duct was only isolated but not ligated. The animals were sacrificed 5 days after BDL",
+      "species": "mouse",
+      "species_evidence": "Male C57BL/6",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 3
+      },
+      "animal_counts_evidence": "n = 3/ group",
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": null,
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "subcutaneous"
+      ],
+      "route_evidence": "received 60 μg/ kg body weight of buprenorphine subcutaneously",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "bile infarcts",
+          "role": "primary",
+          "evidence": "quantification of bile infarcts"
+        },
+        {
+          "slug": null,
+          "label": "CK-19",
+          "role": "secondary",
+          "evidence": "quantification of positive CK-19"
+        },
+        {
+          "slug": null,
+          "label": "mRNA sequencing",
+          "role": "secondary",
+          "evidence": "Total RNA concentration of 1-2 μg was used for mRNA sequencing"
+        },
+        {
+          "slug": null,
+          "label": "respirometry",
+          "role": "secondary",
+          "evidence": "The oxygen consumption rates (OCRs) in homogenates from frozen livers were measured"
+        }
+      ],
+      "substances": [
+        {
+          "name": "buprenorphine",
+          "role": "other",
+          "evidence": "mice received 60 μg/ kg body weight of buprenorphine"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "60"
+        ],
+        "dose_units": "μg/ kg",
+        "frequency": null,
+        "duration": "5 days",
+        "timing": "before the surgery",
+        "conditions": null
+      },
+      "exposure_evidence": "The animals were sacrificed 5 days after BDL",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Experiment involves germ-free (GF) and altered Schaedler's flora (ASF) colonized mice."
+    }
+  ]
+}

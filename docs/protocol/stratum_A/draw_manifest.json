@@ -1,0 +1,172 @@
+{
+ "generated_utc": "2026-11-21T03:49:54.472045+00:00",
+ "seed": 20261113,
+ "candidates_per_method": 5,
+ "frame": "v3 manifest full_query (2020-2025) + method terms NOT preprint[pt]",
+ "frame_query_sha256": "88b18795b4903b03db23247a2e13e5e6567dab0e1554aab9b9ef5bfff47a1ce4",
+ "catalog_sha256": "d268a9513fc0a0b60471cca56e8b2b1cafabbdfd3723bd4de04fcd7c34981242",
+ "methods": [
+  {
+   "method_id": "6",
+   "oecd_ref": "TG 437",
+   "hits": 229,
+   "pool_after_dedup": 229,
+   "terms_sha256": "ea71f489052386a7",
+   "translation_sha256": "f5aaa31a517f5c19"
+  },
+  {
+   "method_id": "7",
+   "oecd_ref": "TG 438",
+   "hits": 229,
+   "pool_after_dedup": 224,
+   "terms_sha256": "ea71f489052386a7",
+   "translation_sha256": "f5aaa31a517f5c19"
+  },
+  {
+   "method_id": "8",
+   "oecd_ref": "TG 460",
+   "hits": 229,
+   "pool_after_dedup": 219,
+   "terms_sha256": "ea71f489052386a7",
+   "translation_sha256": "f5aaa31a517f5c19"
+  },
+  {
+   "method_id": "10",
+   "oecd_ref": "TG 442C",
+   "hits": 610,
+   "pool_after_dedup": 610,
+   "terms_sha256": "cf0faa961b0bbc98",
+   "translation_sha256": "43652906a98e08db"
+  },
+  {
+   "method_id": "12",
+   "oecd_ref": "TG 442E",
+   "hits": 610,
+   "pool_after_dedup": 605,
+   "terms_sha256": "cf0faa961b0bbc98",
+   "translation_sha256": "43652906a98e08db"
+  },
+  {
+   "method_id": "17",
+   "oecd_ref": "TG 471",
+   "hits": 697,
+   "pool_after_dedup": 696,
+   "terms_sha256": "0526a31a5720d2a7",
+   "translation_sha256": "412fd8e08dc09d6f"
+  },
+  {
+   "method_id": "45",
+   "oecd_ref": "TG 473",
+   "hits": 697,
+   "pool_after_dedup": 691,
+   "terms_sha256": "0526a31a5720d2a7",
+   "translation_sha256": "412fd8e08dc09d6f"
+  },
+  {
+   "method_id": "1",
+   "oecd_ref": "TG 439",
+   "hits": 412,
+   "pool_after_dedup": 409,
+   "terms_sha256": "f5d7916cbe8c36b1",
+   "translation_sha256": "27c4c92f51832cad"
+  },
+  {
+   "method_id": "3",
+   "oecd_ref": "TG 431",
+   "hits": 412,
+   "pool_after_dedup": 404,
+   "terms_sha256": "f5d7916cbe8c36b1",
+   "translation_sha256": "27c4c92f51832cad"
+  },
+  {
+   "method_id": "22",
+   "oecd_ref": "GD 129",
+   "hits": 1395,
+   "pool_after_dedup": 1394,
+   "terms_sha256": "a5ab1db8875ff960",
+   "translation_sha256": "13ba393486d99d7f"
+  },
+  {
+   "method_id": "23",
+   "oecd_ref": "TG 420",
+   "hits": 1395,
+   "pool_after_dedup": 1389,
+   "terms_sha256": "a5ab1db8875ff960",
+   "translation_sha256": "13ba393486d99d7f"
+  },
+  {
+   "method_id": "41",
+   "oecd_ref": "TG 455",
+   "hits": 116,
+   "pool_after_dedup": 116,
+   "terms_sha256": "1bf2dca5fe42e790",
+   "translation_sha256": "6b9609894c92aadc"
+  },
+  {
+   "method_id": "43",
+   "oecd_ref": "TG 456",
+   "hits": 651,
+   "pool_after_dedup": 651,
+   "terms_sha256": "a2f2908389159bcc",
+   "translation_sha256": "0462adea2b483e89"
+  },
+  {
+   "method_id": "30",
+   "oecd_ref": "",
+   "hits": 488,
+   "pool_after_dedup": 488,
+   "terms_sha256": "0e2535f4e26ff775",
+   "translation_sha256": "38a373986707a53d"
+  },
+  {
+   "method_id": "34",
+   "oecd_ref": "",
+   "hits": 488,
+   "pool_after_dedup": 483,
+   "terms_sha256": "0e2535f4e26ff775",
+   "translation_sha256": "38a373986707a53d"
+  },
+  {
+   "method_id": "54",
+   "oecd_ref": "TG 319A",
+   "hits": 2065,
+   "pool_after_dedup": 2065,
+   "terms_sha256": "ab2771b728f02c0e",
+   "translation_sha256": "3360c8929595c4fc"
+  },
+  {
+   "method_id": "20",
+   "oecd_ref": "",
+   "hits": 123,
+   "pool_after_dedup": 123,
+   "terms_sha256": "d44612567358c546",
+   "translation_sha256": "15dd5ed7c9ffa71a"
+  },
+  {
+   "method_id": "50",
+   "oecd_ref": "TG 495",
+   "hits": 277,
+   "pool_after_dedup": 276,
+   "terms_sha256": "fe21273d332eb99d",
+   "translation_sha256": "53349b3d49d85047"
+  },
+  {
+   "method_id": "37",
+   "oecd_ref": "TG 422",
+   "hits": 71,
+   "pool_after_dedup": 70,
+   "terms_sha256": "c55c67ddb275b083",
+   "translation_sha256": "3565bdadcb5c9aa9"
+  },
+  {
+   "method_id": "51",
+   "oecd_ref": "TG 212",
+   "hits": 240,
+   "pool_after_dedup": 240,
+   "terms_sha256": "ece5ec767cf4f0d7",
+   "translation_sha256": "1a27e57a6772901b"
+  }
+ ],
+ "script_sha256": "56b20ae8a3d3ec379bc2551b19831a823570f9c9f5aee63cefd4c09b3276e84c",
+ "status": "unverified_candidate_draw"
+}

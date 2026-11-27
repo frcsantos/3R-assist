@@ -1,0 +1,143 @@
+{
+ "seed": 20261114,
+ "search_hits": 642,
+ "pool": 632,
+ "with_pmc_features": 632,
+ "eligible": 93,
+ "draw": [
+  {
+   "rank": 1,
+   "pmid": 32932811,
+   "missing": [
+    "sex",
+    "age_weight",
+    "route"
+   ],
+   "methods_chars": 8718,
+   "pmcid": "PMC7565486"
+  },
+  {
+   "rank": 2,
+   "pmid": 35045097,
+   "missing": [
+    "age_weight",
+    "n_group",
+    "route"
+   ],
+   "methods_chars": 5211,
+   "pmcid": "PMC8769355"
+  },
+  {
+   "rank": 3,
+   "pmid": 39236010,
+   "missing": [
+    "n_group",
+    "route",
+    "duration"
+   ],
+   "methods_chars": 3361,
+   "pmcid": "PMC11376581"
+  },
+  {
+   "rank": 4,
+   "pmid": 39540281,
+   "missing": [
+    "age_weight",
+    "n_group",
+    "route"
+   ],
+   "methods_chars": 8156,
+   "pmcid": "PMC11668614"
+  },
+  {
+   "rank": 5,
+   "pmid": 37917589,
+   "missing": [
+    "age_weight",
+    "dose",
+    "route",
+    "duration"
+   ],
+   "methods_chars": 11124,
+   "pmcid": "PMC10621849"
+  },
+  {
+   "rank": 6,
+   "pmid": 38450510,
+   "missing": [
+    "age_weight",
+    "dose",
+    "route"
+   ],
+   "methods_chars": 1970,
+   "pmcid": "PMC10978246"
+  },
+  {
+   "rank": 7,
+   "pmid": 33804656,
+   "missing": [
+    "age_weight",
+    "n_group",
+    "route"
+   ],
+   "methods_chars": 5781,
+   "pmcid": "PMC8003781"
+  },
+  {
+   "rank": 8,
+   "pmid": 38328801,
+   "missing": [
+    "sex",
+    "age_weight",
+    "route"
+   ],
+   "methods_chars": 5356,
+   "pmcid": "PMC10847156"
+  },
+  {
+   "rank": 9,
+   "pmid": 32522007,
+   "missing": [
+    "age_weight",
+    "n_group",
+    "route"
+   ],
+   "methods_chars": 5630,
+   "pmcid": "PMC7526689"
+  },
+  {
+   "rank": 10,
+   "pmid": 37358021,
+   "missing": [
+    "sex",
+    "age_weight",
+    "route"
+   ],
+   "methods_chars": 15303,
+   "pmcid": "PMC10291732"
+  },
+  {
+   "rank": 11,
+   "pmid": 37342107,
+   "missing": [
+    "sex",
+    "age_weight",
+    "n_group"
+   ],
+   "methods_chars": 5127,
+   "pmcid": "PMC10278111"
+  },
+  {
+   "rank": 12,
+   "pmid": 34220227,
+   "missing": [
+    "sex",
+    "n_group",
+    "route"
+   ],
+   "methods_chars": 2683,
+   "pmcid": "PMC8241621"
+  }
+ ],
+ "script_sha256": "f71d4902250eb1a84c12b74d85d08de89c927914899daa71555a5ed54971ee84"
+}

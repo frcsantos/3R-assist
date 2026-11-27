@@ -1,0 +1,77 @@
+{
+  "experiments": [
+    {
+      "study_type": "xenograft tumorigenicity and lung metastasis",
+      "procedure_text": "BALB/c nude mice were injected with HuH7 cells subcutaneously to assess tumor growth or intravenously to assess lung metastasis.",
+      "procedure_text_evidence": "The xenograft mouse model was performed to investigate the tumorigenic ability of HCC in vivo. ... The metastatic model through the tail vein injection of HCC was established to measure metastatic ability in vivo.",
+      "species": "mouse",
+      "species_evidence": "Four-week-old BALB/c nude mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "The xenograft mouse model was performed to investigate the tumorigenic ability of HCC in vivo.",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "subcutaneous",
+        "intravenous"
+      ],
+      "route_evidence": "HuH7 cells were subcutaneously injected ... Nude mice were intravenously injected with 1 × 10 6 HuH7 cells.",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "tumorigenesis",
+          "role": "primary",
+          "evidence": "investigate the tumorigenic ability of HCC in vivo"
+        },
+        {
+          "slug": null,
+          "label": "tumor size and volume",
+          "role": "primary",
+          "evidence": "Tumor size and volume were measured regularly."
+        },
+        {
+          "slug": null,
+          "label": "metastatic ability",
+          "role": "primary",
+          "evidence": "measure metastatic ability in vivo"
+        }
+      ],
+      "substances": [
+        {
+          "name": "HuH7 cells",
+          "role": "test",
+          "evidence": "HuH7 cells were subcutaneously injected"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "1 × 10 7",
+          "1 × 10 6"
+        ],
+        "dose_units": "cells",
+        "frequency": null,
+        "duration": "25 days; 52 days",
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": "Approximate 1 × 10 7 HuH7 cells were subcutaneously injected ... Nude mice were intravenously injected with 1 × 10 6 HuH7 cells.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts",
+        "frequency"
+      ],
+      "notes": "Two separate in vivo models were performed: subcutaneous injection for tumorigenicity (25 days) and tail vein injection for metastasis (52 days)."
+    }
+  ]
+}

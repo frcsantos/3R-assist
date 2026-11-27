@@ -1,0 +1,120 @@
+{
+  "experiments": [
+    {
+      "study_type": "Whole-body plethysmography of ventilatory responses to hypoxic-hypercapnic gas challenge after L,D-DTT injection",
+      "procedure_text": "Rats received IV vehicle or L,D-DTT, then 15 min later a 60-min hypoxic-hypercapnic gas challenge with ventilatory parameters recorded by plethysmography.",
+      "procedure_text_evidence": "received an injection of L,D-DTT (100 μmol/kg, IV). After 15 min, both groups received a HH gas challenge",
+      "species": "rat",
+      "species_evidence": "male Sprague Dawley rats",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 6
+      },
+      "animal_counts_evidence": "One group of rats (n = 6, 326 ± 2 g) received an injection of vehicle",
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "record ventilatory parameters in freely-moving rats",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["intravenous"],
+      "route_evidence": "injection of vehicle (100 μL/kg, IV)",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Ventilatory parameters (Freq, TV, MV, Ti, Te, PIF, PEF, inspiratory/expiratory drive, NEBI)",
+          "role": "primary",
+          "evidence": "used to record ventilatory parameters in freely-moving rats"
+        },
+        {
+          "slug": null,
+          "label": "Body temperature",
+          "role": "secondary",
+          "evidence": "We recorded rat body temperatures before (Pre-drug) and at various timepoints"
+        }
+      ],
+      "substances": [
+        {
+          "name": "L,D-DTT",
+          "role": "test",
+          "evidence": "received an injection of L,D-DTT (100 μmol/kg, IV)"
+        },
+        {
+          "name": "vehicle",
+          "role": "control",
+          "evidence": "received an injection of vehicle (100 μL/kg, IV)"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["100 μmol/kg", "100 μL/kg"],
+        "dose_units": "μmol/kg",
+        "frequency": "single injection",
+        "duration": "60-min HH gas challenge",
+        "timing": "After 15 min, both groups received a HH gas challenge for 60 min",
+        "conditions": "temperature of 21.2 ± 0.2 °C and relative humidity of 51 ± 2%"
+      },
+      "exposure_evidence": "received an injection of L,D-DTT (100 μmol/kg, IV). After 15 min, both groups received a HH gas challenge for 60 min",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "performed according to the NIH Guide for Care and Use of Laboratory Animals",
+      "missing_or_ambiguous": ["total_animal_counts"],
+      "notes": "Study 1. Two separate batches of 3 rats per group were used. Body temperature recorded via rectal thermometer in a related cohort (n = 6)."
+    },
+    {
+      "study_type": "Whole-body plethysmography of ventilatory responses to hypoxic-hypercapnic gas challenge after L-NACme injection",
+      "procedure_text": "Rats received IV vehicle or L-NACme, then 15 min later a 60-min hypoxic-hypercapnic gas challenge with ventilatory parameters recorded by plethysmography.",
+      "procedure_text_evidence": "received an injection of L-NACme (500 μmol/kg, IV). After 15 min, both groups were subjected to a 60-min HH gas challenge",
+      "species": "rat",
+      "species_evidence": "male Sprague Dawley rats",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 6
+      },
+      "animal_counts_evidence": "One group of rats (n = 6, 324 ± 3 g) received an injection of vehicle",
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "record ventilatory parameters in freely-moving rats",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["intravenous"],
+      "route_evidence": "received an injection of L-NACme (500 μmol/kg, IV)",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Ventilatory parameters (Freq, TV, MV, NEBI, NEBI/Freq)",
+          "role": "primary",
+          "evidence": "used to record ventilatory parameters in freely-moving rats"
+        }
+      ],
+      "substances": [
+        {
+          "name": "L-NACme",
+          "role": "test",
+          "evidence": "received an injection of L-NACme (500 μmol/kg, IV)"
+        },
+        {
+          "name": "vehicle",
+          "role": "control",
+          "evidence": "received an injection of vehicle (100 μL/kg, IV)"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["500 μmol/kg", "100 μL/kg"],
+        "dose_units": "μmol/kg",
+        "frequency": "single injection",
+        "duration": "60-min HH gas challenge",
+        "timing": "After 15 min, both groups were subjected to a 60-min HH gas challenge",
+        "conditions": "temperature of 21.2 ± 0.2 °C and relative humidity of 51 ± 2%"
+      },
+      "exposure_evidence": "received an injection of L-NACme (500 μmol/kg, IV). After 15 min, both groups were subjected to a 60-min HH gas challenge",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "performed according to the NIH Guide for Care and Use of Laboratory Animals",
+      "missing_or_ambiguous": ["total_animal_counts"],
+      "notes": "Study 2. Two separate batches of 3 rats per group were used. Figure 10 cites L-NACme as 100 μmol/kg whereas text/Figure 11 state 500 μmol/kg; dose is inconsistent across figures."
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "experiments": [
+    {
+      "study_type": "Tumor xenograft generation",
+      "procedure_text": "Generation of xenograft tumor mice by subcutaneous injection of U-87 MG glioma cells into the flank of male athymic nude mice.",
+      "procedure_text_evidence": "To generate xenograft tumor mice, male athymic nude mice (Taconic, Foxn1 nu ) aged 4-10 weeks were injected subcutaneously in the flank (0.5-1 million cells in 200 μL of DMEM-F12 serum and antibiotic-free medium).",
+      "species": "mouse",
+      "species_evidence": "male athymic nude mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "To generate xenograft tumor mice",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "subcutaneous"
+      ],
+      "route_evidence": "injected subcutaneously in the flank",
+      "endpoints": [],
+      "substances": [
+        {
+          "name": "U-87 MG glioma cells",
+          "role": "test",
+          "evidence": "0.5-1 million cells"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "0.5-1 million"
+        ],
+        "dose_units": "cells",
+        "frequency": null,
+        "duration": "2-4 weeks",
+        "timing": null,
+        "conditions": "200 μL of DMEM-F12"
+      },
+      "exposure_evidence": "injected subcutaneously in the flank (0.5-1 million cells in 200 μL of DMEM-F12 serum and antibiotic-free medium)",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "Mice were handled in accordance with institutional guideline and under protocols approved by the Animal Care and Use Committee",
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Mice were sacrificed when tumors reached 2 cm2."
+    },
+    {
+      "study_type": "Tissue harvest and microdissection for ex vivo assay",
+      "procedure_text": "Harvest of mouse liver tissue for use in intact cuboid imaging and chopping quantitation experiments.",
+      "procedure_text_evidence": "Livers from male nude mice without tumors (2-4 months old) were used for the intact cuboid imaging. For the chopping quantitation experiments, we used livers from adult (3 months old) C57BL6-derived mice",
+      "species": "mouse",
+      "species_evidence": "male nude mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "ex_vivo"
+      ],
+      "test_system_evidence": "Livers from male nude mice... were used for the intact cuboid imaging",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "tissue viability/morphology",
+          "role": "primary",
+          "evidence": "revealed that while the outer edges of the cuboid had ~1-3 layers of dead or dying cells... most of the cuboid interior appears undamaged"
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "Mice were handled in accordance with institutional guideline and under protocols approved by the Animal Care and Use Committee",
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Livers harvested from non-tumor bearing mice for tissue engineering methodology development."
+    }
+  ]
+}

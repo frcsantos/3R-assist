@@ -1,0 +1,75 @@
+{
+  "experiments": [
+    {
+      "study_type": "Form deprivation myopia (FDM) recovery",
+      "procedure_text": "Form deprivation myopia (FDM) was induced in 3 to 4 day-old chicks by applying translucent plastic goggles to the right eye for 10 days.",
+      "procedure_text_evidence": "Form deprivation myopia (FDM) was induced in 3 to 4 day-old chicks by applying translucent plastic goggles to the right eye, as previously described (Rada et al., 1991).",
+      "species": "chicken",
+      "species_evidence": "3 to 4 day-old chicks",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": 30,
+        "per_group": null
+      },
+      "animal_counts_evidence": "30 chickens total",
+      "test_system": [
+        "in_vivo",
+        "ex_vivo"
+      ],
+      "test_system_evidence": "chicks were euthanized... Eyes were enucleated",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "single cell RNA sequencing",
+          "role": "primary",
+          "evidence": "single cell RNA sequencing and bioinformatic analyses"
+        },
+        {
+          "slug": null,
+          "label": "immunolabelling",
+          "role": "secondary",
+          "evidence": "immunolabeled choroids were examined"
+        }
+      ],
+      "substances": [
+        {
+          "name": "isoflurane",
+          "role": "other",
+          "evidence": "euthanized by an overdose of isoflurane inhalant anesthetic"
+        },
+        {
+          "name": "collagenase",
+          "role": "other",
+          "evidence": "digested with collagenase"
+        },
+        {
+          "name": "trypsin",
+          "role": "other",
+          "evidence": "digested with 2 ml trypsin"
+        }
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": "daily",
+        "duration": "10 days",
+        "timing": null,
+        "conditions": "translucent plastic goggles"
+      },
+      "exposure_evidence": "Goggles remained in place for 10 days.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "route"
+      ],
+      "notes": "Experimental animals were divided into control and recovering eyes, with pools generated from 10 chicks each for 3 pools per condition."
+    }
+  ]
+}

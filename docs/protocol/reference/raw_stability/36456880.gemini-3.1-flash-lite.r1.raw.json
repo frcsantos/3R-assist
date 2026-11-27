@@ -1,0 +1,110 @@
+{
+  "experiments": [
+    {
+      "study_type": "Bone fracture model and lineage tracing",
+      "procedure_text": "Bone fractures were generated on the right femurs of adult male mice using a 3-point bending device following intramedullary canal stabilization.",
+      "procedure_text_evidence": "Bone fractures were generated on the right femurs of adult male mice. ... A 0.5-mm-diameter needle was inserted into the intramedullary canal to stabilize the impending fracture. After the incision was sutured, a closed fracture was produced at the midshaft of the right femur using a custom-made 3-point bending device",
+      "species": "mouse",
+      "species_evidence": "adult male mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "Bone fractures were generated on the right femurs of adult male mice.",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "intraperitoneal"
+      ],
+      "route_evidence": "Mice were anesthetized by an intraperitoneal injection of 40 mg kg -1 sodium pentobarbital",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "bone fracture healing",
+          "role": "primary",
+          "evidence": "Prrx1 + cells are required for bone fracture and skin wound healing."
+        }
+      ],
+      "substances": [
+        {
+          "name": "sodium pentobarbital",
+          "role": "other",
+          "evidence": "anesthetized by an intraperitoneal injection of 40 mg kg -1 sodium pentobarbital"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "40"
+        ],
+        "dose_units": "mg kg -1",
+        "frequency": "single dose",
+        "duration": null,
+        "timing": null,
+        "conditions": "anesthesia"
+      },
+      "exposure_evidence": "anesthetized by an intraperitoneal injection of 40 mg kg -1 sodium pentobarbital",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Procedure included surgery to insert a needle into the femoral intramedullary canal for fracture stabilization."
+    },
+    {
+      "study_type": "Skin wound healing model",
+      "procedure_text": "Circular wounds of 10 mm in diameter and the full thickness of the skin were produced through the panniculus carnosus on the dorsum.",
+      "procedure_text_evidence": "Circular wounds of 10 mm in diameter and the full thickness of the skin were produced through the panniculus carnosus on the dorsum",
+      "species": "mouse",
+      "species_evidence": "adult male mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "For skin wound healing experiments, the dorsal fur was shaved",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "wound closure",
+          "role": "primary",
+          "evidence": "the size of the wound was measured every day."
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": "every other day",
+        "duration": null,
+        "timing": null,
+        "conditions": "anesthesia"
+      },
+      "exposure_evidence": "Dressings were changed every other day while the mice were under anesthesia",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": null
+    }
+  ]
+}

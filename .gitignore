@@ -8,3 +8,19 @@ backend/data/pubmed_baseline/
 backend/**/__pycache__/
 backend/.pytest_cache/
 docs/oecd_files/
+# Pilot protocol: copyrighted article full texts must never be committed (PDFs, PMC XML, text conversions)
+docs/protocol/articles/
+docs/protocol/stratum_A/fulltext/
+docs/protocol/stratum_C/fulltext/
+docs/protocol/reference/expert_package/sources/
+docs/protocol/reference/expert_package_second/sources/
+docs/protocol/reference/input_text/
+docs/test_articles/
+docs/**/*.pdf
+
+# OECD-derived method catalogue (like docs/oecd_files/); frozen by hash in docs/protocol/v3/FREEZE_2026-11-21.md
+docs/protocol/Tabelas*.xlsx
+docs/protocol/**/Tabelas*.xlsx
+
+# python bytecode from pilot scripts
+docs/**/__pycache__/

@@ -1,0 +1,493 @@
+{
+  "experiments": [
+    {
+      "study_type": "Generation of U87 glioma flank xenografts",
+      "procedure_text": "Inject cells subcutaneously into the flank of male athymic nude mice and sacrifice the mice before the stated tumor size limit.",
+      "procedure_text_evidence": "were injected subcutaneously in the flank (0.5-1 million cells in 200 μL of DMEM-F12 serum and antibiotic-free medium)",
+      "species": "mouse",
+      "species_evidence": "male athymic nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "To generate xenograft tumor mice",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["subcutaneous"],
+      "route_evidence": "injected subcutaneously in the flank",
+      "endpoints": [],
+      "substances": [
+        {
+          "name": "U-87 MG (U87) cells",
+          "role": "test",
+          "evidence": "U-87 MG (U87) cells (ATCC)"
+        },
+        {
+          "name": "DMEM-F12 serum and antibiotic-free medium",
+          "role": "other",
+          "evidence": "200 μL of DMEM-F12 serum and antibiotic-free medium"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["0.5-1 million cells"],
+        "dose_units": "cells",
+        "frequency": null,
+        "duration": null,
+        "timing": "aged 4-10 weeks",
+        "conditions": "in 200 μL of DMEM-F12 serum and antibiotic-free medium"
+      },
+      "exposure_evidence": "0.5-1 million cells in 200 μL of DMEM-F12 serum and antibiotic-free medium",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "under protocols approved by the Animal Care and Use Committee at the University of Washington",
+      "missing_or_ambiguous": ["animal_counts", "frequency", "tumor_size_unit"],
+      "notes": "Mice were sacrificed at 2-4 weeks before the stated tumor volume limit of 2 cm 2; the source gives an area unit for volume."
+    },
+    {
+      "study_type": "Mouse liver cuboid microdissection and filtering yield",
+      "procedure_text": "Chop liver slices in orthogonal directions, filter through 750 μm and 300 μm filters, and image cuboids before and after filtering.",
+      "procedure_text_evidence": "We took tiled 2x images of each set of cuboids before and after filtering.",
+      "species": "mouse",
+      "species_evidence": "mouse liver",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "intact tissues from both mouse liver and glioma",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "Cuboid size distribution before and after filtering", "role": "unspecified", "evidence": "cuboid size distribution and sample yield"},
+        {"slug": null, "label": "Tissue loss during chopping and filtering", "role": "unspecified", "evidence": "sample loss occurs in each microdissection step"},
+        {"slug": null, "label": "Yield of 300-600 μm cuboids relative to initial tissue", "role": "unspecified", "evidence": "cuboids of the desired 300-600 μm size range represented ~34% and ~48%"},
+        {"slug": null, "label": "Loss of initially 300-600 μm cuboids during filtration", "role": "unspecified", "evidence": "the loss of the initial pool of 300-600 μm cuboids with filtration"}
+      ],
+      "substances": [
+        {"name": "Belzer UW Cold Storage Solution", "role": "other", "evidence": "mouse liver and slices in Belzer UW Cold Storage Solution"},
+        {"name": "DMEM-F12 with HEPES", "role": "other", "evidence": "Cuboids were maintained and washed with DMEM-F12 with HEPES."}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": "before and after filtering",
+        "conditions": "set to 400 μm slice thickness"
+      },
+      "exposure_evidence": "through a 750 μm filter followed by a 300 μm filter",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Chopping quantitation used livers from 3-month-old, functionally wild-type C57BL6-derived mice. The desired 300-600 μm range accounted for 59% before and 70% after filtering; final in-range tissue represented ~34% of the initial sample."
+    },
+    {
+      "study_type": "Glioma xenograft cuboid microdissection and filtering yield",
+      "procedure_text": "Chop glioma xenograft slices in orthogonal directions, filter through 750 μm and 300 μm filters, and image cuboids before and after filtering.",
+      "procedure_text_evidence": "We took tiled 2x images of each set of cuboids before and after filtering.",
+      "species": "mouse",
+      "species_evidence": "male athymic nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "from U-87MG (U87) glioma cell-derived xenograft flank tumors",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "Cuboid size distribution before and after filtering", "role": "unspecified", "evidence": "cuboid size distribution and sample yield"},
+        {"slug": null, "label": "Tissue loss during chopping and filtering", "role": "unspecified", "evidence": "sample loss occurs in each microdissection step"},
+        {"slug": null, "label": "Yield of 300-600 μm cuboids relative to initial tissue", "role": "unspecified", "evidence": "cuboids of the desired 300-600 μm size range represented ~34% and ~48%"},
+        {"slug": null, "label": "Loss of initially 300-600 μm cuboids during filtration", "role": "unspecified", "evidence": "the loss of the initial pool of 300-600 μm cuboids with filtration"},
+        {"slug": null, "label": "Post-filter cuboid count per tumor", "role": "unspecified", "evidence": "we obtained ~4 cm 2 of slices and ~1,300 total cuboids after filtering"}
+      ],
+      "substances": [
+        {"name": "DMEM/F12 supplemented with HEPES", "role": "other", "evidence": "with glioma tissue in DMEM/F12 supplemented with HEPES"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": "before and after filtering",
+        "conditions": "set to 400 μm slice thickness"
+      },
+      "exposure_evidence": "through a 750 μm filter followed by a 300 μm filter",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Two small tumors were analyzed; this is not a stated animal count. The desired 300-600 μm range accounted for 78% before and 88% after filtering; final in-range tissue represented ~48% of the initial sample."
+    },
+    {
+      "study_type": "Open-top light-sheet characterization of liver cuboid microarchitecture",
+      "procedure_text": "Cut vibratome liver slices into cubes, suspend in collagen, fix after gelation, stain, clear, and image by open-top light-sheet microscopy.",
+      "procedure_text_evidence": "Vibratome slices of liver were cut into cubes with the tissue chopper, suspended in collagen, and fixed after gelation.",
+      "species": "mouse",
+      "species_evidence": "male nude mice without tumors",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "open-top light-sheet (OTLS) microscopy of fixed and optically-cleared liver cuboids",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "Cutting-associated cell death and tissue damage by location", "role": "unspecified", "evidence": "the outer edges of the cuboid had ~1-3 layers of dead or dying cells"},
+        {"slug": null, "label": "Liver microarchitecture and cell location", "role": "unspecified", "evidence": "hepatocyte and non-parenchymal cells in the original 2D images"},
+        {"slug": null, "label": "Cuboid volume", "role": "unspecified", "evidence": "an average volume of the three cuboids of 0.025 ± 0.002 mm 3"},
+        {"slug": null, "label": "Vascular volume fraction", "role": "unspecified", "evidence": "the vasculature occupied 7.9 ± 2.2% of the volume"},
+        {"slug": null, "label": "Nuclear density", "role": "unspecified", "evidence": "the nuclear density was 311,000 ± 17,000 nuclei/mm 2"},
+        {"slug": null, "label": "Nuclear size distribution", "role": "unspecified", "evidence": "the bimodal size distribution of the nuclei"},
+        {"slug": null, "label": "Hepatocyte fraction of nuclei", "role": "unspecified", "evidence": "hepatocyte nuclei represented 44 ± 4% of the nuclei"},
+        {"slug": null, "label": "Percentage of binuclear cells", "role": "unspecified", "evidence": "The percent of binuclear cells for the cuboids"}
+      ],
+      "substances": [
+        {"name": "Krebs-Heneseleit solution", "role": "other", "evidence": "in ice-cold Krebs-Heneseleit solution"},
+        {"name": "carbogen", "role": "other", "evidence": "bubbled with carbogen (95% O 2 , 5% CO 2 )"},
+        {"name": "collagen", "role": "other", "evidence": "suspended in collagen, and fixed after gelation"},
+        {"name": "TO-PRO 3 nuclear dye", "role": "other", "evidence": "far-red fluorescent TO-PRO 3 nuclear dye and fluorescent eosin"},
+        {"name": "fluorescent eosin", "role": "other", "evidence": "TO-PRO 3 nuclear dye and fluorescent eosin"},
+        {"name": "ethyl cinnamate", "role": "other", "evidence": "ethyl cinnamate clearing"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": "fixed after gelation",
+        "conditions": "in ice-cold Krebs-Heneseleit solution (Alfa Aesar), bubbled with carbogen (95% O 2 , 5% CO 2 )"
+      },
+      "exposure_evidence": "400 μm-thick slices using a 5100mz vibratome",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "nuclear_density_unit"],
+      "notes": "The source used livers from 2-4-month-old male nude mice without tumors, analyzed three cuboids, and used the two best-preserved cuboids for nuclear size classification at 7.5 μm. Vascular and nuclear quantitation was restricted to central regions; the nuclear density unit is reported as nuclei/mm 2."
+    },
+    {
+      "study_type": "Off-device U87 glioma cuboid culture viability and microenvironment characterization",
+      "procedure_text": "Culture U87 glioma cuboids in collagen on Transwell inserts and assess live staining, histology, and immunostaining after culture.",
+      "procedure_text_evidence": "we cultured the cuboids within a collagen hydrogel layer on top of a Transwell insert",
+      "species": "mouse",
+      "species_evidence": "male athymic nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "viability and microenvironment of U87 glioma cuboids after two days in culture",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other"],
+      "route_evidence": "with the following dyes (individually or in combination) diluted in culture medium",
+      "endpoints": [
+        {"slug": null, "label": "Cuboid shape in culture", "role": "unspecified", "evidence": "By day 2, the cuboid shape relaxed to that of a spheroid."},
+        {"slug": null, "label": "Cuboid viability and dead-cell staining", "role": "unspecified", "evidence": "Most of the cuboids show minimal SG dead stain"},
+        {"slug": null, "label": "Histology compared with initial tumor", "role": "unspecified", "evidence": "Traditional H&E staining showed similar histology between the cuboids and the initial tumor."},
+        {"slug": null, "label": "Proliferation by Ki-67", "role": "unspecified", "evidence": "continued proliferation (Ki-67)"},
+        {"slug": null, "label": "Apoptosis by cleaved caspase 3", "role": "unspecified", "evidence": "minimal apoptosis (anti-cleaved caspase 3, CC3), usually central if present"},
+        {"slug": null, "label": "Endothelial cell retention by CD31", "role": "unspecified", "evidence": "continued presence of endothelial cells (CD31)"},
+        {"slug": null, "label": "Immune cell retention by CD45", "role": "unspecified", "evidence": "endothelial cells (CD31) and immune cells (CD45)"}
+      ],
+      "substances": [
+        {"name": "collagen hydrogel", "role": "other", "evidence": "within a collagen hydrogel layer on top of a Transwell insert"},
+        {"name": "SYTOX green", "role": "other", "evidence": "SYTOX green (SG; Invitrogen, 0.01 μM)"},
+        {"name": "Hoechst", "role": "other", "evidence": "Hoechst (H; Invitrogen, 16 μM)"},
+        {"name": "H&E", "role": "other", "evidence": "Traditional H&E staining"},
+        {"name": "anti-cleaved caspase 3", "role": "other", "evidence": "minimal apoptosis (anti-cleaved caspase 3, CC3)"}
+      ],
+      "exposure": {
+        "dose_levels": ["0.01 μM", "16 μM"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": "1 hour",
+        "timing": null,
+        "conditions": "with an air interface above and medium below"
+      },
+      "exposure_evidence": "Live cuboids were stained for 1 hour, 37°C",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "timing", "cohort_assignment"],
+      "notes": "The overview refers to two days in culture; live staining was reported at day 3, with separate day 3 and day 4 experiments showing ~16% relatively green cuboids. Cultures with and without an additional pre-gelled collagen layer showed similar histology and staining, but cuboids were often flatter without the extra layer."
+    },
+    {
+      "study_type": "Off-device cisplatin treatment of U87 glioma cuboids",
+      "procedure_text": "Treat U87 glioma cuboids off-device with 100 μM cisplatin for two days and assess cell death using live staining.",
+      "procedure_text_evidence": "Off-device experiments performed in parallel with 100 μM cisplatin also showed cell death",
+      "species": "mouse",
+      "species_evidence": "male athymic nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "Off-device experiments performed in parallel with 100 μM cisplatin",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other"],
+      "route_evidence": "was diluted in cell culture medium for the drug treatment experiment",
+      "endpoints": [
+        {"slug": null, "label": "Cuboid cell death after cisplatin treatment", "role": "unspecified", "evidence": "Off-device experiments performed in parallel with 100 μM cisplatin also showed cell death"}
+      ],
+      "substances": [
+        {"name": "cisplatin", "role": "test", "evidence": "Off-device experiments performed in parallel with 100 μM cisplatin"}
+      ],
+      "exposure": {
+        "dose_levels": ["100 μM"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": "2-day",
+        "timing": null,
+        "conditions": "Off-device"
+      },
+      "exposure_evidence": "after a 2-day maximal drug treatment (100 μM Cisplatin)",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "timing", "cohort_assignment"],
+      "notes": "The mean 1.4 increase after maximal treatment was used as the death threshold for the culture viability analysis. The source does not identify which donor tumors supplied the parallel off-device and on-device assays."
+    },
+    {
+      "study_type": "Finite-volume modeling of microfluidic trap flow",
+      "procedure_text": "Model microfluidic flow in Ansys Fluent and compare adjacent and spaced trap configurations.",
+      "procedure_text_evidence": "Using Ansys Fluent, we modeled the velocity and flow profiles over the whole device",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_silico"],
+      "test_system_evidence": "finite volume modeling of fluid flow in the device",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "Modeled velocity and flow profiles", "role": "unspecified", "evidence": "we modeled the velocity and flow profiles over the whole device"},
+        {"slug": null, "label": "Trap-to-bypass flow ratio at the first three traps", "role": "unspecified", "evidence": "Calculation of the flow ratio Q T /Q B for the first three traps"}
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": "groups of three adjacent traps"
+      },
+      "exposure_evidence": "a control configuration with traps separated by an extra length of microchannel",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": "The acellular model predicted trap-to-bypass flow ratios of 1.16, 1.39, and 1.22 for adjacent traps and 0.72 for each of the spaced traps."
+    },
+    {
+      "study_type": "Syringe-pump loading and trapping of fixed U87 glioma cuboids",
+      "procedure_text": "Load size-selected fixed U87 glioma cuboids in 20% PEG by syringe pump and quantify trapping at the first and second traps.",
+      "procedure_text_evidence": "we used sparse, fixed U87 glioma cuboids manually selected for similar size (~300-500 μm).",
+      "species": "mouse",
+      "species_evidence": "male athymic nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "fixed U87 glioma cuboids manually selected for similar size",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other"],
+      "route_evidence": "we suspended the cuboids in a 20% PEG solution",
+      "endpoints": [
+        {"slug": null, "label": "First-trap filling efficiency", "role": "primary", "evidence": "we evaluated the filling of the first trap while all other traps were empty"},
+        {"slug": null, "label": "Second-trap efficiency among cuboids bypassing the first trap", "role": "unspecified", "evidence": "the trapping efficiency was 100% at the second well"},
+        {"slug": null, "label": "Cuboid settling, clogging, and sticking during loading", "role": "unspecified", "evidence": "rapidly settle to the bottom of the channels, which affected the trapping efficiency"},
+        {"slug": null, "label": "Sticking during syringe-pump flow", "role": "unspecified", "evidence": "with less than 100% efficiency and with occasional sticking"}
+      ],
+      "substances": [
+        {"name": "PEG", "role": "other", "evidence": "we suspended the cuboids in a 20% PEG solution"},
+        {"name": "blue dye", "role": "other", "evidence": "lightly colored with blue dye"},
+        {"name": "medium", "role": "other", "evidence": "successful trap loading with medium or PBS"},
+        {"name": "PBS", "role": "other", "evidence": "successful trap loading with medium or PBS"},
+        {"name": "collagen solution", "role": "other", "evidence": "manual loading with a collagen solution worked relatively smoothly without clogging"}
+      ],
+      "exposure": {
+        "dose_levels": ["20%"],
+        "dose_units": "%",
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": "we controlled the flow rate (20 mL/h) with a syringe pump"
+      },
+      "exposure_evidence": "we suspended the cuboids in a 20% PEG solution",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "duration"],
+      "notes": "Preliminary manual loading needed transient pressure bursts with medium or PBS and was smoother with collagen; syringe-pump loading with collagen was impractical. With PEG, first-trap efficiencies were 84% and 69% across two devices, and the second trap caught all cuboids that bypassed the first."
+    },
+    {
+      "study_type": "Manual loading of live cuboids in collagen into a multi-trap device",
+      "procedure_text": "Manually load live cuboids in collagen, assess trap occupancy and loading failures, and compare well-level occupancy with predicted random seeding.",
+      "procedure_text_evidence": "When we performed manual loading of live cuboids in collagen",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "manual loading of live cuboids in collagen",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other"],
+      "route_evidence": "We then load the cuboids in a collagen suspension",
+      "endpoints": [
+        {"slug": null, "label": "Trap filling and well-level trap occupancy", "role": "primary", "evidence": "cuboids filled 83 ± 4% of the 24 traps of each of 4 different devices"},
+        {"slug": null, "label": "Trap blockage by air bubbles or tissue", "role": "unspecified", "evidence": "All but one of the unfilled traps (17%) were blocked by air bubbles"},
+        {"slug": null, "label": "Multiple cuboids per trap", "role": "unspecified", "evidence": "were filled by more than one cuboid"},
+        {"slug": null, "label": "Fusion of touching cuboids in culture", "role": "unspecified", "evidence": "These touching cuboids fused over time in culture"},
+        {"slug": null, "label": "Cuboid retention during silicone layer removal", "role": "unspecified", "evidence": "Removal of the silicone layer did not disturb the cuboids"},
+        {"slug": null, "label": "Cuboids per well versus predicted random seeding", "role": "unspecified", "evidence": "85% had 2-4 cuboids per well"}
+      ],
+      "substances": [
+        {"name": "collagen", "role": "other", "evidence": "manual loading of live cuboids in collagen"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": "~300 cuboids in 1.5 mL, not accounting for loss from manipulation"
+      },
+      "exposure_evidence": "~300 cuboids in 1.5 mL",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["species", "animal_counts", "cohort_assignment"],
+      "notes": "The live-loading paragraph does not separately identify the donor tissue. The comparison used observed occupancy for 32 wells across four devices and a Poisson prediction for random seeding, not a separately run random-seeding experiment."
+    },
+    {
+      "study_type": "Fluorescein diffusion crosstalk in collagen-filled microchannels",
+      "procedure_text": "Apply fluorescein to one well of a collagen-filled device, measure fluorescence by distance and time, and estimate effective diffusivity.",
+      "procedure_text_evidence": "We measured the diffusion of fluorescein (1 mM) from one well in a device filled with collagen over 72 hrs",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_chemico", "in_silico"],
+      "test_system_evidence": "applied Fick's second law of diffusion to calculate for our experiments the effective diffusivity",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other"],
+      "route_evidence": "from one well in a device filled with collagen",
+      "endpoints": [
+        {"slug": null, "label": "Interwell diffusion crosstalk by fluorescence intensity over distance and time", "role": "primary", "evidence": "we measured the fluorescence intensity at different distances from the last open trap"},
+        {"slug": null, "label": "Effective diffusivity of fluorescein in collagen", "role": "unspecified", "evidence": "the effective diffusivity of fluorescein in collagen for our system"}
+      ],
+      "substances": [
+        {"name": "fluorescein", "role": "test", "evidence": "a fluorescent dye (fluorescein, MW = 332 g/mol)"},
+        {"name": "collagen", "role": "other", "evidence": "in a device filled with collagen"}
+      ],
+      "exposure": {
+        "dose_levels": ["1 mM"],
+        "dose_units": "mM",
+        "frequency": null,
+        "duration": "over 72 hrs",
+        "timing": null,
+        "conditions": "from one well in a device filled with collagen"
+      },
+      "exposure_evidence": "diffusion of fluorescein (1 mM) from one well in a device filled with collagen",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": "Fluorescence reached approximately 10% of the initial value at ~30 mm after 42 hrs; no apparent increase was observed beyond the first neighboring trap. Diffusivity was fitted over the first 16 hours; later movement appeared approximately fourfold faster, and the authors noted incomplete sealing."
+    },
+    {
+      "study_type": "Selective live-dye delivery and viability in cultured U87 glioma cuboids on-device",
+      "procedure_text": "Load freshly cut U87 glioma cuboids in collagen, apply alternating CellTracker dyes after gelation, and image labeling and viability after culture.",
+      "procedure_text_evidence": "we manually loaded U87 glioma cuboids in a collagen solution, immediately after cutting",
+      "species": "mouse",
+      "species_evidence": "male athymic nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "the culture of cuboids and selective dye application in the device",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other"],
+      "route_evidence": "with the following dyes (individually or in combination) diluted in culture medium",
+      "endpoints": [
+        {"slug": null, "label": "Selective CellTracker labeling and interwell dye crosstalk", "role": "primary", "evidence": "robust labeling of both dyes, indicating continued viability of the cuboids"},
+        {"slug": null, "label": "Cuboid viability and cell death by live nuclear staining", "role": "secondary", "evidence": "SG staining showed minimal cell death"}
+      ],
+      "substances": [
+        {"name": "Cell Tracker Green CMFDA", "role": "test", "evidence": "Cell Tracker Green CMFDA (Invitrogen, 10 μM)"},
+        {"name": "Cell Tracker Orange CMRA", "role": "test", "evidence": "Cell Tracker Orange CMRA (Invitrogen, 10 μM)"},
+        {"name": "SYTOX green", "role": "other", "evidence": "SYTOX green (SG; Invitrogen, 0.01 μM)"},
+        {"name": "Hoechst", "role": "other", "evidence": "Hoechst (H; Invitrogen, 16 μM)"},
+        {"name": "collagen", "role": "other", "evidence": "we manually loaded U87 glioma cuboids in a collagen solution"}
+      ],
+      "exposure": {
+        "dose_levels": ["10 μM", "16 μM", "0.01 μM"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": "for one hour",
+        "timing": "After gelation of the collagen in the incubator",
+        "conditions": "with alternating patterns of green and red live fluorescent dyes"
+      },
+      "exposure_evidence": "we labeled live cells in the cuboids for one hour with alternating patterns",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "cohort_assignment"],
+      "notes": "CellTracker dyes were each used at 10 μM and imaged after two days in culture, with no evidence of crosstalk. Orange-labeled wells then received SYTOX green (0.01 μM) and Hoechst (16 μM), while Green-labeled wells received Hoechst alone."
+    },
+    {
+      "study_type": "On-device cisplatin dose-response in U87 glioma cuboids",
+      "procedure_text": "Treat U87 glioma cuboids on-device with cisplatin from day 1 to day 3 and assess viability by SYTOX green-to-Hoechst fluorescence ratio.",
+      "procedure_text_evidence": "we treated two wells with each concentration of cisplatin (0, 10, 30, 100 μM) for 2 days",
+      "species": "mouse",
+      "species_evidence": "male athymic nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "we exposed U87 cuboids in the device",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other"],
+      "route_evidence": "was diluted in cell culture medium for the drug treatment experiment",
+      "endpoints": [
+        {"slug": null, "label": "Cuboid viability by SYTOX green-to-Hoechst fluorescence ratio", "role": "primary", "evidence": "of SG dead nuclear fluorescence to Hoechst pan-nuclear fluorescence"}
+      ],
+      "substances": [
+        {"name": "cisplatin", "role": "test", "evidence": "each concentration of cisplatin (0, 10, 30, 100 μM)"},
+        {"name": "SYTOX green", "role": "other", "evidence": "SYTOX green (SG; Invitrogen, 0.01 μM)"},
+        {"name": "Hoechst", "role": "other", "evidence": "Hoechst (H; Invitrogen, 16 μM)"}
+      ],
+      "exposure": {
+        "dose_levels": ["0", "10", "30", "100 μM"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": "for 2 days",
+        "timing": "from day 1 to day 3",
+        "conditions": "In each of two devices, we treated two wells with each concentration of cisplatin"
+      },
+      "exposure_evidence": "cisplatin (0, 10, 30, 100 μM) for 2 days from day 1 to day 3",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "cohort_assignment"],
+      "notes": "The response was statistically significant at 30 μM and showed a trend at 100 μM. Both nuclear stains were weak at higher concentrations; the authors described this as consistent with late-stage nuclear breakdown, not as a separate assay."
+    }
+  ]
+}

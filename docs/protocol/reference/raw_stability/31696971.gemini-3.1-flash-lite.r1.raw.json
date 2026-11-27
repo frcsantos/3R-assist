@@ -1,0 +1,128 @@
+{
+  "experiments": [
+    {
+      "study_type": "xenograft mouse model for tumorigenic ability",
+      "procedure_text": "HuH7 cells were subcutaneously injected into the left and right dorsal regions of BALB/c nude mice to investigate the tumorigenic ability of HCC in vivo.",
+      "procedure_text_evidence": "The xenograft mouse model was performed to investigate the tumorigenic ability of HCC in vivo. ... Approximate 1 × 10 7 HuH7 cells were subcutaneously injected into the left and right dorsal regions of the nude mouse.",
+      "species": "mouse",
+      "species_evidence": "BALB/c nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "The xenograft mouse model was performed to investigate the tumorigenic ability of HCC in vivo.",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "subcutaneous"
+      ],
+      "route_evidence": "subcutaneously injected",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "tumor size",
+          "role": "secondary",
+          "evidence": "Tumor size and volume were measured regularly."
+        },
+        {
+          "slug": null,
+          "label": "tumor volume",
+          "role": "secondary",
+          "evidence": "Tumor size and volume were measured regularly."
+        },
+        {
+          "slug": null,
+          "label": "tumor weight",
+          "role": "secondary",
+          "evidence": "tumors were excised, weighed"
+        },
+        {
+          "slug": null,
+          "label": "tumorigenesis",
+          "role": "primary",
+          "evidence": "investigate the tumorigenic ability of HCC in vivo"
+        }
+      ],
+      "substances": [
+        {
+          "name": "HuH7 cells",
+          "role": "test",
+          "evidence": "Approximate 1 × 10 7 HuH7 cells were subcutaneously injected"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "1 × 10 7"
+        ],
+        "dose_units": "cells",
+        "frequency": null,
+        "duration": "25 days",
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": "Approximate 1 × 10 7 HuH7 cells were subcutaneously injected ... After 25 days, the mice were killed",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Experimental cohort used HuH7 cells with SNHG16 knockdown or control."
+    },
+    {
+      "study_type": "metastatic model",
+      "procedure_text": "Nude mice were intravenously injected with 1 × 10 6 HuH7 cells to measure metastatic ability in vivo.",
+      "procedure_text_evidence": "The metastatic model through the tail vein injection of HCC was established to measure metastatic ability in vivo. Nude mice were intravenously injected with 1 × 10 6 HuH7 cells.",
+      "species": "mouse",
+      "species_evidence": "Nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "The metastatic model through the tail vein injection of HCC was established to measure metastatic ability in vivo.",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "intravenous"
+      ],
+      "route_evidence": "intravenously injected",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "metastatic ability",
+          "role": "primary",
+          "evidence": "measure metastatic ability in vivo"
+        }
+      ],
+      "substances": [
+        {
+          "name": "HuH7 cells",
+          "role": "test",
+          "evidence": "Nude mice were intravenously injected with 1 × 10 6 HuH7 cells."
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "1 × 10 6"
+        ],
+        "dose_units": "cells",
+        "frequency": null,
+        "duration": "52 days",
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": "Nude mice were intravenously injected with 1 × 10 6 HuH7 cells. After 52 days, the mice were killed",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Metastatic ability measured via lung nodules observation."
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "experiments": [
+    {
+      "study_type": "Hepatocyte-specific Kctd17 depletion in MASH",
+      "procedure_text": "Cas9 knockin mice were transduced with AAV8-TBG-Cre or AAV8-U6-sgKctd17-TBG-Cre and fed an FPC diet, followed by analysis 16 weeks after transduction.",
+      "procedure_text_evidence": "Cas9 knockin mice were transduced with AAV8-TBG-Cre (control) or AAV8-U6-sgKctd17-TBG-Cre (L-Kctd17) with an FPC diet and euthanized 16 weeks after transduction.",
+      "species": "mouse",
+      "species_evidence": "mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "mice",
+      "application": "translational-applied-research",
+      "application_evidence": null,
+      "route": [
+        "other"
+      ],
+      "route_evidence": "transduced with AAV8-TBG-Cre",
+      "endpoints": [
+        {
+          "slug": "other-health-effects",
+          "label": "liver fibrosis",
+          "role": "primary",
+          "evidence": "Hepatocyte-specific Kctd17 depletion alleviates liver fibrosis"
+        },
+        {
+          "slug": null,
+          "label": "ALT levels",
+          "role": "secondary",
+          "evidence": "ALT (e) and AST (f) levels in serum."
+        },
+        {
+          "slug": null,
+          "label": "AST levels",
+          "role": "secondary",
+          "evidence": "ALT (e) and AST (f) levels in serum."
+        }
+      ],
+      "substances": [
+        {
+          "name": "AAV8-U6-sgKctd17-TBG-Cre",
+          "role": "test",
+          "evidence": "transduced with AAV8-TBG-Cre (control) or AAV8-U6-sgKctd17-TBG-Cre"
+        }
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": "single",
+        "duration": "16 weeks",
+        "timing": null,
+        "conditions": "FPC diet"
+      },
+      "exposure_evidence": "euthanized 16 weeks after transduction.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": null
+    },
+    {
+      "study_type": "Pharmacologic Kctd17 inhibition in MASH",
+      "procedure_text": "C57BL/6 WT mice fed FPC or CDAHFD were administered Kctd17-targeting ASO weekly by intraperitoneal injection.",
+      "procedure_text_evidence": "administered control ASO or two different Kctd17-targeting ASO (Kctd17 ASO-1 and ASO-2) weekly by intraperitoneal injection",
+      "species": "mouse",
+      "species_evidence": "C57BL/6 WT mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "C57BL/6 WT mice",
+      "application": "translational-applied-research",
+      "application_evidence": null,
+      "route": [
+        "intraperitoneal"
+      ],
+      "route_evidence": "administered by intraperitoneal injection",
+      "endpoints": [
+        {
+          "slug": "other-health-effects",
+          "label": "liver fibrosis",
+          "role": "primary",
+          "evidence": "Pharmacologic Kctd17 inhibition protects from MASH-induced liver fibrosis."
+        },
+        {
+          "slug": null,
+          "label": "ALT levels",
+          "role": "secondary",
+          "evidence": "ALT (f) and AST (g) levels in serum."
+        },
+        {
+          "slug": null,
+          "label": "AST levels",
+          "role": "secondary",
+          "evidence": "ALT (f) and AST (g) levels in serum."
+        }
+      ],
+      "substances": [
+        {
+          "name": "Kctd17 ASO-1",
+          "role": "test",
+          "evidence": "control ASO, Kctd17 ASO-1 or ASO-2"
+        },
+        {
+          "name": "Kctd17 ASO-2",
+          "role": "test",
+          "evidence": "control ASO, Kctd17 ASO-1 or ASO-2"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "20-25"
+        ],
+        "dose_units": "mg/kg",
+        "frequency": "weekly",
+        "duration": "6-7 weeks",
+        "timing": null,
+        "conditions": "administered by intraperitoneal injection"
+      },
+      "exposure_evidence": "administered by intraperitoneal injection to male C57BL/6N mice at a dosage of 20-25 mg/kg body weight once weekly for 6-7 weeks",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Two different diets (FPC and CDAHFD) were used in independent cohorts."
+    }
+  ]
+}

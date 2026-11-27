@@ -1,0 +1,107 @@
+{
+ "generated_utc": "2026-11-27T16:43:48.920882+00:00",
+ "seed": 20261114,
+ "k": 6,
+ "k_underspecified": 12,
+ "frame_query_sha256": "88b18795b4903b03db23247a2e13e5e6567dab0e1554aab9b9ef5bfff47a1ce4",
+ "slots": [
+  {
+   "type": "near_miss",
+   "name": "Skin sensitisation",
+   "hits": 139,
+   "pool_after_dedup": 139,
+   "drawn": 6,
+   "terms_sha256": "3559e54cbdfe31e3"
+  },
+  {
+   "type": "near_miss",
+   "name": "Skin irritation and corrosion",
+   "hits": 76,
+   "pool_after_dedup": 75,
+   "drawn": 6,
+   "terms_sha256": "523df93f775a60b2"
+  },
+  {
+   "type": "near_miss",
+   "name": "Pyrogen and endotoxin",
+   "hits": 1863,
+   "pool_after_dedup": 1862,
+   "drawn": 6,
+   "terms_sha256": "a9251449487c3789"
+  },
+  {
+   "type": "near_miss",
+   "name": "Absorption and clearance",
+   "hits": 132,
+   "pool_after_dedup": 132,
+   "drawn": 6,
+   "terms_sha256": "ebc01e34d2b119b3"
+  },
+  {
+   "type": "near_miss",
+   "name": "Genotoxicity",
+   "hits": 171,
+   "pool_after_dedup": 171,
+   "drawn": 6,
+   "terms_sha256": "340ecf2394fdf1a6"
+  },
+  {
+   "type": "near_miss",
+   "name": "Reproductive toxicity",
+   "hits": 696,
+   "pool_after_dedup": 696,
+   "drawn": 6,
+   "terms_sha256": "fef0bd704d88b554"
+  },
+  {
+   "type": "no_match",
+   "name": "Behaviour and cognition",
+   "hits": 11344,
+   "pool_after_dedup": 11343,
+   "drawn": 6,
+   "terms_sha256": "7377cf9d79de0e2f"
+  },
+  {
+   "type": "no_match",
+   "name": "Bone and orthopaedics",
+   "hits": 5028,
+   "pool_after_dedup": 5028,
+   "drawn": 6,
+   "terms_sha256": "671ffdb25f0c6dec"
+  },
+  {
+   "type": "no_match",
+   "name": "Cardiac physiology",
+   "hits": 2110,
+   "pool_after_dedup": 2110,
+   "drawn": 6,
+   "terms_sha256": "2e6704e4c749924a"
+  },
+  {
+   "type": "no_match",
+   "name": "Infection challenge",
+   "hits": 3260,
+   "pool_after_dedup": 3256,
+   "drawn": 6,
+   "terms_sha256": "799b497d35cb32cd"
+  },
+  {
+   "type": "no_match",
+   "name": "Neurodegeneration",
+   "hits": 11892,
+   "pool_after_dedup": 11888,
+   "drawn": 6,
+   "terms_sha256": "77ee8aaf22865b4b"
+  },
+  {
+   "type": "underspecified",
+   "name": "Short-format animal articles",
+   "hits": 642,
+   "pool_after_dedup": 642,
+   "drawn": 12,
+   "terms_sha256": "2797b3be2325f813"
+  }
+ ],
+ "script_sha256": "dc6e0c1ee274292c0d8ae6ad8952d30f0f01defb4bb8a30dd276e0254ff87993",
+ "status": "unverified_candidate_draw"
+}

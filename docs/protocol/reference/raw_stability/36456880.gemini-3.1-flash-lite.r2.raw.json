@@ -1,0 +1,62 @@
+{
+  "experiments": [
+    {
+      "study_type": "Bone fracture and skin wound models",
+      "procedure_text": "Bone fractures were generated on the right femurs of adult male mice using a 3-point bending device, following surgical stabilization with an intramedullary needle.",
+      "procedure_text_evidence": "Bone fractures were generated on the right femurs of adult male mice. ... A 0.5-mm-diameter needle was inserted into the intramedullary canal to stabilize the impending fracture.",
+      "species": "mouse",
+      "species_evidence": "adult male mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "Bone fractures were generated on the right femurs of adult male mice.",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "intraperitoneal"
+      ],
+      "route_evidence": "Mice were anesthetized by an intraperitoneal injection of 40 mg kg -1 sodium pentobarbital",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Bone fracture healing",
+          "role": "primary",
+          "evidence": "Prrx1 + cells are required for bone fracture and skin wound healing."
+        }
+      ],
+      "substances": [
+        {
+          "name": "sodium pentobarbital",
+          "role": "other",
+          "evidence": "anesthetized by an intraperitoneal injection of 40 mg kg -1 sodium pentobarbital"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "40"
+        ],
+        "dose_units": "mg kg -1",
+        "frequency": "single dose for anesthesia",
+        "duration": "approximately 20 min of deep anesthesia",
+        "timing": null,
+        "conditions": "intraperitoneal injection"
+      },
+      "exposure_evidence": "Mice were anesthetized by an intraperitoneal injection of 40 mg kg -1 sodium pentobarbital",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Anesthesia administered for surgery and fracture induction procedure."
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "experiments": [
+    {
+      "study_type": "conditional deletion of Argonaute2 in glutamatergic neurons",
+      "procedure_text": "Slc17a6-Cre-expressing mice were crossed to Argonaute2-floxed mice to generate conditional knockout mice. Phenotypic, vascular, and molecular characterization performed at P14.",
+      "procedure_text_evidence": "Slc17a6-Cre-and Slc32a1-Creexpressing mice were purchased... and directly crossed to Argonaute2-floxed mice",
+      "species": "mouse",
+      "species_evidence": "Mice of both genders",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "brains were isolated from mice",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": "other-health-effects",
+          "label": "body weight curves",
+          "role": "secondary",
+          "evidence": "Body weight curves of Slc17a6-cre, Ago2 flox/flox mice (n = 19) and littermate controls (n = 5)."
+        },
+        {
+          "slug": "other-health-effects",
+          "label": "survival curve",
+          "role": "secondary",
+          "evidence": "Survival curve of Slc17a6-cre, Ago2 flox/flox mice"
+        },
+        {
+          "slug": "neurotoxicity",
+          "label": "cortical thickness",
+          "role": "secondary",
+          "evidence": "reduced cortical thicknesses in Slc17a6cre, Ago2 flox/flox mice"
+        },
+        {
+          "slug": null,
+          "label": "synaptogenesis",
+          "role": "primary",
+          "evidence": "Loss of glutamatergic Ago2 reduces synaptogenesis."
+        },
+        {
+          "slug": null,
+          "label": "vascular morphogenesis",
+          "role": "primary",
+          "evidence": "Glutamatergic Ago2 is essential for normal vascular morphogenesis in the CNS."
+        },
+        {
+          "slug": null,
+          "label": "permeability assay",
+          "role": "secondary",
+          "evidence": "For the permeability assay, 40 μl of Alexa Fluor 555-conjugated cadaverine... was injected intraperitoneally"
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": [
+          "40"
+        ],
+        "dose_units": "μl",
+        "frequency": "once",
+        "duration": "2 hours",
+        "timing": "P14",
+        "conditions": "intraperitoneally"
+      },
+      "exposure_evidence": "40 μl of Alexa Fluor 555-conjugated cadaverine (1 mg/ml... was injected intraperitoneally into P14 postnatal mice.",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": false,
+      "regulatory_evidence": "in accordance with requirements established by the Johns Hopkins University Animal Care and Use Committee",
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Experiments involved genetic modification (conditional knockout) rather than pharmacological administration, except for the cadaverine permeability assay."
+    }
+  ]
+}

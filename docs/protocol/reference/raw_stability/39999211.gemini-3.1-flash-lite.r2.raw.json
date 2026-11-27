@@ -1,0 +1,135 @@
+{
+  "experiments": [
+    {
+      "study_type": "genetically modified mouse line characterization and phenotypic assessment",
+      "procedure_text": "Slc17a6-Cre-expressing mice were crossed to Argonaute2-floxed mice. Phenotypic analysis of Slc17a6-cre, Ago2 flox/flox mice included survival, body weight, brain MRI, histology, EM, and behavioral monitoring.",
+      "procedure_text_evidence": "Slc17a6-Cre-and Slc32a1-Creexpressing mice were purchased... and directly crossed to Argonaute2-floxed mice... Slc17a6-cre, Ago2 flox/flox mice... phenotypic analysis... survival, body weight, brain MRI, histology, EM",
+      "species": "mouse",
+      "species_evidence": "Mice of both genders",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": null
+      },
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "Slc17a6-cre, Ago2 flox/flox mice... at P14",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": "other-health-effects",
+          "label": "survival",
+          "role": "primary",
+          "evidence": "Survival curve of Slc17a6-cre, Ago2 flox/flox mice"
+        },
+        {
+          "slug": null,
+          "label": "body weight",
+          "role": "primary",
+          "evidence": "Body weight curves of Slc17a6-cre, Ago2 flox/flox mice"
+        },
+        {
+          "slug": null,
+          "label": "cortical thickness",
+          "role": "primary",
+          "evidence": "reduced cortical thicknesses in Slc17a6cre, Ago2 flox/flox mice"
+        },
+        {
+          "slug": null,
+          "label": "synaptogenesis",
+          "role": "primary",
+          "evidence": "Loss of glutamatergic Ago2 reduces synaptogenesis."
+        },
+        {
+          "slug": null,
+          "label": "vascular morphogenesis",
+          "role": "primary",
+          "evidence": "Glutamatergic Ago2 is essential for normal vascular morphogenesis in the CNS."
+        },
+        {
+          "slug": null,
+          "label": "blood-brain barrier integrity",
+          "role": "primary",
+          "evidence": "defective BBB integrity"
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": "P14",
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Experimental procedures were approved under specific protocols. Mice are evaluated postnatally (P14)."
+    },
+    {
+      "study_type": "intraperitoneal tracer permeability assay",
+      "procedure_text": "40 μl of Alexa Fluor 555-conjugated cadaverine (1 mg/ml) was injected intraperitoneally into P14 mice and allowed to circulate for 2 hours to detect leakage.",
+      "procedure_text_evidence": "40 μl of Alexa Fluor 555-conjugated cadaverine (1 mg/ml; A30677, Thermo Fisher Scientific) was injected intraperitoneally into P14 postnatal mice. Cadaverine was allowed to circulate for 2 hours",
+      "species": "mouse",
+      "species_evidence": "P14 postnatal mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "injected intraperitoneally into P14 postnatal mice",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "intraperitoneal"
+      ],
+      "route_evidence": "injected intraperitoneally",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "permeability",
+          "role": "primary",
+          "evidence": "For the permeability assay... detect cadaverine leakage"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Alexa Fluor 555-conjugated cadaverine",
+          "role": "test",
+          "evidence": "Alexa Fluor 555-conjugated cadaverine (1 mg/ml; A30677, Thermo Fisher Scientific)"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "40 μl"
+        ],
+        "dose_units": "μl",
+        "frequency": "single",
+        "duration": "2 hours",
+        "timing": "P14",
+        "conditions": null
+      },
+      "exposure_evidence": "40 μl of Alexa Fluor 555-conjugated cadaverine... injected intraperitoneally... circulate for 2 hours",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": null
+    }
+  ]
+}

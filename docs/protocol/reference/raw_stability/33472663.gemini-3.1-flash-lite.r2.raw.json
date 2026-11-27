@@ -1,0 +1,97 @@
+{
+  "experiments": [
+    {
+      "study_type": "focal delayed-type hypersensitivity model of experimental autoimmune encephalomyelitis (fDTH-EAE)",
+      "procedure_text": "fDTH-EAE model in rats evaluated by PET/CT imaging, ex vivo tissue analysis, histology, and immunofluorescence after treatment with EC2319.",
+      "procedure_text_evidence": "A focal delayed-type hypersensitivity model of experimental autoimmune encephalomyelitis (fDTH-EAE) was established as previously described",
+      "species": "rat",
+      "species_evidence": "Male Lewis rats",
+      "animal_counts": {
+        "female": null,
+        "male": 60,
+        "total": 60,
+        "per_group": 10
+      },
+      "animal_counts_evidence": "n = 60",
+      "test_system": [
+        "in_vivo",
+        "ex_vivo"
+      ],
+      "test_system_evidence": "In vivo imaging was performed with an Inveon multimodality small animal PET/CT device... the animals were sacrificed and various tissues were excised",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "subcutaneous",
+        "intravenous"
+      ],
+      "route_evidence": "The rats in the acute phase (day 14) groups were subcutaneously administered with EC2319... 68 Ga-FOL... was injected IV",
+      "endpoints": [
+        {
+          "slug": "other-health-effects",
+          "label": "neuroinflammation",
+          "role": "primary",
+          "evidence": "immune cell-mediated inflammatory response in bacillus Calmette-Guérin-induced intrastriatal lesions"
+        },
+        {
+          "slug": null,
+          "label": "PET/CT imaging",
+          "role": "primary",
+          "evidence": "68 Ga-FOL PET/CT at 60 days after lesion activation"
+        },
+        {
+          "slug": null,
+          "label": "ex vivo gamma counting",
+          "role": "primary",
+          "evidence": "sacrifice for ex vivo gamma counting of excised tissues"
+        },
+        {
+          "slug": null,
+          "label": "histology and immunofluorescence",
+          "role": "primary",
+          "evidence": "The brain cryosections were analyzed by autoradiography, histology, and immunofluorescence"
+        },
+        {
+          "slug": null,
+          "label": "cytokine and chemokine levels",
+          "role": "secondary",
+          "evidence": "Plasma levels of interferon γ (IFN-γ) and interleukins IL-1β, IL-4, IL-6, and IL-10 were measured"
+        }
+      ],
+      "substances": [
+        {
+          "name": "EC2319",
+          "role": "test",
+          "evidence": "subcutaneously administered with EC2319"
+        },
+        {
+          "name": "68 Ga-FOL",
+          "role": "test",
+          "evidence": "68 Ga-FOL (45 ± 1 MBq, range 47-41 MBq) was injected IV"
+        },
+        {
+          "name": "saline",
+          "role": "control",
+          "evidence": "fDTH-EAE rats receiving only saline"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "750 nmol/kg/day",
+          "500 nmol/kg/day"
+        ],
+        "dose_units": "nmol/kg/day",
+        "frequency": "0, 3, 7, and 10 days after lesion activation; biweekly for 4 weeks",
+        "duration": "4 weeks",
+        "timing": "acute phase (day 14) or chronic phase (day 90)",
+        "conditions": "folate-free diet"
+      },
+      "exposure_evidence": "750 nmol/kg/day... 500 nmol/kg/day... biweekly for 4 weeks",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": "EC2319 dosages differ between acute (750 nmol/kg/day) and chronic (500 nmol/kg/day) experimental cohorts."
+    }
+  ]
+}

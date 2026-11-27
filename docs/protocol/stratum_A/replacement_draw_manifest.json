@@ -1,0 +1,46 @@
+{
+ "generated_utc": "2026-11-27T17:05:18.779490+00:00",
+ "method_seed": 20261113,
+ "article_seed": 20261115,
+ "k": 6,
+ "slots": [
+  {
+   "replaces_method": "10",
+   "replacement_method": "13",
+   "family": "Skin sensitisation",
+   "hits": 14,
+   "pool_after_dedup": 13,
+   "drawn": 6,
+   "terms_sha256": "069844e952bccaee"
+  },
+  {
+   "replaces_method": "30",
+   "replacement_method": "33",
+   "family": "Rabies diagnostics",
+   "hits": 225,
+   "pool_after_dedup": 225,
+   "drawn": 6,
+   "terms_sha256": "64c043c8c4ad0bac"
+  },
+  {
+   "replaces_method": "34",
+   "replacement_method": "35",
+   "family": "Rabies diagnostics",
+   "hits": 225,
+   "pool_after_dedup": 219,
+   "drawn": 6,
+   "terms_sha256": "64c043c8c4ad0bac"
+  },
+  {
+   "replaces_method": "50",
+   "replacement_method": "16",
+   "family": "Phototoxicity",
+   "hits": 76,
+   "pool_after_dedup": 74,
+   "drawn": 6,
+   "terms_sha256": "9de25bcf495da6b5"
+  }
+ ],
+ "script_sha256": "146a3dfc103b61efb00e0220b0c9c66f54db7e1250d19535fe44659eba0521dc",
+ "status": "unverified_candidate_draw"
+}

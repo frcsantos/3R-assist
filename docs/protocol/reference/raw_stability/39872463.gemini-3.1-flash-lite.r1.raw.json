@@ -1,0 +1,87 @@
+{
+  "experiments": [
+    {
+      "study_type": "pulmonary fibrosis model",
+      "procedure_text": "Mice were intratracheally injected with 3 mg/kg of BLM to establish pulmonary fibrosis. MSC-exos (20 μg) were administered via tail vein injection after modeling.",
+      "procedure_text_evidence": "3 mg/kg of BLM (Zhejiang Hisun Pharmaceutical Co., Ltd., China) was intratracheally injected. ... mice in the BLM + MSC-exos group were treated with 20 μg MSC-exos in 100 μL PBS via tail vein injection",
+      "species": "mouse",
+      "species_evidence": "C57BL/6J mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 3
+      },
+      "animal_counts_evidence": "random allocation into three distinct experimental groups: control group, BLM group, and BLM + MSC-exos group(n = 3)",
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": null,
+      "application": "translational-applied-research",
+      "application_evidence": null,
+      "route": [
+        "intratracheal",
+        "intravenous"
+      ],
+      "route_evidence": "3 mg/kg of BLM ... was intratracheally injected. ... treated with 20 μg MSC-exos ... via tail vein injection",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "pulmonary fibrosis",
+          "role": "primary",
+          "evidence": "A pulmonary fibrosis model was established"
+        },
+        {
+          "slug": null,
+          "label": "HE staining",
+          "role": "secondary",
+          "evidence": "subjected to both HE and Masson staining"
+        },
+        {
+          "slug": null,
+          "label": "Masson staining",
+          "role": "secondary",
+          "evidence": "subjected to both HE and Masson staining"
+        },
+        {
+          "slug": "other-health-effects",
+          "label": "inflammation",
+          "role": "secondary",
+          "evidence": "MSC-exos suppress inflammation in the BLM-induced PF model"
+        }
+      ],
+      "substances": [
+        {
+          "name": "BLM",
+          "role": "test",
+          "evidence": "3 mg/kg of BLM"
+        },
+        {
+          "name": "MSC-exos",
+          "role": "test",
+          "evidence": "20 μg MSC-exos"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "3",
+          "20"
+        ],
+        "dose_units": "mg/kg, μg",
+        "frequency": "single administration",
+        "duration": "21 days",
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": "3 mg/kg of BLM ... treated with 20 μg MSC-exos ... mice were euthanized after a duration of 21 days",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "The study utilized n=3 per group. The protocol mentions regulatory approval by the Experimental Animal Ethics Review Committee."
+    }
+  ]
+}

@@ -1,0 +1,246 @@
+{
+  "experiments": [
+    {
+      "study_type": "Human HCC and adjacent normal tissue collection for RNA expression analysis",
+      "procedure_text": "Paired HCC tissue specimens and adjacent normal tissue specimens were collected from 47 patients who underwent surgical resection.",
+      "procedure_text_evidence": "Paired HCC tissue specimens and adjacent normal tissue specimens were collected from 47 patients",
+      "species": "human",
+      "species_evidence": "collected from 47 patients",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "Samples were stored in liquid nitrogen before total RNA extraction",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "SNHG16 and let-7b-5p expression in tissues",
+          "role": "unspecified",
+          "evidence": "SNHG16 mRNA levels in HCC tissues and adjacent normal tissues"
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "Ethical approval for the study was provided by the Human Ethics Committee of Hunan Normal University",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Clinical specimens from 47 patients used for qRT-PCR; not an in vivo experimental procedure."
+    },
+    {
+      "study_type": "In vitro HCC cell line functional assays (knockdown/transfection, cell cycle, apoptosis, viability, migration, invasion)",
+      "procedure_text": "HCC and control cell lines cultured; SNHG16 knockdown and let-7b-5p modulation analyzed for cycle, apoptosis, proliferation, migration, invasion.",
+      "procedure_text_evidence": "Five HCC lines (MHCC97H, HuH7, SMMC7721, Hep3B, and HepG2), one normal hepatocyte cell line (LO2), and HEK293 cells were cultured",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "Five HCC lines ... one normal hepatocyte cell line (LO2), and HEK293 cells were cultured",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Cell cycle distribution",
+          "role": "unspecified",
+          "evidence": "analyze the cell cycle distribution"
+        },
+        {
+          "slug": null,
+          "label": "Cell apoptosis",
+          "role": "unspecified",
+          "evidence": "stained by an annexin V-fluorescein isothiocyanate (FITC)/PI kit"
+        },
+        {
+          "slug": null,
+          "label": "Cell viability/proliferation (MTT)",
+          "role": "unspecified",
+          "evidence": "MTT cell proliferation assays"
+        },
+        {
+          "slug": null,
+          "label": "Colony formation",
+          "role": "unspecified",
+          "evidence": "Colony formation assay"
+        },
+        {
+          "slug": null,
+          "label": "Cell migration (wound-healing)",
+          "role": "unspecified",
+          "evidence": "Wound-healing assays showing the migratory ability"
+        },
+        {
+          "slug": null,
+          "label": "Cell invasion (transwell)",
+          "role": "unspecified",
+          "evidence": "Transwell invasion assays demonstrating the effect"
+        },
+        {
+          "slug": null,
+          "label": "Cisplatin drug sensitivity / IC50",
+          "role": "unspecified",
+          "evidence": "The increased sensitivity to cisplatin in SNHG16-knockdown HCC cells"
+        },
+        {
+          "slug": null,
+          "label": "SNHG16-let-7b-5p miRNA interaction (luciferase/RIP)",
+          "role": "unspecified",
+          "evidence": "SNHG16 acted as a let-7b-5p sponge in HCC"
+        }
+      ],
+      "substances": [
+        {
+          "name": "sh-SNHG16 lentiviruses",
+          "role": "test",
+          "evidence": "The sh-SNHG16 lentiviruses (target sequence"
+        },
+        {
+          "name": "sh-Ctrl",
+          "role": "control",
+          "evidence": "nonspecific synthetic control lentiviruses, sh-Ctrl"
+        },
+        {
+          "name": "let-7b-5p mimics",
+          "role": "test",
+          "evidence": "let-7b-5p mimics, a let-7b-5p inhibitor"
+        },
+        {
+          "name": "let-7b-5p inhibitor",
+          "role": "test",
+          "evidence": "a let-7b-5p inhibitor and their associated negative controls"
+        },
+        {
+          "name": "cisplatin",
+          "role": "test",
+          "evidence": "Cells were treated with different concentrations of cisplatin for 36 hours"
+        }
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": "cisplatin for 36 hours",
+        "timing": null,
+        "conditions": "multiplicity of infection of 10 pfu/cell"
+      },
+      "exposure_evidence": "Cells were treated with different concentrations of cisplatin for 36 hours",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["dose_levels", "species"],
+      "notes": "In vitro cell line experiments; no animal source stated, so species is null. HEK293 used for luciferase reporter assays."
+    },
+    {
+      "study_type": "Subcutaneous xenograft tumorigenesis model in nude mice",
+      "procedure_text": "HuH7 cells subcutaneously injected into dorsal regions of nude mice; tumor growth measured, tumors excised at 25 days.",
+      "procedure_text_evidence": "Approximate 1 × 10 7 HuH7 cells were subcutaneously injected into the left and right dorsal regions of the nude mouse",
+      "species": "mouse",
+      "species_evidence": "BALB/c nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "The xenograft mouse model was performed to investigate the tumorigenic ability",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["subcutaneous"],
+      "route_evidence": "subcutaneously injected into the left and right dorsal regions",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Tumor size, volume and weight",
+          "role": "primary",
+          "evidence": "Tumor size and volume were measured regularly"
+        },
+        {
+          "slug": null,
+          "label": "Ki67 IHC proliferation marker",
+          "role": "secondary",
+          "evidence": "immunohistochemical (IHC) staining of Ki67"
+        }
+      ],
+      "substances": [
+        {
+          "name": "HuH7 cells",
+          "role": "test",
+          "evidence": "Approximate 1 × 10 7 HuH7 cells were subcutaneously injected"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["1 × 10 7 HuH7 cells"],
+        "dose_units": "cells",
+        "frequency": null,
+        "duration": "After 25 days",
+        "timing": null,
+        "conditions": "injected into the left and right dorsal regions"
+      },
+      "exposure_evidence": "Approximate 1 × 10 7 HuH7 cells were subcutaneously injected",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "complied with the regulations of the Ethics Committee of Hunan Normal University",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Four-week-old BALB/c nude mice from Hunan SJA Laboratory Animal Co."
+    },
+    {
+      "study_type": "Tail vein metastasis model in nude mice",
+      "procedure_text": "Nude mice intravenously injected with HuH7 cells; after 52 days lung nodules observed and examined by H&E staining.",
+      "procedure_text_evidence": "Nude mice were intravenously injected with 1 × 10 6 HuH7 cells",
+      "species": "mouse",
+      "species_evidence": "Nude mice were intravenously injected",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "The metastatic model through the tail vein injection of HCC was established",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["intravenous"],
+      "route_evidence": "intravenously injected with 1 × 10 6 HuH7 cells",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Lung metastatic nodules",
+          "role": "primary",
+          "evidence": "nodules on the surface of the lungs were observed"
+        }
+      ],
+      "substances": [
+        {
+          "name": "HuH7 cells",
+          "role": "test",
+          "evidence": "intravenously injected with 1 × 10 6 HuH7 cells"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["1 × 10 6 HuH7 cells"],
+        "dose_units": "cells",
+        "frequency": null,
+        "duration": "After 52 days",
+        "timing": null,
+        "conditions": "tail vein injection"
+      },
+      "exposure_evidence": "Nude mice were intravenously injected with 1 × 10 6 HuH7 cells",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "complied with the regulations of the Ethics Committee of Hunan Normal University",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Separate metastasis cohort with distinct route, cell dose, and duration from the subcutaneous xenograft model."
+    }
+  ]
+}

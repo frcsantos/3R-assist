@@ -1,0 +1,503 @@
+{
+  "experiments": [
+    {
+      "study_type": "Cell viability and synergy assays with 673A and co-treatments",
+      "procedure_text": "Measure luminescence-based viability in OVCAR5 and OVCAR4 cells treated with 673A alone or with retinaldehyde, 4-HNE, metformin or hydralazine; assess synergy in OVCAR5 cells.",
+      "procedure_text_evidence": "Cell viability of OVCAR5 and OVCAR4 cells treated with 673A alone or in combination with",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "reseeded in 96-well plates at 2000 cells/well",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "Normalized cell viability", "role": "unspecified", "evidence": "Normalized viability was calculated by comparing the luminescence of drug-treated wells to vehicle-treated wells"},
+        {"slug": null, "label": "Drug combination index (synergy or antagonism)", "role": "unspecified", "evidence": "CI<1.0 is synergistic, CI>1.0 is antagonistic."}
+      ],
+      "substances": [
+        {"name": "673A", "role": "test", "evidence": "treated with 673A alone or in combination with"},
+        {"name": "Retinaldehyde", "role": "test", "evidence": "A) Retinaldehyde B) 4-HNE, C) Metformin or D) Hydralazine."},
+        {"name": "4-HNE", "role": "test", "evidence": "A) Retinaldehyde B) 4-HNE, C) Metformin or D) Hydralazine."},
+        {"name": "Metformin", "role": "test", "evidence": "A) Retinaldehyde B) 4-HNE, C) Metformin or D) Hydralazine."},
+        {"name": "Hydralazine", "role": "test", "evidence": "A) Retinaldehyde B) 4-HNE, C) Metformin or D) Hydralazine."},
+        {"name": "vehicle", "role": "control", "evidence": "drug-treated wells to vehicle-treated wells"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": "96 h",
+        "timing": "allowed to recover for 24 h",
+        "conditions": "reseeded in 96-well plates at 2000 cells/well"
+      },
+      "exposure_evidence": "the cells were put back into the incubator for 96 h",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["exposure.dose_levels", "route"],
+      "notes": "Viability was read using Cell-Titer Glo 2.0; synergy was assessed using the Chou-Talalay method and CompuSyn. All assays were repeated at least three times with three technical replicates."
+    },
+    {
+      "study_type": "Neutral Comet assay after 673A treatment",
+      "procedure_text": "Expose OVCAR4 and OVCAR5 cells to DMSO or 673A for 24 hours and quantify comet tail moments after neutral electrophoresis.",
+      "procedure_text_evidence": "Neutral comet assays were performed in OVCAR4 and OVCAR5 cell lines treated with DMSO",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "200,000 cells were seeded in a 6-well plate",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": "genotoxicity", "label": "DNA damage (neutral comet tail moment)", "role": "unspecified", "evidence": "tail moments were analyzed using CometAssay IV software"}
+      ],
+      "substances": [
+        {"name": "DMSO", "role": "control", "evidence": "fresh medium containing DMSO or ALDH1Ai (673A; at 0.5 μM or 1 μM)"},
+        {"name": "673A", "role": "test", "evidence": "ALDH1Ai (673A; at 0.5 μM or 1 μM)"}
+      ],
+      "exposure": {
+        "dose_levels": ["0.5 μM", "1 μM"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": "24 hrs",
+        "timing": "After 18 hrs",
+        "conditions": "fresh medium containing DMSO or ALDH1Ai"
+      },
+      "exposure_evidence": "ALDH1Ai (673A; at 0.5 μM or 1 μM) was added for 24 hrs",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["route"],
+      "notes": "Electrophoresis was performed at 21 volts for 45 min at 4 o C. Figure 1 reports 200 tail moments from two independent experiments; the method describes a biological replicate and duplicate measurements."
+    },
+    {
+      "study_type": "ALDEFLUOR assay after inhibitor or vehicle exposure",
+      "procedure_text": "Incubate cultured cells with Aldefluor reagent and inhibitor or vehicle, then measure the proportion of Aldefluor-positive cells by flow cytometry relative to vehicle.",
+      "procedure_text_evidence": "tubes containing inhibitor or vehicle and incubated for 30 min at 37 ° C",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "When the cells reached 80% confluency",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "ALDH activity (percentage of Aldefluor-positive cells relative to vehicle)", "role": "unspecified", "evidence": "assayed for ALDH activity using the Aldefluor assay"}
+      ],
+      "substances": [
+        {"name": "inhibitor", "role": "test", "evidence": "tubes containing inhibitor or vehicle"},
+        {"name": "vehicle", "role": "control", "evidence": "the control sample (vehicle-treated)"},
+        {"name": "Aldefluor reagent", "role": "other", "evidence": "Aldefluor reagent was added"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": "30 min",
+        "timing": null,
+        "conditions": "at 37 ° C"
+      },
+      "exposure_evidence": "containing inhibitor or vehicle and incubated for 30 min at 37 ° C",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["cell_line", "substances", "exposure.dose_levels", "route"],
+      "notes": "Aldefluor-positive cells were measured on a CytoFLEX S flow cytometer."
+    },
+    {
+      "study_type": "Western blotting after 673A treatment",
+      "procedure_text": "Immunoblot cultured cell lysates; Figure 1 reports DNA damage, checkpoint and PARP markers in 673A-treated OVCAR4 and OVCAR5 cells.",
+      "procedure_text_evidence": "Western Blot of yH2AX, pChk1, pChk2, and cleaved-PARP, in OVCAR4, OVCAR5 cells",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "in OVCAR4, OVCAR5 cells treated with 0, 1 μM or 10 μM 673A",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": "genotoxicity", "label": "γ-H2AX immunoblot signal", "role": "unspecified", "evidence": "Western Blot of yH2AX, pChk1, pChk2, and cleaved-PARP"},
+        {"slug": null, "label": "pChk1 immunoblot signal", "role": "unspecified", "evidence": "Western Blot of yH2AX, pChk1, pChk2, and cleaved-PARP"},
+        {"slug": null, "label": "pChk2 immunoblot signal", "role": "unspecified", "evidence": "Western Blot of yH2AX, pChk1, pChk2, and cleaved-PARP"},
+        {"slug": null, "label": "Cleaved PARP immunoblot signal", "role": "unspecified", "evidence": "Western Blot of yH2AX, pChk1, pChk2, and cleaved-PARP"},
+        {"slug": null, "label": "pATM immunoblot signal", "role": "unspecified", "evidence": "Western blot pATM and pATR in OVCAR4 and OVCAR5 cells"},
+        {"slug": null, "label": "pATR immunoblot signal", "role": "unspecified", "evidence": "Western blot pATM and pATR in OVCAR4 and OVCAR5 cells"},
+        {"slug": null, "label": "Full-length PARP immunoblot signal", "role": "unspecified", "evidence": "Primary antibodies (FL-PARP, CL-PARP, KU-70, KU-80, pChk1, pChk2, γ -H2AX and b-Actin)"},
+        {"slug": null, "label": "KU-70 immunoblot signal", "role": "unspecified", "evidence": "Primary antibodies (FL-PARP, CL-PARP, KU-70, KU-80, pChk1, pChk2, γ -H2AX and b-Actin)"},
+        {"slug": null, "label": "KU-80 immunoblot signal", "role": "unspecified", "evidence": "Primary antibodies (FL-PARP, CL-PARP, KU-70, KU-80, pChk1, pChk2, γ -H2AX and b-Actin)"}
+      ],
+      "substances": [
+        {"name": "673A", "role": "test", "evidence": "treated with 673A (0, 1, 3 and 10 μM)"}
+      ],
+      "exposure": {
+        "dose_levels": ["0", "1 μM", "3", "10 μM"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": "treated with 673A (0, 1, 3 and 10 μM)",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["exposure.duration", "endpoint_regimen_mapping", "route"],
+      "notes": "Figure 1C used 0, 1 μM or 10 μM 673A for γ-H2AX, pChk1, pChk2 and cleaved PARP; Figure 1E used 0, 1, 3 and 10 μM for pATM and pATR. The antibody list includes FL-PARP, KU-70, KU-80 and b-Actin without a stated regimen for those targets."
+    },
+    {
+      "study_type": "RNA isolation and RT-qPCR",
+      "procedure_text": "Extract RNA, assess its quality, reverse-transcribe it, and determine relative gene expression by RT-qPCR using YWHAZ normalization.",
+      "procedure_text_evidence": "samples were normalized to YWHAZ. The ΔΔCt method was used to determine relative gene expression.",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "Cells were lysed using RNeasy Mini kit",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "Relative gene expression", "role": "unspecified", "evidence": "The ΔΔCt method was used to determine relative gene expression."}
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["cell_line", "target_genes", "assay_assignment"],
+      "notes": "The two RT-qPCR sections describe one workflow, with duplicate reactions, dissociation curves and 260/280 ratios above 1.9. The primers are referenced to Table S1, and the passage does not specify which samples used this workflow."
+    },
+    {
+      "study_type": "Immunofluorescence after 673A treatment",
+      "procedure_text": "Use immunofluorescence to assess 4-HNE in OVCAR5 and OVCAR4 cells with or without 673A and γ-H2AX foci in cells treated with 673A.",
+      "procedure_text_evidence": "IF for 4-HNE in OVCAR5 and OVCAR4 cells treated with or without 673A.",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "Cultured cells were plated on coverslips",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "4-HNE immunofluorescence", "role": "unspecified", "evidence": "IF for 4-HNE in OVCAR5 and OVCAR4 cells"},
+        {"slug": "genotoxicity", "label": "γ-H2AX foci", "role": "unspecified", "evidence": "IF of g-H2AX foci in cells treated with 0, 0.6, 1.2 and 2.4 μM 673A"}
+      ],
+      "substances": [
+        {"name": "673A", "role": "test", "evidence": "cells treated with or without 673A"}
+      ],
+      "exposure": {
+        "dose_levels": ["0", "0.6", "1.2", "2.4 μM"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": null,
+        "timing": "cultured overnight and treated the next day",
+        "conditions": "Cultured cells were plated on coverslips"
+      },
+      "exposure_evidence": "cells treated with 0, 0.6, 1.2 and 2.4 μM 673A",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["exposure.duration", "endpoint_regimen_mapping", "cell_line", "route"],
+      "notes": "The listed concentrations apply to the γ-H2AX panel; the 4-HNE panel specifies only treatment with or without 673A. The γ-H2AX panel does not name the cell lines."
+    },
+    {
+      "study_type": "Acrolein immunofluorescence",
+      "procedure_text": "Stain for acrolein by immunofluorescence; the method describes both paraffin-embedded sections and cultured cells without assigning the acrolein stain to either.",
+      "procedure_text_evidence": "Acrolein antibody (Invitrogen MA527553 Waltham, MA) was used at 1:50",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": null,
+      "test_system_evidence": null,
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "Acrolein immunofluorescence", "role": "unspecified", "evidence": "Acrolein antibody (Invitrogen MA527553 Waltham, MA) was used at 1:50"}
+      ],
+      "substances": [
+        {"name": "Acrolein antibody", "role": "other", "evidence": "Acrolein antibody (Invitrogen MA527553 Waltham, MA) was used at 1:50"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["segmentation", "test_system", "species", "exposure"],
+      "notes": "The acrolein stain is described in the general immunofluorescence method but is not linked to a specific treatment or sample."
+    },
+    {
+      "study_type": "γ-H2AX immunofluorescence after 673A, hydralazine or retinaldehyde treatment",
+      "procedure_text": "Image γ-H2AX foci in cultured cells treated with 673A, hydralazine, retinaldehyde or the combination.",
+      "procedure_text_evidence": "IF Images of g-H2AX foci in cells treated with 673A, hydralazine, retinaldehyde or the combination.",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "Cultured cells were plated on coverslips",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": "genotoxicity", "label": "γ-H2AX foci", "role": "unspecified", "evidence": "IF Images of g-H2AX foci in cells"}
+      ],
+      "substances": [
+        {"name": "673A", "role": "test", "evidence": "treated with 673A, hydralazine, retinaldehyde or the combination"},
+        {"name": "hydralazine", "role": "test", "evidence": "treated with 673A, hydralazine, retinaldehyde or the combination"},
+        {"name": "retinaldehyde", "role": "test", "evidence": "treated with 673A, hydralazine, retinaldehyde or the combination"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": "cultured overnight and treated the next day",
+        "conditions": "Cultured cells were plated on coverslips"
+      },
+      "exposure_evidence": "cultured overnight and treated the next day",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["cell_line", "treatment_combinations", "exposure.dose_levels", "exposure.duration", "route"],
+      "notes": "Figure 2E does not specify which agents were combined or identify the cells used for the images."
+    },
+    {
+      "study_type": "ALDH1A3 CRISPR knockout and functional validation",
+      "procedure_text": "Transduce OVCAR5 cells with ALDH1A3-targeting CRISPR lentivirus, select with puromycin and limiting dilution, then confirm knockout by qPCR and ALDEFLUOR.",
+      "procedure_text_evidence": "Knockout was confirmed using qPCR and ALDEFLUOR assays.",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "OVCAR5 cells were transduced",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "ALDH1A3 knockout confirmation by qPCR", "role": "unspecified", "evidence": "Knockout was confirmed using qPCR and ALDEFLUOR assays."},
+        {"slug": null, "label": "ALDH activity (ALDH-positive cell fraction)", "role": "unspecified", "evidence": "stained with an ALDEFLUOR assay and gated for ALDH positive cells"}
+      ],
+      "substances": [
+        {"name": "human sgRNA CRISPR All-in-One Lentivirus", "role": "test", "evidence": "human sgRNA CRISPR All-in-One Lentivirus (Applied Biological Materials Inc) targeting ALDH1A3"},
+        {"name": "puromycin", "role": "other", "evidence": "7 days of puromycin selection"}
+      ],
+      "exposure": {
+        "dose_levels": ["MOI of 5"],
+        "dose_units": "MOI",
+        "frequency": null,
+        "duration": null,
+        "timing": "before being clonally selected using limiting dilution",
+        "conditions": "7 days of puromycin selection"
+      },
+      "exposure_evidence": "targeting ALDH1A3 at MOI of 5",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["exposure.duration", "puromycin_concentration", "route"],
+      "notes": "Cells received one of three ALDH1A3-targeting lentiviral reagents at MOI 5; the seven-day duration applies to puromycin selection, not transduction. ALDEFLUOR compared parental cells with CRISPR clones."
+    },
+    {
+      "study_type": "Retinaldehyde viability assay in parental and ALDH1A3 knockout cells",
+      "procedure_text": "Measure viability of parental OVCAR5 and ALDH1A3 knockout clones at 12.5 μM retinaldehyde and generate retinaldehyde dose-response curves for the clones.",
+      "procedure_text_evidence": "viability of parental OVCAR 5 and OVCAR5 ALDH1A3 knockout clones treated with 12.5 μM retinaldehyde",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "parental OVCAR 5 and OVCAR5 ALDH1A3 knockout clones",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "Cell viability after retinaldehyde treatment", "role": "unspecified", "evidence": "viability curves of ALDH1A3 CRISPR clones treated with increasing concentrations of retinaldehyde"}
+      ],
+      "substances": [
+        {"name": "retinaldehyde", "role": "test", "evidence": "treated with 12.5 μM retinaldehyde"}
+      ],
+      "exposure": {
+        "dose_levels": ["12.5 μM"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": "96 h",
+        "timing": "allowed to recover for 24 h",
+        "conditions": "reseeded in 96-well plates at 2000 cells/well"
+      },
+      "exposure_evidence": "treated with 12.5 μM retinaldehyde",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["exposure.dose_levels", "route"],
+      "notes": "Figure 3B does not list the other concentrations used for the knockout clone viability curves. Figure 3 assays were performed at least three times."
+    },
+    {
+      "study_type": "4-HNE viability assay in parental and ALDH1A3 knockout cells",
+      "procedure_text": "Measure viability of parental OVCAR5 and ALDH1A3 knockout clones at 25 μM 4-HNE and generate 4-HNE dose-response curves for the clones.",
+      "procedure_text_evidence": "viability of parental OVCAR 5 and OVCAR5 ALDH1A3 knockout clones treated with 25 μM 4-HNE",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "parental OVCAR 5 and OVCAR5 ALDH1A3 knockout clones",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "Cell viability after 4-HNE treatment", "role": "unspecified", "evidence": "viability curves of ALDH1A3 CRISPR clones treated with increasing concentrations of 4-HNE"}
+      ],
+      "substances": [
+        {"name": "4-HNE", "role": "test", "evidence": "treated with 25 μM 4-HNE"}
+      ],
+      "exposure": {
+        "dose_levels": ["25 μM"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": "96 h",
+        "timing": "allowed to recover for 24 h",
+        "conditions": "reseeded in 96-well plates at 2000 cells/well"
+      },
+      "exposure_evidence": "treated with 25 μM 4-HNE",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["exposure.dose_levels", "route"],
+      "notes": "Figure 3C does not list the other concentrations used for the knockout clone viability curves. Figure 3 assays were performed at least three times."
+    },
+    {
+      "study_type": "Cell viability and combination index analysis with 673A and ATM or ATR inhibitors",
+      "procedure_text": "Measure viability after ATM or ATR inhibition with or without 673A in OVCAR5, OVCAR4 and ALDH1A3 knockout cells, and assess combination indices.",
+      "procedure_text_evidence": "inhibitors (AZD1390) or ATR (AZD6738) inhibitors and/or 673A",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "OVCAR5 cells and several OVCAR5 ALDH1A3 CRISPR KO clones",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "Cell viability after ATM or ATR inhibitor treatment", "role": "unspecified", "evidence": "Viability curves for OVCAR5 and OVCAR4 cells treated with"},
+        {"slug": null, "label": "Combination index for 673A and ATM or ATR inhibitors", "role": "unspecified", "evidence": "Combination index analysis for 673A, ATM and ATR inhibitors."}
+      ],
+      "substances": [
+        {"name": "AZD1390", "role": "test", "evidence": "2.5 μM, 5 μM, and 10 μM ATM (AZD1390) inhibitors and/or 673A"},
+        {"name": "AZD6738", "role": "test", "evidence": "0.25 μM, 0.5 μM, and 1 μM ATR (AZD6738) inhibitor and/or 673A"},
+        {"name": "673A", "role": "test", "evidence": "inhibitors and/or 673A"}
+      ],
+      "exposure": {
+        "dose_levels": ["2.5 μM", "5 μM", "10 μM", "0.25 μM", "0.5 μM", "1 μM"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": "96 h",
+        "timing": "allowed to recover for 24 h",
+        "conditions": "reseeded in 96-well plates at 2000 cells/well"
+      },
+      "exposure_evidence": "2.5 μM, 5 μM, and 10 μM ATM (AZD1390) inhibitors and/or 673A",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["exposure.dose_levels", "endpoint_regimen_mapping", "route"],
+      "notes": "Figure 4A lists AZD1390 at 2.5 μM, 5 μM and 10 μM; Figure 4B lists AZD6738 at 0.25 μM, 0.5 μM and 1 μM, each with or without 673A. Figure 4C–D does not state doses for parental OVCAR5 and the knockout clones, and the run-together Table 2 text does not unambiguously map all concentrations to combination indices."
+    },
+    {
+      "study_type": "In vivo therapeutic study of 673A with ATM or ATR inhibitors in an OVCAR5 mouse xenograft",
+      "procedure_text": "Inject OVCAR5 cells subcutaneously into nude mice; after engraftment, treat daily with vehicle, 673A, AZD1390 or AZD6738, alone or in the stated combinations.",
+      "procedure_text_evidence": "This cell suspension was injected subcutaneously into the axillary region of nude mice.",
+      "species": "mouse",
+      "species_evidence": "nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "This cell suspension was injected subcutaneously into the axillary region of nude mice.",
+      "application": "translational-applied-research",
+      "application_evidence": "[In vivo therapeutic studies]",
+      "route": ["subcutaneous", "unspecified", "oral"],
+      "route_evidence": "given vehicle, 20 mg/kg AZD1390, or 50 mg/kg AZD 6738 by oral gavage daily",
+      "endpoints": [
+        {"slug": null, "label": "Tumor growth (caliper-derived tumor volume over time)", "role": "unspecified", "evidence": "Tumors were measure by caliper and volume was calculated (L*W*W/2)."},
+        {"slug": null, "label": "Final tumor mass", "role": "unspecified", "evidence": "Plot of final tumor mass."},
+        {"slug": "genotoxicity", "label": "Tumor γ-H2AX immunofluorescence (positive cells relative to DAPI)", "role": "unspecified", "evidence": "Quantification of γ-H2AX positive cells relative to DAPI control."}
+      ],
+      "substances": [
+        {"name": "OVCAR5 cells", "role": "other", "evidence": "OVCAR5 cells were grown in RPMI 1640 media"},
+        {"name": "PBS", "role": "other", "evidence": "resuspended in cold PBS 1:1 with Matrigel"},
+        {"name": "Matrigel", "role": "other", "evidence": "resuspended in cold PBS 1:1 with Matrigel"},
+        {"name": "673A", "role": "test", "evidence": "Mice were injected daily with vehicle or 20 mg/kg 673A"},
+        {"name": "AZD1390", "role": "test", "evidence": "20 mg/kg AZD1390"},
+        {"name": "AZD 6738", "role": "test", "evidence": "50 mg/kg AZD 6738 by oral gavage daily"},
+        {"name": "vehicle", "role": "control", "evidence": "Tumor growth curves for mice treated with vehicle"}
+      ],
+      "exposure": {
+        "dose_levels": ["100 μL", "50,000 cells", "20 mg/kg 673A", "20 mg/kg AZD1390", "50 mg/kg AZD 6738", "20 mg/kg 673A + 20 mg/kg AZD1390", "20 mg/kg 673A + 50 mg/kg AZD6738"],
+        "dose_units": null,
+        "frequency": "daily",
+        "duration": null,
+        "timing": "3 days to engraft before treatments were started",
+        "conditions": "resuspended in cold PBS 1:1 with Matrigel"
+      },
+      "exposure_evidence": "Mice were injected daily with vehicle or 20 mg/kg 673A",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts", "animal_age", "exposure.duration", "673A_injection_route", "vehicle_composition", "tumor_measurement_frequency"],
+      "notes": "The axillary subcutaneous inoculum was 100 μL containing 50,000 OVCAR5 cells; daily 673A or vehicle injections have no stated anatomical route, while AZD1390, AZD 6738 or vehicle were given by daily oral gavage. Figure 5 reports six arms: vehicle, each of the three drugs alone, 673A plus AZD1390, and 673A plus AZD6738."
+    }
+  ]
+}

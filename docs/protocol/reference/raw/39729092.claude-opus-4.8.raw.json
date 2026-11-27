@@ -1,0 +1,182 @@
+{
+  "experiments": [
+    {
+      "study_type": "In vitro cellular uptake of 68Ga/Atto495-labeled MSNPs",
+      "procedure_text": "B16F10 or MDA-MB-231 cells incubated with 68Ga-MSNPs or Atto 495-MSNPs; analyzed by flow cytometry and confocal microscopy.",
+      "procedure_text_evidence": "Cells were incubated with 68 Ga-MSNPs or Atto 495-MSNPs at 37 °C and 5% CO2 for 30 minutes",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "The B16F10 mouse melanoma and MDA-MB-231 human breast adenocarcinoma cancer cell lines",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [],
+      "substances": [
+        {"name": "68 Ga-MSNPs", "role": "test", "evidence": "incubated with 68 Ga-MSNPs or Atto 495-MSNPs"},
+        {"name": "Atto 495-MSNPs", "role": "test", "evidence": "incubated with 68 Ga-MSNPs or Atto 495-MSNPs"},
+        {"name": "Lipofectamine 2000", "role": "other", "evidence": "A cationic liposome transfection agent (Lipofectamine 2000"}
+      ],
+      "exposure": {
+        "dose_levels": ["~ 10 μg MSNP"],
+        "dose_units": null,
+        "frequency": null,
+        "duration": "30 minutes",
+        "timing": null,
+        "conditions": "at 37 °C and 5% CO2"
+      },
+      "exposure_evidence": "Cells were incubated with 68 Ga-MSNPs or Atto 495-MSNPs at 37 °C and 5% CO2 for 30 minutes",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["endpoints"],
+      "notes": "Cell-line based uptake study; no catalog endpoint fits nanoparticle uptake measurement."
+    },
+    {
+      "study_type": "In vitro cell-viability/cytotoxicity assay of MSNPs",
+      "procedure_text": "B16F10 cells exposed to MSNPs at varying concentrations; viability determined via metabolic activity using CCK-8 assay 24 h later.",
+      "procedure_text_evidence": "To evaluate the cytotoxicity of MSNPs, cell viability was determined according to metabolic activity as a surrogate",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "B16F10 cells were seeded in 96-well plates",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": "basal-cytotoxicity", "label": "cytotoxicity / cell viability", "role": "primary", "evidence": "To evaluate the cytotoxicity of MSNPs, cell viability was determined"}
+      ],
+      "substances": [
+        {"name": "MSNPs", "role": "test", "evidence": "MSNPs with varying concentrations (up to 10 mg/ml)"}
+      ],
+      "exposure": {
+        "dose_levels": ["up to 10 mg/ml"],
+        "dose_units": "mg/ml",
+        "frequency": null,
+        "duration": "incubated for 30 min",
+        "timing": "tested 24 h after MSNP exposure",
+        "conditions": null
+      },
+      "exposure_evidence": "MSNPs with varying concentrations (up to 10 mg/ml) were incubated for 30 min",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": null
+    },
+    {
+      "study_type": "In vitro cellular uptake and efflux of 68Ga by gamma counting",
+      "procedure_text": "B16F10 cells incubated with 68Ga-labeled MSNPs; cellular uptake, retention and efflux kinetics assessed by bulk and single-cell gamma counting.",
+      "procedure_text_evidence": "Gamma counting was also used to study the cellular efflux of radioactivity",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "After incubation with 68 Ga-labeled MSNPs, B16F10 cells were washed",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [],
+      "substances": [
+        {"name": "68 Ga-labeled MSNPs", "role": "test", "evidence": "After incubation with 68 Ga-labeled MSNPs"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": "15 min, 30 min, 45 min, and 90 min",
+        "timing": "various time points",
+        "conditions": null
+      },
+      "exposure_evidence": "collecting the complete cell culture media at various time points (15 min, 30 min, 45 min, and 90 min)",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["endpoints"],
+      "notes": "Single-cell measurements used individually sorted cells (n=50); efflux measured in triplicate."
+    },
+    {
+      "study_type": "In vivo PET/CT biodistribution of 68Ga-MSNP2 (intravenous)",
+      "procedure_text": "68Ga-MSNP2 radioconjugate injected intravenously into female athymic nude mice and imaged by small-animal PET/CT to assess in vivo stability and biodistribution.",
+      "procedure_text_evidence": "the nanoparticle radioconjugate was injected intravenously and imaged (5 min) using a small-animal PET scanner",
+      "species": "mouse",
+      "species_evidence": "Female athymic nude mice",
+      "animal_counts": {"female": null, "male": null, "total": 6, "per_group": null},
+      "animal_counts_evidence": "Biodistribution (time=1 h) of 68 Ga-MSNP 2 in immunodeficient mice (n=6)",
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "Female athymic nude mice (aged 6-8 weeks, Charles River) were used for in vivo studies",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["intravenous"],
+      "route_evidence": "the nanoparticle radioconjugate was injected intravenously",
+      "endpoints": [
+        {"slug": "distribution", "label": "biodistribution", "role": "primary", "evidence": "Biodistribution (time=1 h) of 68 Ga-MSNP 2 in immunodeficient mice"}
+      ],
+      "substances": [
+        {"name": "68 Ga-MSNP 2", "role": "test", "evidence": "the in vivo stability of 68 Ga-MSNP 2 , the nanoparticle radioconjugate"}
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": "Biodistribution (time=1 h)",
+        "conditions": "1-2% isoflurane concentration"
+      },
+      "exposure_evidence": "the nanoparticle radioconjugate was injected intravenously and imaged (5 min)",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "In vivo procedures were approved by the Administrative Panel on Laboratory Animal Care at Stanford University (protocol #28882)",
+      "missing_or_ambiguous": ["dose_levels", "animal_counts"],
+      "notes": "n=6 refers to the biodistribution cohort; total female mice unspecified."
+    },
+    {
+      "study_type": "In vivo single-cell PET/CT imaging of 68Ga-MSNP-labeled cells (intracardiac)",
+      "procedure_text": "Radiolabeled single B16F10 cells injected intracardially into left ventricle of nude mice under ultrasound guidance; PET/CT imaging of cell biodistribution.",
+      "procedure_text_evidence": "100 μl of this solution (~ 100 cells) was administered to the animals",
+      "species": "mouse",
+      "species_evidence": "Female athymic nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "Female athymic nude mice (aged 6-8 weeks, Charles River) were used for in vivo studies",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["intracardiac"],
+      "route_evidence": "For intracardiac injection, we used an ultrasound system",
+      "endpoints": [
+        {"slug": "distribution", "label": "in vivo biodistribution of radiolabeled cells", "role": "primary", "evidence": "PET imaging of nude mice shows biodistribution of 50-100 radiolabeled cells"}
+      ],
+      "substances": [
+        {"name": "68 Ga-MSNP-labelled cells", "role": "test", "evidence": "radiolabeled cells were resuspended in PBS"}
+      ],
+      "exposure": {
+        "dose_levels": ["~ 100 cells", "50-100 radiolabeled cells"],
+        "dose_units": "cells",
+        "frequency": null,
+        "duration": null,
+        "timing": "15 min after intracardiac injection",
+        "conditions": "1-2% isoflurane concentration"
+      },
+      "exposure_evidence": "100 μl of this solution (~ 100 cells) was administered to the animals",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "In vivo procedures were approved by the Administrative Panel on Laboratory Animal Care at Stanford University (protocol #28882)",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Route 'intracardiac' not in controlled vocabulary; coded as 'other' concept but preserved verbatim. Injection to left ventricle via ultrasound guidance."
+    }
+  ]
+}

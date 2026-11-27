@@ -1,0 +1,56 @@
+{
+  "experiments": [
+    {
+      "study_type": "Evaluation of tissue damage from robotic grasping forces",
+      "procedure_text": "Saroa surgical system grasping forceps were used on lungs, esophagus, aorta, liver, spleen, small intestine, and large intestine at forces of 1, 2, and 3 N.",
+      "procedure_text_evidence": "the fenestrated grasping forceps of the Saroa surgical system were used to grasp the lungs, esophagus, aorta, liver, spleen, small intestine, and large intestine with forces of 1, 2, and 3 N for durations of 1, 2, and 4 min",
+      "species": "dog",
+      "species_evidence": "adult male beagle dogs",
+      "animal_counts": {
+        "female": 0,
+        "male": 6,
+        "total": 6,
+        "per_group": null
+      },
+      "animal_counts_evidence": "six adult male beagle dogs",
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "The study used six adult male beagle dogs",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": "other-health-effects",
+          "label": "tissue damage (hemorrhage, congestion, degeneration, mucosal erosion)",
+          "role": "primary",
+          "evidence": "The effects of these different grasping forces on the various tissues were examined."
+        }
+      ],
+      "substances": [],
+      "exposure": {
+        "dose_levels": [
+          "1",
+          "2",
+          "3"
+        ],
+        "dose_units": "N",
+        "frequency": null,
+        "duration": "1, 2, and 4 min",
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": "grasp with forces of 1, 2, and 3 N for durations of 1, 2, and 4 min",
+      "guideline_ref": null,
+      "regulatory_evidence": null,
+      "regulatory": null,
+      "missing_or_ambiguous": [
+        "dose_levels",
+        "dose_units"
+      ],
+      "notes": "Although the study cites ARRIVE guidelines, it does not follow a specific regulatory safety testing guideline for the robotic device."
+    }
+  ]
+}

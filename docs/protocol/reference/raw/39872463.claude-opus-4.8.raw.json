@@ -1,0 +1,153 @@
+{
+  "experiments": [
+    {
+      "study_type": "BLM-mediated pulmonary fibrosis model in mice treated with MSC-exos",
+      "procedure_text": "Mice given intratracheal BLM to induce pulmonary fibrosis, treated with MSC-exos via tail vein; lung tissue analyzed after 21 days.",
+      "procedure_text_evidence": "A pulmonary fibrosis model was established based on previous reports",
+      "species": "mouse",
+      "species_evidence": "C57BL/6J mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 3
+      },
+      "animal_counts_evidence": "control group, BLM group, and BLM + MSC-exos group(n = 3)",
+      "test_system": ["in_vivo"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["intratracheal", "intravenous", "intraperitoneal"],
+      "route_evidence": "BLM...was intratracheally injected...treated with 20 μg MSC-exos...via tail vein injection",
+      "endpoints": [
+        {
+          "slug": "repeated-dose-toxicity",
+          "label": "Pulmonary fibrosis pathology (HE/Masson staining)",
+          "role": "primary",
+          "evidence": "subjected to both HE and Masson staining"
+        },
+        {
+          "slug": null,
+          "label": "EMT markers (MMP2, MMP9, N-cadherin, snail, vimentin, fibronectin, E-cadherin)",
+          "role": "primary",
+          "evidence": "MSC-exos inhibit EMT process in BLM-induced PF model"
+        },
+        {
+          "slug": "immunotoxicity",
+          "label": "Inflammation via NOD1/NF-κB/NLRP3 pathway (IL-1beta, IL-18)",
+          "role": "primary",
+          "evidence": "suppress inflammation in the BLM-induced PF model by regulating the NOD1/NF-κB/NLRP3 pathway"
+        },
+        {
+          "slug": null,
+          "label": "Fibrosis markers α-SMA and Co1-I",
+          "role": "secondary",
+          "evidence": "RT-qPCR detection of α-SMA and Co1-I expression in mouse lung tissue"
+        }
+      ],
+      "substances": [
+        {
+          "name": "BLM",
+          "role": "test",
+          "evidence": "3 mg/kg of BLM (Zhejiang Hisun Pharmaceutical Co., Ltd., China) was intratracheally injected"
+        },
+        {
+          "name": "MSC-exos",
+          "role": "test",
+          "evidence": "treated with 20 μg MSC-exos in 100 μL PBS via tail vein injection"
+        },
+        {
+          "name": "sterile saline",
+          "role": "control",
+          "evidence": "control group mice were intratracheally injected with an equal amount of sterile saline"
+        },
+        {
+          "name": "1 % pentobarbital sodium",
+          "role": "other",
+          "evidence": "anesthetized with 1 % pentobarbital sodium via intraperitoneal injection"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["3 mg/kg", "20 μg"],
+        "dose_units": "mg/kg",
+        "frequency": null,
+        "duration": "21 days",
+        "timing": "after the modeling was completed",
+        "conditions": "MSC-exos in 100 μL PBS via tail vein injection"
+      },
+      "exposure_evidence": "3 mg/kg of BLM...was intratracheally injected...euthanized after a duration of 21 days",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts total", "sex of animals"],
+      "notes": "Approved by Experimental Animal Ethics Review Committee (SYT2023036). BLM dose in mg/kg, MSC-exos dose in μg."
+    },
+    {
+      "study_type": "In vitro BLM injury model in A549 cells treated with MSC-exos",
+      "procedure_text": "A549 cells stimulated with BLM to establish injury model, then treated with exosomes; proliferation, EMT and inflammation markers detected.",
+      "procedure_text_evidence": "To establish an in vitro injury model,1* 10 5 A549 cells were inoculated",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["unspecified"],
+      "route_evidence": "stimulated with 50 μM BLM for 24 h...after exosome (2 μg/mL) treatment",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "Cell proliferation (CCK-8)",
+          "role": "primary",
+          "evidence": "In order to evaluate the proliferation of A549 cells"
+        },
+        {
+          "slug": null,
+          "label": "EMT markers (MMP2, MMP9, N-cadherin, snail, vimentin, fibronectin, E-cadherin)",
+          "role": "primary",
+          "evidence": "RT-qPCR detection of MMP2, MMP9, N-cadherin, snail, vimentin, fibronectin"
+        },
+        {
+          "slug": null,
+          "label": "Fibrosis markers α-SMA and Co1-I",
+          "role": "secondary",
+          "evidence": "RT-qPCR detection of α-SMA and Co1-I expression in A549 cells"
+        },
+        {
+          "slug": null,
+          "label": "NLRP3 overexpression reversal effect",
+          "role": "secondary",
+          "evidence": "Overexpression of NLRP3 reverses the effects of MSC-exos"
+        }
+      ],
+      "substances": [
+        {
+          "name": "BLM",
+          "role": "test",
+          "evidence": "stimulated with 50 μM BLM for 24 h"
+        },
+        {
+          "name": "MSC-exos",
+          "role": "test",
+          "evidence": "cells were collected for follow-up detection after exosome (2 μg/mL) treatment"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["50 μM", "2 μg/mL"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": "24 h",
+        "timing": "then treated with MSC-exos for 24 h",
+        "conditions": null
+      },
+      "exposure_evidence": "stimulated with 50 μM BLM for 24 h...exosome (2 μg/mL) treatment",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": "A549 non-small cell lung cancer cells from commercial supplier; no animal source for cell line. BLM dose in μM, exosome in μg/mL."
+    }
+  ]
+}

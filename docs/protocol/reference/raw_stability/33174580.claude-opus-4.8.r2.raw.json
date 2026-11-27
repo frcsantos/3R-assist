@@ -1,0 +1,169 @@
+{
+  "experiments": [
+    {
+      "study_type": "Xenograft tumor generation (U87 glioma flank tumors) in nude mice",
+      "procedure_text": "Male athymic nude mice injected subcutaneously in the flank with U87 glioma cells to generate xenograft flank tumors harvested for microdissection.",
+      "procedure_text_evidence": "male athymic nude mice (Taconic, Foxn1 nu ) aged 4-10 weeks were injected subcutaneously in the flank",
+      "species": "mouse",
+      "species_evidence": "male athymic nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "injected subcutaneously in the flank",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["subcutaneous"],
+      "route_evidence": "injected subcutaneously in the flank",
+      "endpoints": [],
+      "substances": [
+        {
+          "name": "U-87 MG (U87) cells",
+          "role": "other",
+          "evidence": "U-87MG (U87) glioma cell-derived xenograft flank tumors"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["0.5-1 million cells in 200 μL"],
+        "dose_units": "cells in 200 μL",
+        "frequency": null,
+        "duration": "2-4 weeks",
+        "timing": null,
+        "conditions": "Mice were sacrificed before tumor volume reached 2 cm 2"
+      },
+      "exposure_evidence": "injected subcutaneously in the flank (0.5-1 million cells in 200 μL",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "under protocols approved by the Animal Care and Use Committee at the University of Washington",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Tumors harvested as source material for cuboid microdissection; tumor-bearing cohort distinct from liver-donor cohort."
+    },
+    {
+      "study_type": "Liver tissue harvest from nude and C57BL6 mice for cuboid microdissection and imaging",
+      "procedure_text": "Livers from male tumor-free nude mice and adult C57BL6-derived mice used for intact cuboid imaging and chopping quantitation experiments.",
+      "procedure_text_evidence": "Livers from male nude mice without tumors (2-4 months old) were used for the intact cuboid imaging",
+      "species": "mouse",
+      "species_evidence": "Livers from male nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "Livers from male nude mice without tumors",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "under protocols approved by the Animal Care and Use Committee at the University of Washington",
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "Liver donor cohort distinct from tumor-bearing cohort; no chemical administration, tissue used ex vivo for microdissection and imaging."
+    },
+    {
+      "study_type": "Ex vivo liver cuboid imaging (OTLS microscopy of fixed, cleared cuboids)",
+      "procedure_text": "Vibratome liver slices chopped into cuboids, suspended in collagen, fixed, stained, cleared, and imaged by open-top light-sheet microscopy for microenvironment characterization.",
+      "procedure_text_evidence": "we performed open-top light-sheet (OTLS) microscopy of fixed and optically-cleared liver cuboids",
+      "species": "mouse",
+      "species_evidence": "cuboids from both mouse liver",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["ex_vivo"],
+      "test_system_evidence": "OTLS microscopy of fixed and optically-cleared liver cuboids",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "3D tissue microenvironment / cell and vascular quantification",
+          "role": "primary",
+          "evidence": "To visualize the 3D tissue microenvironment inside the cuboids"
+        }
+      ],
+      "substances": [
+        {
+          "name": "TO-PRO 3 nuclear dye",
+          "role": "other",
+          "evidence": "Staining with far-red fluorescent TO-PRO 3 nuclear dye"
+        },
+        {
+          "name": "fluorescent eosin",
+          "role": "other",
+          "evidence": "far-red fluorescent TO-PRO 3 nuclear dye and fluorescent eosin"
+        }
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": "fixed and optically-cleared"
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["animal_counts"],
+      "notes": "n=3 cuboids analyzed for volume, vascular, and nuclear quantification; staining is of isolated tissue, no administration route to animal."
+    },
+    {
+      "study_type": "Cisplatin cytotoxicity drug treatment of U87 glioma cuboids in microfluidic device",
+      "procedure_text": "U87 glioma cuboids cultured in device treated with graded cisplatin concentrations for 2 days; viability assessed by SYTOX green/Hoechst fluorescence ratio.",
+      "procedure_text_evidence": "we exposed U87 cuboids in the device with different concentrations of a cytotoxic chemotherapy drug, cisplatin",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "U87 cuboids in the device",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["unspecified"],
+      "route_evidence": "we treated two wells with each concentration of cisplatin",
+      "endpoints": [
+        {
+          "slug": "basal-cytotoxicity",
+          "label": "cell viability / cytotoxicity (SYTOX green dead stain)",
+          "role": "primary",
+          "evidence": "As a straightforward, simple measure of cell viability"
+        }
+      ],
+      "substances": [
+        {
+          "name": "cisplatin",
+          "role": "test",
+          "evidence": "a cytotoxic chemotherapy drug, cisplatin"
+        }
+      ],
+      "exposure": {
+        "dose_levels": ["0, 10, 30, 100 μM"],
+        "dose_units": "μM",
+        "frequency": null,
+        "duration": "2 days",
+        "timing": "from day 1 to day 3",
+        "conditions": "two wells with each concentration"
+      },
+      "exposure_evidence": "with each concentration of cisplatin (0, 10, 30, 100 μM) for 2 days from day 1 to day 3",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["species"],
+      "notes": "Cuboids derived from U87 cell-line xenograft tumors; this assay performed in vitro on cultured cuboids, so species coded null for cell-line-derived system."
+    }
+  ]
+}

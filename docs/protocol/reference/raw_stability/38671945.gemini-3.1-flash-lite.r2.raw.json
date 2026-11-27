@@ -1,0 +1,134 @@
+{
+  "experiments": [
+    {
+      "study_type": "Hypoxic-hypercapnic gas challenge ventilatory response",
+      "procedure_text": "Adult male Sprague Dawley rats with indwelling femoral vein catheters were injected with DTT or vehicle, followed by a 60-min hypoxic-hypercapnic gas challenge in a plethysmography chamber.",
+      "procedure_text_evidence": "Adult male Sprague Dawley rats with indwelling femoral vein catheters were purchased... injection of vehicle (100 μL/kg, IV) and another... received an injection of L,D-DTT (100 μmol/kg, IV). After 15 min, both groups received a HH gas challenge for 60 min",
+      "species": "rat",
+      "species_evidence": "Adult male Sprague Dawley rats",
+      "animal_counts": {
+        "female": 0,
+        "male": 12,
+        "total": 12,
+        "per_group": 6
+      },
+      "animal_counts_evidence": "One group of rats (n = 6, 326 ± 2 g) received an injection of vehicle... and another (n = 6, 327 ± 2 g) received an injection of L,D-DTT",
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "freely-moving rats",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "intravenous"
+      ],
+      "route_evidence": "injection of vehicle (100 μL/kg, IV) and another (n = 6, 327 ± 2 g) received an injection of L,D-DTT (100 μmol/kg, IV)",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "ventilatory parameters",
+          "role": "primary",
+          "evidence": "Whole-body plethysmography (PLY3223; Data Sciences International, St. Paul, MN, USA) was used to record ventilatory parameters in freely-moving rats"
+        },
+        {
+          "slug": null,
+          "label": "body temperature",
+          "role": "secondary",
+          "evidence": "We recorded rat body temperatures before (Pre-drug) and at various timepoints (Post-drug) following the injection of vehicle"
+        }
+      ],
+      "substances": [
+        {
+          "name": "vehicle",
+          "role": "control",
+          "evidence": "injection of vehicle (100 μL/kg, IV)"
+        },
+        {
+          "name": "L,D-DTT",
+          "role": "test",
+          "evidence": "injection of L,D-DTT (100 μmol/kg, IV)"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "100",
+          "100"
+        ],
+        "dose_units": "μL/kg for vehicle, μmol/kg for DTT",
+        "frequency": "single injection",
+        "duration": "60 min",
+        "timing": "15 minutes prior to gas challenge",
+        "conditions": "hypoxic-hypercapnic (HH) gas challenge"
+      },
+      "exposure_evidence": "After 15 min, both groups received a HH gas challenge for 60 min",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": "Two studies conducted using identical methodology but different test compounds; Study 1 (DTT) and Study 2 (L-NACme)."
+    },
+    {
+      "study_type": "Hypoxic-hypercapnic gas challenge ventilatory response",
+      "procedure_text": "Adult male Sprague Dawley rats with indwelling femoral vein catheters were injected with L-NACme or vehicle, followed by a 60-min hypoxic-hypercapnic gas challenge in a plethysmography chamber.",
+      "procedure_text_evidence": "One group of rats (n = 6, 324 ± 3 g) received an injection of vehicle (100 μL/kg, IV) and another (n = 6, 323 ± 3 g) received an injection of L-NACme (500 μmol/kg, IV). After 15 min, both groups were subjected to a 60-min HH gas challenge",
+      "species": "rat",
+      "species_evidence": "Adult male Sprague Dawley rats",
+      "animal_counts": {
+        "female": 0,
+        "male": 12,
+        "total": 12,
+        "per_group": 6
+      },
+      "animal_counts_evidence": "One group of rats (n = 6, 324 ± 3 g) received an injection of vehicle... and another (n = 6, 323 ± 3 g) received an injection of L-NACme (500 μmol/kg, IV)",
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "freely-moving rats",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": [
+        "intravenous"
+      ],
+      "route_evidence": "injection of vehicle (100 μL/kg, IV) and another (n = 6, 323 ± 3 g) received an injection of L-NACme (500 μmol/kg, IV)",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "ventilatory parameters",
+          "role": "primary",
+          "evidence": "Whole-body plethysmography (PLY3223; Data Sciences International, St. Paul, MN, USA) was used to record ventilatory parameters in freely-moving rats"
+        }
+      ],
+      "substances": [
+        {
+          "name": "vehicle",
+          "role": "control",
+          "evidence": "injection of vehicle (100 μL/kg, IV)"
+        },
+        {
+          "name": "L-NACme",
+          "role": "test",
+          "evidence": "injection of L-NACme (500 μmol/kg, IV)"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "100",
+          "500"
+        ],
+        "dose_units": "μL/kg for vehicle, μmol/kg for L-NACme",
+        "frequency": "single injection",
+        "duration": "60 min",
+        "timing": "15 minutes prior to gas challenge",
+        "conditions": "hypoxic-hypercapnic (HH) gas challenge"
+      },
+      "exposure_evidence": "After 15 min, both groups were subjected to a 60-min HH gas challenge",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": null
+    }
+  ]
+}

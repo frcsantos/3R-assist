@@ -1,0 +1,167 @@
+{
+  "experiments": [
+    {
+      "study_type": "Hepatocyte-specific Kctd17 depletion in mouse models of MASH",
+      "procedure_text": "Cas9 knockin mice were transduced with AAV8-TBG-Cre (control) or AAV8-U6-sgKctd17-TBG-Cre (L-Kctd17) with an FPC diet and euthanized 16 weeks after transduction.",
+      "procedure_text_evidence": "Cas9 knockin mice were transduced with AAV8-TBG-Cre (control) or AAV8-U6-sgKctd17-TBG-Cre (L-Kctd17) with an FPC diet and euthanized 16 weeks after transduction.",
+      "species": "mouse",
+      "species_evidence": "mouse models of MASH",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 4
+      },
+      "animal_counts_evidence": "n = 4 per group",
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "mouse models of MASH",
+      "application": "translational-applied-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "H&E staining",
+          "role": "secondary",
+          "evidence": "H&E and Sirius red staining in histological sections of mouse liver"
+        },
+        {
+          "slug": null,
+          "label": "Sirius red staining",
+          "role": "secondary",
+          "evidence": "H&E and Sirius red staining in histological sections of mouse liver"
+        },
+        {
+          "slug": null,
+          "label": "ALT levels",
+          "role": "secondary",
+          "evidence": "ALT (e) and AST (f) levels in serum"
+        },
+        {
+          "slug": null,
+          "label": "AST levels",
+          "role": "secondary",
+          "evidence": "ALT (e) and AST (f) levels in serum"
+        }
+      ],
+      "substances": [
+        {
+          "name": "AAV8-TBG-Cre",
+          "role": "control",
+          "evidence": "transduced with AAV8-TBG-Cre (control)"
+        },
+        {
+          "name": "AAV8-U6-sgKctd17-TBG-Cre",
+          "role": "test",
+          "evidence": "AAV8-U6-sgKctd17-TBG-Cre (L-Kctd17)"
+        }
+      ],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": "16 weeks",
+        "timing": "euthanized 16 weeks after transduction",
+        "conditions": "FPC diet"
+      },
+      "exposure_evidence": "euthanized 16 weeks after transduction",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": "Experimental cohort involves transduction for gene editing followed by diet-induced MASH progression."
+    },
+    {
+      "study_type": "Pharmacologic Kctd17 inhibition in MASH-induced liver fibrosis",
+      "procedure_text": "C57BL/6 WT mice were fed FPC diet for 10 weeks and then administered control ASO or two different Kctd17-targeting ASO weekly by intraperitoneal injection at 25 mg/kg.",
+      "procedure_text_evidence": "administered control ASO or two different Kctd17-targeting ASO (Kctd17 ASO-1 and ASO-2) weekly by intraperitoneal injection a dose of 25 mg/kg",
+      "species": "mouse",
+      "species_evidence": "C57BL/6 WT mice",
+      "animal_counts": {
+        "female": null,
+        "male": null,
+        "total": null,
+        "per_group": 6
+      },
+      "animal_counts_evidence": "n = 6 per group",
+      "test_system": [
+        "in_vivo"
+      ],
+      "test_system_evidence": "C57BL/6 WT mice",
+      "application": "translational-applied-research",
+      "application_evidence": null,
+      "route": [
+        "intraperitoneal"
+      ],
+      "route_evidence": "administered by intraperitoneal injection",
+      "endpoints": [
+        {
+          "slug": null,
+          "label": "H&E staining",
+          "role": "secondary",
+          "evidence": "H&E and Sirius red staining"
+        },
+        {
+          "slug": null,
+          "label": "Sirius red staining",
+          "role": "secondary",
+          "evidence": "H&E and Sirius red staining"
+        },
+        {
+          "slug": null,
+          "label": "ALT levels",
+          "role": "secondary",
+          "evidence": "ALT (f) and AST (g) levels in serum"
+        },
+        {
+          "slug": null,
+          "label": "AST levels",
+          "role": "secondary",
+          "evidence": "ALT (f) and AST (g) levels in serum"
+        }
+      ],
+      "substances": [
+        {
+          "name": "Control ASO",
+          "role": "control",
+          "evidence": "administered control ASO"
+        },
+        {
+          "name": "Kctd17 ASO-1",
+          "role": "test",
+          "evidence": "Kctd17 ASO-1"
+        },
+        {
+          "name": "Kctd17 ASO-2",
+          "role": "test",
+          "evidence": "Kctd17 ASO-2"
+        }
+      ],
+      "exposure": {
+        "dose_levels": [
+          "25"
+        ],
+        "dose_units": "mg/kg",
+        "frequency": "weekly",
+        "duration": "6 weeks",
+        "timing": "6 weeks after the injections",
+        "conditions": "fed FPC diet for 10 weeks"
+      },
+      "exposure_evidence": "administered control ASO or two different Kctd17-targeting ASO (Kctd17 ASO-1 and ASO-2) weekly by intraperitoneal injection a dose of 25 mg/kg",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [
+        "animal_counts"
+      ],
+      "notes": null
+    }
+  ]
+}

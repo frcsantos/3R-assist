@@ -1,0 +1,297 @@
+{
+  "experiments": [
+    {
+      "study_type": "Nanoparticle Characterization",
+      "procedure_text": "Mesoporous silica nanoparticles were characterized by transmission electron microscopy, ImageJ size analysis, and Zetasizer measurements.",
+      "procedure_text_evidence": "were characterized for their size, structure and zeta potential",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_chemico"],
+      "test_system_evidence": "The particles were deposited onto 300-mesh carbon-formvar-coated copper grids for imaging",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "particle size distribution", "role": "unspecified", "evidence": "The size distribution of the particles was analyzed with ImageJ software"},
+        {"slug": null, "label": "particle structure", "role": "unspecified", "evidence": "their size, structure and zeta potential"},
+        {"slug": null, "label": "hydrodynamic size", "role": "unspecified", "evidence": "The particles' hydrodynamic size and zeta potential"},
+        {"slug": null, "label": "zeta potential", "role": "unspecified", "evidence": "The particles' hydrodynamic size and zeta potential"}
+      ],
+      "substances": [
+        {"name": "MSNP 1", "role": "test", "evidence": "MSNP 1 (Sigma, # 748161)"},
+        {"name": "MSNP 2", "role": "test", "evidence": "MSNP 2 (nanoComposix, # SHSD100)"},
+        {"name": "aminated MSNP 2", "role": "test", "evidence": "aminated MSNP 2 (nanoComposix, # SHAD100)"},
+        {"name": "MSNP 3", "role": "test", "evidence": "MSNP 3 (hiq-nano, # MP-001)"}
+      ],
+      "exposure": {"dose_levels": null, "dose_units": null, "frequency": null, "duration": null, "timing": null, "conditions": null},
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": "The figure caption reports n≥25 for the particle size distribution."
+    },
+    {
+      "study_type": "Chelator-free 68 Ga loading and adsorption assays",
+      "procedure_text": "MSNPs were co-incubated with 68 Ga in HEPES buffer; bound and unbound 68 Ga were separated by centrifugation, and radiolabeling efficiency was assessed by radio-TLC.",
+      "procedure_text_evidence": "were labeled with 68 Ga solution by co-incubation at 70°C for 30 min",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_chemico"],
+      "test_system_evidence": "The MSNPs were loaded with 68 Ga using a chelator-free method",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "MSNP amount needed to bind 50% of added 68 Ga", "role": "unspecified", "evidence": "variable amount of MSNP needed to bind 50% of the added 68 Ga"},
+        {"slug": null, "label": "68 Ga loading efficiency", "role": "unspecified", "evidence": "68 Ga loading efficiency as a function of the ratio"},
+        {"slug": null, "label": "residual unbound radioactivity", "role": "unspecified", "evidence": "the residual unbound radioactivity of the solution"}
+      ],
+      "substances": [
+        {"name": "MSNPs", "role": "test", "evidence": "10 ng -100 μg of MSNPs"},
+        {"name": "68 GaCl 3 solution", "role": "test", "evidence": "68 GaCl 3 solution was eluted with HCl"},
+        {"name": "HEPES buffer", "role": "other", "evidence": "100 μl of HEPES buffer (0.1 M, pH 7.4)"},
+        {"name": "citric acid", "role": "other", "evidence": "0.1 M citric acid was used as the elution solvent"}
+      ],
+      "exposure": {"dose_levels": ["10 ng -100 μg"], "dose_units": null, "frequency": null, "duration": "30 min", "timing": null, "conditions": "100 μl of HEPES buffer (0.1 M, pH 7.4)"},
+      "exposure_evidence": "co-incubation at 70°C for 30 min",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": "The centrifugal binding assay used 3 MBq; the MSNP 2 radio-TLC validation used 60 MBq. For subsequent MSNP 2 cellular uptake experiments, ~ 10 μg MSNP was found optimal for the available 68 Ga (~100 MBq)."
+    },
+    {
+      "study_type": "Fluorescent labeling of MSNPs",
+      "procedure_text": "Aminated MSNPs were covalently labeled with Atto 495 NHS ester; conjugate purity, size, and colloidal stability were characterized.",
+      "procedure_text_evidence": "The aminated MSNPs were covalently labeled with Atto 495 NHS ester",
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_chemico"],
+      "test_system_evidence": "by forming amide bonds on the MSNP surface",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "Atto 495-MSNP conjugate purity", "role": "unspecified", "evidence": "The purity of Atto 495-MSNP conjugate was validated with TLC and UV-vis spectroscopy"},
+        {"slug": null, "label": "particle size before and after labeling", "role": "unspecified", "evidence": "Size and colloidal stability of the MSNPs before and after fluorescence labeling"},
+        {"slug": null, "label": "colloidal stability before and after labeling", "role": "unspecified", "evidence": "Size and colloidal stability of the MSNPs before and after fluorescence labeling"}
+      ],
+      "substances": [
+        {"name": "MSNP 2 with primary amine surface functionalization", "role": "test", "evidence": "MSNP 2 with primary amine surface functionalization"},
+        {"name": "Atto 495 NHS ester", "role": "other", "evidence": "Atto 495 NHS ester (Sigma, # 00379)"}
+      ],
+      "exposure": {"dose_levels": ["Approximately 1 mg", "100 μg"], "dose_units": null, "frequency": null, "duration": "4 h", "timing": null, "conditions": "at room temperature for 4 h with gentle rocking"},
+      "exposure_evidence": "Approximately 1 mg of MSNPs were mixed with 100 μg of dye",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": "The labeling reaction used bicarbonate buffer at pH 8.5 with Atto 495 NHS ester in molar excess. Size and stability were characterized by DLS and zeta potential measurement."
+    },
+    {
+      "study_type": "68 Ga-MSNP 2 stability in fetal bovine serum",
+      "procedure_text": "Stability of 68 Ga-labeled MSNP 2 was assessed in 50% fetal bovine serum.",
+      "procedure_text_evidence": "Stability of 68 Ga-labeled MSNP 2 in 50% fetal bovine serum",
+      "species": "bovine",
+      "species_evidence": "fetal bovine serum",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "Stability of 68 Ga-labeled MSNP 2 in 50% fetal bovine serum",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "stability of 68 Ga-labeled MSNP 2 in serum", "role": "unspecified", "evidence": "Stability of 68 Ga-labeled MSNP 2 in 50% fetal bovine serum"}
+      ],
+      "substances": [
+        {"name": "68 Ga-labeled MSNP 2", "role": "test", "evidence": "Stability of 68 Ga-labeled MSNP 2"},
+        {"name": "fetal bovine serum", "role": "other", "evidence": "50% fetal bovine serum"}
+      ],
+      "exposure": {"dose_levels": null, "dose_units": null, "frequency": null, "duration": null, "timing": null, "conditions": "in 50% fetal bovine serum"},
+      "exposure_evidence": "in 50% fetal bovine serum",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["dose_levels", "duration", "timing"],
+      "notes": "The protocol describes the serum assay only in the Figure 3 caption."
+    },
+    {
+      "study_type": "Cellular uptake and efflux of 68 Ga-MSNP 2",
+      "procedure_text": "B16F10 cells were incubated with radiolabeled MSNPs; bulk cells, single cells, and fractions of culture media and cell lysate were analyzed by gamma counting.",
+      "procedure_text_evidence": "After incubation with 68 Ga-labeled MSNPs, B16F10 cells were washed thrice with PBS, trypsinized, and counted before gamma counting",
+      "species": "mouse",
+      "species_evidence": "B16F10 mouse melanoma",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "B16F10 mouse melanoma and MDA-MB-231 human breast adenocarcinoma cancer cell lines",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "concentration-dependent cellular uptake of nanoparticles", "role": "unspecified", "evidence": "Concentrationdependent cellular uptake of nanoparticles"},
+        {"slug": null, "label": "single-cell radiolabeling efficiency", "role": "unspecified", "evidence": "radiolabeling efficiency measured by single-cell gamma counting"},
+        {"slug": null, "label": "cellular retention of 68 Ga", "role": "unspecified", "evidence": "Cellular retention and efflux of 68 Ga"},
+        {"slug": null, "label": "kinetics of cellular efflux of radioactivity", "role": "unspecified", "evidence": "the kinetics of cellular efflux was assessed in triplicate"},
+        {"slug": null, "label": "dissociated versus MSNP-bound 68 Ga in media and cell lysate", "role": "unspecified", "evidence": "The percentage of 68 Ga dissociated (free) from the nanoparticle"}
+      ],
+      "substances": [
+        {"name": "68 Ga-MSNP 2", "role": "test", "evidence": "Radiolabeling of B16F10 mouse melanoma cells with 68 Ga-MSNP 2"},
+        {"name": "Lipofectamine 2000", "role": "other", "evidence": "Lipofectamine 2000, 11668030, Thermo Fisher Scientific"}
+      ],
+      "exposure": {"dose_levels": null, "dose_units": null, "frequency": null, "duration": "30 minutes", "timing": "15 min, 30 min, 45 min, and 90 min", "conditions": "at 37 °C and 5% CO2"},
+      "exposure_evidence": "Cells were incubated with 68 Ga-MSNPs or Atto 495-MSNPs at 37 °C",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["dose_levels", "segmentation"],
+      "notes": "B16F10 passages 5-10 were used; bulk uptake and efflux were measured in triplicate and 50 sorted cells were counted individually. Bare and Lipofectamine-assisted conditions were compared; fresh medium replaced each efflux sample, and cells were lysed at 90 min."
+    },
+    {
+      "study_type": "Fluorescent MSNP uptake and intracellular imaging",
+      "procedure_text": "MDA-MB-231 uptake of Atto495-MSNP 2 was characterized by flow cytometry, and intracellular localization and temperature-dependent uptake were assessed from confocal images.",
+      "procedure_text_evidence": "Flow cytometry characterization of cellular (MDA-MB-231) uptake with Atto495-MSNP 2",
+      "species": "human",
+      "species_evidence": "MDA-MB-231 human breast adenocarcinoma",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "MDA-MB-231 human breast adenocarcinoma cancer cell lines",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": null, "label": "cellular uptake of Atto495-MSNP 2, including temperature dependence", "role": "unspecified", "evidence": "dependent cellular uptake (n>10 cells) of MSNPs from the confocal images"},
+        {"slug": null, "label": "intracellular nanoparticle localization", "role": "unspecified", "evidence": "most nanoparticles are localized in the cytoplasm"}
+      ],
+      "substances": [
+        {"name": "Atto495-MSNP 2", "role": "test", "evidence": "MDA-MB-231 cells labeled with Atto495-MSNP 2"},
+        {"name": "Lipofectamine 2000", "role": "other", "evidence": "Lipofectamine 2000, 11668030, Thermo Fisher Scientific"},
+        {"name": "NucBlue Live ReadyProbes Reagent", "role": "other", "evidence": "incubation with NucBlue Live ReadyProbes Reagent"},
+        {"name": "paraformaldehyde", "role": "other", "evidence": "fixed with 4% paraformaldehyde after incubation and washing with PBS"}
+      ],
+      "exposure": {"dose_levels": null, "dose_units": null, "frequency": null, "duration": null, "timing": null, "conditions": null},
+      "exposure_evidence": "Very low uptake of nanoparticles was observed when the cells were incubated at 4°C",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["dose_levels", "duration"],
+      "notes": "The general uptake protocol specifies 30 minutes at 37 °C and 5% CO2; the 4°C condition is reported without a separate duration. Confocal uptake quantification used n>10 cells, and localization profiles sampled three line paths."
+    },
+    {
+      "study_type": "MSNP 2 cell-viability assay",
+      "procedure_text": "B16F10 cells were exposed to varying MSNP concentrations for 30 min, and metabolic activity was measured with CCK-8 as a surrogate for viability 24 h later.",
+      "procedure_text_evidence": "cell viability was determined according to metabolic activity as a surrogate",
+      "species": "mouse",
+      "species_evidence": "B16F10 mouse melanoma",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vitro"],
+      "test_system_evidence": "B16F10 cells were seeded in 96-well plates",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [
+        {"slug": "basal-cytotoxicity", "label": "cell viability as a percentage of control, using metabolic activity as a surrogate", "role": "primary", "evidence": "To evaluate the cytotoxicity of MSNPs, cell viability was determined according to metabolic activity"}
+      ],
+      "substances": [
+        {"name": "MSNP 2", "role": "test", "evidence": "Cell viability as % of control and a function of increasing MSNP 2 concentration"},
+        {"name": "complete media with no cell", "role": "control", "evidence": "untreated cells & complete media with no cell"},
+        {"name": "Cell Counting Kit-8 (CCK-8) solution", "role": "other", "evidence": "using Cell Counting Kit-8 (CCK-8) solution"}
+      ],
+      "exposure": {"dose_levels": ["up to 10 mg/ml"], "dose_units": "mg/ml", "frequency": null, "duration": "30 min", "timing": "24 h after MSNP exposure", "conditions": null},
+      "exposure_evidence": "MSNPs with varying concentrations (up to 10 mg/ml) were incubated for 30 min",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": ["dose_levels"],
+      "notes": "B16F10 cells were seeded at 2.5 × 10 3 cells per well; untreated cells and cell-free complete medium served as controls. The CCK-8 incubation lasted 1h, and mean optical density was read at 450 nm."
+    },
+    {
+      "study_type": "In vivo stability and biodistribution of intravenously injected 68 Ga-MSNP 2",
+      "procedure_text": "The radioconjugate was injected intravenously and imaged by small-animal PET; organ biodistribution at 1 h and bladder PET signal were reported.",
+      "procedure_text_evidence": "the nanoparticle radioconjugate was injected intravenously and imaged (5 min) using a small-animal PET scanner",
+      "species": "mouse",
+      "species_evidence": "Female athymic nude mice",
+      "animal_counts": {"female": null, "male": null, "total": 6, "per_group": null},
+      "animal_counts_evidence": "Biodistribution (time=1 h) of 68 Ga-MSNP 2 in immunodeficient mice (n=6)",
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "Female athymic nude mice (aged 6-8 weeks, Charles River) were used for in vivo studies",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["intravenous"],
+      "route_evidence": "the nanoparticle radioconjugate was injected intravenously",
+      "endpoints": [
+        {"slug": null, "label": "in vivo radioconjugate stability", "role": "primary", "evidence": "To study the in vivo stability of 68 Ga-MSNP 2"},
+        {"slug": "distribution", "label": "organ and blood biodistribution at 1 h, including liver uptake", "role": "unspecified", "evidence": "Biodistribution (time=1 h) of 68 Ga-MSNP 2 in immunodeficient mice (n=6)"},
+        {"slug": null, "label": "bladder signal as a fraction of total PET signal", "role": "unspecified", "evidence": "Negligible signal from the bladder (<0.5 % of total PET signal)"}
+      ],
+      "substances": [
+        {"name": "68 Ga-MSNP 2", "role": "test", "evidence": "the in vivo stability of 68 Ga-MSNP 2"}
+      ],
+      "exposure": {"dose_levels": null, "dose_units": null, "frequency": null, "duration": null, "timing": "time=1 h", "conditions": null},
+      "exposure_evidence": "injected intravenously and imaged (5 min)",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "approved by the Administrative Panel on Laboratory Animal Care at Stanford University (protocol #28882)",
+      "missing_or_ambiguous": ["dose_levels", "timing", "segmentation"],
+      "notes": "The mice were 6-8 weeks old and sourced from Charles River; n=6 is reported for 1 h biodistribution. The protocol does not clarify whether the 5 min refers to scan duration or post-injection timing, or whether the same mice supplied both readouts."
+    },
+    {
+      "study_type": "In vivo single-cell PET/CT imaging after intracardiac injection",
+      "procedure_text": "Radiolabeled B16F10 cells were administered to the left ventricle under ultrasound guidance; static PET and anatomical CT images were acquired.",
+      "procedure_text_evidence": "For intracardiac injection, we used an ultrasound system (Vevo 2100, Visual Sonics) to guide the needle",
+      "species": "mouse",
+      "species_evidence": "Female athymic nude mice",
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": ["in_vivo"],
+      "test_system_evidence": "PET imaging of nude mice shows biodistribution of 50-100 radiolabeled cells",
+      "application": "basic-research",
+      "application_evidence": null,
+      "route": ["other"],
+      "route_evidence": "after intracardiac injection to the left ventricle",
+      "endpoints": [
+        {"slug": "distribution", "label": "PET biodistribution of radiolabeled B16F10 cells", "role": "unspecified", "evidence": "PET imaging of nude mice shows biodistribution of 50-100 radiolabeled cells"},
+        {"slug": null, "label": "cell-cluster radioactivity by region-of-interest analysis", "role": "unspecified", "evidence": "Representative ROI analysis shows an actual activity of ~22 Bq from a cell cluster"}
+      ],
+      "substances": [
+        {"name": "radiolabeled cells", "role": "test", "evidence": "radiolabeled cells were resuspended in PBS"},
+        {"name": "PBS", "role": "other", "evidence": "radiolabeled cells were resuspended in PBS"},
+        {"name": "isoflurane", "role": "other", "evidence": "Mice were anesthetized using 1-2% isoflurane concentration"},
+        {"name": "oxygen", "role": "other", "evidence": "0.5 l min -1 oxygen flow rate"}
+      ],
+      "exposure": {"dose_levels": ["1,000 cells/ml", "100 μl", "~ 100 cells", "50-100 radiolabeled cells"], "dose_units": null, "frequency": null, "duration": null, "timing": "~ 15 min post-injection", "conditions": "1-2% isoflurane concentration and 0.5 l min -1 oxygen flow rate"},
+      "exposure_evidence": "100 μl of this solution (~ 100 cells) was administered to the animals",
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": true,
+      "regulatory_evidence": "approved by the Administrative Panel on Laboratory Animal Care at Stanford University (protocol #28882)",
+      "missing_or_ambiguous": ["animal_counts", "segmentation"],
+      "notes": "Female athymic nude mice were 6-8 weeks old and sourced from Charles River; the PET acquisition lasted 10-20 min, and CT provided anatomical reference. The caption describes a negative control or failed injection with local PET signal at the injection site, without distinguishing between the two."
+    }
+  ]
+}
