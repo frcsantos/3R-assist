@@ -41,6 +41,9 @@ from app.services.oecd_citation import prefer_oecd_tg_citation
 
 logger = logging.getLogger(__name__)
 
+from pathlib import Path as _Path
+_OLLAMA_ACTIVE_FLAG = _Path("/tmp/ollama_active")
+
 RAW_RESPONSE_LOG_LIMIT = 1200
 EXTRACTION_MAX_TOKENS = 8192
 POLICY_EXTRACTION_MAX_TOKENS = 4096
@@ -847,6 +850,46 @@ def _coerce_animal_counts(payload: dict) -> AnimalCounts | None:
     return None
 
 
+_VALID_STUDY_DOMAINS = frozenset({"pharma", "cosmetics", "chemical_safety", "general"})
+_VALID_SPECIES = frozenset(
+    {"rat", "mouse", "rabbit", "guinea_pig", "chicken", "zebrafish", "in_vitro", "other"}
+)
+_VALID_ROUTES = frozenset(
+    {"oral", "intraperitoneal", "intravenous", "dermal", "ocular", "inhalation", "in_vitro", "other"}
+)
+_SPECIES_ALIASES: dict[str, str] = {
+    "bovine": "other", "cow": "other", "cattle": "other",
+    "porcine": "other", "pig": "other", "swine": "other",
+    "canine": "other", "dog": "other",
+    "feline": "other", "cat": "other",
+    "ovine": "other", "sheep": "other",
+    "caprine": "other", "goat": "other",
+    "equine": "other", "horse": "other",
+    "wistar": "rat", "sprague": "rat", "sprague-dawley": "rat",
+    "rattus": "rat", "rattus norvegicus": "rat",
+    "mus musculus": "mouse", "balb/c": "mouse", "c57bl/6": "mouse",
+    "oryctolagus": "rabbit", "new zealand white": "rabbit",
+    "danio rerio": "zebrafish",
+    "cavia porcellus": "guinea_pig",
+    "gallus gallus": "chicken",
+}
+_ROUTE_ALIASES: dict[str, str] = {
+    "gavage": "oral", "intragastric": "oral", "p.o.": "oral", "per os": "oral",
+    "dietary": "oral", "intragástrico": "oral",
+    "i.p.": "intraperitoneal", "ip": "intraperitoneal",
+    "i.v.": "intravenous", "iv": "intravenous", "endovenous": "intravenous",
+    "topical": "dermal", "cutaneous": "dermal", "epicutaneous": "dermal",
+    "instillation": "ocular", "conjunctival": "ocular",
+    "aerosol": "inhalation", "inhalation chamber": "inhalation",
+}
+
+
+def _coerce_study_domain(payload: dict) -> None:
+    domain = payload.get("study_domain")
+    if not isinstance(domain, str) or domain.strip().lower() not in _VALID_STUDY_DOMAINS:
+        payload["study_domain"] = "general"
+
+
 def _coerce_application(payload: dict) -> None:
     payload["application"] = coerce_application(payload.get("application"))
 
@@ -859,40 +902,39 @@ def _is_null_route_marker(value: object) -> bool:
     return False
 
 
+def _normalize_route_value(value: str) -> str | None:
+    v = value.strip().lower()
+    if v in _VALID_ROUTES:
+        return v
+    if v in _ROUTE_ALIASES:
+        return _ROUTE_ALIASES[v]
+    return "other"
+
+
 def _coerce_route(payload: dict) -> None:
     route = payload.get("route")
     if route is None:
         return
     if isinstance(route, str):
-        payload["route"] = None if _is_null_route_marker(route) else [route]
+        if _is_null_route_marker(route):
+            payload["route"] = None
+        else:
+            normalized = _normalize_route_value(route)
+            payload["route"] = [normalized] if normalized else None
         return
     if not isinstance(route, list):
+        payload["route"] = None
         return
 
-    normalized = [item for item in route if not _is_null_route_marker(item)]
-    payload["route"] = normalized or None
-
-
-_SPECIES_ALIASES = frozenset(
-    {
-        "bovine",
-        "cow",
-        "cattle",
-        "porcine",
-        "pig",
-        "swine",
-        "canine",
-        "dog",
-        "feline",
-        "cat",
-        "ovine",
-        "sheep",
-        "caprine",
-        "goat",
-        "equine",
-        "horse",
-    }
-)
+    valid = []
+    for item in route:
+        if _is_null_route_marker(item):
+            continue
+        if isinstance(item, str):
+            normalized = _normalize_route_value(item)
+            if normalized:
+                valid.append(normalized)
+    payload["route"] = valid or None
 
 
 def _coerce_species(payload: dict) -> None:
@@ -900,8 +942,13 @@ def _coerce_species(payload: dict) -> None:
     if not isinstance(species, str):
         return
     normalized = species.strip().lower()
+    if normalized in _VALID_SPECIES:
+        return
     if normalized in _SPECIES_ALIASES:
-        payload["species"] = "other"
+        payload["species"] = _SPECIES_ALIASES[normalized]
+    else:
+        # Unknown species string — drop rather than fail validation
+        payload["species"] = None
 
 
 def _promote_primary_endpoint(payload: dict) -> None:
@@ -943,6 +990,10 @@ def _raw_from_experiment_item(item: object) -> RawExtraction | None:
             payload["study_type"] = legacy_endpoint.replace("_", " ")
         else:
             return None
+
+    for k, v in payload.items():
+        if v == "null":
+            payload[k] = None
 
     try:
         raw = RawExtraction.model_validate(payload)
@@ -1040,7 +1091,7 @@ class LlmCallAdapter(LLMAdapter):
         except ImportError:
             logger.warning("llmcall package is not installed")
             return None
-        kwargs: dict = {"max_tokens": max_tokens}
+        kwargs: dict = {"max_tokens": max_tokens, "temperature": 0.0}
         if json_mode:
             kwargs["response_format"] = "json"
         result = _llmcall.call(self._model, prompt, constraints=CallConstraints(**kwargs))
@@ -1312,7 +1363,8 @@ class OllamaLLMAdapter(LLMAdapter):
             "model": self._model,
             "prompt": prompt,
             "stream": False,
-            "options": {"num_predict": max_tokens},
+            "keep_alive": 0,
+            "options": {"num_predict": max_tokens, "temperature": 0.0, "num_ctx": 16384, "seed": 42},
         }
         if json_mode:
             payload["format"] = "json"
@@ -1323,16 +1375,24 @@ class OllamaLLMAdapter(LLMAdapter):
             headers={"Content-Type": "application/json"},
             method="POST",
         )
+        _OLLAMA_ACTIVE_FLAG.touch()
         try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
+            with urllib.request.urlopen(req, timeout=600) as resp:
                 body = json.loads(resp.read())
             return body.get("response")
         except Exception as exc:
             logger.warning("Ollama call failed: %s", exc)
             return None
+        finally:
+            _OLLAMA_ACTIVE_FLAG.unlink(missing_ok=True)
 
-    def extract_raw_experiments(self, text: str) -> list[RawExtraction] | ExtractionError:
-        raw = self.call(build_extraction_prompt(text), max_tokens=EXTRACTION_MAX_TOKENS, json_mode=True)
+    def extract_raw_experiments(
+        self,
+        text: str,
+        *,
+        source_language: str = "English",
+    ) -> list[RawExtraction] | ExtractionError:
+        raw = self.call(build_extraction_prompt(text, source_language=source_language), max_tokens=EXTRACTION_MAX_TOKENS, json_mode=True)
         if raw is None:
             return ExtractionError(message="Ollama call returned no response.")
         return _extract_from_raw(raw)

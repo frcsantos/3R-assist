@@ -1,3 +1,4 @@
+import threading
 from abc import ABC, abstractmethod
 from functools import lru_cache
 
@@ -18,6 +19,10 @@ class SentenceTransformerEmbedder(EmbedderAdapter):
     def __init__(self, model_name: str) -> None:
         self._model_name = model_name
         self._model = None
+        # Serialise all encode() calls: concurrent inferences on MPS each allocate
+        # hundreds of MB of intermediate tensors and can OOM the system when many
+        # search queries are embedded in parallel.
+        self._lock = threading.Lock()
 
     def _get_model(self):
         if self._model is None:
@@ -34,11 +39,13 @@ class SentenceTransformerEmbedder(EmbedderAdapter):
         return self._model
 
     def embed(self, text: str) -> list[float]:
-        return self._get_model().encode(text, normalize_embeddings=True).tolist()
+        with self._lock:
+            return self._get_model().encode(text, normalize_embeddings=True).tolist()
 
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        vectors = self._get_model().encode(texts, normalize_embeddings=True)
-        return [vector.tolist() for vector in vectors]
+        with self._lock:
+            vectors = self._get_model().encode(texts, normalize_embeddings=True)
+            return [vector.tolist() for vector in vectors]
 
 
 class StubEmbedderAdapter(EmbedderAdapter):

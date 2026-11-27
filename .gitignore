@@ -1,5 +1,7 @@
 .env
 backend/.env
+backend/.env.test
+frontend/.env
 backend/.venv/
 backend/venv/
 backend/data/*.db
@@ -8,6 +10,15 @@ backend/data/pubmed_baseline/
 backend/**/__pycache__/
 backend/.pytest_cache/
 docs/oecd_files/
+
+# python bytecode from pilot scripts
+docs/**/__pycache__/
+backend/*.log
+backend/**/*.log
+.DS_Store
+**/.DS_Store
+backups/
+
 # Pilot protocol: copyrighted article full texts must never be committed (PDFs, PMC XML, text conversions)
 docs/protocol/articles/
 docs/protocol/stratum_A/fulltext/
@@ -22,5 +33,3 @@ docs/**/*.pdf
 docs/protocol/Tabelas*.xlsx
 docs/protocol/**/Tabelas*.xlsx
 
-# python bytecode from pilot scripts
-docs/**/__pycache__/

@@ -6,7 +6,10 @@ import asyncio
 import ftplib
 import gzip
 import logging
+import os
 from pathlib import Path
+
+import torch
 
 from app.adapters.embedder import EmbedderAdapter
 from pubmed.db.repository import PubMedRepository
@@ -16,8 +19,12 @@ from pubmed.models.record import PubMedRecord
 
 logger = logging.getLogger(__name__)
 
-EMBED_BATCH_SIZE = 128
-INSERT_BATCH_SIZE = 256
+# Use all CPU cores for torch tokenization
+_CPU_CORES = os.cpu_count() or 4
+torch.set_num_threads(_CPU_CORES)
+
+EMBED_BATCH_SIZE = 1024
+INSERT_BATCH_SIZE = 1024
 
 
 def _embed_record_batch(
@@ -85,6 +92,10 @@ def _reconnect(ftp: ftplib.FTP | None) -> ftplib.FTP:
     return ftp_module.connect()
 
 
+def _parse_file_to_list(path: Path) -> list[PubMedRecord]:
+    return list(parse_file(path))
+
+
 async def run_baseline(
     dest_dir: Path,
     repository: PubMedRepository,
@@ -96,48 +107,68 @@ async def run_baseline(
     dest_dir.mkdir(parents=True, exist_ok=True)
     await repository.ensure_ingestion_table()
 
-    ftp = ftp_module.connect()
-    files = ftp_module.list_baseline_files(ftp)
+    if skip_download:
+        all_files = sorted(dest_dir.glob("pubmed*.xml.gz"))
+        filenames = [p.name for p in all_files]
+    else:
+        ftp = ftp_module.connect()
+        filenames = ftp_module.list_baseline_files(ftp)
+
     if max_files:
-        files = files[:max_files]
+        filenames = filenames[:max_files]
 
-    logger.info("Baseline: %d files to process", len(files))
+    logger.info("Baseline: %d files to process", len(filenames))
+    logger.info("Using %d CPU threads for tokenization", _CPU_CORES)
 
-    for filename in files:
-        if await repository.is_file_ingested(filename):
+    ftp = None if skip_download else ftp_module.connect()
+    loop = asyncio.get_event_loop()
+
+    # Build list of pending paths
+    pending: list[Path] = []
+    for filename in filenames:
+        if not await repository.is_file_ingested(filename):
+            pending.append(dest_dir / filename)
+        else:
             logger.info("Already ingested, skipping: %s", filename)
+
+    if not pending:
+        return
+
+    # Pre-parse first file in background
+    prefetch = loop.run_in_executor(None, _parse_file_to_list, pending[0])
+
+    for i, path in enumerate(pending):
+        if not path.exists():
+            logger.warning("Skipping missing file: %s", path.name)
+            prefetch = loop.run_in_executor(None, _parse_file_to_list, pending[i + 1]) if i + 1 < len(pending) else None
             continue
 
-        local_path = dest_dir / filename
+        # Wait for pre-parsed records
+        records = await prefetch
 
-        if not skip_download:
-            for attempt in range(1, _MAX_RETRIES + 1):
-                try:
-                    local_path = ftp_module.download_file(
-                        ftp, filename, dest_dir, verify=True
-                    )
-                    break
-                except Exception as exc:
-                    logger.warning(
-                        "Download failed for %s (attempt %d/%d): %s",
-                        filename, attempt, _MAX_RETRIES, exc,
-                    )
-                    ftp = _reconnect(ftp)
-                    (dest_dir / filename).unlink(missing_ok=True)
-                    if attempt == _MAX_RETRIES:
-                        logger.error("Giving up on %s after %d attempts", filename, _MAX_RETRIES)
-                        local_path = None
+        # Immediately start parsing next file while we embed+insert current
+        if i + 1 < len(pending):
+            prefetch = loop.run_in_executor(None, _parse_file_to_list, pending[i + 1])
 
-        if local_path is None or not local_path.exists():
-            logger.warning("Skipping missing file: %s", filename)
-            continue
+        logger.info("Processing %s (%d records)...", path.name, len(records))
+        inserted = 0
+        buffer: list[PubMedRecord] = []
 
-        logger.info("Processing %s ...", filename)
-        stats = await ingest_file(local_path, repository, embedder)
-        await repository.mark_file_ingested(filename)
-        logger.info(
-            "  %s — parsed=%d inserted=%d",
-            filename,
-            stats["parsed"],
-            stats["inserted"],
-        )
+        for record in records:
+            buffer.append(record)
+            if len(buffer) >= INSERT_BATCH_SIZE:
+                ep_embs, meth_embs = await loop.run_in_executor(
+                    None, _embed_record_batch, buffer, embedder
+                )
+                inserted += await repository.insert_batch(buffer, ep_embs, meth_embs)
+                logger.info("  %s — inserted %d so far", path.name, inserted)
+                buffer.clear()
+
+        if buffer:
+            ep_embs, meth_embs = await loop.run_in_executor(
+                None, _embed_record_batch, buffer, embedder
+            )
+            inserted += await repository.insert_batch(buffer, ep_embs, meth_embs)
+
+        await repository.mark_file_ingested(path.name)
+        logger.info("  %s — done, inserted=%d", path.name, inserted)

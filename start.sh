@@ -11,35 +11,48 @@ lsof -ti:8000 | xargs kill -9 2>/dev/null
 lsof -ti:5173 | xargs kill -9 2>/dev/null
 sleep 1
 
-echo "==> Checking Ollama..."
-if ! pgrep -x ollama > /dev/null; then
-    echo "    Starting Ollama in background..."
-    ollama serve > /tmp/ollama.log 2>&1 &
-    sleep 2
+echo "==> Restarting Cloudflare tunnel..."
+if launchctl kickstart -k "gui/$(id -u)/com.3rassist.cloudflared" 2>/dev/null; then
+    echo "    Tunnel restarted."
 else
-    echo "    Ollama already running."
+    echo "    Tunnel not loaded — loading it..."
+    launchctl load ~/Library/LaunchAgents/com.3rassist.cloudflared.plist 2>/dev/null
 fi
+
+echo "==> Keeping GPU awake on lid close..."
+pkill -f "caffeinate -di" 2>/dev/null
+caffeinate -di &
+
+echo "==> Ensuring PostgreSQL is running..."
+brew services start postgresql@17 2>/dev/null || true
+echo "    PostgreSQL ready."
+
+echo "==> Restarting Ollama (num_ctx=16384)..."
+pkill -x ollama 2>/dev/null
+pkill -f llama-server 2>/dev/null
+sleep 2
+OLLAMA_NUM_CTX=16384 OLLAMA_KEEP_ALIVE=-1 ollama serve > /tmp/ollama.log 2>&1 &
+sleep 3
+
+echo "==> Building frontend..."
+cd "$PROJECT/frontend" && $NPM run build
+echo "    Frontend built."
+
+echo "==> Clearing Python bytecode cache..."
+find "$PROJECT/backend" -name "*.pyc" -delete 2>/dev/null
+find "$PROJECT/backend" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null
+echo "    Done."
 
 echo "==> Opening backend (port 8000)..."
 osascript -e "
 tell application \"Terminal\"
     activate
-    do script \"echo '=== BACKEND ===' && cd '$PROJECT/backend' && $UVICORN app.main:app --reload --host 127.0.0.1 --port 8000\"
+    do script \"echo '=== BACKEND ===' && cd '$PROJECT/backend' && PYTHONDONTWRITEBYTECODE=1 $UVICORN app.main:app --reload --host 127.0.0.1 --port 8000 --timeout-keep-alive 700\"
 end tell"
 
-echo "==> Opening frontend (port 5173)..."
-osascript -e "
-tell application \"Terminal\"
-    activate
-    do script \"echo '=== FRONTEND ===' && cd '$PROJECT/frontend' && $NPM run dev\"
-end tell"
-
-echo "==> Waiting for servers to start..."
-sleep 4
-
-echo "==> Opening browser..."
-open http://localhost:5173
+echo "==> Waiting for backend to start..."
+sleep 3
 
 echo ""
-echo "Done. App is at http://localhost:5173"
+echo "Done. App is at https://assist3r.com"
 echo "To restart: run ./start.sh again (kills old processes first)."

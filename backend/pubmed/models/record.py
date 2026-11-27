@@ -23,11 +23,14 @@ class PubMedRecord(BaseModel):
     pub_year: int | None = None
     pub_month: int | None = None
     journal: str | None = None
-    abstract_text: str   # full abstract kept for display
-    endpoint_text: str   # Background + Objective + Conclusions (or full abstract)
-    method_text: str     # Methods + Results (or full abstract)
+    abstract_text: str
+    endpoint_text: str
+    method_text: str
     mesh_terms: list[str]
-    cluster: str         # which filter cluster matched at ingestion time
+    cluster: str
+    doi: str | None = None
+    source: str = "pubmed"
+    published_doi: str | None = None
 
     def to_endpoint_embedding_text(self) -> str:
         """Title + endpoint/hypothesis context — drives Path A search."""

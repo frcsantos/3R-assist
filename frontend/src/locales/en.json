@@ -393,7 +393,12 @@
       "regulationQuote": "Regulation quote"
     },
     "animalDerivedYes": "animal-derived",
-    "animalDerivedNo": "not animal-derived"
+    "animalDerivedNo": "not animal-derived",
+    "threeR": {
+      "replacement": "Replace",
+      "reduction": "Reduce",
+      "refinement": "Refine"
+    }
   },
   "s4": {
     "title": "Explore",
@@ -484,7 +489,11 @@
     },
     "results": {
       "scoreLabel": "Relevance:",
-      "pubmedLink": "View on PubMed"
+      "pubmedLink": "View on PubMed ↗",
+      "pathAlternative": "Alternative method search",
+      "pathEndpoint": "Endpoint search",
+      "showSimilar": "{{count}} similar paper(s)",
+      "hideSimilar": "Hide similar"
     }
   },
   "feedback": {

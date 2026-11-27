@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+const API_TOKEN = import.meta.env.VITE_API_TOKEN ?? ''
 
 function formatErrorDetail(detail) {
   if (detail == null) {
@@ -26,6 +27,8 @@ function formatErrorDetail(detail) {
   return parts.join(' — ')
 }
 
+const PUBMED_TIMEOUT_MS = 720_000 // 12 min — covers slow Ollama under GPU contention
+
 export async function apiFetch(path, options = {}) {
   const { signal, ...rest } = options
   const headers = { ...rest.headers }
@@ -34,22 +37,44 @@ export async function apiFetch(path, options = {}) {
   if (!isFormData && headers['Content-Type'] == null) {
     headers['Content-Type'] = 'application/json'
   }
+  if (API_TOKEN && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${API_TOKEN}`
+  }
+
+  const isPubMed = path.startsWith('/pubmed/')
+  const timeoutController = new AbortController()
+  let timedOut = false
+  const timeoutId = isPubMed
+    ? window.setTimeout(() => { timedOut = true; timeoutController.abort() }, PUBMED_TIMEOUT_MS)
+    : null
+
+  // Forward external cancellation into our controller
+  const onExternalAbort = signal ? () => timeoutController.abort() : null
+  if (onExternalAbort) signal.addEventListener('abort', onExternalAbort)
 
   let response
   try {
     response = await fetch(`${API_BASE}${path}`, {
       ...rest,
       headers,
-      signal,
+      signal: timeoutController.signal,
     })
   } catch (err) {
     if (err?.name === 'AbortError') {
+      if (timedOut) {
+        const timeoutError = new Error('Analysis is taking too long — the AI model is under load. Please try again.')
+        timeoutError.code = 'TIMEOUT'
+        throw timeoutError
+      }
       const abortError = new Error('Request cancelled')
       abortError.code = 'ABORTED'
       abortError.name = 'AbortError'
       throw abortError
     }
     throw err
+  } finally {
+    if (timeoutId) window.clearTimeout(timeoutId)
+    if (onExternalAbort) signal.removeEventListener('abort', onExternalAbort)
   }
   if (!response.ok) {
     let message = `API ${response.status}: ${response.statusText}`
@@ -69,6 +94,7 @@ export async function apiFetch(path, options = {}) {
     }
     const error = new Error(message)
     if (code) error.code = code
+    error.status = response.status
     throw error
   }
   return response.json()

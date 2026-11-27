@@ -7,15 +7,23 @@ from pubmed.models.record import Author, PubMedRecord
 
 # ── Vector search queries ────────────────────────────────────────────────────
 
+# v1 (all-MiniLM-L6-v2, 384-dim, 1000 lists) — revert by swapping _SET_PROBES and the two queries below
+# _SET_PROBES = "SET ivfflat.probes = 100"
+# _SEARCH_ENDPOINT_V1 = endpoint_embedding, WHERE endpoint_embedding IS NOT NULL
+# _SEARCH_METHOD_V1   = method_embedding,   WHERE method_embedding IS NOT NULL
+
+# v2 (bge-m3, 1024-dim, 5000 lists) — probes=300 ≈ 6% of lists; ceiling ~500 before RAM thrash
+_SET_PROBES = "SET ivfflat.probes = 300"
+
 _SEARCH_ENDPOINT = """
     SELECT
         pmid, title, authors, institutions,
         pub_year, pub_month, journal,
         abstract_text, endpoint_text, method_text, mesh_terms, cluster,
-        1 - (endpoint_embedding <=> $1::vector) AS score
+        1 - (endpoint_embedding_v2 <=> $1::vector) AS score
     FROM pubmed_abstracts
-    WHERE endpoint_embedding IS NOT NULL
-    ORDER BY endpoint_embedding <=> $1::vector
+    WHERE endpoint_embedding_v2 IS NOT NULL
+    ORDER BY endpoint_embedding_v2 <=> $1::vector
     LIMIT $2
 """
 
@@ -24,10 +32,10 @@ _SEARCH_METHOD = """
         pmid, title, authors, institutions,
         pub_year, pub_month, journal,
         abstract_text, endpoint_text, method_text, mesh_terms, cluster,
-        1 - (method_embedding <=> $1::vector) AS score
+        1 - (method_embedding_v2 <=> $1::vector) AS score
     FROM pubmed_abstracts
-    WHERE method_embedding IS NOT NULL
-    ORDER BY method_embedding <=> $1::vector
+    WHERE method_embedding_v2 IS NOT NULL
+    ORDER BY method_embedding_v2 <=> $1::vector
     LIMIT $2
 """
 
@@ -38,9 +46,9 @@ _INSERT_RECORD = """
         pmid, title, authors, institutions,
         pub_year, pub_month, journal,
         abstract_text, endpoint_text, method_text, mesh_terms, cluster,
-        endpoint_embedding, method_embedding
+        endpoint_embedding, method_embedding, doi, source, published_doi
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::vector, $14::vector)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::vector, $14::vector, $15, $16, $17)
     ON CONFLICT (pmid) DO UPDATE SET
         title               = EXCLUDED.title,
         authors             = EXCLUDED.authors,
@@ -55,8 +63,31 @@ _INSERT_RECORD = """
         cluster             = EXCLUDED.cluster,
         endpoint_embedding  = EXCLUDED.endpoint_embedding,
         method_embedding    = EXCLUDED.method_embedding,
+        doi                 = EXCLUDED.doi,
+        source              = EXCLUDED.source,
+        published_doi       = EXCLUDED.published_doi,
         indexed_at          = NOW()
 """
+
+_PAIRWISE_COSINE = """
+    SELECT
+        a.pmid AS pmid_a,
+        b.pmid AS pmid_b,
+        1 - (
+            COALESCE(a.method_embedding, a.endpoint_embedding)
+            <=>
+            COALESCE(b.method_embedding, b.endpoint_embedding)
+        ) AS cosine
+    FROM pubmed_abstracts a
+    JOIN pubmed_abstracts b ON a.pmid < b.pmid
+    WHERE a.pmid = ANY($1::text[])
+      AND b.pmid = ANY($1::text[])
+      AND COALESCE(a.method_embedding, a.endpoint_embedding) IS NOT NULL
+      AND COALESCE(b.method_embedding, b.endpoint_embedding) IS NOT NULL
+"""
+
+_DOI_EXISTS = "SELECT 1 FROM pubmed_abstracts WHERE doi = $1 LIMIT 1"
+_BATCH_DOI_EXISTS = "SELECT doi FROM pubmed_abstracts WHERE doi = ANY($1::text[])"
 
 _COUNT_RECORDS = "SELECT COUNT(*) FROM pubmed_abstracts"
 
@@ -85,9 +116,9 @@ class PubMedRepository:
         *,
         top_k: int = 12,
     ) -> list[tuple[PubMedRecord, float]]:
-        """Path A: search by endpoint/hypothesis embedding."""
         pool = await get_pool()
         async with pool.acquire() as conn:
+            await conn.execute(_SET_PROBES)
             rows = await conn.fetch(_SEARCH_ENDPOINT, _vec_str(embedding), top_k)
         return [(self._row_to_record(row), float(row["score"])) for row in rows]
 
@@ -97,9 +128,9 @@ class PubMedRepository:
         *,
         top_k: int = 15,
     ) -> list[tuple[PubMedRecord, float]]:
-        """Path B: search by method/technique embedding."""
         pool = await get_pool()
         async with pool.acquire() as conn:
+            await conn.execute(_SET_PROBES)
             rows = await conn.fetch(_SEARCH_METHOD, _vec_str(embedding), top_k)
         return [(self._row_to_record(row), float(row["score"])) for row in rows]
 
@@ -132,9 +163,34 @@ class PubMedRepository:
                         record.cluster,
                         _vec_str(ep_emb),
                         _vec_str(meth_emb),
+                        record.doi,
+                        record.source,
+                        record.published_doi,
                     )
                     count += 1
         return count
+
+    async def fetch_pairwise_cosines(self, pmids: list[str]) -> list[tuple[str, str, float]]:
+        if len(pmids) < 2:
+            return []
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(_PAIRWISE_COSINE, pmids)
+        return [(row["pmid_a"], row["pmid_b"], float(row["cosine"])) for row in rows]
+
+    async def doi_exists(self, doi: str) -> bool:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(_DOI_EXISTS, doi.lower())
+            return row is not None
+
+    async def batch_doi_exists(self, dois: list[str]) -> set[str]:
+        if not dois:
+            return set()
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(_BATCH_DOI_EXISTS, dois)
+        return {row["doi"] for row in rows}
 
     async def count(self) -> int:
         pool = await get_pool()

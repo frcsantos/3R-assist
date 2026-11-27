@@ -57,6 +57,14 @@ def _parse_pub_date(article: ET.Element) -> tuple[int | None, int | None]:
     if month_el is not None and month_el.text:
         raw = month_el.text.strip().lower()[:3]
         month = _MONTH_MAP.get(raw) or (int(raw) if raw.isdigit() else None)
+    # Fallback: MedlineDate e.g. "2010 Mar" or "2009-2010" when Year element absent
+    if year is None:
+        medline_el = pub_date.find("MedlineDate")
+        if medline_el is not None and medline_el.text:
+            import re as _re
+            m = _re.search(r'\b(19|20)\d{2}\b', medline_el.text)
+            if m:
+                year = int(m.group())
     return year, month
 
 
@@ -135,6 +143,13 @@ def _parse_mesh_terms(citation: ET.Element) -> list[str]:
     return terms
 
 
+def _parse_doi(citation: ET.Element) -> str | None:
+    for el in citation.findall(".//ELocationID"):
+        if el.get("EIdType") == "doi" and el.text:
+            return el.text.strip().lower()
+    return None
+
+
 def _parse_journal(article: ET.Element) -> str | None:
     journal_el = article.find("Journal")
     if journal_el is None:
@@ -167,13 +182,12 @@ def _parse_article(citation: ET.Element) -> PubMedRecord | None:
 
     mesh_terms = _parse_mesh_terms(citation)
 
-    cluster = match_cluster(title, abstract_text, mesh_terms)
-    if cluster is None:
-        return None
+    cluster = match_cluster(title, abstract_text, mesh_terms) or "general"
 
     pub_year, pub_month = _parse_pub_date(article)
     authors, institutions = _parse_authors(article)
     journal = _parse_journal(article)
+    doi = _parse_doi(citation)
 
     return PubMedRecord(
         pmid=pmid_el.text.strip(),
@@ -188,6 +202,8 @@ def _parse_article(citation: ET.Element) -> PubMedRecord | None:
         method_text=method_text,
         mesh_terms=mesh_terms,
         cluster=cluster,
+        doi=doi,
+        source="pubmed",
     )
 
 

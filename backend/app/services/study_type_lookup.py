@@ -7,8 +7,10 @@ from __future__ import annotations
 
 from app.models.protocol import EndpointCategory
 
-# study_type strings containing these must not map to acute_toxicity — "subacute"
-# contains the substring "acute toxicity" (§4.1 known miss).
+# study_type strings containing these must not map to acute_toxicity.
+# "subacute" contains the substring "acute" (§4.1 known miss).
+# Detection/potency/bioassay protocols use lethality as a readout, not as their
+# endpoint — the endpoint is detection or potency characterisation, not toxicity.
 _ACUTE_TOXICITY_BLOCKLIST = (
     "subacute",
     "sub-acute",
@@ -21,6 +23,16 @@ _ACUTE_TOXICITY_BLOCKLIST = (
     "90-day",
     "chronic toxicity",
     "subchronic toxicity",
+    # Detection / bioassay / potency — lethality is the readout, not the endpoint
+    "detection",
+    "contamination",
+    "sterility",
+    "potency assay",
+    "bioassay potency",
+    "microbial detection",
+    "pathogen detection",
+    "lethality assay for detection",
+    "lethality assay for potency",
 )
 
 STUDY_TYPE_LOOKUP: list[tuple[tuple[str, ...], EndpointCategory]] = [

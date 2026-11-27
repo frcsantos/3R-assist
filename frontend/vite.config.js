@@ -15,5 +15,14 @@ export default defineConfig({
       // Allow importing shared markdown from ../docs (e.g. glossary_*.md)
       allow: [rootDir, repoRoot],
     },
+    proxy: {
+      '/analyze': 'http://localhost:8000',
+      '/search': 'http://localhost:8000',
+      '/admin': 'http://localhost:8000',
+      '/health': 'http://localhost:8000',
+      '/pubmed': 'http://localhost:8000',
+      '/methods': 'http://localhost:8000',
+      '/documents': 'http://localhost:8000',
+    },
   },
 })

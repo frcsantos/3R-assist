@@ -33,7 +33,7 @@ Assist3R emerged in 2026 at an AI hackathon for animal causes organized by [Code
 
 ## Team
 
-- [**Bianca Marigliani, PhD**](https://www.linkedin.com/in/bmarigliani/): Senior Principal in Regulatory Science at Humane World for Animals. Scientific and regulatory assessment of non-animal methods (NAMs).
+- [**Bianca Marigliani, PhD**](https://www.linkedin.com/in/bmarigliani/): Senior Principal in Regulatory Science at Humane World for Animals. Scientific and regulatory assessment of new methodological aproaches (NAMs).
 - [**Felipe Rodolfo Camargo dos Santos, PhD**](https://www.linkedin.com/in/felipercsantos/): Bioinformatician, Postdoctoral Associate at the Broad Institute of MIT and Harvard. Scientific information retrieval and development of Basket 2.
 - [**Karynn Vieira Capilé, DVM, PhD**](https://www.linkedin.com/in/karynn-capil%C3%A9-77ab76142): Researcher and faculty member in animal ethics, animal welfare, and the 3Rs; coordinator of the Bioethics front of the Fórum Animal. Ethical and regulatory conception, scientific curation, and relationship with CEUAs.
 - [**Leo Heikiti Maeda Arruda, MSc**](https://www.linkedin.com/in/leohmarruda/): Software and artificial intelligence developer. Created the first prototype and leads the platform's architecture and development.

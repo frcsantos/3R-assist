@@ -1,6 +1,10 @@
 import { useTranslation } from 'react-i18next'
 
-const PUBMED_URL = (pmid) => `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`
+const ARTICLE_URL = (id) => {
+  if (!id) return null
+  if (id.startsWith('10.')) return `https://doi.org/${id}`
+  return `https://pubmed.ncbi.nlm.nih.gov/${id}/`
+}
 
 function renderSummaryText(text) {
   const parts = text.split(/(\[PMID:\d+\])/g)
@@ -10,7 +14,7 @@ function renderSummaryText(text) {
       return (
         <a
           key={i}
-          href={PUBMED_URL(match[1])}
+          href={ARTICLE_URL(match[1])}
           target="_blank"
           rel="noreferrer"
           className="font-medium text-info-text underline-offset-2 hover:underline"
@@ -52,7 +56,7 @@ export default function LiteratureSummary({ summary, citations }) {
                 <span className="font-medium">{citation.authors_display}</span>
                 {citation.pub_year ? ` (${citation.pub_year}). ` : '. '}
                 <a
-                  href={PUBMED_URL(citation.pmid)}
+                  href={ARTICLE_URL(citation.pmid)}
                   target="_blank"
                   rel="noreferrer"
                   className="italic underline-offset-2 hover:underline"
@@ -60,7 +64,7 @@ export default function LiteratureSummary({ summary, citations }) {
                   {citation.title}
                 </a>
                 {' '}
-                <span className="text-text-tertiary">PMID: {citation.pmid}</span>
+                <span className="text-text-tertiary">ID: {citation.pmid}</span>
               </li>
             ))}
           </ol>
