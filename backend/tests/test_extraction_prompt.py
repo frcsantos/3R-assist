@@ -244,14 +244,30 @@ def test_build_extraction_prompt_injects_protocol_text():
     assert "Acute toxicity LD50 study in rats." in prompt
     assert '"experiments"' in prompt
     assert "study_type" in prompt
-    assert "MAX 15 WORDS" in prompt
-    assert "MAX 5 WORDS" in prompt
-    assert "Do not quote entire paragraphs" in prompt
-    assert "route_confidence" in prompt
-    assert "substance-to-tissue contact" in prompt
-    assert "EVEIT" in prompt
-    assert "per-field confidence" in prompt
-    assert "Do NOT include a top-level" in prompt
+    assert "OUTPUT CONTRACT (P2)" in prompt
+    assert '"endpoints"' in prompt
+    assert '"substances"' in prompt
+    assert '"exposure"' in prompt
+    assert "maximum 15 words" in prompt
+    assert "Route values" in prompt
+    assert "Species values" in prompt
+    assert "{route_values}" not in prompt and "{species_values}" not in prompt
+    assert "{application_values}" not in prompt and "{endpoint_values}" not in prompt
+
+
+def test_promote_primary_endpoint_sets_singular_endpoint():
+    from app.adapters.llm import _promote_primary_endpoint
+
+    payload = {
+        "endpoints": [
+            {"slug": None, "label": "x", "role": "secondary", "evidence": "q"},
+            {"slug": "b", "label": "b", "role": "secondary", "evidence": "q"},
+            {"slug": "a", "label": "a", "role": "primary", "evidence": "qa"},
+        ]
+    }
+    _promote_primary_endpoint(payload)
+    assert payload["endpoint"] == "a"
+    assert payload["endpoint_evidence"] == "qa"
 
 
 def test_parse_json_payload_repairs_truncated_unterminated_string():

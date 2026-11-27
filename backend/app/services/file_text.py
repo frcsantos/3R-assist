@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from io import BytesIO
 
+from app.services import article_pipeline
 from app.services.url_text import MAX_EXTRACTED_CHARS, html_to_text
+
+logger = logging.getLogger(__name__)
 
 MAX_UPLOAD_BYTES = 15 * 1024 * 1024
 
@@ -151,7 +155,38 @@ def _pdf_to_text(raw: bytes) -> str:
             "FILE_NO_TEXT",
             "Could not extract enough text from the PDF.",
         )
-    return text
+    if article_pipeline.is_scanned(len(text), len(reader.pages)):
+        raise FileTextError(
+            "FILE_NEEDS_OCR",
+            "This PDF looks scanned; it needs OCR or manual review.",
+        )
+    return _grobid_methods_text(raw) or text
+
+
+def _grobid_methods_text(raw: bytes) -> str | None:
+    """Methods + legends/tables from our GROBID Space, or None to fall back."""
+    from app.config import get_settings
+
+    settings = get_settings()
+    if not settings.grobid_url:
+        return None
+    try:
+        article = article_pipeline.parse_article(
+            raw,
+            grobid_url=settings.grobid_url,
+            hf_token=settings.hf_token,
+            allow_public_demo=settings.grobid_allow_public_demo,
+        )
+    except article_pipeline.ArticleParseError as exc:
+        logger.warning("GROBID failed (%s); using plain PDF text", exc.code)
+        return None
+    if not article.has_methods:
+        logger.warning("GROBID found no Methods section; using plain PDF text")
+        return None
+    return _truncate_at_boundary(
+        "\n\n".join(article.pass1_chunks(max_tokens=10**9)),
+        MAX_EXTRACTED_CHARS,
+    )
 
 
 def extract_text_from_upload(

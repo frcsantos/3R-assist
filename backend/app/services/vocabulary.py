@@ -231,6 +231,26 @@ def application_prompt_lines() -> str:
     )
 
 
+_FALLBACK_PROMPT_ROUTES = (
+    "oral", "intraperitoneal", "intravenous", "intramuscular", "subcutaneous",
+    "intradermal", "cutaneous", "ocular", "inhalation", "other", "unspecified",
+    "not-applicable", "multiple",
+)
+_FALLBACK_PROMPT_SPECIES = ("rat", "mouse", "rabbit", "guinea_pig", "chicken", "zebrafish", "other")
+
+
+def route_prompt_lines() -> str:
+    """One `  slug` line per active route (static list when the DB is not loaded)."""
+    slugs = route_slugs() or _FALLBACK_PROMPT_ROUTES
+    return "\n".join(f"  {slug}" for slug in slugs)
+
+
+def species_prompt_lines() -> str:
+    """One `  slug` line per species; `in_vitro` is excluded (use null instead)."""
+    slugs = species_slugs() or _FALLBACK_PROMPT_SPECIES
+    return "\n".join(f"  {slug}" for slug in slugs if slug != "in_vitro")
+
+
 def endpoint_prompt_lines() -> str:
     """One indented `slug: name` line per endpoint (tree order), for LLM prompts."""
     rows = endpoint_rows()

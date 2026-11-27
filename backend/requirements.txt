@@ -12,3 +12,6 @@ python-multipart>=0.0.9
 pytest>=8.0
 tqdm>=4.0
 sentence-transformers>=5.14
+lxml>=5.0
+rank-bm25>=0.2.2
+rapidfuzz>=3.0

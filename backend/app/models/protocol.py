@@ -322,11 +322,19 @@ class AnalyzeRequest(BaseModel):
     lang: Literal["pt", "en"] | None = None
 
 
+class EvidenceCheck(BaseModel):
+    """Result of fuzzy-matching a field's evidence quote against the source text."""
+
+    status: Literal["verified", "unverified", "value_not_in_evidence", "no_evidence"]
+    score: float | None = None
+
+
 class ExperimentResult(BaseModel):
     raw: RawExtraction
     endpoint_category: EndpointCategory | None = None
     params: ProtocolParameters
     notes: str | None = None
+    verification: dict[str, EvidenceCheck] = Field(default_factory=dict)
 
     @classmethod
     def from_extraction(cls, result: ExtractionResult) -> ExperimentResult:

@@ -1,187 +1,149 @@
-"""Build extraction prompts from docs/parameter_model.md §9."""
+"""Build extraction prompts (P2 output contract)."""
 
-EXTRACTION_PROMPT_TEMPLATE = """You are a scientific assistant specializing in animal research ethics.
-Extract experimental parameters from the protocol description below.
-
-STRICT EXTRACTION MODE: Extract only what is explicitly stated in the text.
-Do not infer, assume, or use domain knowledge to fill gaps.
-If a field is not explicitly stated, return null.
-Use the notes field for any interpretation or likely inference.
-
-CRITICAL: All _evidence fields must be short, exact quotes (maximum 15–20 words).
-Do not quote entire paragraphs. Use the shortest phrase that supports the value.
-
-── MULTI-EXPERIMENT SPLITTING ───────────────────────────────────────────────
-Create a separate experiment object ONLY IF at least one of the following is true:
-1. A different animal cohort is used (different group of animals — not the same
-   animals measured at multiple timepoints or with multiple assays)
-2. A materially different dosing regimen applies (different compound, different
-   route, or different schedule — NOT different doses of the same compound)
-3. A separate, explicitly-labelled study section describes an independent study
-   (e.g. "Study 1", "Experiment 2", "Dose-range study")
-
-Multiple assays on the same animals = one experiment object.
-Multiple dose groups of the same compound = one experiment object.
-
-── ROUTE SYNONYMS ───────────────────────────────────────────────────────────
-CRITICAL: "route" describes how the test substance contacts the biological
-system — NOT what type of biological system it is. For ex vivo preparations
-(isolated corneas, skin discs, membrane models), choose the route that
-describes substance-to-tissue contact, not the culture setup.
-
-  ocular      ← instillation into eye, conjunctival, eye drop,
-                  applied over cornea, applied to corneal surface,
-                  applied to apex of cornea, ex vivo corneal application
-                  (USE THIS for EVEIT, BCOP, ICE — even though they are
-                  ex vivo systems, the substance contacts the corneal surface)
-
-  cutaneous   ← topical, dermal, epicutaneous, skin application,
-                  ex vivo skin disc, membrane model (Strat-M, Skin+)
-
-  oral              ← p.o., gavage, gavagem, intragastric, intragástrico,
-                       gastric tube, gastric intubation, dietary (mixed in feed)
-  intraperitoneal   ← i.p.
-  intravenous       ← i.v., endovenous
-  intramuscular     ← i.m.
-  subcutaneous      ← s.c., sub-cut
-  intradermal       ← i.d.
-  inhalation        ← aerosol, nose-only chamber, inhalation chamber,
-                       whole-body exposure
-  other             ← a known chemical administration route not listed above
-  unspecified       ← a route may exist but is not reported
-  not-applicable    ← no organism-level administration route applies
-  multiple          ← more than one route, not recorded separately
-  null              ← UV irradiation, radiation, physical exposure,
-                       or cell-culture medium exposure without an oriented tissue
-                       surface (assay modality belongs in test_system, not route)
-                       (radiation is not a chemical administration route)
-
-── APPLICATION VALUES ──────────────────────────────────────────────────────
-{application_values}
-
-── ENDPOINT VALUES ─────────────────────────────────────────────────────────
-{endpoint_values}
-
-── TEST SYSTEM VALUES ───────────────────────────────────────────────────────
-How the protocol itself tests the substance (an array; most protocols have one):
-  in_vivo     ← living animals dosed or exposed (including fish/amphibian embryos)
-  ex_vivo     ← tissue or organs taken from animals and tested outside the body
-                  (isolated corneas, skin discs, explants, perfused organs)
-  in_vitro    ← cultured cells, reconstructed tissues, cell lines
-  in_chemico  ← cell-free chemical or biochemical reactivity assays
-  in_silico   ← computational models, QSAR, read-across
-  in_data     ← analysis of existing data only (no new test)
-
-── SPECIES SYNONYMS ─────────────────────────────────────────────────────────
-  rat         ← Rattus norvegicus, Wistar, Sprague-Dawley, SD, F344, Fischer,
-                  IGS, Crj:CD(SD), SKH (rat strain)
-  mouse       ← Mus musculus, BALB/c, C57BL/6, SKH:HR1, hairless mouse
-  rabbit      ← Oryctolagus cuniculus, New Zealand White
-  guinea_pig  ← Cavia porcellus, cavie
-  chicken     ← Gallus gallus
-  zebrafish   ← Danio rerio
-  in_vitro    ← cell culture, cell line, isolated cells
-  other       ← any species not listed above (bovine, porcine, canine, etc.)
-
-── OUTPUT FORMAT ────────────────────────────────────────────────────────────
-Return ONLY valid JSON. No preamble. No markdown. No explanation outside JSON.
-Your first character must be `{`. Do not write reasoning before the JSON object.
-The JSON must be complete: close every string with a double quote and close
-every object and array with } and ]. Never stop mid-field or mid-string.
-Do NOT include a top-level "confidence" field. Confidence is per-field only —
-each paired _confidence field reflects how directly that field's evidence
-supports its value.
-
-Per-field confidence scale:
-  "high"   — evidence directly and explicitly states the value; no interpretation needed
-  "medium" — evidence requires vocabulary mapping or mild inference
-  "low"    — value extracted but evidence is tangential; user should verify
-  null     — field is null; omit the confidence field
+P2_OUTPUT_SPEC = r'''── OUTPUT CONTRACT (P2) ────────────────────────────────────────────────────
+Return only valid JSON, exactly one object with key "experiments". No code
+fences, comments, preamble or additional keys. Every experiment has exactly
+these fields. Use JSON null (never strings "unknown" or "null") for absent,
+ambiguous or unsupported facts; include all fields even when null.
 
 {
   "experiments": [
     {
-      "study_type": "free-text description of the study type, e.g. 'prenatal
-        developmental toxicity study' or 'in vivo genotoxicity battery'. Do not
-        map to any controlled vocabulary here — describe what you see.",
-
-      "route": array of controlled values (see synonyms above) or null,
-      "route_evidence": "exact quote from text, MAX 15 WORDS" or null,
-      "route_confidence": "high"|"medium"|"low" or null if route is null,
-
-      "application": one of the slugs listed under "Application values" below,
-      "application_evidence": "exact quote from text, MAX 15 WORDS" or null,
-      "application_confidence": "high"|"medium"|"low",
-      // Choose the value whose description best matches the stated purpose.
-      // Use the default value when no practical or regulatory purpose is
-      // declared or the study is validating a method rather than testing a
-      // specific product class. The identity of the test substance alone does
-      // not determine this field.
-
-      "procedure_text": "brief description of the procedure, max 30 words,
-        in the source language (see the end of this prompt)" or null,
-      "procedure_text_evidence": "exact quote from text, MAX 20 WORDS" or null,
-      "procedure_text_confidence": "high"|"medium"|"low" or null if procedure_text is null,
-
-      "species": controlled value (see synonyms above) or null,
-      "species_evidence": "exact quote from text, MAX 5 WORDS" or null,
-      "species_confidence": "high"|"medium"|"low" or null if species is null,
-
-      "animal_counts": {
-        "female": integer (explicitly stated) or null,
-        "male": integer (explicitly stated) or null,
-        "total": integer (explicitly stated, not derived) or null,
-        "per_group": integer (explicitly stated) or null
-      } or null if no counts are explicitly stated,
-      "animal_counts_evidence": "exact quote from text, MAX 15 WORDS" or null,
-      "animal_counts_confidence": "high"|"medium"|"low" or null if animal_counts is null,
-
-      "endpoint": the single most specific slug from "Endpoint values" that
-        the study measures (e.g. prefer "eye-irritation" over "eye-effects"),
-        or null if none fits. Choose by what the study assesses, not by the
-        substance tested. Mapping the study to the list is expected here.
-      "endpoint_evidence": "exact quote from text, MAX 15 WORDS" or null,
-      "endpoint_confidence": "high"|"medium"|"low" or null if endpoint is null,
-
-      "test_system": array of values from "Test system values" or null,
-      "test_system_evidence": "exact quote from text, MAX 15 WORDS" or null,
-      "test_system_confidence": "high"|"medium"|"low" or null if test_system is null,
-
-      "guideline_ref": the test guideline the protocol follows or cites, in the
-        form "TG 420" or "GD 129" (OECD), or null if none is named. Only a
-        guideline the experiment is actually performed under; not one that is
-        merely mentioned as background or as a method to be replaced.
-      "guideline_ref_evidence": "exact quote from text, MAX 15 WORDS" or null,
-      "guideline_ref_confidence": "high"|"medium"|"low" or null if guideline_ref is null,
-
-      "regulatory": true if a named regulatory guideline or authority is
-        explicitly cited, false if explicitly stated as non-regulatory,
-        null if not mentioned,
-      "regulatory_evidence": "exact quote from text, MAX 20 WORDS" or null,
-      "regulatory_confidence": "high"|"medium"|"low" or null if regulatory is null,
-
-      "notes": "1-2 sentences on anything the structured fields cannot
-        represent: secondary experiments, vocabulary gaps, ambiguous animal
-        counts, unsupported routes, study designs outside the standard
-        taxonomy, etc. null if nothing needs flagging."
+      "study_type": null,
+      "procedure_text": null,
+      "procedure_text_evidence": null,
+      "species": null,
+      "species_evidence": null,
+      "animal_counts": null,
+      "animal_counts_evidence": null,
+      "test_system": null,
+      "test_system_evidence": null,
+      "application": null,
+      "application_evidence": null,
+      "route": null,
+      "route_evidence": null,
+      "endpoints": [],
+      "substances": [],
+      "exposure": {
+        "dose_levels": null,
+        "dose_units": null,
+        "frequency": null,
+        "duration": null,
+        "timing": null,
+        "conditions": null
+      },
+      "exposure_evidence": null,
+      "guideline_ref": null,
+      "guideline_ref_evidence": null,
+      "regulatory": null,
+      "regulatory_evidence": null,
+      "missing_or_ambiguous": [],
+      "notes": null
     }
   ]
 }
 
-Order experiments by centrality to the protocol's stated objective,
-or by per-field confidence if centrality is unclear.
+Field rules:
+- study_type: short source-language description or null; keep the stated
+  design and key stressor/exposure (e.g. "UV photocarcinogenesis", not just
+  "carcinogenicity"); do not invent a regulatory or mechanistic classification
+  from a substance alone.
+- procedure_text: <=30 words in source language, or null.
+- species: a DB-listed species slug or legacy marker "other", ONLY for a named
+  organism; null ONLY for cell-culture/cell-line systems with no stated animal
+  source (not "in_vitro"). Tissue or organs from a named animal (e.g. bovine
+  eyes from a slaughterhouse) still count: use that species, with its evidence.
+  If specific organism not in DB, use "other" and preserve its name in notes.
+- animal_counts: null, or object with EXACT keys female/male/total/per_group,
+  each integer or null; values must be explicitly stated, not calculated.
+- test_system: nonempty array of values drawn from
+  in_vivo/ex_vivo/in_vitro/in_chemico/in_silico/in_data, or null.
+- application: active application slug or the documented DEFAULT_APPLICATION;
+  if defaulted, application_evidence=null. This is coding, not a stated fact.
+- route: nonempty array of active route slugs or null. Give a route ONLY if the
+  text states how the substance reaches the test system; never infer one from
+  the exposure type (e.g. UV or other radiation) or the tissue. Use an explicit
+  surface contact route for isolated tissue if stated. Use "unspecified" (when
+  available) only when administration is explicitly described without naming a
+  route; if no chemical administration is reported, route is null. Do not force
+  "not-applicable" for ex vivo.
+- endpoints: array of objects, one per DISTINCT, explicitly assessed endpoint:
+  {"slug": <active endpoint slug or null>,
+   "label": <brief original-language endpoint name>,
+   "role": "primary"|"secondary"|"unspecified",
+   "evidence": <exact source quote> }.
+  If explicitly measured but no catalog slug fits, slug=null and retain label.
+  Zero endpoints => [] (NOT a guessed default). Mark primary only if the text
+  clearly establishes it; multiple primary endpoints are permitted if explicit.
+  Deduplicate synonymous measurements, but keep distinct biological outcomes.
+- substances: array of objects:
+  {"name": <verbatim substance/material name>,
+   "role": "test"|"control"|"other"|"unknown",
+   "evidence": <exact source quote>}.
+  Use [] when none is stated. Do not infer administered compound from context.
+- exposure: an object with 6 keys exactly. Report only source-stated details.
+  dose_levels is an array of verbatim dose expressions or null;
+  dose_units is a verbatim unit string or null;
+  frequency, duration, timing, conditions are concise verbatim phrases or null.
+  Never convert units or calculate cumulative doses. If multiple regimens
+  belong to one experiment, preserve distinct regimens in notes and do not
+  imply that a single dose or duration applies to all cohorts.
+- exposure_evidence: exact short quote supporting the most important exposure
+  specification, or null; unresolved conflicts go to missing_or_ambiguous.
+- guideline_ref: OECD-style TG/GD identifier only if the procedure actually
+  follows the guideline, not a background or comparison citation.
+- regulatory: true if a named authority/guideline is cited, false only if
+  explicitly described as non-regulatory, else null; does NOT itself establish
+  compliance or recognition.
+- missing_or_ambiguous: array of short FIELD NAMES relevant to matching whose
+  facts are missing/contradictory. No hypothesized values.
+- notes: <=2 concise source-language sentences for issues not represented.
+- All *_evidence fields, including endpoint and substance evidence, must be
+  EXACT, CONTIGUOUS quotes from the protocol text; maximum 15 words except
+  procedure_text_evidence and regulatory_evidence (maximum 20). For species
+  evidence maximum 5 words. If no quote supports a fact, make it null.
 
-CRITICAL: All _evidence fields must be short, exact quotes (maximum 15–20 words).
-Do not quote entire paragraphs.
+Experiment segmentation:
+1. Split for explicitly different animal cohorts.
+2. Split for materially distinct compounds, routes, or schedules with separate
+   procedures; never split dose levels of the same compound alone.
+3. Split independent labeled studies only when independently described.
+4. Multiple assays/endpoints on the same animals are ONE experiment. Record
+   all such endpoints; do not silently discard secondary measurements.
+5. If the segmentation is genuinely unclear, use the least speculative split,
+   flag uncertainty in missing_or_ambiguous, and describe it in notes.
 
-CRITICAL: Your response must be syntactically complete JSON. Close all strings,
-objects, and arrays before ending output.
-
-Detected source language: {source_language}. Keep extracted free-text
-(study_type, procedure_text, notes, evidence quotes) in that language.
+Evidence/normalization:
+- Extract source facts, then normalize with the active vocabularies. A clear
+  synonym mapping (e.g., Sprague-Dawley -> rat) is allowed; an inferred
+  experimental fact is not. Never create new slugs.
+- SOURCE LANGUAGE: keep narrative and quoted evidence in {source_language}.
+- Output every object and array fully closed and syntactically valid JSON.
 
 Protocol description:
-{protocol_text}"""
+{protocol_text}'''
+
+P2_PREAMBLE = '''You are a scientific assistant specializing in animal research ethics.
+Extract experimental parameters from the protocol description without inventing facts.
+Use explicit source statements or unambiguous vocabulary normalization only.
+Preserve all distinct endpoints and details relevant to matching an animal
+procedure to recognized alternative methods. Missing evidence is not evidence
+of absence. Use only exact short quotations in evidence fields.
+
+── CONTROLLED VOCABULARIES ──────────────────────────────────────────────────
+{application_values}
+
+{endpoint_values}
+
+{route_values}
+
+{species_values}
+'''
+
+P2_TEMPLATE = P2_PREAMBLE + '\n' + P2_OUTPUT_SPEC
+
+# Backwards-compatible name.
+EXTRACTION_PROMPT_TEMPLATE = P2_TEMPLATE
 
 
 def _endpoint_values_block() -> str:
@@ -189,21 +151,41 @@ def _endpoint_values_block() -> str:
 
     lines = endpoint_prompt_lines()
     if not lines:
-        return "Endpoint values: not available; return null for endpoint."
+        return "Endpoint values: not available; use slug=null and keep the label."
     return (
         "Endpoint values (slug: name; indentation shows the hierarchy, deeper = more "
         "specific). Use a slug exactly as written:\n" + lines
     )
 
 
+def _route_values_block() -> str:
+    from app.services.vocabulary import route_prompt_lines
+
+    return "Route values (active slugs; use exactly as written):\n" + route_prompt_lines()
+
+
+def _species_values_block() -> str:
+    from app.services.vocabulary import species_prompt_lines
+
+    return (
+        "Species values (active slugs; use exactly as written; null when only "
+        "in-vitro/cell culture):\n" + species_prompt_lines()
+    )
+
+
 def build_extraction_prompt(protocol_text: str, *, source_language: str = "English") -> str:
     from app.services.vocabulary import DEFAULT_APPLICATION, application_prompt_lines
 
-    template = EXTRACTION_PROMPT_TEMPLATE.replace(
-        "{application_values}",
-        f"Application values (slug: description; default {DEFAULT_APPLICATION}):\n"
-        + application_prompt_lines(),
-    ).replace("{endpoint_values}", _endpoint_values_block())
+    template = (
+        P2_TEMPLATE.replace(
+            "{application_values}",
+            f"Application values (slug: description; DEFAULT_APPLICATION = {DEFAULT_APPLICATION}):\n"
+            + application_prompt_lines(),
+        )
+        .replace("{endpoint_values}", _endpoint_values_block())
+        .replace("{route_values}", _route_values_block())
+        .replace("{species_values}", _species_values_block())
+    )
     return template.replace(
         "{protocol_text}",
         protocol_text.strip(),

@@ -72,6 +72,16 @@ class Settings(BaseSettings):
         alias="CONTACT_TO_EMAIL",
     )
 
+    # Article parsing (docs/protocol-extraction-pipeline.md). When unset,
+    # PDFs fall back to in-process pypdf text extraction.
+    grobid_url: str | None = Field(default=None, alias="GROBID_URL")
+    hf_token: str | None = Field(default=None, alias="HF_TOKEN")
+    # Only for testing with public papers; the public demo server is blocked
+    # by default because uploaded PDFs may be confidential.
+    grobid_allow_public_demo: bool = Field(
+        default=False, alias="GROBID_ALLOW_PUBLIC_DEMO"
+    )
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

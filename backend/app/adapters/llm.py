@@ -904,6 +904,24 @@ def _coerce_species(payload: dict) -> None:
         payload["species"] = "other"
 
 
+def _promote_primary_endpoint(payload: dict) -> None:
+    """Map the P2 `endpoints[]` list onto the singular `endpoint` the backend reads.
+
+    Prefers the first entry with role "primary" and a slug, then any entry with a slug.
+    """
+    if payload.get("endpoint"):
+        return
+    entries = payload.get("endpoints")
+    if not isinstance(entries, list):
+        return
+    valid = [e for e in entries if isinstance(e, dict) and isinstance(e.get("slug"), str) and e["slug"]]
+    chosen = next((e for e in valid if e.get("role") == "primary"), valid[0] if valid else None)
+    if chosen:
+        payload["endpoint"] = chosen["slug"]
+        if isinstance(chosen.get("evidence"), str):
+            payload.setdefault("endpoint_evidence", chosen["evidence"])
+
+
 def _raw_from_experiment_item(item: object) -> RawExtraction | None:
     if not isinstance(item, dict):
         return None
@@ -912,6 +930,7 @@ def _raw_from_experiment_item(item: object) -> RawExtraction | None:
     payload.pop("endpoint_category", None)
     payload.pop("confidence", None)
     payload.pop("raw_text_excerpt", None)
+    _promote_primary_endpoint(payload)
     _coerce_application(payload)
     _coerce_route(payload)
     _coerce_species(payload)
